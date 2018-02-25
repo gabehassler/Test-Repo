@@ -51,10 +51,6 @@ singleton.restoreState(instance);
 precision = storedPrecision;
 }
 @Override
-public void acceptState() {
-singleton.acceptState(instance);
-}
-@Override
 public void makeDirty() {
 singleton.makeDirty(instance);
 }

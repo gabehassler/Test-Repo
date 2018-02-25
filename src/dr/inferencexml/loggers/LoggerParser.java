@@ -53,8 +53,7 @@ header = xo.getStringAttribute(HEADER);
 }
 if (title == null) {
 final BeastVersion version = new BeastVersion();
-title = "BEAST " + version.getVersionString() +
-", " + version.getBuildString() + "\n" +
+title = "BEAST " + version.getVersionString() + "\n" +
 (header != null ? header + "\n" : "") +
 "Generated " + (new Date()).toString() + " [seed=" + MathUtils.getSeed() + "]";
 } else {

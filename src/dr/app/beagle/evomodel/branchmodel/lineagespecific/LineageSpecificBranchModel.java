@@ -48,16 +48,15 @@ private Parameter categoriesParameter;
 public LineageSpecificBranchModel(TreeModel treeModel, //
 FrequencyModel rootFrequencyModel, //
 final List<SubstitutionModel> substitutionModels, //
-//			CountableBranchCategoryProvider categoriesProvider, //
+CountableBranchCategoryProvider categoriesProvider, //
 Parameter categoriesParameter //
 ) {
 super("");
 this.treeModel = treeModel;
 this.substitutionModels = substitutionModels;
-//		this.categoriesProvider = categoriesProvider;
+this.categoriesProvider = categoriesProvider;
 this.categoriesParameter = categoriesParameter;
 this.rootFrequencyModel = rootFrequencyModel;
-this.categoriesProvider = new CountableBranchCategoryProvider.IndependentBranchCategoryModel(treeModel, categoriesParameter);
 this.nodeMap = new HashMap<NodeRef, Mapping>();
 for (SubstitutionModel model : this.substitutionModels) {
 addModel(model);
@@ -188,9 +187,8 @@ for (int i = 0; i < 2; i++) {
 substModels.add(mg94);
 }
 Parameter uCategories = new Parameter.Default(2, 0);
-//            CountableBranchCategoryProvider provider = new CountableBranchCategoryProvider.IndependentBranchCategoryModel(tree, uCategories);
-LineageSpecificBranchModel branchSpecific = new LineageSpecificBranchModel(tree, freqModel, substModels, //provider, 
-uCategories);
+CountableBranchCategoryProvider provider = new CountableBranchCategoryProvider.IndependentBranchCategoryModel(tree, uCategories);
+LineageSpecificBranchModel branchSpecific = new LineageSpecificBranchModel(tree, freqModel, substModels, provider, uCategories);
 BeagleTreeLikelihood like = new BeagleTreeLikelihood(convert, //
 tree, //
 branchSpecific, //

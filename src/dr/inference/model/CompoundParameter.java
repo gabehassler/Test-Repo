@@ -119,12 +119,9 @@ index += 1;
 return v;
 }
 public void fireParameterChangedEvent() {
-doNotPropogateChangeUp = true;
 for (Parameter p : parameters) {
 p.fireParameterChangedEvent();
 }
-doNotPropogateChangeUp = false;
-fireParameterChangedEvent(-1, ChangeType.ALL_VALUES_CHANGED);
 }
 public double getParameterValue(int dim) {
 return parameters.get(dim).getParameterValue(pindex.get(dim));
@@ -190,9 +187,7 @@ public void variableChangedEvent(Variable variable, int index, Parameter.ChangeT
 int dim = 0;
 for (Parameter parameter1 : uniqueParameters) {
 if (variable == parameter1) {
-if (!doNotPropogateChangeUp) {
 fireParameterChangedEvent(dim + index, type);
-}
 break;
 }
 dim += parameter1.getDimension();
@@ -221,7 +216,6 @@ private final ArrayList<Integer> pindex = new ArrayList<Integer>();
 private Bounds bounds = null;
 private int dimension;
 private String name;
-private boolean doNotPropogateChangeUp = false;
 public static void main(String[] args) {
 Parameter param1 = new Parameter.Default(2);
 Parameter param2 = new Parameter.Default(2);

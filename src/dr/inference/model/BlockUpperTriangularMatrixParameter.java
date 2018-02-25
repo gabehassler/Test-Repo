@@ -95,14 +95,10 @@ return  PID%getRowDimension();
 protected int getColumn(int PID){
 return PID/getRowDimension();
 }
-public void setParameterValueQuietly(int row, int col, double value){
+public void setParameterValue(int row, int col, double value){
 if(matrixCondition(row, col)){
-getParameter(col).setParameterValueQuietly(getInnerDimension(row,col), value);
+getParameter(col).setParameterValue(row, value);
 }
-}
-public void setParameterValue(int row, int col,double value){
-setParameterValueQuietly(row, col, value);
-fireParameterChangedEvent();
 }
 public void setParameterValue(int PID, double value){
 int row=getRow(PID);

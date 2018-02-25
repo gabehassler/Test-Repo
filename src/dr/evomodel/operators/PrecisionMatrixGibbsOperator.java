@@ -17,7 +17,6 @@ import dr.math.distributions.WishartStatistics;
 import dr.math.distributions.WishartSufficientStatistics;
 import dr.math.interfaces.ConjugateWishartStatisticsProvider;
 import dr.math.matrixAlgebra.IllegalDimension;
-import dr.math.matrixAlgebra.Matrix;
 import dr.math.matrixAlgebra.SymmetricMatrix;
 import dr.util.Attribute;
 import dr.xml.*;
@@ -157,16 +156,7 @@ for (int i = 0; i < outerProducts.length; i++) {
 System.arraycopy(outerProducts[i], 0, S[i], 0, S[i].length);
 }
 numberObservations = df;
-//        checkDiagonals(outerProducts);
 }
-//    private void checkDiagonals(double[][] S) {
-//        for (int i = 0; i < S.length; ++i) {
-//            if (S[i][i] < 0.0) {
-//                System.err.println("ERROR diag(S)\n" + new Matrix(S));
-//                System.exit(-1);
-//            }
-//        }
-//    }
 private void incrementOuterProduct(double[][] S, NodeRef node) {
 if (!treeModel.isRoot(node)) {
 NodeRef parent = treeModel.getParent(node);
@@ -212,22 +202,6 @@ S2 = (SymmetricMatrix) S2.product(pathWeight);
 if (priorInverseScaleMatrix != null)
 S2 = priorInverseScaleMatrix.add(S2);
 inverseS2 = (SymmetricMatrix) S2.inverse();
-//            if (S[0][0] < 0.0) {
-//                 System.err.println("ERROR A");
-//                 System.err.println(new Matrix(S));
-//             }
-//
-//            if (S2.component(0, 0) < 0.0) {
-//                 System.err.println("ERROR B");
-//                 System.err.println(S2);
-//             }
-//
-//            if (inverseS2.component(0, 0) < 0.0) {
-//                 System.err.println("ERROR C");
-//                 System.err.println("S:\n" + new Matrix(S));
-//                 System.err.println("S2:\n" + S2);
-//                 System.err.println(inverseS2);
-//             }
 } catch (IllegalDimension illegalDimension) {
 illegalDimension.printStackTrace();
 }
@@ -241,10 +215,6 @@ setupWishartStatistics(priorModel);
 final double[][] scaleMatrix = getOperationScaleMatrixAndSetObservationCount();
 final double treeDf = numberObservations;
 final double df = priorDf + treeDf * pathWeight;
-//        if (scaleMatrix[0][0] < 0.0) {
-//             System.err.println("ERROR");
-//             System.err.println(new Matrix(scaleMatrix));
-//         }
 double[][] draw = WishartDistribution.nextWishart(df, scaleMatrix);
 //        int tries  = 0;
 //        int limit = 100;

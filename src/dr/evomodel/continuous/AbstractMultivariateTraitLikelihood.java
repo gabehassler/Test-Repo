@@ -8,16 +8,13 @@ import dr.inference.distribution.MultivariateDistributionLikelihood;
 import dr.inference.loggers.LogColumn;
 import dr.inference.loggers.NumberColumn;
 import dr.inference.model.*;
-import dr.math.MathUtils;
 import dr.math.distributions.MultivariateDistribution;
 import dr.math.distributions.MultivariateNormalDistribution;
-import dr.stats.DiscreteStatistics;
 import dr.util.Author;
 import dr.util.Citable;
 import dr.util.Citation;
 import dr.util.CommonCitations;
 import dr.xml.*;
-import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import java.util.ArrayList;
@@ -37,7 +34,6 @@ public static final String SCALE_BY_TIME = "scaleByTime";
 public static final String SUBSTITUTIONS = "substitutions";
 public static final String SAMPLING_DENSITY = "samplingDensity";
 public static final String INTEGRATE = "integrateInternalTraits";
-public static final String STANDARDIZE_TRAITS = "standardizeTraits";
 public static final String RECIPROCAL_RATES = "reciprocalRates";
 public static final String PRIOR_SAMPLE_SIZE = "priorSampleSize";
 public static final String RANDOM_SAMPLE = "randomSample";
@@ -576,7 +572,6 @@ boolean useTreeLength = xo.getAttribute(USE_TREE_LENGTH, false);
 boolean scaleByTime = xo.getAttribute(SCALE_BY_TIME, false);
 boolean reciprocalRates = xo.getAttribute(RECIPROCAL_RATES, false);
 boolean reportAsMultivariate = xo.getAttribute(REPORT_MULTIVARIATE, true);
-boolean standardizeTraits = xo.getAttribute(STANDARDIZE_TRAITS, false);
 BranchRateModel rateModel = (BranchRateModel) xo.getChild(BranchRateModel.class);
 List<BranchRateModel> driftModels = null;
 if (xo.hasChildNamed(DRIFT_MODELS)) {
@@ -627,34 +622,6 @@ Parameter deltaParameter = null;
 if (xo.hasChildNamed("delta")) {
 XMLObject cxo = xo.getChild("delta");
 deltaParameter = (Parameter) cxo.getChild(Parameter.class);
-}
-if (standardizeTraits) {
-//                standardize(traitParameter);
-//                dimTrait = diffusionModel.getPrecisionmatrix().length;
-//                        dim = traitParameter != null ? traitParameter.getParameter(0).getDimension() : 0;
-//                        numData = dim / dimTrait;
-//                System.err.println(traitParameter.getDimension());
-//                System.err.println(traitParameter.getParameterCount());
-//                System.err.println(traitParameter.getParameter(0).getDimension());
-//                System.exit(-1);
-int numTraits = traitParameter.getParameter(0).getDimension();
-int numObservations = traitParameter.getParameterCount();
-StringBuilder sb = new StringBuilder();
-sb.append("Traits have been standardized.  Use following to transform values back to original scale.\n");
-for (int trait = 0; trait < numTraits; ++trait) {
-double[] values = new double[numObservations];
-for (int obs = 0; obs < numObservations; ++obs) {
-values[obs] = traitParameter.getParameter(obs).getParameterValue(trait);
-}
-double traitMean = DiscreteStatistics.mean(values);
-double traitSD = Math.sqrt(DiscreteStatistics.variance(values, traitMean));
-sb.append("\tDimension " + (trait + 1) + ": multiply by " + traitSD + " then add " + traitMean + "\n");
-for (int obs = 0; obs < numObservations; ++obs) {
-traitParameter.getParameter(obs).setParameterValue(trait,
-(values[obs] - traitMean) / traitSD);
-}
-}
-Logger.getLogger("dr.evomodel").info(sb.toString());
 }
 AbstractMultivariateTraitLikelihood like;
 if (integrate) {
@@ -786,7 +753,6 @@ AttributeRule.newBooleanRule(REPORT_MULTIVARIATE, true),
 AttributeRule.newBooleanRule(USE_TREE_LENGTH, true),
 AttributeRule.newBooleanRule(SCALE_BY_TIME, true),
 AttributeRule.newBooleanRule(RECIPROCAL_RATES, true),
-AttributeRule.newBooleanRule(STANDARDIZE_TRAITS, true),
 AttributeRule.newBooleanRule(CACHE_BRANCHES, true),
 AttributeRule.newIntegerRule(RANDOM_SAMPLE, true),
 AttributeRule.newBooleanRule(IGNORE_PHYLOGENY, true),

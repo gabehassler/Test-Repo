@@ -57,8 +57,7 @@ boolean[] updateNode;
 public BeagleBranchLikelihood(PatternList patternList, //
 TreeModel treeModel, //
 BranchModel branchModel, //
-SiteRateModel siteRateModel, //
-FrequencyModel freqModel, //
+SiteRateModel siteRateModel, FrequencyModel freqModel, //
 BranchRateModel branchRateModel //
 ) {
 this.patternList = patternList;

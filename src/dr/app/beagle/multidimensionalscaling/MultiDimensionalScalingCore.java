@@ -8,5 +8,4 @@ double calculateLogLikelihood();
 void storeState();
 void restoreState();
 void makeDirty();
-void acceptState();
 }

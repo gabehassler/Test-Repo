@@ -2,9 +2,7 @@ package dr.inference.model;
 import dr.math.matrixAlgebra.Matrix;
 import dr.util.Citable;
 import dr.util.Citation;
-import java.lang.reflect.Array;
 import java.util.List;
-import java.util.Vector;
 public class LatentFactorModel extends AbstractModelLikelihood implements Citable {
 //    private Matrix data;
 //    private Matrix factors;
@@ -40,11 +38,6 @@ private double logDetCol;
 private double storedLogDetCol;
 private boolean[][] changed;
 private boolean[][] storedChanged;
-private boolean RecomputeResiduals=false;
-private boolean RecomputeFactors=false;
-private Vector<Integer> changedValues;
-private boolean factorsKnown=false;
-private boolean storedFactorsKnown=false;
 private double[] residual;
 private double[] LxF;
 private double[] storedResidual;
@@ -55,10 +48,6 @@ DiagonalMatrix rowPrecision, DiagonalMatrix colPrecision,
 boolean scaleData, Parameter continuous, boolean newModel
 ) {
 super("");
-changedValues=new Vector<Integer>();
-for (int i = 0; i <data.getDimension(); i++) {
-changedValues.add(i);
-}
 //        data = new Matrix(dataIn.getParameterAsMatrix());
 //        factors = new Matrix(factorsIn.getParameterAsMatrix());
 //        loadings = new Matrix(loadingsIn.getParameterAsMatrix());
@@ -216,29 +205,18 @@ answer[i*col+j]=Left.getParameterValue(i,j)+Right.getParameterValue(i,j);
 private void subtract(MatrixParameter Left, double[] Right, double[] answer){
 int row=Left.getRowDimension();
 int col=Left.getColumnDimension();
-if(!RecomputeResiduals && LxFKnown || !RecomputeFactors && !factorsKnown){
-while(!changedValues.isEmpty()){
-int id=changedValues.remove(0);
-int tcol=id/row;
-int trow=id%row;
-//                System.out.println(Left.getParameterValue(id)==Left.getParameterValue(tcol,trow));
-answer[trow*col+tcol]=Left.getParameterValue(id)-Right[trow*col+tcol];
-}
-}
-else{
 for (int i = 0; i <row ; i++) {
 if(continuous.getParameterValue(i)!=0 ||newModel){
 for (int j = 0; j < col; j++) {
 answer[i*col+j]=Left.getParameterValue(i,j)-Right[i*col+j];
 }
 }
-//              else{
-//                  for (int j = 0; j <col; j++) {
-//                        Left.setParameterValueQuietly(i,j, Right[i*col+j]);
-//                  }
-//                    containsDiscrete=true;
+//            else{
+//                for (int j = 0; j <col; j++) {
+//                    Left.setParameterValueQuietly(i,j, Right[i*col+j]);
 //                }
-}
+//                containsDiscrete=true;
+//            }
 }
 //        if(containsDiscrete){
 //            Left.fireParameterChangedEvent();}
@@ -321,11 +299,10 @@ private void computeResiduals() {
 //        if(firstTime || (!factorVariablesChanged.empty() && !loadingVariablesChanged.empty())){
 if(!LxFKnown){
 Multiply(loadings, factors, LxF);
+LxFKnown=true;
 }
 subtract(data, LxF, residual);
-LxFKnown=true;
 residualKnown=true;
-factorsKnown=true;
 //        firstTime=false;}
 //        else{
 //            while(!factorVariablesChanged.empty()){
@@ -354,7 +331,6 @@ storedTrace=trace;
 storedTraceKnown=traceKnown;
 storedResidualKnown=residualKnown;
 storedLxFKnown=LxFKnown;
-storedFactorsKnown=factorsKnown;
 System.arraycopy(residual, 0, storedResidual, 0, residual.length);
 System.arraycopy(LxF, 0, storedLxF, 0, residual.length);
 System.arraycopy(changed, 0, storedChanged, 0, changed.length);
@@ -377,7 +353,6 @@ LxF=storedLxF;
 storedLxF=new double[LxF.length];
 logDetCol=storedLogDetCol;
 logDetColKnown=storedLogDetColKnown;
-factorsKnown=storedFactorsKnown;
 //        System.out.println(data.getParameterValue(10, 19));
 //        int index=0;
 //        for (int i = 0; i <continuous.getDimension() ; i++) {
@@ -399,24 +374,11 @@ if(variable==getScaledData()){
 residualKnown=false;
 traceKnown=false;
 likelihoodKnown=false;
-if(!RecomputeResiduals){
-if(index!=-1)
-changedValues.add(index);
-else
-LxFKnown=false;
-}
 }
 if(variable==factors){
 //            for (int i = 0; i <loadings.getRowDimension() ; i++) {
 //                changed[i][index/factors.getRowDimension()]=true;
 //            }
-if(!RecomputeFactors){
-factorsKnown=false;
-if(index!=-1)
-for (int i = 0; i <data.getRowDimension() ; i++) {
-changedValues.add(index);
-}
-}
 //            factorVariablesChanged.push(index);
 LxFKnown=false;
 residualKnown=false;
@@ -515,7 +477,7 @@ trace=TDTTrace(residual, colPrecision);
 //            }
 //        }
 //        System.out.println(expPart);
-return -.5*trace + .5*data.getColumnDimension()*logDetCol +.5*data.getRowDimension()
+return -.5*trace + .5*data.getColumnDimension()*logDetCol
 -.5*data.getRowDimension()*data.getColumnDimension()*Math.log(2.0 * StrictMath.PI);
 }
 //    public void setPathParameter(double beta){

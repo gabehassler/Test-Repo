@@ -3,6 +3,7 @@ import dr.evolution.io.Importer;
 import dr.evolution.io.NewickImporter;
 import dr.evolution.tree.*;
 import dr.evolution.util.Taxon;
+import dr.evolution.util.TimeScale;
 import dr.evolution.util.Units;
 import dr.evoxml.util.XMLUnits;
 import dr.xml.*;
@@ -35,13 +36,13 @@ if (xo.hasAttribute(USING_DATES)) {
 usingDates = xo.getAttribute(USING_DATES, true);
 }
 boolean usingHeights = false;
-if (xo.hasAttribute(USING_HEIGHTS)) {
+if(xo.hasAttribute(USING_HEIGHTS)) {
 usingHeights = xo.getAttribute(USING_HEIGHTS, true);
 }
 //        System.out.println("UsingDates=" + usingDates + " usingHeights= " + usingHeights);
 if (usingDates && usingHeights) {
 throw new XMLParseException("Unable to use both dates and node heights. Specify value of usingDates attribute.");
-}
+} 
 //		else if (!usingDates && !usingHeights) {
 //			System.out.println("Tree is assumed to be ultrametric");
 //		}
@@ -110,7 +111,7 @@ tree.setNodeHeight(tree.getInternalNode(i), height);
 }
 }// END: i loop
 MutableTree.Utils.correctHeightsForTips(tree);
-} else if (!usingDates && !usingHeights) {
+} else if(!usingDates && !usingHeights) {
 System.out.println("Tree is assumed to be ultrametric");
 // not using dates or heights
 for (int i = 0; i < tree.getTaxonCount(); i++) {
@@ -142,7 +143,6 @@ tree.setNodeHeight(n, tree.getNodeHeight(n) * scale);
 }
 }
 //System.out.println("Constructed newick tree = " + Tree.Utils.uniqueNewick(tree, tree.getRoot()));
-System.err.println(tree.toString());
 return tree;
 }
 //************************************************************************

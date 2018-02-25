@@ -3,26 +3,24 @@ import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
 import dr.evomodel.tree.TreeModel;
 import dr.evomodelxml.operators.SubtreeJumpOperatorParser;
+import dr.evomodelxml.operators.SubtreeSlideOperatorParser;
 import dr.inference.operators.*;
 import dr.math.MathUtils;
 import java.util.ArrayList;
 import java.util.List;
 public class SubtreeJumpOperator extends AbstractTreeOperator implements CoercableMCMCOperator {
-private static final double SCALE_ALPHA = 10.0;
-private double bias = 0.0;
-private final TreeModel tree;
-private final CoercionMode mode;
-private final boolean arctanTransform;;
-public SubtreeJumpOperator(TreeModel tree, double weight, double bias, boolean arctanTransform, CoercionMode mode) {
+private TreeModel tree = null;
+private double size = 1;
+private CoercionMode mode = CoercionMode.DEFAULT;
+public SubtreeJumpOperator(TreeModel tree, double weight, double size, CoercionMode mode) {
 this.tree = tree;
 setWeight(weight);
-this.bias = bias;
-this.arctanTransform = arctanTransform;
+this.size = size;
 this.mode = mode;
 }
 public double doOperation() throws OperatorFailedException {
 double logq;
-final double alpha =  (arctanTransform ? Math.atan(bias) * SCALE_ALPHA : Math.log(bias) );
+final double alpha = Math.log(size); // now alpha lives on the real line
 final NodeRef root = tree.getRoot();
 double  maxHeight = tree.getNodeHeight(root);
 NodeRef i;
@@ -126,14 +124,20 @@ return weights[originalIndex] /= sum;
 private double getJumpWeight(double age, double alpha) {
 return Math.pow(age, alpha) + Double.MIN_VALUE;
 }
+public double getSize() {
+return size;
+}
+public void setSize(double size) {
+this.size = size;
+}
 public double getCoercableParameter() {
-return bias;
+return Math.log(getSize());
 }
 public void setCoercableParameter(double value) {
-bias = value;
+setSize(Math.exp(value));
 }
 public double getRawParameter() {
-return bias;
+return getSize();
 }
 public CoercionMode getMode() {
 return mode;
@@ -144,7 +148,7 @@ return 0.234;
 public String getPerformanceSuggestion() {
 double prob = MCMCOperator.Utils.getAcceptanceProbability(this);
 double targetProb = getTargetAcceptanceProbability();
-double ws = OperatorUtils.optimizeWindowSize(bias, Double.MAX_VALUE, prob, targetProb);
+double ws = OperatorUtils.optimizeWindowSize(getSize(), Double.MAX_VALUE, prob, targetProb);
 if (prob < getMinimumGoodAcceptanceLevel()) {
 return "Try decreasing size to about " + ws;
 } else if (prob > getMaximumGoodAcceptanceLevel()) {
