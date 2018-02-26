@@ -1,6 +1,8 @@
+
 package dr.math.interfaces;
+
 public interface ParametrizedOneVariableFunction
-extends OneVariableFunction
+										extends OneVariableFunction
 {
 double[] parameters();
 void setParameters( double[] p);

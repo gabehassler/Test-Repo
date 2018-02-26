@@ -1,4 +1,6 @@
+
 package dr.evomodel.operators;
+
 import dr.evolution.tree.MultivariateTraitTree;
 import dr.evolution.tree.NodeRef;
 import dr.evomodel.continuous.AbstractMultivariateTraitLikelihood;
@@ -12,48 +14,61 @@ import dr.inference.operators.SimpleMCMCOperator;
 import dr.math.MathUtils;
 import dr.util.Citable;
 import dr.xml.*;
+
 import java.util.logging.Logger;
+
 public class OldLatentLiabilityGibbsOperator extends SimpleMCMCOperator implements GibbsOperator {
-public static final String GIBBS_OPERATOR = "oldLatentLiabilityGibbsOperator";
+
+    public static final String GIBBS_OPERATOR = "oldLatentLiabilityGibbsOperator";
 //    public static final String INTERNAL_ONLY = "onlyInternalNodes";
 //    public static final String TIP_WITH_PRIORS_ONLY = "onlyTipsWithPriors";
 //    public static final String NODE_PRIOR = "nodePrior";
 //    public static final String NODE_LABEL = "taxon";
 //    public static final String ROOT_PRIOR = "rootPrior";
-private final MultivariateTraitTree treeModel;
-private final MatrixParameter precisionMatrixParameter;
-private final IntegratedMultivariateTraitLikelihood traitModel;
-private final BinaryLatentLiabilityLikelihood liabilityLikelihood;
-private final int dim;
-private final String traitName;
+
+    private final MultivariateTraitTree treeModel;
+    private final MatrixParameter precisionMatrixParameter;
+    private final IntegratedMultivariateTraitLikelihood traitModel;
+    private final BinaryLatentLiabilityLikelihood liabilityLikelihood;
+
+    private final int dim;
+    private final String traitName;
+
 //    private Map<Taxon, GeoSpatialDistribution> nodeGeoSpatialPrior;
 //    private Map<Taxon, MultivariateNormalDistribution> nodeMVNPrior;
 //    private GeoSpatialCollectionModel parameterPrior = null;
+
 //    private boolean onlyInternalNodes = true;
 //    private boolean onlyTipsWithPriors = true;
 //    private boolean sampleRoot = false;
 //    private double[] rootPriorMean;
 //    private double[][] rootPriorPrecision;
-private final int maxTries = 10000;
-public OldLatentLiabilityGibbsOperator(IntegratedMultivariateTraitLikelihood traitModel,
-BinaryLatentLiabilityLikelihood liabilityLikelihood) {
-super();
-this.traitModel = traitModel;
-this.liabilityLikelihood = liabilityLikelihood;
-this.treeModel = traitModel.getTreeModel();
-this.precisionMatrixParameter = (MatrixParameter) traitModel.getDiffusionModel().getPrecisionParameter();
-this.traitName = traitModel.getTraitName();
-this.dim = traitModel.getDimTrait();
-StringBuilder sb = new StringBuilder();
-sb.append("Using a latent trait Gibbs operator.  Please cite:");
-sb.append(Citable.Utils.getCitationString(liabilityLikelihood));
-Logger.getLogger("dr.evomodel.continuous").info(sb.toString());
-}
+
+    private final int maxTries = 10000;
+
+    public OldLatentLiabilityGibbsOperator(IntegratedMultivariateTraitLikelihood traitModel,
+                                           BinaryLatentLiabilityLikelihood liabilityLikelihood) {
+        super();
+        this.traitModel = traitModel;
+        this.liabilityLikelihood = liabilityLikelihood;
+
+        this.treeModel = traitModel.getTreeModel();
+        this.precisionMatrixParameter = (MatrixParameter) traitModel.getDiffusionModel().getPrecisionParameter();
+        this.traitName = traitModel.getTraitName();
+        this.dim = traitModel.getDimTrait();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Using a latent trait Gibbs operator.  Please cite:");
+        sb.append(Citable.Utils.getCitationString(liabilityLikelihood));
+        Logger.getLogger("dr.evomodel.continuous").info(sb.toString());
+    }
+
 //    public void setRootPrior(MultivariateNormalDistribution rootPrior) {
 //        rootPriorMean = rootPrior.getMean();
 //        rootPriorPrecision = rootPrior.getScaleMatrix();
 //        sampleRoot = true;
 //    }
+
 //    public void setTaxonPrior(Taxon taxon, MultivariateDistribution distribution) {
 //
 //        if (distribution instanceof GeoSpatialDistribution) {
@@ -75,9 +90,11 @@ Logger.getLogger("dr.evomodel.continuous").info(sb.toString());
 //    public void setParameterPrior(GeoSpatialCollectionModel distribution) {
 //        parameterPrior = distribution;
 //    }
-public int getStepCount() {
-return 1;
-}
+
+    public int getStepCount() {
+        return 1;
+    }
+
 //    private boolean nodeGeoSpatialPriorExists(NodeRef node) {
 //        return nodeGeoSpatialPrior != null && nodeGeoSpatialPrior.containsKey(treeModel.getNodeTaxon(node));
 //    }
@@ -85,16 +102,22 @@ return 1;
 //    private boolean nodeMVNPriorExists(NodeRef node) {
 //        return nodeMVNPrior != null && nodeMVNPrior.containsKey(treeModel.getNodeTaxon(node));
 //    }
-public double doOperation() throws OperatorFailedException {
-traitModel.redrawAncestralStates();
-NodeRef node = treeModel.getNode(MathUtils.nextInt(treeModel.getExternalNodeCount()));
-int tip = node.getNumber();
-// Draw truncated MVN using rejection sampling
-do {
-// Nothing
-} while (!liabilityLikelihood.validTraitForTip(tip));
+
+    public double doOperation() throws OperatorFailedException {
+
+        traitModel.redrawAncestralStates();
+
+        NodeRef node = treeModel.getNode(MathUtils.nextInt(treeModel.getExternalNodeCount()));
+        int tip = node.getNumber();
+
+        // Draw truncated MVN using rejection sampling
+        do {
+            // Nothing
+        } while (!liabilityLikelihood.validTraitForTip(tip));
+
 //        NodeRef node = null;
 //        final NodeRef root = treeModel.getRoot();
+
 //        while (node == null) {
 //            if (onlyInternalNodes)
 //                node = treeModel.getInternalNode(MathUtils.nextInt(
@@ -149,8 +172,10 @@ do {
 //
 //        } while (parameterPriorExists &&
 //                (parameterPrior.getLogLikelihood() == Double.NEGATIVE_INFINITY));
-return 0;
-}
+
+        return 0;
+    }
+
 //    private MeanPrecision operateNotRoot(NodeRef node) {
 //
 //        double[][] precision = precisionMatrixParameter.getParameterAsMatrix();
@@ -190,14 +215,17 @@ return 0;
 //
 //        return new MeanPrecision(mean,precision);
 //    }
-class MeanPrecision {
-final double[] mean;
-final double[][] precision;
-MeanPrecision(double[] mean, double[][] precision) {
-this.mean = mean;
-this.precision = precision;
-}
-}
+
+    class MeanPrecision {
+        final double[] mean;
+        final double[][] precision;
+
+        MeanPrecision(double[] mean, double[][] precision) {
+            this.mean = mean;
+            this.precision = precision;
+        }
+    }
+
 //    private MeanPrecision operateRoot(NodeRef node) {
 //
 //        double[] trait;
@@ -237,46 +265,63 @@ this.precision = precision;
 //
 //        return new MeanPrecision(trait,precision);
 //    }
-public String getPerformanceSuggestion() {
-return null;
-}
-public String getOperatorName() {
-return GIBBS_OPERATOR;
-}
-public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-public String getParserName() {
-return GIBBS_OPERATOR;
-}
-public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-double weight = xo.getDoubleAttribute(WEIGHT);
+
+    public String getPerformanceSuggestion() {
+        return null;
+    }
+
+    public String getOperatorName() {
+        return GIBBS_OPERATOR;
+    }
+
+    public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
+
+        public String getParserName() {
+            return GIBBS_OPERATOR;
+        }
+
+        public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
+            double weight = xo.getDoubleAttribute(WEIGHT);
 //            boolean onlyInternalNodes = xo.getAttribute(INTERNAL_ONLY, true);
 //            boolean onlyTipsWithPriors = xo.getAttribute(TIP_WITH_PRIORS_ONLY, true);
 //            boolean onlyInternalNodes = true;
 //            boolean onlyTipsWithPriors = true;
-IntegratedMultivariateTraitLikelihood traitModel = (IntegratedMultivariateTraitLikelihood)
-xo.getChild(AbstractMultivariateTraitLikelihood.class);
-BinaryLatentLiabilityLikelihood liabilityLikelihood = (BinaryLatentLiabilityLikelihood)
-xo.getChild(BinaryLatentLiabilityLikelihood.class);
-OldLatentLiabilityGibbsOperator operator = new OldLatentLiabilityGibbsOperator(traitModel, liabilityLikelihood);
-operator.setWeight(weight);
-return operator;
-}
-//************************************************************************
-// AbstractXMLObjectParser implementation
-//************************************************************************
-public String getParserDescription() {
-return "This element returns a multivariate Gibbs operator on traits for tip nodes under a latent liability model.";
-}
-public Class getReturnType() {
-return MCMCOperator.class;
-}
-public XMLSyntaxRule[] getSyntaxRules() {
-return rules;
-}
-private final XMLSyntaxRule[] rules = {
-AttributeRule.newDoubleRule(WEIGHT),
-new ElementRule(IntegratedMultivariateTraitLikelihood.class),
-new ElementRule(BinaryLatentLiabilityLikelihood.class),
-};
-};
+
+            IntegratedMultivariateTraitLikelihood traitModel = (IntegratedMultivariateTraitLikelihood)
+                    xo.getChild(AbstractMultivariateTraitLikelihood.class);
+
+            BinaryLatentLiabilityLikelihood liabilityLikelihood = (BinaryLatentLiabilityLikelihood)
+                    xo.getChild(BinaryLatentLiabilityLikelihood.class);
+
+            OldLatentLiabilityGibbsOperator operator = new OldLatentLiabilityGibbsOperator(traitModel, liabilityLikelihood);
+            operator.setWeight(weight);
+
+            return operator;
+        }
+
+        //************************************************************************
+        // AbstractXMLObjectParser implementation
+        //************************************************************************
+
+        public String getParserDescription() {
+            return "This element returns a multivariate Gibbs operator on traits for tip nodes under a latent liability model.";
+        }
+
+        public Class getReturnType() {
+            return MCMCOperator.class;
+        }
+
+        public XMLSyntaxRule[] getSyntaxRules() {
+            return rules;
+        }
+
+        private final XMLSyntaxRule[] rules = {
+                AttributeRule.newDoubleRule(WEIGHT),
+                new ElementRule(IntegratedMultivariateTraitLikelihood.class),
+                new ElementRule(BinaryLatentLiabilityLikelihood.class),
+        };
+
+    };
+
 }

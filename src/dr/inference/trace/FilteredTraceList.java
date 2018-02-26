@@ -1,6 +1,9 @@
 package dr.inference.trace;
+
 public abstract class FilteredTraceList implements TraceList {
+
 //    protected boolean[] selected; // length = values[].length = getValuesSize, all must be true initially
+
 //    private void createSelected() { // will init in updateSelected()
 //        if (getTrace(0) != null) {
 //            selected = new boolean[getTrace(0).getValuesSize()];
@@ -8,41 +11,49 @@ public abstract class FilteredTraceList implements TraceList {
 //            throw new RuntimeException("Cannot initial filters ! getTrace(0) failed !");
 //        }
 //    }
+
 //    private void initSelected() {
 //        for (int i = 0; i < selected.length; i++) {
 //            selected[i] = true;
 //        }
 //    }
-public boolean hasFilter(int traceIndex) {
+
+    public boolean hasFilter(int traceIndex) {
 //        if (selected == null) return false;
-return getTrace(traceIndex).getFilter() != null;
-}
-public void setFilter(int traceIndex, Filter filter) {
+        return getTrace(traceIndex).getFilter() != null;
+    }
+
+    public void setFilter(int traceIndex, Filter filter) {
 //        if (selected == null) createSelected();
-getTrace(traceIndex).setFilter(filter);
-refreshStatistics();
-}
-public Filter getFilter(int traceIndex) {
+        getTrace(traceIndex).setFilter(filter);
+        refreshStatistics();
+    }
+
+    public Filter getFilter(int traceIndex) {
 //        if (selected == null) return null;
-return getTrace(traceIndex).getFilter();
-}
-public void removeFilter(int traceIndex) {
-getTrace(traceIndex).setFilter(null);
-refreshStatistics();
-}
-public void removeAllFilters() {
-for (int i = 0; i < getTraceCount(); i++) {
-getTrace(i).setFilter(null);
-}
+        return getTrace(traceIndex).getFilter();
+    }
+
+    public void removeFilter(int traceIndex) {
+        getTrace(traceIndex).setFilter(null);
+        refreshStatistics();
+    }
+
+    public void removeAllFilters() {
+        for (int i = 0; i < getTraceCount(); i++) {
+            getTrace(i).setFilter(null);
+        }
 //        selected = null;
-refreshStatistics();// must be after "selected = null"
-}
-protected void refreshStatistics() {
+        refreshStatistics();// must be after "selected = null"
+    }
+
+    protected void refreshStatistics() {
 //        updateSelected();
-for (int i = 0; i < getTraceCount(); i++) {
-analyseTrace(i);
-}
-}
+        for (int i = 0; i < getTraceCount(); i++) {
+            analyseTrace(i);
+        }
+    }
+
 //    private void updateSelected() {
 //        if (selected != null) {
 //            initSelected();

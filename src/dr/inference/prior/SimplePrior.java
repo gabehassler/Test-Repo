@@ -1,6 +1,8 @@
+
 //package dr.inference.prior;
 //
 //import dr.inference.model.Parameter;
+
 //public class SimplePrior implements Prior {
 //
 //	ContinuousVariablePrior cvp;

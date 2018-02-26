@@ -1,4 +1,7 @@
+
 package dr.evolution.tree;
+
 public interface MutableTreeListener {
-void treeChanged(Tree tree);
+
+	void treeChanged(Tree tree);
 }

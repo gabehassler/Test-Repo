@@ -1,4 +1,6 @@
+
 //package dr.inference.prior;
+
 //public class ContinuousVariablePrior {
 //
 //	public static final int UNIFORM = 0;

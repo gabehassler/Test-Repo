@@ -1,4 +1,6 @@
+
 package dr.evomodelxml.branchratemodel;
+
 import dr.evolution.tree.Tree;
 import dr.evolution.util.Taxa;
 import dr.evolution.util.TaxonList;
@@ -9,90 +11,106 @@ import dr.evomodel.branchratemodel.CountableModelMixtureBranchRates;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.model.Parameter;
 import dr.xml.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+
 public class BranchCategoriesParser extends AbstractXMLObjectParser {
-public static final String BRANCH_CATEGORIES = "branchCategories";
-public static final String CATEGORY = "category";
-public static final String ALLOCATION = "rateCategories";
-public static final String RANDOMIZE = "randomize";
-public String getParserName() {
-return BRANCH_CATEGORIES;
-}
-public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-Parameter allocationParameter = (Parameter) xo.getElementFirstChild(ALLOCATION);
-CountableBranchCategoryProvider cladeModel;
-TreeModel treeModel = (TreeModel) xo.getChild(TreeModel.class);
-if (!xo.getAttribute(RANDOMIZE, true)) {
-CountableBranchCategoryProvider.CladeBranchCategoryModel cm = new
-CountableBranchCategoryProvider.CladeBranchCategoryModel(treeModel, allocationParameter);
-for (int i = 0; i < xo.getChildCount(); ++i) {
-if (xo.getChild(i) instanceof XMLObject) {
-XMLObject xoc = (XMLObject) xo.getChild(i);
-if (xoc.getName().equals(LocalClockModelParser.CLADE)) {
-TaxonList taxonList = (TaxonList) xoc.getChild(TaxonList.class);
-boolean includeStem = xoc.getAttribute(LocalClockModelParser.INCLUDE_STEM, false);
-boolean excludeClade = xoc.getAttribute(LocalClockModelParser.EXCLUDE_CLADE, false);
-int rateCategory = xoc.getIntegerAttribute(CATEGORY) - 1; // XML index-start = 1 not 0
-try {
-cm.setClade(taxonList, rateCategory, includeStem, excludeClade, false);
-} catch (Tree.MissingTaxonException e) {
-throw new XMLParseException("Unable to find taxon for clade in countable mixture model: " + e.getMessage());
-}
-}  else if (xoc.getName().equals(LocalClockModelParser.TRUNK)) {
-TaxonList taxonList = (TaxonList) xoc.getChild(TaxonList.class);
-boolean includeStem = xoc.getAttribute(LocalClockModelParser.INCLUDE_STEM, false);
-boolean excludeClade = xoc.getAttribute(LocalClockModelParser.EXCLUDE_CLADE, false);
-int rateCategory = xoc.getIntegerAttribute(CATEGORY) - 1; // XML index-start = 1 not 0
-try {
-cm.setClade(taxonList, rateCategory, includeStem, excludeClade, true);
-} catch (Tree.MissingTaxonException e) {
-throw new XMLParseException("Unable to find taxon for trunk in countable mixture model: " + e.getMessage());
-}
-}
-}
-}
-cladeModel = cm;
-} else {
-CountableBranchCategoryProvider.IndependentBranchCategoryModel cm = new CountableBranchCategoryProvider.IndependentBranchCategoryModel(treeModel, allocationParameter);
-cm.randomize();
-cladeModel = cm;
-}
-return cladeModel;
-}
-//************************************************************************
-// AbstractXMLObjectParser implementation
-//************************************************************************
-public String getParserDescription() {
-return
-"This element provides a set of branch categories.";
-}
-public Class getReturnType() {
-return CountableBranchCategoryProvider.class;
-}
-public XMLSyntaxRule[] getSyntaxRules() {
-return rules;
-}
-private final XMLSyntaxRule[] rules = {
-new ElementRule(TreeModel.class),
-new ElementRule(ALLOCATION, Parameter.class, "Allocation parameter", false),
-AttributeRule.newBooleanRule(RANDOMIZE, true),
-new ElementRule(LocalClockModelParser.CLADE,
-new XMLSyntaxRule[]{
+
+    public static final String BRANCH_CATEGORIES = "branchCategories";
+    public static final String CATEGORY = "category";
+    public static final String ALLOCATION = "rateCategories";
+
+    public static final String RANDOMIZE = "randomize";
+
+    public String getParserName() {
+        return BRANCH_CATEGORIES;
+    }
+
+    public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
+        Parameter allocationParameter = (Parameter) xo.getElementFirstChild(ALLOCATION);
+        CountableBranchCategoryProvider cladeModel;
+        TreeModel treeModel = (TreeModel) xo.getChild(TreeModel.class);
+
+        if (!xo.getAttribute(RANDOMIZE, true)) {
+            CountableBranchCategoryProvider.CladeBranchCategoryModel cm = new
+                    CountableBranchCategoryProvider.CladeBranchCategoryModel(treeModel, allocationParameter);
+            for (int i = 0; i < xo.getChildCount(); ++i) {
+                if (xo.getChild(i) instanceof XMLObject) {
+                    XMLObject xoc = (XMLObject) xo.getChild(i);
+                    if (xoc.getName().equals(LocalClockModelParser.CLADE)) {
+                        TaxonList taxonList = (TaxonList) xoc.getChild(TaxonList.class);
+
+                        boolean includeStem = xoc.getAttribute(LocalClockModelParser.INCLUDE_STEM, false);
+                        boolean excludeClade = xoc.getAttribute(LocalClockModelParser.EXCLUDE_CLADE, false);
+                        int rateCategory = xoc.getIntegerAttribute(CATEGORY) - 1; // XML index-start = 1 not 0
+                        try {
+                            cm.setClade(taxonList, rateCategory, includeStem, excludeClade, false);
+                        } catch (Tree.MissingTaxonException e) {
+                            throw new XMLParseException("Unable to find taxon for clade in countable mixture model: " + e.getMessage());
+                        }
+                    }  else if (xoc.getName().equals(LocalClockModelParser.TRUNK)) {
+                        TaxonList taxonList = (TaxonList) xoc.getChild(TaxonList.class);
+
+                        boolean includeStem = xoc.getAttribute(LocalClockModelParser.INCLUDE_STEM, false);
+                        boolean excludeClade = xoc.getAttribute(LocalClockModelParser.EXCLUDE_CLADE, false);
+                        int rateCategory = xoc.getIntegerAttribute(CATEGORY) - 1; // XML index-start = 1 not 0
+                        try {
+                            cm.setClade(taxonList, rateCategory, includeStem, excludeClade, true);
+                        } catch (Tree.MissingTaxonException e) {
+                            throw new XMLParseException("Unable to find taxon for trunk in countable mixture model: " + e.getMessage());
+                        }
+                    }
+                }
+            }
+            cladeModel = cm;
+        } else {
+            CountableBranchCategoryProvider.IndependentBranchCategoryModel cm = new CountableBranchCategoryProvider.IndependentBranchCategoryModel(treeModel, allocationParameter);
+            cm.randomize();
+            cladeModel = cm;
+        }
+
+        return cladeModel;
+    }
+
+    //************************************************************************
+    // AbstractXMLObjectParser implementation
+    //************************************************************************
+
+    public String getParserDescription() {
+        return
+                "This element provides a set of branch categories.";
+    }
+
+    public Class getReturnType() {
+        return CountableBranchCategoryProvider.class;
+    }
+
+    public XMLSyntaxRule[] getSyntaxRules() {
+        return rules;
+    }
+
+    private final XMLSyntaxRule[] rules = {
+            new ElementRule(TreeModel.class),
+            new ElementRule(ALLOCATION, Parameter.class, "Allocation parameter", false),
+            AttributeRule.newBooleanRule(RANDOMIZE, true),
+            new ElementRule(LocalClockModelParser.CLADE,
+                    new XMLSyntaxRule[]{
 //                            AttributeRule.newBooleanRule(RELATIVE, true),
-AttributeRule.newIntegerRule(CATEGORY, false),
-AttributeRule.newBooleanRule(LocalClockModelParser.INCLUDE_STEM, true, "determines whether or not the stem branch above this clade is included in the siteModel (default false)."),
-AttributeRule.newBooleanRule(LocalClockModelParser.EXCLUDE_CLADE, true, "determines whether to exclude actual branches of the clade from the siteModel (default false)."),
-new ElementRule(Taxa.class, "A set of taxa which defines a clade to apply a different site model to"),
-}, 0, Integer.MAX_VALUE),
-new ElementRule(LocalClockModelParser.TRUNK,
-new XMLSyntaxRule[]{
+                            AttributeRule.newIntegerRule(CATEGORY, false),
+                            AttributeRule.newBooleanRule(LocalClockModelParser.INCLUDE_STEM, true, "determines whether or not the stem branch above this clade is included in the siteModel (default false)."),
+                            AttributeRule.newBooleanRule(LocalClockModelParser.EXCLUDE_CLADE, true, "determines whether to exclude actual branches of the clade from the siteModel (default false)."),
+                            new ElementRule(Taxa.class, "A set of taxa which defines a clade to apply a different site model to"),
+                    }, 0, Integer.MAX_VALUE),
+            new ElementRule(LocalClockModelParser.TRUNK,
+                    new XMLSyntaxRule[]{
 //                            AttributeRule.newBooleanRule(RELATIVE, true),
-AttributeRule.newIntegerRule(CATEGORY, false),
-AttributeRule.newBooleanRule(LocalClockModelParser.INCLUDE_STEM, true, "determines whether or not the stem branch above this clade is included in the siteModel (default false)."),
-AttributeRule.newBooleanRule(LocalClockModelParser.EXCLUDE_CLADE, true, "determines whether to exclude actual branches of the clade from the siteModel (default false)."),
-new ElementRule(Taxa.class, "A set of taxa which defines a clade to apply a different site model to"),
-}, 0, Integer.MAX_VALUE),
-};
+                            AttributeRule.newIntegerRule(CATEGORY, false),
+                            AttributeRule.newBooleanRule(LocalClockModelParser.INCLUDE_STEM, true, "determines whether or not the stem branch above this clade is included in the siteModel (default false)."),
+                            AttributeRule.newBooleanRule(LocalClockModelParser.EXCLUDE_CLADE, true, "determines whether to exclude actual branches of the clade from the siteModel (default false)."),
+                            new ElementRule(Taxa.class, "A set of taxa which defines a clade to apply a different site model to"),
+                    }, 0, Integer.MAX_VALUE),
+    };
 }

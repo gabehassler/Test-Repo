@@ -1,7 +1,9 @@
+
 //package dr.inference.prior;
 //
 //import dr.inference.model.Model;
 //import dr.inference.model.Statistic;
+
 //public class LogPriorStatistic extends Statistic.Abstract {
 //
 //	public LogPriorStatistic(Prior prior, Model model) {

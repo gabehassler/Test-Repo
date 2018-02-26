@@ -1,26 +1,39 @@
+
 package dr.inference.model;
+
 import dr.xml.*;
+
 import java.util.ArrayList;
 import java.util.List;
+
 //import java.util.StringTokenizer;
+
 public class BlockDiagonalMatrixParameter extends MatrixParameter {
-public final static String BLOCK_DIAGONAL_MATRIX_PARAMETER = "blockDiagonalMatrixParameter";
-private final List<MatrixParameter> parameterList;
-public BlockDiagonalMatrixParameter(String name) {
-super(name);
-parameterList = new ArrayList<MatrixParameter>();
-rowOffset = new ArrayList<Integer>();
-colOffset = new ArrayList<Integer>();
-}
-private final List<Integer> rowOffset;
-private final List<Integer> colOffset;
+
+    public final static String BLOCK_DIAGONAL_MATRIX_PARAMETER = "blockDiagonalMatrixParameter";
+
+    private final List<MatrixParameter> parameterList;
+
+    public BlockDiagonalMatrixParameter(String name) {
+        super(name);
+        parameterList = new ArrayList<MatrixParameter>();
+        rowOffset = new ArrayList<Integer>();
+        colOffset = new ArrayList<Integer>();
+    }
+
+    private final List<Integer> rowOffset;
+    private final List<Integer> colOffset;
+
 //    public BlockDiagonalMatrixParameter(String name, Parameter[] parameters) {
 //        super(name, parameters);
 //        dimensionsEstablished = true;
 //    }
-public double getParameterValue(int row, int col) {
-return 0; // TODO
-}
+
+    public double getParameterValue(int row, int col) {
+
+        return 0; // TODO
+    }
+
 //    public double[][] getParameterAsMatrix() {
 //        final int I = getRowDimension();
 //        final int J = getColumnDimension();
@@ -59,12 +72,15 @@ return 0; // TODO
 //            }
 //        }
 //    }
-public int getColumnDimension() {
-return columnDimension;
-}
-public int getRowDimension() {
-return rowDimension;
-}
+
+    public int getColumnDimension() {
+        return columnDimension;
+    }
+
+    public int getRowDimension() {
+        return rowDimension;
+    }
+
 //    public String toSymmetricString() {
 //        StringBuilder sb = new StringBuilder("{");
 //        int dim = getRowDimension();
@@ -80,6 +96,7 @@ return rowDimension;
 //        sb.append("}");
 //        return sb.toString();
 //    }
+
 //    public static BlockDiagonalMatrixParameter parseFromSymmetricString(String string) {
 //        String clip = string.replace("{", "").replace("}", "").trim();
 //        StringTokenizer st = new StringTokenizer(clip, ",");
@@ -114,37 +131,51 @@ return rowDimension;
 //        }
 //        return new BlockDiagonalMatrixParameter(null, parameter);
 //    }
+
 //    private boolean dimensionsEstablished = false;
-private int columnDimension = 0;
-private int rowDimension = 0;
-public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-public String getParserName() {
-return BLOCK_DIAGONAL_MATRIX_PARAMETER;
-}
-public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-final String name = xo.hasId() ? xo.getId() : null;
-BlockDiagonalMatrixParameter matrixParameter
-= new BlockDiagonalMatrixParameter(name);
-for (int i = 0; i < xo.getChildCount(); i++) {
-MatrixParameter parameter = (MatrixParameter) xo.getChild(i);
-matrixParameter.addParameter(parameter); // TODO Double-check
-}
-return matrixParameter;
-}
-//************************************************************************
-// AbstractXMLObjectParser implementation
-//************************************************************************
-public String getParserDescription() {
-return "A matrix parameter constructed from its component parameters.";
-}
-public XMLSyntaxRule[] getSyntaxRules() {
-return rules;
-}
-private final XMLSyntaxRule[] rules = {
-new ElementRule(MatrixParameter.class, 0, Integer.MAX_VALUE),
-};
-public Class getReturnType() {
-return BlockDiagonalMatrixParameter.class;
-}
-};
+    private int columnDimension = 0;
+    private int rowDimension = 0;
+
+
+    public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
+
+        public String getParserName() {
+            return BLOCK_DIAGONAL_MATRIX_PARAMETER;
+        }
+
+        public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
+            final String name = xo.hasId() ? xo.getId() : null;
+
+            BlockDiagonalMatrixParameter matrixParameter
+                 = new BlockDiagonalMatrixParameter(name);
+
+            for (int i = 0; i < xo.getChildCount(); i++) {
+                MatrixParameter parameter = (MatrixParameter) xo.getChild(i);
+                matrixParameter.addParameter(parameter); // TODO Double-check
+            }
+
+            return matrixParameter;
+        }
+
+        //************************************************************************
+        // AbstractXMLObjectParser implementation
+        //************************************************************************
+
+        public String getParserDescription() {
+            return "A matrix parameter constructed from its component parameters.";
+        }
+
+        public XMLSyntaxRule[] getSyntaxRules() {
+            return rules;
+        }
+
+        private final XMLSyntaxRule[] rules = {
+                new ElementRule(MatrixParameter.class, 0, Integer.MAX_VALUE),
+        };
+
+        public Class getReturnType() {
+            return BlockDiagonalMatrixParameter.class;
+        }
+    };
 }

@@ -1,9 +1,11 @@
+
 //package dr.inference.prior;
 //
 //import dr.inference.model.Parameter;
 //import dr.math.distributions.NormalDistribution;
 //import org.w3c.dom.Document;
 //import org.w3c.dom.Element;
+
 //public class NormalParameterPrior extends AbstractParameterPrior {
 //
 //    /**
