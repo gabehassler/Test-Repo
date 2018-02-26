@@ -1,3 +1,4 @@
+
 package dr.app.beauti.components.tipdatesampling;
 
 import dr.app.beauti.options.AbstractPartitionData;

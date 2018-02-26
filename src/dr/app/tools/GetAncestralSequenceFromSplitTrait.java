@@ -1,3 +1,4 @@
+
 package dr.app.tools;
 
 import dr.app.beast.BeastVersion;
@@ -12,7 +13,6 @@ import dr.inference.trace.TraceException;
 import dr.util.Version;
 import java.util.*;
 import java.io.*;
-
 
 public class GetAncestralSequenceFromSplitTrait {
 

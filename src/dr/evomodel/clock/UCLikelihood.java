@@ -1,3 +1,4 @@
+
 package dr.evomodel.clock;
 
 import dr.evomodel.tree.TreeModel;

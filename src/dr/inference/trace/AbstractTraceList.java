@@ -1,3 +1,4 @@
+
 package dr.inference.trace;
 
 public abstract class AbstractTraceList extends FilteredTraceList {

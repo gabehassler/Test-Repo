@@ -1,3 +1,4 @@
+
 package dr.app.beagle.evomodel.branchmodel.lineagespecific;
 
 import java.util.ArrayList;
@@ -69,8 +70,7 @@ public class BeagleBranchLikelihood implements Likelihood {
 	public BeagleBranchLikelihood(PatternList patternList, //
 			TreeModel treeModel, //
 			BranchModel branchModel, //
-			SiteRateModel siteRateModel, //
-			FrequencyModel freqModel, //
+			SiteRateModel siteRateModel, FrequencyModel freqModel, //
 			BranchRateModel branchRateModel //
 	) {
 

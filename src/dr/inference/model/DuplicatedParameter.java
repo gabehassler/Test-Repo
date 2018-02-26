@@ -1,3 +1,4 @@
+
 package dr.inference.model;
 
 public class DuplicatedParameter extends Parameter.Abstract implements VariableListener {

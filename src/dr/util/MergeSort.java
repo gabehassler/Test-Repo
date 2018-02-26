@@ -1,6 +1,5 @@
 
 package dr.util;
-
 public abstract class MergeSort {
     protected Object           toSort[];
     protected Object           swapSpace[];

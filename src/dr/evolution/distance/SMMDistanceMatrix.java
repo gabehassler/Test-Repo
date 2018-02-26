@@ -1,3 +1,4 @@
+
 package dr.evolution.distance;
 
 import dr.evolution.alignment.PatternList;

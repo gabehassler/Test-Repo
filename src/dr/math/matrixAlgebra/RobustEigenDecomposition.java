@@ -1,3 +1,4 @@
+
 package dr.math.matrixAlgebra;
 
 
@@ -7,7 +8,6 @@ import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.linalg.Property;
 import dr.math.MathUtils;
-
 
 public class RobustEigenDecomposition implements java.io.Serializable {
 	static final long serialVersionUID = 1020;

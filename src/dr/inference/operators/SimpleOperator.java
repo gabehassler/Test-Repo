@@ -1,3 +1,4 @@
+
 package dr.inference.operators;
 
 public abstract class SimpleOperator implements MCMCOperator {

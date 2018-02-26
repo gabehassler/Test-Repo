@@ -1,3 +1,4 @@
+
 package dr.evomodel.arg;
 
 import dr.evomodel.arg.ARGModel.Node;

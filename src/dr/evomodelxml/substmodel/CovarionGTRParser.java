@@ -1,3 +1,4 @@
+
 package dr.evomodelxml.substmodel;
 
 import dr.evolution.datatype.HiddenNucleotides;

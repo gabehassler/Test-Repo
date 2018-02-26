@@ -1,3 +1,4 @@
+
 package dr.evolution.colouring;
 
 import dr.app.beagle.evomodel.substmodel.SubstitutionModel;

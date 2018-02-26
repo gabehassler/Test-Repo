@@ -1,3 +1,4 @@
+
 package dr.evomodelxml.branchratemodel;
 
 //import dr.evomodel.branchratemodel.RandomDiscretizedBranchRates;

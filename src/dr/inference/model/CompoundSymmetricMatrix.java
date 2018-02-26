@@ -1,3 +1,4 @@
+
 package dr.inference.model;
 
 public class CompoundSymmetricMatrix extends MatrixParameter {

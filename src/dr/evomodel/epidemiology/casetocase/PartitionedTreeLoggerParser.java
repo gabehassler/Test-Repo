@@ -1,3 +1,4 @@
+
 package dr.evomodel.epidemiology.casetocase;
 
 import dr.evomodelxml.tree.TreeLoggerParser;

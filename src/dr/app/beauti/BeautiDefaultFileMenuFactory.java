@@ -1,3 +1,4 @@
+
 package dr.app.beauti;
 
 import jam.framework.AbstractFrame;

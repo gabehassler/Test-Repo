@@ -1,3 +1,4 @@
+
 package dr.app.beauti.util;
 
 import javax.swing.*;

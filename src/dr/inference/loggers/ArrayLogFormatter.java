@@ -1,3 +1,4 @@
+
 package dr.inference.loggers;
 
 import dr.inference.trace.Trace;

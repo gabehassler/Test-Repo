@@ -1,3 +1,4 @@
+
 package dr.app.beauti.options;
 
 import dr.evolution.alignment.Patterns;

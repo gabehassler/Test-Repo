@@ -1,3 +1,4 @@
+
 package dr.evomodel.arg.operators;
 
 import dr.evolution.tree.MutableTree;
@@ -11,8 +12,6 @@ import dr.math.MathUtils;
 import dr.xml.*;
 
 import java.util.ArrayList;
-
-
 
 public class ARGExchangeOperator extends SimpleMCMCOperator {
 

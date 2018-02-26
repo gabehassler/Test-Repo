@@ -20,5 +20,4 @@ public interface MultiDimensionalScalingCore {
 
     void makeDirty();
 
-    void acceptState();
 }

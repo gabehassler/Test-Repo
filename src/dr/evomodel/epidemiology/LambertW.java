@@ -1,6 +1,6 @@
 
-package dr.evomodel.epidemiology;
 
+package dr.evomodel.epidemiology;
 
 
 

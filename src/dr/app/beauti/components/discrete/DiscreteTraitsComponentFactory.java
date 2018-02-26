@@ -1,3 +1,4 @@
+
 package dr.app.beauti.components.discrete;
 
 import dr.app.beauti.components.ComponentFactory;

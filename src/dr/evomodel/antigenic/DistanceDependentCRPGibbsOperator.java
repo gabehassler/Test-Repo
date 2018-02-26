@@ -1,3 +1,4 @@
+
 package dr.evomodel.antigenic;
 
 import java.util.logging.Logger;

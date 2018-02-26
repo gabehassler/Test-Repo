@@ -1,3 +1,4 @@
+
 package dr.app.beauti.components.linkedparameters;
 
 import dr.app.beauti.generator.BaseComponentGenerator;

@@ -1,3 +1,4 @@
+
 package dr.evomodelxml.tree;
 
 import dr.evolution.alignment.Patterns;

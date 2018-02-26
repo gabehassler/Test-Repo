@@ -1,3 +1,4 @@
+
 package dr.evomodel.sitemodel;
 
 import dr.evomodel.substmodel.SubstitutionModel;

@@ -3,7 +3,6 @@ package dr.inferencexml.operators;
 
 import dr.inference.distribution.MultivariateDistributionLikelihood;
 import dr.inference.distribution.MultivariateNormalDistributionModel;
-import dr.inference.model.CompoundParameter;
 import dr.inference.model.Parameter;
 import dr.inference.operators.EllipticalSliceOperator;
 import dr.inference.operators.MCMCOperator;
@@ -14,7 +13,6 @@ import dr.xml.*;
 public class EllipticalSliceOperatorParser extends AbstractXMLObjectParser {
 
     public static final String ELLIPTICAL_SLICE_SAMPLER = "ellipticalSliceSampler";
-    public static final String SIGNAL_CONSTITUENT_PARAMETERS = "signalConstituentParameters";
     public static final String DRAW_BY_ROW = "drawByRow";  // TODO What is this?
 
     public String getParserName() {
@@ -29,9 +27,6 @@ public class EllipticalSliceOperatorParser extends AbstractXMLObjectParser {
         if(xo.hasAttribute(DRAW_BY_ROW))
             drawByRowTemp=xo.getBooleanAttribute(DRAW_BY_ROW);
         final boolean drawByRow=drawByRowTemp;
-
-        boolean signal = xo.getAttribute(SIGNAL_CONSTITUENT_PARAMETERS, true);
-        if (!signal && !(variable instanceof CompoundParameter)) signal = true;
 
         GaussianProcessRandomGenerator gaussianProcess = (GaussianProcessRandomGenerator)
                 xo.getChild(GaussianProcessRandomGenerator.class);
@@ -53,7 +48,7 @@ public class EllipticalSliceOperatorParser extends AbstractXMLObjectParser {
                 gaussianProcess = (MultivariateNormalDistributionModel) likelihood.getDistribution();
 
         }
-        EllipticalSliceOperator operator = new EllipticalSliceOperator(variable, gaussianProcess, drawByRow, signal);
+        EllipticalSliceOperator operator = new EllipticalSliceOperator(variable, gaussianProcess, drawByRow);
         operator.setWeight(weight);
         return operator;
     }
@@ -76,7 +71,6 @@ public class EllipticalSliceOperatorParser extends AbstractXMLObjectParser {
 
     private final XMLSyntaxRule[] rules = {
             AttributeRule.newDoubleRule(MCMCOperator.WEIGHT),
-            AttributeRule.newBooleanRule(SIGNAL_CONSTITUENT_PARAMETERS, true),
             new ElementRule(Parameter.class),
             new XORRule(
                     new ElementRule(GaussianProcessRandomGenerator.class),

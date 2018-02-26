@@ -1,3 +1,4 @@
+
 package dr.evomodelxml.sitemodel;
 
 import dr.evomodel.sitemodel.GammaSiteModel;

@@ -1,3 +1,4 @@
+
 package dr.evomodel.treelikelihood;
 
 public class NativeAminoAcidLikelihoodCore extends AbstractLikelihoodCore{

@@ -1,3 +1,4 @@
+
 package dr.inferencexml.distribution;
 
 import dr.inference.distribution.UniformDistributionModel;

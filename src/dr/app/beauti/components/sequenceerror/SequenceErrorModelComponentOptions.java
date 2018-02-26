@@ -1,3 +1,4 @@
+
 package dr.app.beauti.components.sequenceerror;
 
 import dr.app.beauti.options.*;

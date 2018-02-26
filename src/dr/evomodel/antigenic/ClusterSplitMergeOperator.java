@@ -1,3 +1,4 @@
+
 package dr.evomodel.antigenic;
 
 import dr.inference.model.MatrixParameter;

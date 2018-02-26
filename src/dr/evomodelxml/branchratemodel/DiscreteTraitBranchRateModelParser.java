@@ -1,3 +1,4 @@
+
 package dr.evomodelxml.branchratemodel;
 
 import dr.evolution.alignment.PatternList;

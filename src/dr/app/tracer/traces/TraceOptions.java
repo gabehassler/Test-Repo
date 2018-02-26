@@ -1,3 +1,4 @@
+
 package dr.app.tracer.traces;
 
 import dr.math.distributions.KernelDensityEstimatorDistribution;

@@ -1,3 +1,4 @@
+
 package dr.inferencexml.loggers;
 
 import dr.inference.loggers.*;

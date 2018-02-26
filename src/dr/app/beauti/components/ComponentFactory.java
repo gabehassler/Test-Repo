@@ -1,3 +1,4 @@
+
 package dr.app.beauti.components;
 
 import dr.app.beauti.generator.ComponentGenerator;

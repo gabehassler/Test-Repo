@@ -1,3 +1,4 @@
+
 package dr.inferencexml.model;
 
 import dr.inference.model.NotStatistic;

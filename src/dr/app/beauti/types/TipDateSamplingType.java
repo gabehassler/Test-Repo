@@ -1,3 +1,4 @@
+
 package dr.app.beauti.types;
 
 public enum TipDateSamplingType {

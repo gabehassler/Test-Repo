@@ -410,6 +410,10 @@ public final class MarkovChain implements Serializable {
         return isStopped;
     }
 
+    public double evaluate() {
+        return evaluate(likelihood, prior);
+    }
+
     protected double evaluate(Likelihood likelihood, Prior prior) {
 
         double logPosterior = 0.0;

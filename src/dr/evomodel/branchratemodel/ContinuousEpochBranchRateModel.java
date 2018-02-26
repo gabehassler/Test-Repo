@@ -1,3 +1,4 @@
+
 package dr.evomodel.branchratemodel;
 
 import dr.inference.model.Parameter;

@@ -1,3 +1,4 @@
+
 package dr.evolution.coalescent;
 
 public class ScaledDemographic extends DemographicFunction.Abstract {

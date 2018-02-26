@@ -1,3 +1,4 @@
+
 package dr.app.tools;
 
 import dr.app.beast.BeastVersion;
@@ -8,9 +9,6 @@ import dr.util.Version;
 
 import java.io.*;
 import java.util.Hashtable;
-
-
-
 
 import dr.app.beast.BeastVersion;
 import dr.app.util.Arguments;

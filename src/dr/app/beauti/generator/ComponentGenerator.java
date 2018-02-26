@@ -1,3 +1,4 @@
+
 package dr.app.beauti.generator;
 
 import dr.app.beauti.util.XMLWriter;

@@ -1,5 +1,5 @@
-package dr.app.phylogeography.tools;
 
+package dr.app.phylogeography.tools;
 
 import dr.app.tools.TimeSlicer;
 import dr.app.util.Arguments;

@@ -1,3 +1,4 @@
+
 package dr.app.beauti.components.marginalLikelihoodEstimation;
 
 import jam.panels.OptionsPanel;

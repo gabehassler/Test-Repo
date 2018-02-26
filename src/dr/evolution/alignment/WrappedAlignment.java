@@ -1,3 +1,4 @@
+
 package dr.evolution.alignment;
 
 import dr.evolution.datatype.AminoAcids;

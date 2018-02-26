@@ -1,3 +1,4 @@
+
 package dr.evomodel.epidemiology.casetocase.periodpriors;
 
 import dr.xml.*;

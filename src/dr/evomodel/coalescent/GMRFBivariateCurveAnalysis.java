@@ -1,3 +1,4 @@
+
 package dr.evomodel.coalescent;
 
 import dr.inference.trace.LogFileTraces;

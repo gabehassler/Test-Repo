@@ -1,3 +1,4 @@
+
 package dr.app.beauti.alignmentviewer;
 
 import jebl.evolution.sequences.AminoAcids;

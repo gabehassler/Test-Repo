@@ -1,3 +1,4 @@
+
 package dr.app.beauti.components.continuous;
 
 public enum ContinuousSubstModelType {

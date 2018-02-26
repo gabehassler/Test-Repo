@@ -1,3 +1,4 @@
+
 package dr.app.beauti.alignmentviewer;
 
 import javax.swing.*;

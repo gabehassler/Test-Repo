@@ -1,3 +1,4 @@
+
 package dr.app.beauti;
 
 import dr.app.beauti.ancestralStatesPanel.AncestralStatesPanel;

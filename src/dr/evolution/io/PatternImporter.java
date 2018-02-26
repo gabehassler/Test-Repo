@@ -1,3 +1,4 @@
+
 package dr.evolution.io;
 
 import dr.evolution.alignment.Patterns;

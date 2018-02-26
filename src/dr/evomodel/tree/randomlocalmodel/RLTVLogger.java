@@ -1,3 +1,4 @@
+
 package dr.evomodel.tree.randomlocalmodel;
 
 import dr.evolution.tree.NodeRef;

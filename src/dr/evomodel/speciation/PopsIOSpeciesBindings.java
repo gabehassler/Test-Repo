@@ -1,3 +1,4 @@
+
 package dr.evomodel.speciation;
 
 import dr.evolution.tree.NodeRef;

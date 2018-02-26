@@ -1,3 +1,4 @@
+
 package dr.inferencexml.distribution;
 
 import dr.xml.AbstractXMLObjectParser;

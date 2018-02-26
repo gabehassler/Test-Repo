@@ -1,3 +1,4 @@
+
         This file is part of BEAST.
 
         BEAST is free software: you can redistribute it and/or modify

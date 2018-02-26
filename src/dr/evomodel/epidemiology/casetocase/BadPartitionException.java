@@ -1,3 +1,4 @@
+
 package dr.evomodel.epidemiology.casetocase;
 
 public class BadPartitionException extends RuntimeException {

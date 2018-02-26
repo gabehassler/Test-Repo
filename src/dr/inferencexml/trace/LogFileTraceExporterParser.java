@@ -1,3 +1,4 @@
+
 package dr.inferencexml.trace;
 
 import dr.inference.trace.LogFileTraceExporter;

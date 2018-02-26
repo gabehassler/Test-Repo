@@ -68,10 +68,6 @@ public class MultivariateNormalDistributionModel extends AbstractModel implement
         // no intermediates need to be recalculated...
     }
 
-    public Likelihood getLikelihood() {
-        return null;
-    }
-
     protected final void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         distributionKnown = false;
     }

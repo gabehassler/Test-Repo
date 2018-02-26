@@ -1,3 +1,4 @@
+
 package dr.evomodel.speciation;
 
 public abstract class MaskableSpeciationModel extends SpeciationModel {

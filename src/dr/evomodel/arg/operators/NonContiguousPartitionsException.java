@@ -1,3 +1,4 @@
+
 package dr.evomodel.arg.operators;
 
 public class NonContiguousPartitionsException extends Exception {

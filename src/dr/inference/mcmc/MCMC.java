@@ -1,7 +1,6 @@
 
 package dr.inference.mcmc;
 
-import dr.evolution.tree.TreeTrait;
 import dr.inference.loggers.LogColumn;
 import dr.inference.loggers.Loggable;
 import dr.inference.loggers.Logger;
@@ -16,14 +15,19 @@ import dr.util.Identifiable;
 import dr.util.NumberFormatter;
 import dr.xml.Spawnable;
 
-import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 
 public class MCMC implements Identifiable, Spawnable, Loggable {
 
-    public final static String DEBUG_STATE_FILE = "debug.state.file";
-    public final static String DEBUG_WRITE_STATE = "debug.write.state";
+    public final static String LOAD_DUMP_FILE = "load.dump.file";
+    public final static String DUMP_STATE = "dump.state";
+    public final static String DUMP_EVERY = "dump.every";
+
+    // Experimental
+    public final static boolean TEST_CLONING = false;
 
 
     public MCMC(String id) {
@@ -87,10 +91,14 @@ public class MCMC implements Identifiable, Spawnable, Loggable {
         }
         this.delegates = delegates;
 
-        debugStateFile = System.getProperty(DEBUG_STATE_FILE);
-        if (System.getProperty(DEBUG_WRITE_STATE) != null) {
-            long debugWriteState = Long.parseLong(System.getProperty(DEBUG_WRITE_STATE));
-            mc.addMarkovChainListener(new DebugChainListener(debugWriteState));
+        dumpStateFile = System.getProperty(LOAD_DUMP_FILE);
+        if (System.getProperty(DUMP_STATE) != null) {
+            long debugWriteState = Long.parseLong(System.getProperty(DUMP_STATE));
+            mc.addMarkovChainListener(new DebugChainListener(this, debugWriteState, false));
+        }
+        if (System.getProperty(DUMP_EVERY) != null) {
+            long debugWriteEvery = Long.parseLong(System.getProperty(DUMP_EVERY));
+            mc.addMarkovChainListener(new DebugChainListener(this, debugWriteEvery, true));
         }
     }
 
@@ -128,9 +136,6 @@ public class MCMC implements Identifiable, Spawnable, Loggable {
         chain();
     }
 
-    // Experimental
-    public final static boolean TEST_CLONING = false;
-
     public void chain() {
 
         stopping = false;
@@ -145,8 +150,18 @@ public class MCMC implements Identifiable, Spawnable, Loggable {
         }
 
         if (!stopping) {
-            if (debugStateFile != null) {
-                mc = readMarkovChainFromFile(new File(debugStateFile));
+            if (dumpStateFile != null) {
+                double[] savedLnL = new double[1];
+
+                long loadedState = DebugUtils.readStateFromFile(new File(dumpStateFile), savedLnL);
+
+                mc.setCurrentLength(loadedState);
+
+                double lnL = mc.evaluate();
+
+                if (lnL != savedLnL[0]) {
+                   throw new RuntimeException("Dumped lnL does not match loaded state");
+                }
             }
 
             mc.addMarkovChainListener(chainListener);
@@ -172,19 +187,17 @@ public class MCMC implements Identifiable, Spawnable, Loggable {
 
             if (TEST_CLONING) {
                 // TEST Code for cloning the MarkovChain to a file to distribute amongst processors
-                for(MarkovChainDelegate delegate : delegates) {
-                    mc.removeMarkovChainDelegate(delegate);
-                }
-                mc.removeMarkovChainListener(chainListener);
+
+                double lnL1 = mc.getCurrentScore();
 
                 // Write the MarkovChain out and back in again...
-                writeMarkovChainToFile(new File("beast.clone"), mc);
-                mc = readMarkovChainFromFile(new File("beast.clone"));
+                DebugUtils.writeStateToFile(new File("beast.state"), currentState, mc.getCurrentScore());
+                DebugUtils.readStateFromFile(new File("beast.state"), null);
 
-                mc.addMarkovChainListener(chainListener);
+                double lnL2 = mc.evaluate();
 
-                for(MarkovChainDelegate delegate : delegates) {
-                    mc.addMarkovChainDelegate(delegate);
+                if (lnL1 != lnL2) {
+                    throw new RuntimeException("Likelihood different after state load");
                 }
                 // TEST Code end
             }
@@ -200,39 +213,6 @@ public class MCMC implements Identifiable, Spawnable, Loggable {
             }
         }
         timer.stop();
-    }
-
-    protected boolean writeMarkovChainToFile(File file, MarkovChain mc) {
-        OutputStream fileOut = null;
-        try {
-            fileOut = new FileOutputStream(file);
-            ObjectOutputStream out = new ObjectOutputStream(fileOut);
-            out.writeObject(mc);
-            out.close();
-            fileOut.close();
-        } catch (IOException ioe) {
-            System.err.println("Unable to write file: " + ioe.getMessage());
-        }
-        return true;
-    }
-
-    protected MarkovChain readMarkovChainFromFile(File file) {
-        MarkovChain mc = null;
-        try {
-            FileInputStream fileIn =
-                    new FileInputStream(file);
-            ObjectInputStream in = new ObjectInputStream(fileIn);
-            mc = (MarkovChain) in.readObject();
-            in.close();
-            fileIn.close();
-        } catch (IOException ioe) {
-            System.err.println("Unable to read file: " + ioe.getMessage());
-        } catch (ClassNotFoundException cnfe) {
-            System.err.println("Unable to read file: " + cnfe.getMessage());
-            cnfe.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-
-        return mc;
     }
 
     @Override
@@ -262,39 +242,6 @@ public class MCMC implements Identifiable, Spawnable, Loggable {
                 return Double.toString(getTimer().toSeconds());
             }
         }   };
-    }
-
-    class DebugChainListener implements MarkovChainListener {
-        public DebugChainListener(final long writeStateAt) {
-            this.writeStateAt = writeStateAt;
-        }
-        // MarkovChainListener interface *******************************************
-
-        public void currentState(long state, Model currentModel) {
-            if (state == writeStateAt) {
-//                for(MarkovChainDelegate delegate : delegates) {
-//                    mc.removeMarkovChainDelegate(delegate);
-//                }
-//                mc.removeMarkovChainListener(chainListener);
-
-                // Write the MarkovChain out and back in again...
-                String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(Calendar.getInstance().getTime());
-                writeMarkovChainToFile(new File("beast_debug_" + timeStamp), mc);
-
-//                mc.addMarkovChainListener(chainListener);
-//
-//                for(MarkovChainDelegate delegate : delegates) {
-//                    mc.addMarkovChainDelegate(delegate);
-//                }
-
-            }
-        }
-
-        public void bestState(long state, Model bestModel) { }
-
-        public void finished(long chainLength) { }
-
-        private final long writeStateAt;
     }
 
     private final MarkovChainListener chainListener = new MarkovChainListener() {
@@ -539,7 +486,7 @@ public class MCMC implements Identifiable, Spawnable, Loggable {
 
     // PRIVATE TRANSIENTS
 
-    private String debugStateFile = null;
+    private String dumpStateFile = null;
 
     //private FileLogger operatorLogger = null;
     protected final boolean isAdapting = true;

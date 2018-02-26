@@ -1,3 +1,4 @@
+
 package dr.app.beagle.evomodel.branchmodel.lineagespecific;
 
 import dr.app.beagle.evomodel.branchmodel.BranchModel;

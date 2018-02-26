@@ -1,3 +1,4 @@
+
 package dr.app.beastgen;
 
 import dr.evolution.alignment.Alignment;

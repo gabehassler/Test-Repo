@@ -1,3 +1,4 @@
+
 package dr.inference.distribution;
 
 import dr.inference.model.AbstractModel;
@@ -9,8 +10,6 @@ import dr.math.UnivariateFunction;
 import dr.math.distributions.InverseGaussianDistribution;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-
 
 
 public class InverseGaussianDistributionModel extends AbstractModel implements ParametricDistributionModel {

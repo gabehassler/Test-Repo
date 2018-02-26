@@ -1,5 +1,5 @@
-package dr.math.matrixAlgebra;
 
+package dr.math.matrixAlgebra;
 
 import cern.colt.matrix.DoubleFactory2D;
 import cern.colt.matrix.DoubleMatrix2D;

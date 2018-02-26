@@ -1,3 +1,4 @@
+
 package dr.evolution.datatype;
 
 public class MutationDeathType extends DataType {

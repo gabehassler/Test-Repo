@@ -1,3 +1,4 @@
+
 package dr.app.beauti.types;
 
 import dr.app.beauti.options.Parameter;
