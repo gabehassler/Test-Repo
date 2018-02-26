@@ -1,6 +1,4 @@
-
 package dr.evomodel.epidemiology.casetocase;
-
 import dr.evolution.alignment.PatternList;
 import dr.evolution.datatype.DataType;
 import dr.evolution.datatype.GeneralDataType;
@@ -9,12 +7,8 @@ import dr.evolution.util.Taxon;
 import dr.evolution.util.TaxonList;
 import dr.inference.model.AbstractModel;
 import dr.inference.model.Parameter;
-
 import java.util.*;
-
-
 public abstract class AbstractOutbreak extends AbstractModel implements PatternList {
-
     protected GeneralDataType caseDataType;
     protected TaxonList taxa;
     private boolean hasLatentPeriods;
@@ -22,11 +16,9 @@ public abstract class AbstractOutbreak extends AbstractModel implements PatternL
     private final String CASE_NAME = "caseID";
     protected ArrayList<AbstractCase> cases;
     protected int infectedSize = 0;
-
     public AbstractOutbreak(String name, Taxa taxa){
         this(name, taxa, false, true);
     }
-
     public AbstractOutbreak(String name, Taxa taxa, boolean hasLatentPeriods, boolean hasGeography){
         super(name);
         this.taxa = taxa;
@@ -38,24 +30,17 @@ public abstract class AbstractOutbreak extends AbstractModel implements PatternL
         this.hasLatentPeriods = hasLatentPeriods;
         this.hasGeography = hasGeography;
     }
-
     public ArrayList<AbstractCase> getCases(){
         return new ArrayList<AbstractCase>(cases);
     }
-
     public boolean hasLatentPeriods() {
         return hasLatentPeriods;
     }
-
     public boolean hasGeography(){
         return hasGeography;
     }
-
     // todo this should be in terms of arbitary distance functions, not kernels
-
     public abstract double getLatentPeriod(AbstractCase aCase);
-
-
     public double getKernelValue(AbstractCase a, AbstractCase b, SpatialKernel kernel){
         if(!hasGeography){
             return 1;
@@ -63,10 +48,7 @@ public abstract class AbstractOutbreak extends AbstractModel implements PatternL
             return kernel.value(getDistance(a,b));
         }
     }
-
-
     // all the kernel values going TO case a (this is symmetric, usually, but potentially might not be)
-
     public double[] getKernelValues(AbstractCase aCase, SpatialKernel kernel){
         double[] out = new double[cases.size()];
         for(int i=0; i<out.length; i++){
@@ -74,25 +56,19 @@ public abstract class AbstractOutbreak extends AbstractModel implements PatternL
         }
         return out;
     }
-
     public int getCaseIndex(AbstractCase thisCase){
         return cases.indexOf(thisCase);
     }
-
     public int size(){
         return cases.size();
     }
-
     public int infectedSize(){
         return infectedSize;
     }
-
     public abstract double getDistance(AbstractCase a, AbstractCase b);
-
     public AbstractCase getCase(int i){
         return cases.get(i);
     }
-
     public AbstractCase getCase(String name){
         for(AbstractCase thisCase: cases){
             if(thisCase.getName().equals(name)){
@@ -101,34 +77,25 @@ public abstract class AbstractOutbreak extends AbstractModel implements PatternL
         }
         return null;
     }
-
     public TaxonList getTaxa(){
         return taxa;
     }
-
-
     //************************************************************************
     // PatternList implementation
     //************************************************************************
-
     // not considering the possibility that we are simultaneously reconstructing more than one transmission tree!
-
     public int getPatternCount(){
         return 1;
     }
-
     public int getStateCount(){
         return size();
     }
-
     public int getPatternLength(){
         return taxa.getTaxonCount();
     }
-
     // with an exact correspondence between taxa and states, the following five methods are ill-fitting, but here if
     // needed.
     // @todo if these are never going to be used, get them to throw exceptions
-
     public int[] getPattern(int patternIndex){
         int[] out = new int[cases.size()];
         for(int i=0; i<cases.size(); i++){
@@ -136,64 +103,49 @@ public abstract class AbstractOutbreak extends AbstractModel implements PatternL
         }
         return out;
     }
-
     public int getPatternState(int taxonIndex, int patternIndex){
         return taxonIndex;
     }
-
     public double getPatternWeight(int patternIndex){
         return 1;
     }
-
     public double[] getPatternWeights(){
         return new double[]{1};
     }
-
     public double[] getStateFrequencies(){
         double[] out = new double[cases.size()];
         Arrays.fill(out, 1/cases.size());
         return out;
     }
-
     public DataType getDataType(){
         return caseDataType;
     }
-
     //************************************************************************
     // TaxonList implementation
     //************************************************************************
-
     public int getTaxonCount(){
         return taxa.getTaxonCount();
     }
-
     public Taxon getTaxon(int taxonIndex){
         return taxa.getTaxon(taxonIndex);
     }
-
     public String getTaxonId(int taxonIndex){
         return taxa.getTaxonId(taxonIndex);
     }
-
     public int getTaxonIndex(String id){
         return taxa.getTaxonIndex(id);
     }
-
     public int getTaxonIndex(Taxon taxon){
         return taxa.getTaxonIndex(taxon);
     }
-
     public List<Taxon> asList(){
         return taxa.asList();
     }
-
     public Object getTaxonAttribute(int taxonIndex, String name){
         return taxa.getTaxonAttribute(taxonIndex, name);
     }
-
     public Iterator<Taxon> iterator() {
         if (taxa == null) throw new RuntimeException("Patterns has no TaxonList");
         return taxa.iterator();
     }
-
 }

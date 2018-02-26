@@ -1,30 +1,22 @@
-
 package dr.math;
-
 import dr.math.matrixAlgebra.Vector;
-
 public class ComplexArray {
-
     public final double[] real;
     public final double[] complex;
     public final int length;
-
     public ComplexArray(double[] real) {
         this(real, new double[real.length]);
     }
-
     public ComplexArray(double[] real, double[] complex) {
         this.real = real;
         this.complex = complex;
         this.length = real.length;
     }
-
     public void conjugate() {
         for (int i = 0; i < length; ++i) {
             complex[i] = -complex[i];
         }
     }
-
     public ComplexArray product(ComplexArray x) {
         double[] newReal = new double[length];
         double[] newComplex = new double[length];
@@ -39,12 +31,10 @@ public class ComplexArray {
         }
         return new ComplexArray(newReal, newComplex);
     }
-
     public String toString() {
         return "\nReal   : " + new Vector(real).toString() +
                "\nComplex: " + new Vector(complex).toString();
     }
-
     public static double[] interleave(double[] real, double[] complex) {
         final int length = real.length;
         double[] out = new double[length * 2];

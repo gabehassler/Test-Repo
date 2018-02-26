@@ -1,21 +1,14 @@
-
 package dr.evomodelxml.operators;
-
 import dr.evomodel.operators.AlloppChangeNumHybridizations;
 import dr.evomodel.speciation.AlloppSpeciesBindings;
 import dr.evomodel.speciation.AlloppSpeciesNetworkModel;
 import dr.inference.operators.MCMCOperator;
 import dr.xml.*;
-
 public class AlloppChangeNumHybridizationsParser extends AbstractXMLObjectParser {
-
     public static final String CHANGE_NUM_HYBRIDIZATIONS = "changeNumHybridizations";
-
-
     public String getParserName() {
         return CHANGE_NUM_HYBRIDIZATIONS;
     }
-
     @Override
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
         AlloppSpeciesBindings apsp = (AlloppSpeciesBindings) xo.getChild(AlloppSpeciesBindings.class);
@@ -23,11 +16,9 @@ public class AlloppChangeNumHybridizationsParser extends AbstractXMLObjectParser
         if (apspnet.getOneHybridization()) {
             throw new XMLParseException("oneHybridization is set to true but there is a changeNumHybridizations operator");
         }
-
         final double weight = xo.getDoubleAttribute(MCMCOperator.WEIGHT);
         return new AlloppChangeNumHybridizations(apspnet, apsp, weight);
     }
-
     @Override
     public XMLSyntaxRule[] getSyntaxRules() {
         return new XMLSyntaxRule[]{
@@ -36,18 +27,12 @@ public class AlloppChangeNumHybridizationsParser extends AbstractXMLObjectParser
                 new ElementRule(AlloppSpeciesNetworkModel.class)
         };
     }
-
     @Override
     public String getParserDescription() {
         return "Operator which changes the number of tetraploid subtrees (hybridizations) by merging and splitting them.";
-
     }
-
     @Override
     public Class getReturnType() {
         return AlloppChangeNumHybridizations.class;
     }
-
-
-
 }

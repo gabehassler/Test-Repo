@@ -1,32 +1,21 @@
-
 package dr.evomodel.substmodel;
-
 import dr.evolution.datatype.AminoAcids;
 import dr.util.Author;
 import dr.util.Citable;
 import dr.util.Citation;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-
 public class FLU extends EmpiricalRateMatrix.AbstractAminoAcid {
-
     public static final FLU INSTANCE = new FLU();
-
     // The rates below are specified assuming that the amino acids are in this order:
     // ARNDCQEGHILKMFPSTWYV
     // but the AminoAcids dataType wants them in this order:
     // ACDEFGHIKLMNPQRSTVWY
     // This is solved by calling the setEmpiricalRates and setEmpiricalFrequencies methods
-    
     private FLU() { super("FLU");
-
         int n = AminoAcids.INSTANCE.getStateCount();
-
         double[][] rate = new double[n][n];
-
         // Q matrix
         rate[0][1] = 0.138659; rate[0][2] = 0.053367;
         rate[0][3] = 0.584852; rate[0][4] = 0.026447;
@@ -47,7 +36,6 @@ public class FLU extends EmpiricalRateMatrix.AbstractAminoAcid {
         rate[1][14] = 0.154027; rate[1][15] = 0.950138;
         rate[1][16] = 0.183077; rate[1][17] = 1.369429;
         rate[1][18] = 0.099855; rate[1][19] = 0.103964;
-
         rate[2][3] = 7.737393; rate[2][4] = 0.000013;
         rate[2][5] = 0.530643; rate[2][6] = 0.061652;
         rate[2][7] = 0.322525; rate[2][8] = 1.387096;
@@ -65,7 +53,6 @@ public class FLU extends EmpiricalRateMatrix.AbstractAminoAcid {
         rate[3][14] = 0.188539; rate[3][15] = 0.338372;
         rate[3][16] = 0.135481; rate[3][17] = 0.000015;
         rate[3][18] = 0.525399; rate[3][19] = 0.297124;
-
         rate[4][5] = 0.002547; rate[4][6] = 0.000000;
         rate[4][7] = 0.116941; rate[4][8] = 0.021845;
         rate[4][9] = 0.001112; rate[4][10] = 0.005614;
@@ -81,7 +68,6 @@ public class FLU extends EmpiricalRateMatrix.AbstractAminoAcid {
         rate[5][14] = 0.712770; rate[5][15] = 0.487822;
         rate[5][16] = 0.602341; rate[5][17] = 0.044021;
         rate[5][18] = 0.072206; rate[5][19] = 0.406698;
-
         rate[6][7] = 1.593099; rate[6][8] = 0.256492;
         rate[6][9] = 0.014211; rate[6][10] = 0.016500;
         rate[6][11] = 3.881489; rate[6][12] = 0.313974;
@@ -95,7 +81,6 @@ public class FLU extends EmpiricalRateMatrix.AbstractAminoAcid {
         rate[7][14] = 0.038632; rate[7][15] = 1.585647;
         rate[7][16] = 0.018808; rate[7][17] = 0.196486;
         rate[7][18] = 0.074815; rate[7][19] = 0.337230;
-
         rate[8][9] = 0.243190; rate[8][10] = 0.321612;
         rate[8][11] = 0.347303; rate[8][12] = 0.001274;
         rate[8][13] = 0.119029; rate[8][14] = 0.924467;
@@ -107,7 +92,6 @@ public class FLU extends EmpiricalRateMatrix.AbstractAminoAcid {
         rate[9][14] = 0.080543; rate[9][15] = 0.290381;
         rate[9][16] = 2.904052; rate[9][17] = 0.032132;
         rate[9][18] = 0.273934; rate[9][19] = 14.394052;
-
         rate[10][11] = 0.129224; rate[10][12] = 6.746936;
         rate[10][13] = 2.986800; rate[10][14] = 0.634309;
         rate[10][15] = 0.570767; rate[10][16] = 0.044926;
@@ -117,7 +101,6 @@ public class FLU extends EmpiricalRateMatrix.AbstractAminoAcid {
         rate[11][14] = 0.195751; rate[11][15] = 0.283808;
         rate[11][16] = 1.526964; rate[11][17] = 0.000050;
         rate[11][18] = 0.012416; rate[11][19] = 0.073128;
-
         rate[12][13] = 0.279911; rate[12][14] = 0.056869;
         rate[12][15] = 0.007027; rate[12][16] = 2.031511;
         rate[12][17] = 0.070460; rate[12][18] = 0.874272;
@@ -125,21 +108,16 @@ public class FLU extends EmpiricalRateMatrix.AbstractAminoAcid {
         rate[13][14] = 0.007132; rate[13][15] = 0.996686;
         rate[13][16] = 0.000135; rate[13][17] = 0.814753;
         rate[13][18] = 5.393924; rate[13][19] = 0.592588;
-
         rate[14][15] = 2.087385; rate[14][16] = 0.542251;
         rate[14][17] = 0.000431; rate[14][18] = 0.000182;
         rate[14][19] = 0.058972;
         rate[15][16] = 2.206860; rate[15][17] = 0.099836;
         rate[15][18] = 0.392552; rate[15][19] = 0.088256;
-
         rate[16][17] = 0.207066; rate[16][18] = 0.124898;
         rate[16][19] = 0.654109;
         rate[17][18] = 0.427755; rate[17][19] = 0.256900;
-
         rate[18][19] = 0.167582;
-
         setEmpiricalRates(rate, "ARNDCQEGHILKMFPSTWYV");
-
         double[] f = new double[n];
         f[0] = 0.0470718; // A
         f[1] = 0.0509102; // R
@@ -163,11 +141,9 @@ public class FLU extends EmpiricalRateMatrix.AbstractAminoAcid {
         f[19] = 0.0632292; // V
         setEmpiricalFrequencies(f, "ARNDCQEGHILKMFPSTWYV");
     }
-
     public List<Citation> getCitations() {
         return Arrays.asList(CITATION);
     }
-
     public static Citation CITATION = new Citation(
             new Author[]{
                     new Author("CC", "Dang"),

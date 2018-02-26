@@ -1,26 +1,17 @@
-
 package dr.math;
-
-
 public class Poisson {
-
 	private Poisson() {
 	}
-
 	// oldm is a flag for whether xm has been changed since last call.
     private static double oldm = -1.0;
     private static double sq, alxm, g;
-
     // used by gammaln
     private static final double[] cof = {   76.18009172947146, -86.50532032941677,
 				                            24.01409824083091,  -1.231739572450155,
 				                            0.1208650973866179e-2, -0.5395239384953e-5};
-
     public static int nextPoisson(double xm) {
-
         double em; // expected mean
         double t, y;
-
         if (xm < 12.0) { // use direct method
 			if (xm != oldm) {
 			    oldm = xm;
@@ -54,12 +45,9 @@ public class Poisson {
         }
         return (int)em;
     }
-
     public static double gammln(double xx) {
 		double x, y, tmp, ser;
-
 		int j;
-
 		y = x = xx;
 		tmp = x + 5.5;
 		tmp -= (x + 0.5) * Math.log(tmp);

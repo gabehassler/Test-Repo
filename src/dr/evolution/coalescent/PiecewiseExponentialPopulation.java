@@ -1,11 +1,7 @@
-
 package dr.evolution.coalescent;
-
 import java.util.Collections;
 import java.util.ArrayList;
-
 public class PiecewiseExponentialPopulation extends DemographicFunction.Abstract {
-
     public PiecewiseExponentialPopulation(double[] intervals, double N0, double[] lambdas, Type units) {
         super(units);
         if (lambdas == null || intervals == null) {
@@ -14,13 +10,10 @@ public class PiecewiseExponentialPopulation extends DemographicFunction.Abstract
         if (lambdas.length != intervals.length + 1) {
             throw new IllegalArgumentException();
         }
-
         this.thetas = new double[] { N0 };
         this.intervals = intervals;
         this.lambdas = lambdas;
-
     }
-
     public PiecewiseExponentialPopulation(double[] intervals, double[] thetas, double lambda, Type units) {
         super(units);
         if (thetas == null || intervals == null) {
@@ -29,17 +22,13 @@ public class PiecewiseExponentialPopulation extends DemographicFunction.Abstract
         if (thetas.length != intervals.length + 1) {
             throw new IllegalArgumentException();
         }
-
         this.thetas = thetas;
         this.intervals = intervals;
         this.lambdas = new double[] { lambda };
-
     }
-
     // **************************************************************
     // Implementation of abstract methods
     // **************************************************************
-
     public double getDemographic(double t) {
         if (thetas.length == 1) {
             int epoch = 0;
@@ -80,48 +69,39 @@ public class PiecewiseExponentialPopulation extends DemographicFunction.Abstract
             return N1 * Math.exp(-r * t1);
         }
     }
-
     public double getIntensity(double t) {
         throw new RuntimeException("Not implemented!");
     }
-
     public double getInverseIntensity(double x) {
         throw new RuntimeException("Not implemented!");
     }
-
     public double getIntegral(double start, double finish) {
         //final double v1 = getIntensity(finish) - getIntensity(start);
         // Until the above getIntensity is implemented, numerically integrate
         final double numerical = getNumericalIntegral(start, finish);
         return numerical;
     }
-
     public double getUpperBound(int i) {
         return 1e9;
     }
-
     public double getLowerBound(int i) {
         return Double.MIN_VALUE;
     }
-
     public int getNumArguments() {
         return lambdas.length + 1;
     }
-
     public String getArgumentName(int i) {
         if (i < thetas.length) {
             return "theta" + i;
         }
         return "lambda" + (i - thetas.length);
     }
-
     public double getArgument(int i) {
         if (i < thetas.length) {
             return thetas[i];
         }
         return lambdas[i - thetas.length];
     }
-
     public void setArgument(int i, double value) {
         if (i < thetas.length) {
             thetas[i] = value;
@@ -129,10 +109,8 @@ public class PiecewiseExponentialPopulation extends DemographicFunction.Abstract
             lambdas[i - thetas.length] = value;
         }
     }
-
     public DemographicFunction getCopy() {
         PiecewiseExponentialPopulation df;
-
         if (thetas.length == 1) {
             df = new PiecewiseExponentialPopulation(new double[intervals.length], thetas[0], new double[lambdas.length], getUnits());
         } else {
@@ -141,35 +119,26 @@ public class PiecewiseExponentialPopulation extends DemographicFunction.Abstract
         System.arraycopy(intervals, 0, df.intervals, 0, intervals.length);
         System.arraycopy(thetas, 0, df.thetas, 0, thetas.length);
         System.arraycopy(lambdas, 0, df.lambdas, 0, lambdas.length);
-
         return df;
     }
-
-
     protected double getDemographic(int epoch, double t) {
         return getEpochDemographic(epoch);
     }
-
     protected double getIntensity(int epoch) {
         return getEpochDuration(epoch) / getEpochDemographic(epoch);
     }
-
     protected double getIntensity(final int epoch, final double relativeTime) {
         assert 0 <= relativeTime && relativeTime <= getEpochDuration(epoch);
-
         return relativeTime / getEpochDemographic(epoch);
     }
-
     public int getEpochCount() {
         return intervals.length + 1;
     }
-
     public double getEpochDuration(int epoch) {
         if (epoch == intervals.length) {
             return Double.POSITIVE_INFINITY;
         } else return intervals[epoch];
     }
-
     public void setEpochDuration(int epoch, double duration) {
         if (epoch < 0 || epoch >= intervals.length) {
             throw new IllegalArgumentException("epoch must be between 0 and " + (intervals.length - 1));
@@ -179,12 +148,10 @@ public class PiecewiseExponentialPopulation extends DemographicFunction.Abstract
         }
         intervals[epoch] = duration;
     }
-
     public final double getEpochDemographic(int epoch) {
         if (epoch < 0 || epoch > intervals.length) {
             throw new IllegalArgumentException();
         }
-
         if (thetas.length == 1) {
             int ep = 0;
             double N1 = thetas[0];
@@ -199,7 +166,6 @@ public class PiecewiseExponentialPopulation extends DemographicFunction.Abstract
             return thetas[epoch];
         }
     }
-
     public final double getEpochGrowthRate(int epoch) {
         if (epoch < 0 || epoch > intervals.length) {
             throw new IllegalArgumentException();
@@ -223,7 +189,6 @@ public class PiecewiseExponentialPopulation extends DemographicFunction.Abstract
             }
         }
     }
-
     public String toString() {
         StringBuffer buffer = new StringBuffer();
         for (int i = 0; i < thetas.length; i++) {
@@ -234,9 +199,7 @@ public class PiecewiseExponentialPopulation extends DemographicFunction.Abstract
         }
         return buffer.toString();
     }
-
     double[] intervals;
     double[] thetas;
     double[] lambdas;
-
 }

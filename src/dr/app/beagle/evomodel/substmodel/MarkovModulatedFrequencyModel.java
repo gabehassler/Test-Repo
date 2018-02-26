@@ -1,18 +1,12 @@
-
 package dr.app.beagle.evomodel.substmodel;
-
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
 import cern.colt.matrix.linalg.LUDecomposition;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
-
 import java.util.List;
-
-
 public class MarkovModulatedFrequencyModel extends FrequencyModel {
-
     public MarkovModulatedFrequencyModel(String name, List<FrequencyModel> freqModels, Parameter switchingRates) {
         super(name);
         this.freqModels = freqModels;
@@ -29,28 +23,22 @@ public class MarkovModulatedFrequencyModel extends FrequencyModel {
         totalFreqCount = freqCount;
         this.switchingRates = switchingRates;
         addVariable(switchingRates);
-
 //        if (switchingRates.getDimension() > 2 ||  numBaseModel > 2) {
 //            throw new RuntimeException("MarkovModulatedFrequencyModel not yet implemented for more than 2 hidden classes");
 //        }
-
         baseStationaryDistribution = new double[numBaseModel];
         storedBaseStationaryDistribution = new double[numBaseModel];
         stationaryDistributionKnown = false;
-
         d = new DenseDoubleMatrix2D(numBaseModel, numBaseModel);
         d.set(0, 0, 1.0);
     }
-
     public void setFrequency(int i, double value) {
         throw new RuntimeException("Not implemented");
     }
-
     public double getFrequency(int index) {
         int whichModel = index / stateCount;
         int whichState = index % stateCount;
         double relativeFreq = freqModels.get(whichModel).getFrequency(whichState);
-
         // Scale by stationary distribution over hidden classes
         if (numBaseModel > 1) {
             if (!stationaryDistributionKnown) {
@@ -59,12 +47,9 @@ public class MarkovModulatedFrequencyModel extends FrequencyModel {
             }
 //            relativeFreq *= baseStationaryDistribution[whichModel]; // Try: no adjustment, appears to cause store/restore issue
         }
-
         return relativeFreq;
     }
-
     private void computeStationaryDistribution(double[] statDistr) {
-
 //        // Uses an eigendecomposition and matrix inverse
 //        DoubleMatrix2D mat = new DenseDoubleMatrix2D(numBaseModel, numBaseModel);
 //        int index = 0;
@@ -98,8 +83,6 @@ public class MarkovModulatedFrequencyModel extends FrequencyModel {
 //            statDistr[i] = b.get(0,i);
 //        }
 //        System.err.println(new Vector(statDistr));
-
-
         // Uses an LU decomposition to solve Q^t \pi = 0 and \sum \pi_i = 1
         DoubleMatrix2D mat2 = new DenseDoubleMatrix2D(numBaseModel + 1, numBaseModel);
         int index2 = 0;
@@ -121,16 +104,13 @@ public class MarkovModulatedFrequencyModel extends FrequencyModel {
                 if (i != j) {
                     rowTotal += mat2.get(j, i); // Transposed
                 }
-
             }
             mat2.set(i, i, -rowTotal);
         }
-
         // Add row for sum-to-one constraint
         for (int i = 0; i < numBaseModel; ++i) {
             mat2.set(numBaseModel, i, 1.0);
         }
-
         LUDecomposition decomp = new LUDecomposition(mat2);
         DoubleMatrix2D x = new DenseDoubleMatrix2D(numBaseModel + 1, 1);
         x.set(numBaseModel, 0, 1.0);
@@ -140,47 +120,36 @@ public class MarkovModulatedFrequencyModel extends FrequencyModel {
         }
         //System.err.println(new Vector(statDistr));              
     }
-
     protected void storeState() {
         System.arraycopy(baseStationaryDistribution, 0, storedBaseStationaryDistribution, 0, numBaseModel);
         storedStationaryDistributionKnown = stationaryDistributionKnown;
     }
-
     protected void restoreState() {
         double[] tmp = baseStationaryDistribution;
         baseStationaryDistribution = storedBaseStationaryDistribution;
         storedBaseStationaryDistribution = tmp;
-
         stationaryDistributionKnown = storedStationaryDistributionKnown;
     }
-
     protected void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         if (variable == switchingRates) {
             stationaryDistributionKnown = false;
         }
     }
-
     public int getFrequencyCount() {
         return totalFreqCount;
     }
-
     public Parameter getFrequencyParameter() {
         throw new RuntimeException("Not implemented");
     }
-
     private List<FrequencyModel> freqModels;
-
     private final int numBaseModel;
     private final int totalFreqCount;
     private final int stateCount;
     private final Parameter switchingRates;
-
     private double[] baseStationaryDistribution;
     private double[] storedBaseStationaryDistribution;
-
     private boolean stationaryDistributionKnown;
     private boolean storedStationaryDistributionKnown;
-
     private final Algebra alg = new Algebra();
     private final DoubleMatrix2D d;
 }

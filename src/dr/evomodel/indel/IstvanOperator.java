@@ -1,6 +1,4 @@
-
 package dr.evomodel.indel;
-
 import dr.evolution.alignment.Alignment;
 import dr.evolution.alignment.SimpleAlignment;
 import dr.evolution.datatype.DataType;
@@ -13,23 +11,18 @@ import dr.inference.operators.OperatorFailedException;
 import dr.inference.operators.SimpleMCMCOperator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-
 public class IstvanOperator extends SimpleMCMCOperator {
-
     private double tuning = 0.1;
     private double exponent = 1.5;
     private double gapPenalty = -10;
     private TKF91Likelihood likelihood;
     private dr.evomodel.indel.IstvansProposal proposal = new dr.evomodel.indel.IstvansProposal();
     private Alignment alignment;
-
     int[][] iAlignment;
     double[][][] iProbs;
     double[] iBaseFreqs;
     int[] iParent;
     double[] iTau;
-
     public IstvanOperator(double iP, double exponent, double gapPenalty, double weight, TKF91Likelihood likelihood) {
         this.tuning = iP;
         this.exponent = exponent;
@@ -37,58 +30,40 @@ public class IstvanOperator extends SimpleMCMCOperator {
         this.likelihood = likelihood;
         setWeight(weight);
     }
-
     public double doOperation() throws OperatorFailedException {
-
         Tree tree = likelihood.getTreeModel();
         alignment = likelihood.getAlignment();
-
         //System.out.println("Incoming alignment");
         //System.out.println(alignment);
         //System.out.println();
-
         SubstitutionModel substModel = likelihood.getSiteModel().getSubstitutionModel();
-
         // initialize the iParent and iTau arrays based on the given tree.
         initTree(tree, likelihood.getSiteModel().getMu());
-
         int[] treeIndex = new int[tree.getTaxonCount()];
         for (int i = 0; i < treeIndex.length; i++) {
             treeIndex[i] = tree.getTaxonIndex(alignment.getTaxonId(i));
         }
-
         // initialize the iAlignment array from the given alignment.
         initAlignment(alignment, treeIndex);
-
         // initialize the iProbs array from the substitution model -- must be called after populating tree!
         initSubstitutionModel(substModel);
-
         DataType dataType = substModel.getDataType();
         proposal.setGapSymbol(dataType.getGapState());
-
         int[][] returnedAlignment = new int[iAlignment.length][];
-
         //System.out.println("Initialization done, starting proposal proper...");
-
-
         double logq = proposal.propose(iAlignment, iProbs, iBaseFreqs, iParent, iTau, returnedAlignment, tuning, exponent, gapPenalty);
-
         //System.out.println("Proposal finished, logq=" + logq);
-
         //create new alignment object
         SimpleAlignment newAlignment = new SimpleAlignment();
         for (int i = 0; i < alignment.getTaxonCount(); i++) {
-
             StringBuffer seqBuffer = new StringBuffer();
             for (int j = 0; j < returnedAlignment[i].length; j++) {
                 seqBuffer.append(dataType.getChar(returnedAlignment[treeIndex[i]][j]));
             }
-
             // add sequences in order of tree
             String seqString = seqBuffer.toString();
             Sequence sequence = new Sequence(alignment.getTaxon(i), seqString);
             newAlignment.addSequence(sequence);
-
             String oldunaligned = alignment.getUnalignedSequenceString(i);
             String unaligned = newAlignment.getUnalignedSequenceString(i);
             if (!unaligned.equals(oldunaligned)) {
@@ -101,34 +76,24 @@ public class IstvanOperator extends SimpleMCMCOperator {
         //System.out.println("Outgoing alignment");
         //System.out.println(newAlignment);
         //System.out.println();
-
-
         likelihood.setAlignment(newAlignment);
-
         return logq;
     }
-
     // MUST RESET ALIGNMENT IF REJECTED!!
     public void reject() {
         super.reject();
         likelihood.setAlignment(alignment);
     }
-
     private void initTree(Tree tree, double mutationRate) {
         iParent = new int[tree.getNodeCount()];
         iTau = new double[tree.getNodeCount() - 1];
         populate(tree, tree.getRoot(), new int[]{tree.getExternalNodeCount()}, mutationRate);
         iParent[tree.getNodeCount() - 1] = -1;
-
     }
-
     private void initSubstitutionModel(SubstitutionModel model) {
-
         DataType dataType = model.getDataType();
         int stateCount = dataType.getStateCount();
-
         iProbs = new double[iTau.length][stateCount][stateCount];
-
         double[] transProb = new double[stateCount * stateCount];
         int count;
         for (int i = 0; i < iTau.length; i++) {
@@ -141,23 +106,18 @@ public class IstvanOperator extends SimpleMCMCOperator {
                 }
             }
         }
-
         // initialize equlibrium distribution
         iBaseFreqs = new double[stateCount];
         for (int k = 0; k < stateCount; k++) {
             iBaseFreqs[k] = model.getFrequencyModel().getFrequency(k);
         }
     }
-
     private void initAlignment(Alignment alignment, int[] treeIndex) {
-
         int numSeqs = alignment.getSequenceCount();
         int numSites = alignment.getSiteCount();
         DataType dataType = alignment.getDataType();
         int numStates = dataType.getStateCount();
-
         iAlignment = new int[numSeqs][numSites];
-
         // populate alignment in order of tree
         for (int i = 0; i < numSeqs; i++) {
             for (int j = 0; j < numSites; j++) {
@@ -165,24 +125,19 @@ public class IstvanOperator extends SimpleMCMCOperator {
             }
         }
     }
-
     private int populate(Tree tree, NodeRef node, int[] current, double mutationRate) {
-
         int nodeNumber = node.getNumber();
-
         // if its an external node just return the number
         if (tree.isExternal(node)) {
             iTau[nodeNumber] =
                     (tree.getNodeHeight(tree.getParent(node)) - tree.getNodeHeight(node)) * mutationRate;
             return nodeNumber;
         }
-
         // if internal node, first let your children be assigned numbers
         int[] childNumbers = new int[tree.getChildCount(node)];
         for (int i = 0; i < tree.getChildCount(node); i++) {
             childNumbers[i] = populate(tree, tree.getChild(node, i), current, mutationRate);
         }
-
         // now, pick the next available number
         nodeNumber = current[0];
         // if you are not the root, then record the branch length above you.
@@ -193,28 +148,22 @@ public class IstvanOperator extends SimpleMCMCOperator {
         }
         // increment the next available number
         current[0] += 1;
-
         // now that you have your number, populate the iParent entries of your children.
         for (int i = 0; i < tree.getChildCount(node); i++) {
             iParent[childNumbers[i]] = nodeNumber;
         }
-
         // finally return your number so your parent can do the same.
         return nodeNumber;
     }
-
     public String getOperatorName() {
         return "IstvansOperator";
     }
-
     public double getMinimumAcceptanceLevel() {
         return 0.1;
     }
-
     public double getMinimumGoodAcceptanceLevel() {
         return 0.4;
     }
-
     public String getPerformanceSuggestion() {
         if (MCMCOperator.Utils.getAcceptanceProbability(this) < getMinimumAcceptanceLevel()) {
             return "";
@@ -224,9 +173,7 @@ public class IstvanOperator extends SimpleMCMCOperator {
             return "";
         }
     }
-
     public Element createOperatorElement(Document doc) {
         throw new RuntimeException();
     }
-
 }

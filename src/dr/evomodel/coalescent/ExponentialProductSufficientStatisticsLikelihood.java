@@ -1,46 +1,33 @@
-
 package dr.evomodel.coalescent;
-
 import java.util.List;
-
 import dr.evolution.coalescent.IntervalType;
 import dr.evolution.tree.Tree;
 import dr.evomodel.coalescent.OldAbstractCoalescentLikelihood.CoalescentEventType;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.model.Likelihood;
-
-
 public class ExponentialProductSufficientStatisticsLikelihood extends OldAbstractCoalescentLikelihood {
-	
 	//not used at the moment
 	public final static boolean FIXED_TREE = false;
-	
 	private TreeModel treeModel;
 	private double[] posteriorMeans;
-	
 	protected int fieldLength;
 	protected double[] coalescentIntervals;
     protected double[] sufficientStatistics;
-
 	//make sure to use in combination with coalescentEventsStatistic
 	public ExponentialProductSufficientStatisticsLikelihood(TreeModel treeModel, double[] posteriorMeans) {
 		super("ExponentialProductSufficientStatisticsLikelihood");
 		this.treeModel = treeModel;
 		this.posteriorMeans = posteriorMeans;
-		
 		tree = treeModel;
 		addModel((TreeModel) tree);
-		
 		this.fieldLength = posteriorMeans.length;
 		wrapSetupIntervals();
 		coalescentIntervals = new double[fieldLength];
         sufficientStatistics = new double[fieldLength];
 	}
-	
 	protected void wrapSetupIntervals() {
         setupIntervals();
     }
-	
         if (treeList.size() != 1) {
             throw new RuntimeException("GMRFSkyrideLikelihood only implemented for one tree");
         }
@@ -50,10 +37,8 @@ public class ExponentialProductSufficientStatisticsLikelihood extends OldAbstrac
             addModel((TreeModel) tree);
         }
     }*/
-	
 	protected void setupSufficientStatistics() {
         int index = 0;
-
         double length = 0;
         double weight = 0;
         for (int i = 0; i < getIntervalCount(); i++) {
@@ -69,35 +54,27 @@ public class ExponentialProductSufficientStatisticsLikelihood extends OldAbstrac
             }
         }
     }
-	
 	private void makeIntervalsKnown() {
         if (!intervalsKnown) {
             wrapSetupIntervals();
             intervalsKnown = true;
         }
     }
-	
 	public double calculateLogLikelihood() {
 		tree = treeModel;
         makeIntervalsKnown();
         setupSufficientStatistics();
-
         // Matrix operations taken from block update sampler to calculate data likelihood and field prior
-
         double currentLike = 0;
         double[] currentGamma = posteriorMeans;
-
         for (int i = 0; i < fieldLength; i++) {
         	//System.err.println(currentGamma[i] + "    " + sufficientStatistics[i] + "    " + (-currentGamma[i] - sufficientStatistics[i] * Math.exp(-currentGamma[i])));
             currentLike += -currentGamma[i] - sufficientStatistics[i] * Math.exp(-currentGamma[i]);
         }
         //System.err.println("currentLike = " + currentLike + "\n");
-
         return currentLike;
     }
-
 	protected boolean getLikelihoodKnown() {
 		return false;
 	}
-
 }

@@ -1,8 +1,5 @@
-
 package dr.app.bss;
-
 import java.io.Serializable;
-
 import dr.app.beagle.evomodel.branchmodel.BranchModel;
 import dr.app.beagle.evomodel.branchmodel.HomogeneousBranchModel;
 import dr.app.beagle.evomodel.sitemodel.GammaSiteRateModel;
@@ -46,21 +43,16 @@ import dr.inference.model.Parameter;
 import dr.inferencexml.distribution.DistributionModelParser;
 import dr.inferencexml.distribution.InverseGaussianDistributionModelParser;
 import dr.inferencexml.distribution.LogNormalDistributionModelParser;
-
 @SuppressWarnings("serial")
 public class PartitionData implements Serializable {
-
 	public PartitionData() {
 	}// END: Constructor
-
 	public int from = 1;
 	public int to = 10;
 	public int every = 1;
-
 	public int createPartitionSiteCount() {
 		return ((to - from) / every) + 1;
 	}
-
 	public void resetIdrefs() {
 		resetClockModelIdref();
 		resetFrequencyModelIdref();
@@ -70,11 +62,9 @@ public class PartitionData implements Serializable {
 		resetDemographicModelIdref();
 		resetTaxaIdref();
 	}
-
 	// ///////////////////////
 	// ---TREE ANNOTATING---//
 	// ///////////////////////
-	
 //	private LinkedHashMap<NodeRef, int[]> sequenceMap;
 //	
 //	public void setSequenceMap(LinkedHashMap<NodeRef, int[]> sequenceMap) {
@@ -84,59 +74,45 @@ public class PartitionData implements Serializable {
 //	public LinkedHashMap<NodeRef, int[]> getSequenceMap() {
 //		return sequenceMap;
 //	}
-	
 	// /////////////////////////
 	// ---DEMOGRAPHIC MODEL---//
 	// /////////////////////////
-
 	//TODO: LogisticGrowth.getInverseIntensity
 	public static final int lastImplementedIndex = 3;
-	
 	public int demographicModelIndex = 0;
-	
 	public String demographicModelIdref = Utils.DEMOGRAPHIC_MODEL;
-
 	public void resetDemographicModelIdref() {
 		this.demographicModelIdref = Utils.DEMOGRAPHIC_MODEL;
 	}
-	
     public static String[] demographicModels = {
     	"No Model (user-specified tree)",
     	"Constant Population",
         "Exponential Growth (Growth Rate)",
         "Exponential Growth (Doubling Time)",
-        "Logistic Growth (Growth Rate)",
+//        "Logistic Growth (Growth Rate)",
 //        "Logistic Growth (Doubling Time)",
 //        "Expansion (Growth Rate)",
 //        "Expansion (Doubling Time)",
         };
-	
 	public static String[] demographicParameterNames = new String[] {
 	        "Population Size", // Constant Population
-			
 	        "Population Size", // Exponential Growth (Growth Rate)
 			"Growth Rate", // Exponential Growth (Growth Rate)
-			
 			"Population Size", // Exponential Growth (Doubling Time)
 			"Doubling Time", // Exponential Growth (Doubling Time)
-			
 //			"Population Size", // Logistic Growth (Growth Rate)
 //			"Growth Rate", // Logistic Growth (Growth Rate)
 //			"Logistic Shape (Half-life)", // Logistic Growth (Growth Rate)
-			
 //			"Population Size", // Logistic Growth (Doubling Time)
 //			"Doubling Time", // Logistic Growth (Doubling Time)
 //			"Logistic Shape (Half-life)", // Logistic Growth (Doubling Time)
-			
 //			"Population Size", // Expansion (Growth Rate)
 //			"Ancestral Proportion", // Expansion (Growth Rate)
 //			"Growth Rate", // Expansion (Growth Rate)
-			
 //			"Population Size", // Expansion (Doubling Time)
 //			"Ancestral Proportion", // Expansion (Doubling Time)
 //			"Doubling Time", // Expansion (Doubling Time)
 	};	
-	
 	public static int[][] demographicParameterIndices = {
 		    {  }, // No model
 			{ 0 }, // Constant Population
@@ -147,23 +123,16 @@ public class PartitionData implements Serializable {
 //			{ 11, 12, 13 }, // Expansion (Growth Rate)
 //			{ 14, 15, 16 } // Expansion (Doubling Time)
 	};
-	
-	
 	public double[] demographicParameterValues = new double[] {
-			
 			1000.0, // Population Size
-			
 			1000.0, // Population Size
 			0.5, // Growth Rate
-			
 			1000.0, // Population Size
 			10.0, // Doubling Time
-			
 //			/*Logistic Growth (Growth Rate)*/
 //			1000.0, // Population Size
 //			0.5, // Growth Rate
 //			50.0, // Logistic Shape (Half-life)
-			
 //			1000.0, // Population Size
 //			10.0, // Doubling Time
 //			50.0, // Logistic Shape (Half-life)
@@ -174,32 +143,21 @@ public class PartitionData implements Serializable {
 //			0.1, // Ancestral Proportion
 //			10.0 // Doubling Time
 	};
-
 	public DemographicFunction createDemographicFunction() {
-
 		DemographicFunction demographicFunction = null;
-
 		if (this.demographicModelIndex == 0) { // No model
-
 			// do nothing
-			
 		} else if (this.demographicModelIndex == 1) {// Constant Population
-
 			demographicFunction = new ConstantPopulation(Units.Type.YEARS);
 			((ConstantPopulation)demographicFunction).setN0(demographicParameterValues[0]);
-			
 		} else if (this.demographicModelIndex == 2) {// Exponential Growth (Growth Rate)
-
 			demographicFunction = new ExponentialGrowth(Units.Type.YEARS);
             ((ExponentialGrowth) demographicFunction).setN0(demographicParameterValues[1]);
             ((ExponentialGrowth) demographicFunction).setGrowthRate(demographicParameterValues[2]);
-			
 		} else if (this.demographicModelIndex == 3) {// Exponential Growth (Doubling Time)
-			
 			demographicFunction = new ExponentialGrowth(Units.Type.YEARS);
             ((ExponentialGrowth) demographicFunction).setN0(demographicParameterValues[3]);
             ((ExponentialGrowth) demographicFunction).setDoublingTime(demographicParameterValues[4]);
-			
 //		} else if (this.demographicModelIndex == 4) {// Logistic Growth (Growth Rate)
 //			
 //			demographicFunction = new LogisticGrowth(Units.Type.YEARS);
@@ -227,118 +185,75 @@ public class PartitionData implements Serializable {
 //            ((Expansion) demographicFunction).setN0(demographicParameterValues[14]);
 //            ((Expansion) demographicFunction).setProportion(demographicParameterValues[15]);
 //            ((Expansion) demographicFunction).setDoublingTime(demographicParameterValues[16]);
-			
 		} else {
-
 			System.out.println("Not yet implemented");
-			
 		}
-
 		return demographicFunction;
 	}// END: createDemographicFunction
-	
 	// ////////////
 	// ---TAXA---//
 	// ////////////
-
 	public TreesTableRecord record = null;
-	
 	public String taxaIdref = TaxaParser.TAXA;
-	
 	public void resetTaxaIdref() {
 		this.taxaIdref = TaxaParser.TAXA;
 	}
-	
 	// //////////////////
 	// ---TREE MODEL---//
 	// //////////////////
-
 //	public Tree tree = null;
 	public String treeModelIdref = TreeModel.TREE_MODEL;
-
 	public void resetTreeModelIdref() {
 	this.treeModelIdref = TreeModel.TREE_MODEL;
 	}
-	
 	public TreeModel createTreeModel() {
-		
 		TreeModel treeModel = null;
 		if (this.demographicModelIndex == 0 && this.record.isTreeSet()) {
-			
 			treeModel = new TreeModel(this.record.getTree());
-			
 		} else if( (this.demographicModelIndex > 0 && this.demographicModelIndex <= lastImplementedIndex) && this.record.isTreeSet()) {
-			
 			Taxa taxa = new Taxa(this.record.getTree().asList()); 
 			CoalescentSimulator topologySimulator = new CoalescentSimulator();
 			treeModel = new TreeModel(topologySimulator.simulateTree(taxa, createDemographicFunction()));			
-			
 		} else if((this.demographicModelIndex > 0 && this.demographicModelIndex <= lastImplementedIndex) && this.record.isTaxaSet()) {
-			
 			Taxa taxa = this.record.getTaxa();
 			CoalescentSimulator topologySimulator = new CoalescentSimulator();
 			treeModel = new TreeModel(topologySimulator.simulateTree(taxa, createDemographicFunction()));
-		
 //			} else if (this.demographicModelIndex == 0 && this.record.taxaSet) { 
 //			throw new RuntimeException("Data and demographic model incompatible for partition ");	
-			
 		} else {
-			
 			throw new RuntimeException("Data and demographic model incompatible.");
-			
 		}// END: demo model check
-		
 		return treeModel;
 	}//END: createTreeModel
-
 	// /////////////////
 	// ---DATA TYPE---//
 	// /////////////////
-
 	public int dataTypeIndex = 0;
-
 	public static String[] dataTypes = { "Nucleotide", //
 			"Codon", //
 			"Amino acid" //
 	};
-
 	public DataType createDataType() {
-
 		DataType dataType = null;
-
 		if (this.dataTypeIndex == 0) { // Nucleotide
-
 			dataType = Nucleotides.INSTANCE;
-
 		} else if (this.dataTypeIndex == 1) { // Codon
-
 			dataType = Codons.UNIVERSAL;
-
 		} else if (this.dataTypeIndex == 2) { // AminoAcid
-
 			dataType = AminoAcids.INSTANCE;
-			
 		} else {
-
 			System.out.println("Not yet implemented");
-
 		}
-
 		return dataType;
 	}// END: createDataType
-
 	// ///////////////////////////
 	// ---SUBSTITUTION MODELS---//
 	// ///////////////////////////
-
 	public int substitutionModelIndex = 0;
-
 	public String substitutionModelIdref = Utils.SUBSTITUTION_MODEL;
-
 	public void resetSubstitutionModelIdref() {
 		this.substitutionModelIdref = Utils.SUBSTITUTION_MODEL;
 	}
-	
 	public static String[] substitutionModels = { "HKY", //
 			"GTR", //
 			"TN93", //
@@ -353,7 +268,6 @@ public class PartitionData implements Serializable {
 			"MTREV", //
 			"WAG" //
 	};
-
 	public static int[] substitutionCompatibleDataTypes = { 0, // HKY
 			0, // GTR
 			0, // TN93
@@ -368,7 +282,6 @@ public class PartitionData implements Serializable {
 			2, // MTREV
 			2 // WAG
 	};
-	
 	public static String[] substitutionParameterNames = new String[] {
 			"Kappa value", // HKY
 			"AC", // GTR
@@ -384,9 +297,7 @@ public class PartitionData implements Serializable {
 			"Alpha value", // MG94CodonModel
 			"Beta value", // MG94CodonModel
 			"Kappa value" // MG94CodonModel
-			
 	};
-
 	public static int[][] substitutionParameterIndices = { { 0 }, // HKY
 			{ 1, 2, 3, 4, 5, 6 }, // GTR
 			{ 7, 8 }, // TN93
@@ -401,7 +312,6 @@ public class PartitionData implements Serializable {
 			{}, // MTREV
 			{} // WAG
 	};
-
 	public double[] substitutionParameterValues = new double[] { 1.0, // Kappa-value
 			1.0, // AC
 			1.0, // AG
@@ -417,23 +327,14 @@ public class PartitionData implements Serializable {
 			1.0, // Beta value
 			1.0 // kappa value
 	};
-
 	public BranchModel createBranchModel() {
-
 		BranchModel branchModel = null;
-
 		if (this.substitutionModelIndex == 0) { // HKY
-
 			Parameter kappa = new Parameter.Default(1, substitutionParameterValues[0]);
-
 			FrequencyModel frequencyModel = this.createFrequencyModel();
-
 			HKY hky = new HKY(kappa, frequencyModel);
-
 			branchModel = new HomogeneousBranchModel(hky);
-
 		} else if (this.substitutionModelIndex == 1) { // GTR
-
 			Parameter ac = new Parameter.Default(1,
 					substitutionParameterValues[1]);
 			Parameter ag = new Parameter.Default(1,
@@ -446,169 +347,103 @@ public class PartitionData implements Serializable {
 					substitutionParameterValues[5]);
 			Parameter gt = new Parameter.Default(1,
 					substitutionParameterValues[6]);
-
 			FrequencyModel frequencyModel = this.createFrequencyModel();
-
 			GTR gtr = new GTR(ac, ag, at, cg, ct, gt, frequencyModel);
-
 			branchModel = new HomogeneousBranchModel(gtr);
-
 		} else if (this.substitutionModelIndex == 2) { // TN93
-
 			Parameter kappa1 = new Parameter.Default(1,
 					substitutionParameterValues[7]);
 			Parameter kappa2 = new Parameter.Default(1,
 					substitutionParameterValues[8]);
-
 			FrequencyModel frequencyModel = this.createFrequencyModel();
-
 			TN93 tn93 = new TN93(kappa1, kappa2, frequencyModel);
-
 			branchModel = new HomogeneousBranchModel(tn93);
-
 		} else if (this.substitutionModelIndex == 3) { // Yang Codon Model
-
 			FrequencyModel frequencyModel = this.createFrequencyModel();
-
 			Parameter kappa = new Parameter.Default(1,
 					substitutionParameterValues[9]);
 			Parameter omega = new Parameter.Default(1,
 					substitutionParameterValues[10]);
-
 			GY94CodonModel yangCodonModel = new GY94CodonModel(
 					Codons.UNIVERSAL, omega, kappa, frequencyModel);
-
 			branchModel = new HomogeneousBranchModel(yangCodonModel);
-
-			
 		} else if(this.substitutionModelIndex == 4) { // MG94CodonModel
-			
-			
 			FrequencyModel frequencyModel = this.createFrequencyModel();
-
 			Parameter alpha = new Parameter.Default(1, substitutionParameterValues[11]);
 			Parameter beta = new Parameter.Default(1, substitutionParameterValues[12]);
 			Parameter kappa = new Parameter.Default(1, substitutionParameterValues[13]);
-			
 			MG94HKYCodonModel mg94 = new MG94HKYCodonModel(Codons.UNIVERSAL, alpha, beta, kappa, frequencyModel);
-
 			branchModel = new HomogeneousBranchModel(mg94);
-			
 		} else if (this.substitutionModelIndex == 5) { // Blosum62
-			
 			FrequencyModel frequencyModel = this.createFrequencyModel();
-			
 			EmpiricalRateMatrix rateMatrix = Blosum62.INSTANCE;
-
 			EmpiricalAminoAcidModel empiricalAminoAcidModel = new EmpiricalAminoAcidModel(
 					rateMatrix, frequencyModel);
-
 			branchModel = new HomogeneousBranchModel(
 					empiricalAminoAcidModel);
-			
         } else if (this.substitutionModelIndex == 6) { // CPREV
-			
 			FrequencyModel frequencyModel = this.createFrequencyModel();
-			
 			EmpiricalRateMatrix rateMatrix = CPREV.INSTANCE;
-
 			EmpiricalAminoAcidModel empiricalAminoAcidModel = new EmpiricalAminoAcidModel(
 					rateMatrix, frequencyModel);
-
 			branchModel = new HomogeneousBranchModel(
 					empiricalAminoAcidModel);
-			
         } else if (this.substitutionModelIndex == 7) { // Dayhoff
-			
 			FrequencyModel frequencyModel = this.createFrequencyModel();
-			
 			EmpiricalRateMatrix rateMatrix = Dayhoff.INSTANCE;
-
 			EmpiricalAminoAcidModel empiricalAminoAcidModel = new EmpiricalAminoAcidModel(
 					rateMatrix, frequencyModel);
-
 			branchModel = new HomogeneousBranchModel(
 					empiricalAminoAcidModel);
-		
         } else if (this.substitutionModelIndex == 8) { // JTT
-			
 			FrequencyModel frequencyModel = this.createFrequencyModel();
-			
 			EmpiricalRateMatrix rateMatrix = JTT.INSTANCE;
-
 			EmpiricalAminoAcidModel empiricalAminoAcidModel = new EmpiricalAminoAcidModel(
 					rateMatrix, frequencyModel);
-
 			branchModel = new HomogeneousBranchModel(
 					empiricalAminoAcidModel);
-		
         } else if (this.substitutionModelIndex == 9) { // LG
-			
 			FrequencyModel frequencyModel = this.createFrequencyModel();
-			
 			EmpiricalRateMatrix rateMatrix = LG.INSTANCE;
-
 			EmpiricalAminoAcidModel empiricalAminoAcidModel = new EmpiricalAminoAcidModel(
 					rateMatrix, frequencyModel);
-
 			branchModel = new HomogeneousBranchModel(
 					empiricalAminoAcidModel);
-			
         } else if (this.substitutionModelIndex == 10) { // MTREV
-			
 			FrequencyModel frequencyModel = this.createFrequencyModel();
-			
 			EmpiricalRateMatrix rateMatrix = MTREV.INSTANCE;
-
 			EmpiricalAminoAcidModel empiricalAminoAcidModel = new EmpiricalAminoAcidModel(
 					rateMatrix, frequencyModel);
-
 			branchModel = new HomogeneousBranchModel(
 					empiricalAminoAcidModel);	
-			
         } else if (this.substitutionModelIndex == 11) { // WAG
-			
 			FrequencyModel frequencyModel = this.createFrequencyModel();
-			
 			EmpiricalRateMatrix rateMatrix = WAG.INSTANCE;
-
 			EmpiricalAminoAcidModel empiricalAminoAcidModel = new EmpiricalAminoAcidModel(
 					rateMatrix, frequencyModel);
-
 			branchModel = new HomogeneousBranchModel(
 					empiricalAminoAcidModel);	
-			
 		} else {
-
 			System.out.println("Not yet implemented");
-
 		}
-
 		return branchModel;
 	}// END: createBranchSubstitutionModel
-
 	// ////////////////////////
 	// ---FREQUENCY MODELS---//
 	// ////////////////////////
-
 	public String frequencyModelIdref = Utils.FREQUENCY_MODEL;
-
 	public void resetFrequencyModelIdref() {
 		this.frequencyModelIdref = Utils.FREQUENCY_MODEL;
 	}
-	
 	public int frequencyModelIndex = 0;
-
 	public static String[] frequencyModels = { "Nucleotide frequencies", //
 			"Codon frequencies", //
 			"Amino acid frequencies" 
 			};
-
 	public static int[] frequencyCompatibleDataTypes = { 0, // Nucleotide
 			1, // Codon
 			2 // Amino acid
 	};
-
 	public static String[] frequencyParameterNames = new String[] {
 			"A frequency", // Nucleotide frequencies
 			"C frequency", // Nucleotide frequencies
@@ -695,9 +530,7 @@ public class PartitionData implements Serializable {
             "amino acid frequency 18", //
             "amino acid frequency 19", //
             "amino acid frequency 20" //
-			
 	};
-
 	public int[][] frequencyParameterIndices = { { 0, 1, 2, 3 }, // NucleotideFrequencies
 			{ 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, //
 					14, 15, 16, 17, 18, 19, 20, 21, 22, 23, //
@@ -712,7 +545,6 @@ public class PartitionData implements Serializable {
 					80, 81, 82, 83, 84 //
 			} // AminoAcidFrequencies
 	};
-
 	public double[] frequencyParameterValues = new double[] { 0.25, // A frequency
 			0.25, // C frequency
 			0.25, // G frequency
@@ -799,23 +631,15 @@ public class PartitionData implements Serializable {
 			0.05, // aminoacidfrequency19
 			0.05 // aminoacidfrequency20
 	};
-
 	public FrequencyModel createFrequencyModel() {
-
 		FrequencyModel frequencyModel = null;
-
 		if (this.frequencyModelIndex == 0) { // Nucleotidefrequencies
-
 			Parameter freqs = new Parameter.Default(new double[] {
 					frequencyParameterValues[0], frequencyParameterValues[1],
 					frequencyParameterValues[2], frequencyParameterValues[3] });
-
 			DataType dataType = this.createDataType();
-			
 			frequencyModel = new FrequencyModel(dataType, freqs);
-
 		} else if (this.frequencyModelIndex == 1) {
-
 			Parameter freqs = new Parameter.Default(new double[] {
 					frequencyParameterValues[4], frequencyParameterValues[5],
 					frequencyParameterValues[6], frequencyParameterValues[7],
@@ -848,13 +672,9 @@ public class PartitionData implements Serializable {
 					frequencyParameterValues[60], frequencyParameterValues[61],
 					frequencyParameterValues[62], frequencyParameterValues[63],
 					frequencyParameterValues[64] });
-
 			DataType dataType = this.createDataType();
-			
 			frequencyModel = new FrequencyModel(dataType, freqs);
-
 		} else if (this.frequencyModelIndex == 2) {
-
 			Parameter freqs = new Parameter.Default(new double[] {
 					frequencyParameterValues[65], frequencyParameterValues[66], frequencyParameterValues[67], frequencyParameterValues[68],
 					frequencyParameterValues[69], frequencyParameterValues[70], frequencyParameterValues[71], frequencyParameterValues[72],
@@ -862,39 +682,27 @@ public class PartitionData implements Serializable {
 					frequencyParameterValues[77], frequencyParameterValues[78], frequencyParameterValues[79], frequencyParameterValues[80],
 					frequencyParameterValues[81], frequencyParameterValues[82], frequencyParameterValues[83], frequencyParameterValues[84]
 							});
-
 			DataType dataType = this.createDataType();
-			
 			frequencyModel = new FrequencyModel(dataType, freqs);
-
 		} else {
-
 			System.out.println("Not yet implemented");
-
 		}
-
 		return frequencyModel;
 	}// END: createFrequencyModel
-	
 	// ////////////////////
 	// ---CLOCK MODELS---//
 	// ////////////////////
-	
 	public int clockModelIndex = 0;
     public int LRC_INDEX = 1;
-	
 	public String clockModelIdref = BranchRateModel.BRANCH_RATES;
-
 	public void resetClockModelIdref() {
 		this.clockModelIdref = BranchRateModel.BRANCH_RATES;
 	}
-	
 	public static String[] clockModels = { "Strict Clock", // 0
 			"Lognormal relaxed clock (Uncorrelated)", // 1
 			"Exponential relaxed clock (Uncorrelated)", // 2
 			"Inverse Gaussian relaxed clock" // 3
 	};
-
 	public static String[] clockParameterNames = new String[] { "clock.rate", // StrictClock
 			"ucld.mean", // Lognormal relaxed clock
 			"ucld.stdev", // Lognormal relaxed clock
@@ -905,13 +713,11 @@ public class PartitionData implements Serializable {
 			"ig.stdev", // Inverse Gaussian
 			"ig.offset" // Inverse Gaussian
 	};
-
 	public static int[][] clockParameterIndices = { { 0 }, // StrictClock
 			{ 1, 2, 3 }, // Lognormal relaxed clock
 			{ 4, 5 }, // Exponential relaxed clock
 			{ 6, 7, 8 } // Inverse Gaussian
 	};
-
 	public double[] clockParameterValues = new double[] { 1.0, // clockrate
 			0.001, // ucld.mean
 			1.0, // ucld.stdev
@@ -922,29 +728,19 @@ public class PartitionData implements Serializable {
 			1.0, // ig.stdev
 			0.0 // ig.offset
 	};
-
 	public boolean lrcParametersInRealSpace = true;
-	
 	public BranchRateModel createClockRateModel() {
-
 		BranchRateModel branchRateModel = null;
-
 		if (this.clockModelIndex == 0) { // Strict Clock
-
 			Parameter rateParameter = new Parameter.Default(1, clockParameterValues[0]);
-			
 			branchRateModel = new StrictClockBranchRates(rateParameter);
-
 		} else if (this.clockModelIndex == LRC_INDEX) {// Lognormal relaxed clock
-
 			double numberOfBranches = 2 * (createTreeModel().getTaxonCount() - 1);
 			Parameter rateCategoryParameter = new Parameter.Default(numberOfBranches);
-			
 			Parameter mean = new Parameter.Default(LogNormalDistributionModelParser.MEAN, 1, clockParameterValues[1]);
 			Parameter stdev = new Parameter.Default(LogNormalDistributionModelParser.STDEV, 1, clockParameterValues[2]);
 			//TODO: choose between log scale / real scale
 	        ParametricDistributionModel distributionModel = new LogNormalDistributionModel(mean, stdev, clockParameterValues[3], lrcParametersInRealSpace, lrcParametersInRealSpace);
-	        
 	        branchRateModel = new DiscretizedBranchRates(createTreeModel(), //
 	        		rateCategoryParameter, //
 	                distributionModel, //
@@ -954,18 +750,13 @@ public class PartitionData implements Serializable {
 	                true, //randomizeRates
 	                false // keepRates
 	                );
-
 		} else if(this.clockModelIndex == 2) { // Exponential relaxed clock
-		
 			double numberOfBranches = 2 * (createTreeModel().getTaxonCount() - 1);
 			Parameter rateCategoryParameter = new Parameter.Default(numberOfBranches);
-			
 			Parameter mean = new Parameter.Default(DistributionModelParser.MEAN, 1, clockParameterValues[4]);
 	        ParametricDistributionModel distributionModel = new ExponentialDistributionModel(mean, clockParameterValues[5]);
-			
 //	        branchRateModel = new DiscretizedBranchRates(createTreeModel(), rateCategoryParameter, 
 //	                distributionModel, 1, false, Double.NaN);
-			
 	        branchRateModel = new DiscretizedBranchRates(createTreeModel(), //
 	        		rateCategoryParameter, //
 	                distributionModel, //
@@ -975,20 +766,15 @@ public class PartitionData implements Serializable {
 	                true, //randomizeRates
 	                false // keepRates
 	                );
-	        
 		} else if(this.clockModelIndex == 3) { // Inverse Gaussian
-
 			double numberOfBranches = 2 * (createTreeModel().getTaxonCount() - 1);
 			Parameter rateCategoryParameter = new Parameter.Default(numberOfBranches);
-			
 			Parameter mean = new Parameter.Default(InverseGaussianDistributionModelParser.MEAN, 1, clockParameterValues[6]);
 			Parameter stdev = new Parameter.Default(InverseGaussianDistributionModelParser.STDEV, 1, clockParameterValues[7]);
 	        ParametricDistributionModel distributionModel = new InverseGaussianDistributionModel(
 					mean, stdev, clockParameterValues[8], false);
-     
 //	        branchRateModel = new DiscretizedBranchRates(createTreeModel(), rateCategoryParameter, 
 //	                distributionModel, 1, false, Double.NaN);
-	        
 	        branchRateModel = new DiscretizedBranchRates(createTreeModel(), //
 	        		rateCategoryParameter, //
 	                distributionModel, //
@@ -998,83 +784,55 @@ public class PartitionData implements Serializable {
 	                true, //randomizeRates
 	                false // keepRates
 	                );
-	        
 		} else {
-
 			System.out.println("Not yet implemented");
-
 		}
-
 		return branchRateModel;
 	}// END: createBranchRateModel
-
 	// ///////////////////////
 	// ---SITE RATE MODEL---//
 	// ///////////////////////
-
 	public int siteRateModelIndex = 0;
-
 	public String siteRateModelIdref = SiteModel.SITE_MODEL;
-
 	public void resetSiteRateModelIdref() {
 		this.siteRateModelIdref = SiteModel.SITE_MODEL;
 	}
-	
 	public static String[] siteRateModels = { "No Model", //
 			"Gamma Site Rate Model" //
 	};
-
 	public static String[] siteRateModelParameterNames = new String[] {
 			"Gamma categories", // Gamma Site Rate Model
 			"Alpha", // Gamma Site Rate Model
 			"Invariant sites proportion" // Gamma Site Rate Model
 	};
-
 	public static int[][] siteRateModelParameterIndices = { {}, // NoModel
 			{ 0, 1, 2 }, // GammaSiteRateModel
 	};
-
 	public double[] siteRateModelParameterValues = new double[] { 4.0, // GammaCategories
 			0.5, // Alpha
 			0.0 // Invariant sites proportion
 	};
-
 	public GammaSiteRateModel createSiteRateModel() {
-
 		GammaSiteRateModel siteModel = null;
 		String name = "siteModel";
-
 		if (this.siteRateModelIndex == 0) { // no model
-
 			siteModel = new GammaSiteRateModel(name);
-
 		} else if (this.siteRateModelIndex == 1) { // GammaSiteRateModel
-
 			siteModel = new GammaSiteRateModel(name,
 					siteRateModelParameterValues[1],
 					(int) siteRateModelParameterValues[0], siteRateModelParameterValues[2]);
-
 		} else {
-
 			System.out.println("Not yet implemented");
-
 		}
-
 		return siteModel;
 	}// END: createGammaSiteRateModel
-
 	// //////////////////////////
 	// ---ANCESTRAL SEQUENCE---//
 	// //////////////////////////
 	public String ancestralSequenceString = null;
-
 	public Sequence createAncestralSequence() {
-
 		Sequence sequence = new Sequence(ancestralSequenceString);
 		// sequence.appendSequenceString(ancestralSequenceString);
-
 		return sequence;
 	}
-
 }// END: class
-

@@ -1,43 +1,27 @@
-
 package dr.evolution.coalescent;
-
 public class ExpConstant extends ExponentialGrowth {
-
 	public ExpConstant(Type units) {
-	
 		super(units);
 	}
-	
 	public double getTransitionTime() { return transitionTime; }
 	public void setTransitionTime(double transitionTime) { this.transitionTime = transitionTime; }
-	
 	// Implementation of abstract methods
-
 	public double getDemographic(double t) {
-		
 		double N0 = getN0();
 		double r = getGrowthRate();
         double changeTime = getTransitionTime();
-		
 		//return nOne + ((nZero - nOne) * Math.exp(-r*t));
-	
         if(t < changeTime){
             return N0*Math.exp(-r*changeTime);
         }
-		
 		return N0*Math.exp(-r*t);
 	}
-
 	public double getIntensity(double t) {
-
         double N0 = getN0();
         double r = getGrowthRate();
         double changeTime = getTransitionTime();
-
         double plateauLevel = N0*Math.exp(-r*changeTime);
-
         if (r == 0.0) return t/getN0();
-
         if(t==0){
             return 0;
         }
@@ -55,18 +39,14 @@ public class ExpConstant extends ExponentialGrowth {
             }
         }
   	}
-
 	public double getInverseIntensity(double x) {
         double N0 = getN0();
         double r = getGrowthRate();
         double changeTime = getTransitionTime();
-
         double plateauLevel = N0*Math.exp(-r*changeTime);
-
         if (r == 0.0) {
             return getN0()*x;
         } else
-
         if(changeTime <= 0){
             if(x > (1/(N0*r)) * (Math.exp(r*changeTime) - 1)){
                 return super.getInverseIntensity(x);
@@ -81,11 +61,9 @@ public class ExpConstant extends ExponentialGrowth {
             }
         }
 	}
-	
 	public int getNumArguments() {
 		return 3;
 	}
-	
 	public String getArgumentName(int n) {
 		switch (n) {
 			case 0: return "N0";
@@ -94,7 +72,6 @@ public class ExpConstant extends ExponentialGrowth {
 		}
 		throw new IllegalArgumentException("Argument " + n + " does not exist");
 	}
-	
 	public double getArgument(int n) {
 		switch (n) {
 			case 0: return getN0();
@@ -103,17 +80,14 @@ public class ExpConstant extends ExponentialGrowth {
 		}
 		throw new IllegalArgumentException("Argument " + n + " does not exist");
 	}
-	
 	public void setArgument(int n, double value) {
 		switch (n) {
 			case 0: setN0(value); break;
 			case 1: setGrowthRate(value); break;
 			case 2: setTransitionTime(value); break;
 			default: throw new IllegalArgumentException("Argument " + n + " does not exist");
-
 		}
 	}
-
 	public double getLowerBound(int n) {
         switch (n) {
             case 0: return 0;
@@ -122,14 +96,11 @@ public class ExpConstant extends ExponentialGrowth {
             default: throw new IllegalArgumentException("Argument " + n + " does not exist");
         }
 	}
-	
 	public double getUpperBound(int n) {
 		return Double.POSITIVE_INFINITY;
 	}
-
 	//
 	// private stuff
 	//
-
     private double transitionTime;
 }

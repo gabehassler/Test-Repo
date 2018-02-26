@@ -1,24 +1,15 @@
-
 package dr.inference.model;
-
 @author Max Tolkoff
-
-
-
 public class BlockUpperTriangularMatrixParameter extends MatrixParameter {
     private int rowDim;
     private Bounds bounds = null;
-
     public TransposedBlockUpperTriangularMatrixParameter transposeBlock(){
         return TransposedBlockUpperTriangularMatrixParameter.recast(getVariableName(), this);
     }
-
     public BlockUpperTriangularMatrixParameter(String name, Parameter[] params, boolean diagonalRestriction) {
         super(name);
-
         int rowDim=params[params.length-1].getSize();
         int colDim=params.length;
-
         for(int i=0; i<colDim; i++){
 //            if(i<rowDim)
 //            {params[i].setDimension(i+1);
@@ -37,7 +28,6 @@ public class BlockUpperTriangularMatrixParameter extends MatrixParameter {
 //        System.err.print("\n");
 //        System.err.print(colDim);
 //        System.err.print("\n");
-
 //
 //        double[][] temp=getParameterAsMatrix();
 //        for(int i=0; i<getRowDimension(); i++){
@@ -53,29 +43,23 @@ public class BlockUpperTriangularMatrixParameter extends MatrixParameter {
                 if (i < getRowDimension()) {
                     double[] uppers = new double[i + 1];
                     double[] lowers = new double[i + 1];
-
                     for (int j = 0; j < uppers.length; j++) {
                         uppers[j] = Double.POSITIVE_INFINITY;
                         lowers[j] = Double.NEGATIVE_INFINITY;
-
                     }
                     lowers[i] = 0;
                     getParameter(i).addBounds(new DefaultBounds(uppers, lowers));
                 }
             }
         }
-
     }
-
     @Override
     public int getRowDimension() {
         return rowDim;
     }
-
     public void setRowDimension(int rowDim){
         this.rowDim=rowDim;
     }
-
 //    public double[][] getParameterAsMatrix(){
 //        double[][] answer=new double[getRowDimension()][getColumnDimension()];
 //        for(int i=0; i<getRowDimension(); i++){
@@ -98,7 +82,6 @@ public class BlockUpperTriangularMatrixParameter extends MatrixParameter {
 //
 //        return answer;
 //    }
-
     public double getParameterValue(int row, int col) {
         if (!matrixCondition(row, col)) {
             return 0.0;
@@ -106,43 +89,37 @@ public class BlockUpperTriangularMatrixParameter extends MatrixParameter {
             return getParameter(col).getParameterValue(getInnerDimension(row, col));
         }
     }
-
     protected int getRow(int PID){
         return  PID%getRowDimension();
     }
-
     protected int getColumn(int PID){
         return PID/getRowDimension();
     }
-
-    public void setParameterValue(int row, int col, double value){
+    public void setParameterValueQuietly(int row, int col, double value){
          if(matrixCondition(row, col)){
-             getParameter(col).setParameterValue(row, value);
+             getParameter(col).setParameterValueQuietly(getInnerDimension(row,col), value);
         }
     }
+    public void setParameterValue(int row, int col,double value){
+        setParameterValueQuietly(row, col, value);
+        fireParameterChangedEvent();
+    }
     public void setParameterValue(int PID, double value){
-
         int row=getRow(PID);
         int col=getColumn(PID);
 //        System.out.println(row+" "+col);
 //        System.out.println(matrixCondition(row, col));
-
-
         if(matrixCondition(row, col)){
             setParameterValue(row, col, value);
         }
     }
-
-
  //test if violates matrix condition
     boolean matrixCondition(int row, int col){
             return row>=(col);
     }
-
     public double getParameterValue(int id){
         int row=getRow(id);
         int col=getColumn(id);
-
         if(matrixCondition(row, col)){
             return getParameterValue(row, col);
         }
@@ -151,51 +128,38 @@ public class BlockUpperTriangularMatrixParameter extends MatrixParameter {
             return 0;
         }
     }
-
     public void addBounds(Bounds<Double> boundary) {
-
         if (bounds == null) {
             bounds = new BUTMPBounds();
 //            return;
         } //else {
         IntersectionBounds newBounds = new IntersectionBounds(getDimension());
         newBounds.addBounds(bounds);
-
 //        }
         ((IntersectionBounds) bounds).addBounds(boundary);
     }
-
     public Bounds<Double> getBounds() {
-
         if (bounds == null) {
             bounds = new BUTMPBounds();
         }
         return bounds;
     }
-
     protected int getInnerDimension(int row, int col){
         return row;
     }
-
-
     private class BUTMPBounds implements Bounds<Double>{
    //TODO test!
-
             public Double getUpperLimit(int dim) {
                 int row=getRow(dim);
                 int col=getColumn(dim);
-
                 if(matrixCondition(row, col)){
-
                  return getParameter(col).getBounds().getUpperLimit(getInnerDimension(row, col)); }
                 else
                     return 0.0;
             }
-
             public Double getLowerLimit(int dim) {
                 int row=getRow(dim);
                 int col=getColumn(dim);
-
                 if(matrixCondition(row, col)){
                     return getParameter(col).getBounds().getLowerLimit(getInnerDimension(row, col));
 //                    System.out.println(getParameters().get(dim-row).getBounds().getLowerLimit(getPindex().get(dim-row)));
@@ -204,7 +168,6 @@ public class BlockUpperTriangularMatrixParameter extends MatrixParameter {
                 else
                     return 0.0;
             }
-
             public int getBoundsDimension() {
 //                int nBlanks = 0;
 //                for (int i = 0; i <getColumnDimension() ; i++) {
@@ -215,10 +178,7 @@ public class BlockUpperTriangularMatrixParameter extends MatrixParameter {
                 return getDimension();
         }
     }
-
     public int getDimension(){
         return getRowDimension()*getColumnDimension();
     }
-
-
 }

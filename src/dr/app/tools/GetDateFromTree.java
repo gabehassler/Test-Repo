@@ -1,42 +1,32 @@
-
 package dr.app.tools;
-
 import dr.app.beauti.util.XMLWriter;
 import dr.evolution.io.NewickImporter;
 import dr.evolution.tree.FlexibleNode;
 import dr.evolution.tree.Tree;
-
 import java.io.*;
 import java.text.DecimalFormat;
 import java.util.Random;
 import java.util.StringTokenizer;
-
 public class GetDateFromTree extends NewickImporter {
-
     public GetDateFromTree(Reader reader) {
         super(reader);
     }
-
     public GetDateFromTree(String treeString) {
         super(treeString);
     }
-
     static public void main(String[] args) {
         for (int c = 1; c <= 10; c++) {
             int index = 10;
-
             try {
                 System.out.println("Input trees from " + pathInput + c + inputFileName + "\n\n");
                 FileReader fileReader = new FileReader(pathInput + c + inputFileName);
                 GetDateFromTree getDateFromTree = new GetDateFromTree(fileReader); // many trees
                 int totalTrees = 0;
-
                 try {
                     while (getDateFromTree.hasTree()) {
                         Tree tree = getDateFromTree.importNextTree();
 //                        System.out.println(tree.toString());
 //                        System.out.println(insetTreeIndex(2, tree.toString()));
-
                         if (totalTrees == index * 100) { // 1000
                             System.out.println("input " + totalTrees + "th tree");
                             getDate(Integer.toString(c), index, tree);
@@ -44,15 +34,12 @@ public class GetDateFromTree extends NewickImporter {
                         }
                         totalTrees++;
                     }
-
                 } catch (ImportException e) {
                     System.err.println("Error Parsing Input Tree: " + e.getMessage());
                     return;
                 }
-
                 fileReader.close();
                 System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++\n\n");
-
             } catch (FileNotFoundException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             } catch (IOException e) {
@@ -65,26 +52,20 @@ public class GetDateFromTree extends NewickImporter {
 //            index += 10;
 //        }
     }
-
     private static void getDate(String curD, int index, Tree treeOne) throws ImportException { // many trees
         double rootHeight;
         DecimalFormat twoDForm = new DecimalFormat("####0.##");
-
         Tree[] trees = new Tree[combiTrees];
         double[][] tips = new double[combiTrees][treeOne.getExternalNodeCount() + 1];
         double[] origins = new double[trees.length];
-
         trees[0] = treeOne;
-
         for (int t = 1; t < combiTrees; t++) {
             trees[t] = getRandomTree();
             if (trees[t] == null) throw new ImportException("get null random tree");
 //            System.out.println(t + " => " + trees[t].toString());
         }
-
         for (int t = 0; t < trees.length; t++) {
             System.out.println(t + " => " + trees[t]);
-
             for (int i = 0; i < trees[t].getTaxonCount(); i++) {
                 FlexibleNode node = (FlexibleNode) trees[t].getExternalNode(i);
 //                System.out.println(node.getTaxon() + " has " + node.getHeight());
@@ -95,8 +76,6 @@ public class GetDateFromTree extends NewickImporter {
             System.out.println("tree " + t + " root height = " + rootHeight + " origin = " + origins[t]);
             System.out.println("\n");
         }
-
-
         if (index < 0) {
             printXML(tips[0]);
         } else {
@@ -109,18 +88,15 @@ public class GetDateFromTree extends NewickImporter {
         }
         System.out.println("\n");
     }
-
     private static Tree getRandomTree() {
         Random random = new Random();
         int c = random.nextInt(10) + 1; // [1, 10]
         int tId = random.nextInt(9000) + 1000; // [1000, 10000]
-
         try {
             System.out.println("randomly get " + tId + "th tree from " + pathInput + c + inputFileName + "\n\n");
             FileReader fileReader = new FileReader(pathInput + c + inputFileName);
             GetDateFromTree getDateFromTree = new GetDateFromTree(fileReader); // many trees
             int totalTrees = 0;
-
             try {
                 while (getDateFromTree.hasTree()) {
                     Tree tree = getDateFromTree.importNextTree();
@@ -129,23 +105,18 @@ public class GetDateFromTree extends NewickImporter {
                         return tree;
                     }
                 }
-
             } catch (ImportException e) {
                 System.err.println("Error Parsing Input Tree: " + e.getMessage());
                 return null;
             }
-
             fileReader.close();
-
         } catch (FileNotFoundException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         } catch (IOException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
-
         return null;
     }
-
     private static String insetTreeIndex(int treeIndex, String tree) {
         int inserts = 0;
         String newTaxaTree = "";
@@ -165,10 +136,8 @@ public class GetDateFromTree extends NewickImporter {
 //        System.out.println ("changed " + inserts + " taxon");
         return newTaxaTree;
     }
-
     private static void outputBDSSXML(String curD, int index, double[][] tips, double[] origin, Tree[] trees) throws IOException {
         XMLWriter w = writeHeadAndTaxa(curD, index, tips);
-
         w.flush();
         w.writeText("\t<!-- Stadler et al (2011) : Estimating the basic reproductive number from viral sequence data, Submitted.-->\n" +
                 "\t<birthDeathSerialSampling id=\"bdss\" units=\"substitutions\" hasFinalSample=\"false\">\n" +//logTransformed=\"true\">\n" +
@@ -227,7 +196,6 @@ public class GetDateFromTree extends NewickImporter {
                     "\t</birthDeathSerialSampling>\n");
         }
         w.flush();
-
 //        w.writeText("\t<RPNcalculator id=\"mur\">\n" +
 //                "\t\t<variable name=\"b\">\n" +
 //                "\t\t\t<parameter idref=\"bdss.birthRate\"/>\n" +
@@ -288,7 +256,6 @@ public class GetDateFromTree extends NewickImporter {
 //                    "\t\t</expression>\n" +
 //                    "\t</RPNcalculator>\n");
 //        }
-
         w.flush();
         w.writeText("\n" +
                 "\t<!-- Generate a random starting tree under the coalescent process      -->\n" +
@@ -304,7 +271,6 @@ public class GetDateFromTree extends NewickImporter {
             w.writeText("\n" + "\t</newick>\n");
             w.flush();
         }
-
         w.writeText("\n" +
                 "\t<!-- Generate a tree model                                                   -->\n" +
                 "\t<treeModel id=\"treeModel\">\n" +
@@ -338,10 +304,8 @@ public class GetDateFromTree extends NewickImporter {
                     "\n" +
                     "\t\t<!-- END Tip date sampling                                                   -->\n" +
                     "\t</treeModel>\n");
-
         }
         w.flush();
-
         w.writeText("\n" +
                 "\t<!-- Generate a speciation likelihood for Yule or Birth Death                -->\n" +
                 "\t<speciationLikelihood id=\"speciation\">\n" +
@@ -364,7 +328,6 @@ public class GetDateFromTree extends NewickImporter {
                     "\t\t</speciesTree>\n" +
                     "\t</speciationLikelihood>\n");
         }
-
         w.writeText("\n" + "\t<!-- Define operators                                                        -->\n" +
                 "\t<operators id=\"operators\">\n" +
 //                "\t\t<randomWalkOperator windowSize=\"1.0\" weight=\"10\">\n" +
@@ -414,7 +377,6 @@ public class GetDateFromTree extends NewickImporter {
                     "\t\t</scaleOperator>\n");
         }
         w.writeText("\n" + "\t</operators>");
-
         w.flush();
         w.writeText("\n" +
                 "\t<!-- Define MCMC                                                             -->\n" +
@@ -464,7 +426,6 @@ public class GetDateFromTree extends NewickImporter {
                     "\t\t\t\t\t<parameter idref=\"bdss" + tree + ".origin\"/>\n" +
                     "\t\t\t\t</uniformPrior>\n");
         }
-
         w.writeText("\n" +
                 "\t\t\t</prior>\n" +
                 "\t\t\t<likelihood id=\"likelihood\">\n" +
@@ -475,7 +436,6 @@ public class GetDateFromTree extends NewickImporter {
         w.writeText("\t\t\t</likelihood>\n" +
                 "\t\t</posterior>\n" +
                 "\t\t<operators idref=\"operators\"/>\n");
-
         w.flush();
         w.writeText("\n" +
                 "\t\t<!-- write log to screen                                                     -->\n" +
@@ -512,7 +472,6 @@ public class GetDateFromTree extends NewickImporter {
 //                    "\t\t\t<RPNcalculator idref=\"R0" + tree + "\"/>\n" +
                     "\t\t\t<parameter idref=\"bdss" + tree + ".origin\"/>\n");
         }
-
         w.writeText("\t\t</log>\n" +
                 "\n" +
                 "\t\t<!-- write log to file                                                       -->\n" +
@@ -542,13 +501,11 @@ public class GetDateFromTree extends NewickImporter {
 //                    "\t\t\t<RPNcalculator idref=\"R0" + tree + "\"/>\n" +
                     "\t\t\t<parameter idref=\"bdss" + tree + ".origin\"/>\n");
         }
-
         w.writeText("\n" +
                 "\t\t\t<speciationLikelihood idref=\"speciation\"/>\n");
         for (int tree = 2; tree <= combiTrees; tree++) {
             w.writeText("\t\t\t\t<speciationLikelihood idref=\"speciation" + tree + "\"/>\n");
         }
-
         w.writeText("\t\t</log>\n" +
                 "\n" +
 //                "\t\t<!-- write tree log to file                                                  -->\n" +
@@ -563,14 +520,11 @@ public class GetDateFromTree extends NewickImporter {
                 "\t\t</property>\n" +
                 "\t</report>\n" +
                 "</beast>\n");
-
         w.flush();
         w.close();
     }
-
     private static void outputExponetialXML(String curD, int index, double[][] tips, double[] origin, Tree[] trees) throws IOException {
         XMLWriter w = writeHeadAndTaxa(curD, index, tips);
-
         w.flush();
         w.writeText("\n" +
                 "\t<exponentialGrowth id=\"exponential\" units=\"years\">\n" +
@@ -592,7 +546,6 @@ public class GetDateFromTree extends NewickImporter {
                     "\t\t</growthRate>\n" +
                     "\t</exponentialGrowth>\n");
         }
-
         w.flush();
         w.writeText("\n" +
                 "\t<!-- Generate a random starting tree under the coalescent process      -->\n" +
@@ -608,7 +561,6 @@ public class GetDateFromTree extends NewickImporter {
             w.writeText("\n" + "\t</newick>\n");
             w.flush();
         }
-
         w.writeText("\n" +
                 "\t<!-- Generate a tree model                                                   -->\n" +
                 "\t<treeModel id=\"treeModel\">\n" +
@@ -642,10 +594,8 @@ public class GetDateFromTree extends NewickImporter {
                     "\n" +
                     "\t\t<!-- END Tip date sampling                                                   -->\n" +
                     "\t</treeModel>\n");
-
         }
         w.flush();
-
         w.writeText("\n" +
                 "\t<coalescentLikelihood id=\"coalescent\">\n" +
                 "\t\t<model>\n" +
@@ -666,7 +616,6 @@ public class GetDateFromTree extends NewickImporter {
                     "\t\t</populationTree>\n" +
                     "\t</coalescentLikelihood>\n");
         }
-
         w.writeText("\n" + "\t<!-- Define operators                                                        -->\n" +
                 "\t<operators id=\"operators\">\n" +
                 "\t<randomWalkOperator windowSize=\"1.0\" weight=\"10\">\n" +
@@ -682,7 +631,6 @@ public class GetDateFromTree extends NewickImporter {
                     "\t</scaleOperator>\n");
         }
         w.writeText("\n" + "\t</operators>");
-
         w.flush();
         w.writeText("\n" +
                 "\t<!-- Define MCMC                                                             -->\n" +
@@ -703,12 +651,10 @@ public class GetDateFromTree extends NewickImporter {
         for (int tree = 2; tree <= combiTrees; tree++) {
             w.writeText("\t\t\t\t<coalescentLikelihood idref=\"coalescent" + tree + "\"/>\n");
         }
-
         w.writeText("\n" +
                 "\t\t\t</prior>\n" +
                 "\t\t</posterior>\n" +
                 "\t\t<operators idref=\"operators\"/>\n");
-
         w.flush();
         w.writeText("\n" +
                 "\t\t<!-- write log to screen                                                     -->\n" +
@@ -731,7 +677,6 @@ public class GetDateFromTree extends NewickImporter {
             w.writeText("\t\t\t<parameter idref=\"treeModel" + tree + ".rootHeight\"/>\n" +
                     "\t\t\t<parameter idref=\"exponential" + tree + ".popSize\"/>\n");
         }
-
         w.writeText("\t\t</log>\n" +
                 "\n" +
                 "\t\t<!-- write log to file                                                       -->\n" +
@@ -745,13 +690,11 @@ public class GetDateFromTree extends NewickImporter {
             w.writeText("\t\t\t<parameter idref=\"treeModel" + tree + ".rootHeight\"/>\n" +
                     "\t\t\t<parameter idref=\"exponential" + tree + ".popSize\"/>\n");
         }
-
         w.writeText("\n" +
                 "\t\t\t<coalescentLikelihood idref=\"coalescent\"/>\n");
         for (int tree = 2; tree <= combiTrees; tree++) {
             w.writeText("\t\t\t\t<coalescentLikelihood idref=\"coalescent" + tree + "\"/>\n");
         }
-
         w.writeText("\t\t</log>\n" +
                 "\n" +
 //                "\t\t<!-- write tree log to file                                                  -->\n" +
@@ -771,11 +714,9 @@ public class GetDateFromTree extends NewickImporter {
                 "\t\t</property>\n" +
                 "\t</report>\n" +
                 "</beast>\n");
-
         w.flush();
         w.close();
     }
-
     private static XMLWriter writeHeadAndTaxa(String curD, int index, double[][] tips) throws IOException {
         String f = path + curD + "/T_" + Integer.toString(index) + ".xml";
         System.out.println("Creating xml : " + f);
@@ -791,7 +732,6 @@ public class GetDateFromTree extends NewickImporter {
                 "\t<!-- The list of taxa to be analysed (can also include dates/ages).          -->\n" +
                 "\t<!-- ntax=" + tips[0].length + "                                                                -->\n" +
                 "\t<taxa id=\"taxa\">\n");
-
         for (int n = 1; n < tips[0].length; n++) {
             w.writeText("\t<taxon id=\"" + n + "\">\n" +
                     "\t\t<date value=\"" + tips[0][n] + "\" direction=\"backwards\" units=\"years\" />\n" +
@@ -809,7 +749,6 @@ public class GetDateFromTree extends NewickImporter {
         }
         return w;
     }
-
     private static void printXML(double[] tips) {
         System.out.println("\t<taxa id=\"taxa\">");
         for (int n = 1; n < tips.length; n++) {
@@ -819,7 +758,6 @@ public class GetDateFromTree extends NewickImporter {
         }
         System.out.println("\t</taxa>");
     }
-
 //    static final String testingTree = "((1:1,2:1):1,(3:0.25,4:0.75):1);";
     //
     //    static final String treeImported = "((3:0.3824976747708124,94:3.401966643328916):0.2131455444432433,((63:0.7035650391093435,(((61:0.2412493040961774,(((69:0.8620006828340152,((48:0.5302937984554452,((66:0.49360327162170314,96:0.7203824406192432):0.26805517248648547,(84:1.6647723439430746,18:1.7899504518955753):8.032342341470766E-4):0.3878430419933654):0.0020541955766213427,(((39:0.547175618789725,41:0.7713476736692841):1.5199644442202225,59:2.300348903048058):0.3545780299502965,(5:2.173657685837823,(7:0.4831518556113801,46:0.04259431830686622):0.9936840610288644):0.3828314786413345):0.06944108321445075):0.2916463175592021):0.8511296243775233,(((13:0.21179557713185626,65:0.9050599247224358):1.2063337719436882,(19:0.961325550099684,(71:0.27227635823039753,((72:0.3623541449244776,34:1.1593527329427098):0.4329707059057515,24:1.750349112100648):0.8548087225791183):0.33826729136137956):0.014057115381393093):0.6343929119615161,99:3.7025837488577316):0.543866697708435):0.1836689943905121,((((((82:1.7276842975724649,91:1.607723421568065):0.1933685581812319,((28:0.23706203140931148,((86:0.5529558273083699,67:0.29663788595939145):0.281373008673687,31:0.8632750147330384):0.5341346272330105):0.7280205172816232,73:0.11489207430514847):0.1042334879532878):0.22023308807550723,97:2.0816724934432385):0.16356342886852548,(25:0.85596627446141,81:0.10864654588741773):0.3265316815053567):0.7052085780791693,((((54:1.2513925633251677,15:1.7216422570576408):1.1052980890372737,79:1.4025557656843413):0.4324573365468609,((60:1.2665130997995677,(23:0.9699990116584232,(58:0.17796506940081697,27:0.3614456732505629):1.3967642598709824):0.4421690408682921):0.7888785083571337,((76:0.1711906024989267,49:1.2710678644023476):0.060131414497704094,64:1.2593916884637246):1.5454624508194899):0.24056330854342534):0.015283090096886554,((32:1.3278266797752578,50:1.2629774321495602):0.7777520083215703,88:0.02772431983654222):1.1101361895232151):0.5963623233265598):0.3665009131043293,((((16:1.9309003970287875,(((90:0.5445216783903744,6:0.8548831149642158):0.2741249294450656,30:0.008362111012826023):1.022234909613422,(40:0.7366132749777619,83:0.5070914524648216):1.3875613903422281):0.5001700205337869):0.7233479987224163,((1:0.6003333838940725,98:0.3415505496586113):2.588962722413393,(4:0.2759376488056353,29:0.47002294631420005):0.898552467271085):0.2362157981780597):0.11672800780799664,((10:1.1355322499789322,43:0.5843151524612831):0.701686409717148,52:1.9374978201794926):1.417945520858075):0.7586500833008447,9:0.3178627566272416):0.03155457313484966):0.14868731051955386):0.3667216608428072):0.02390814464028157,(((((35:1.086623144974067,74:0.692186651442158):0.10673574135114072,(78:0.1638180965937629,89:0.250663800794962):0.08265189041229482):1.4629757070659404,93:1.6063646891197325):1.4550877544464176,((37:0.9226166936844796,21:1.044343709701885):1.5676034487217074,100:1.3447223957080423):1.088773395481709):0.08284086233381505,((((56:2.355869340652318,45:0.4032979506669325):0.3330320301280212,((2:0.5357734051244822,53:1.0622382154097905):1.0714020295534217,(57:1.9553678171881557,92:1.9351676011453818):0.3176309095081522):0.33889485298905964):1.0910719751499318,51:0.06358005997870864):0.24119223678720436,(12:1.0464825190142348,8:1.0984225849334481):1.6150168196252994):0.13538891424735233):0.654056534527701):0.68828126623945,((((95:1.5084591517564723,87:1.0618807586778019):0.13101510403314265,75:1.1323197425395333):2.2878458817626433,36:2.864052872624789):0.6509399099742286,(((17:0.06524692359560014,((((33:0.017056678783653467,(77:0.768977532338945,22:0.2066823108679694):0.3345642602125296):0.600193544474839,47:0.6997906421703952):0.5100738160877549,(70:0.5677418730833756,42:1.9551556564280363):1.6169469279243813):0.3307075738681533,20:2.492040542806981):0.525443622448492):0.09433286051003886,((11:0.3113555135611077,(38:0.44389504903251376,44:1.2708469141489145):0.2622045045057788):1.2732398364643553,(26:1.6716254866488542,(55:0.9828398772396151,68:0.21551121655825067):1.106998506688205):0.5526554864260289):1.671928572660197):0.12614845672773534,(80:0.34195834822687576,(85:0.09264904116899952,62:1.713709090294202):0.18592099291105324):0.4792020544951763):0.2727014597498254):0.2650194727743962):2.4225764992771586):0.12072071192465827,14:0.47972787703636754):2.757605090929111);";
@@ -850,7 +788,6 @@ public class GetDateFromTree extends NewickImporter {
 //             sum += 1/(double) n;
 //        }
 //        System.out.println("sum = " + sum);
-
 //    private static void getDate(int index, GetDateFromTree getDateFromTree, String treeString) { // single tree or import trees
 //        Taxa taxa = new Taxa();
 //        for (int n = 1; n <= 100; n++) {

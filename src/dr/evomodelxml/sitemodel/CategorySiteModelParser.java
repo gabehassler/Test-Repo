@@ -1,13 +1,9 @@
-
 package dr.evomodelxml.sitemodel;
-
 import dr.evomodel.sitemodel.CategorySiteModel;
 import dr.evomodel.substmodel.SubstitutionModel;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 public class CategorySiteModelParser extends AbstractXMLObjectParser {
-
     public static final String SITE_MODEL = "categorySiteModel";
     public static final String SUBSTITUTION_MODEL = "substitutionModel";
     public static final String MUTATION_RATE = "mutationRate";
@@ -16,19 +12,14 @@ public class CategorySiteModelParser extends AbstractXMLObjectParser {
     public static final String CATEGORY_STATES = "states";
     public static final String CATEGORY_STRING = "values";
     public static final String RELATIVE_TO = "relativeTo";
-
     public String getParserName() {
         return SITE_MODEL;
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         XMLObject cxo = xo.getChild(SUBSTITUTION_MODEL);
         SubstitutionModel substitutionModel = (SubstitutionModel) cxo.getChild(SubstitutionModel.class);
-
         cxo = xo.getChild(MUTATION_RATE);
         Parameter muParam = (Parameter) cxo.getChild(Parameter.class);
-
         cxo = xo.getChild(RATE_PARAMETER);
         Parameter rateParam = null;
         int relativeTo = 0;
@@ -36,7 +27,6 @@ public class CategorySiteModelParser extends AbstractXMLObjectParser {
             rateParam = (Parameter) cxo.getChild(Parameter.class);
             relativeTo = cxo.getIntegerAttribute(RELATIVE_TO);
         }
-
         cxo = xo.getChild(CATEGORIES);
         String categories = "";
         String states = "";
@@ -44,27 +34,20 @@ public class CategorySiteModelParser extends AbstractXMLObjectParser {
             categories = cxo.getStringAttribute(CATEGORY_STRING);
             states = cxo.getStringAttribute(CATEGORY_STATES);
         }
-
         return new CategorySiteModel(substitutionModel, muParam, rateParam, categories, states, relativeTo);
-
     }
-
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
-
     public String getParserDescription() {
         return "A SiteModel that has a gamma distributed rates across sites";
     }
-
     public Class getReturnType() {
         return CategorySiteModel.class;
     }
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     private final XMLSyntaxRule[] rules = {
             new ElementRule(SUBSTITUTION_MODEL, new XMLSyntaxRule[]{
                     new ElementRule(SubstitutionModel.class)
@@ -81,5 +64,4 @@ public class CategorySiteModelParser extends AbstractXMLObjectParser {
                     AttributeRule.newStringRule(CATEGORY_STATES, true)
             }, true),
     };
-
 }

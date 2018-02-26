@@ -1,35 +1,24 @@
-
 package dr.evoxml;
-
 import dr.evolution.tree.SimpleNode;
 import dr.evolution.util.Date;
 import dr.evolution.util.Taxon;
 import dr.util.Attributable;
 import dr.util.Attribute;
 import dr.xml.*;
-
 public class SimpleNodeParser extends AbstractXMLObjectParser {
-
     public final static String NODE = "node";
     public final static String HEIGHT = "height";
     public final static String RATE = "rate";
-
     public String getParserName() { return NODE; }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         SimpleNode node = new SimpleNode();
-
         Taxon taxon = null;
-
         if (xo.hasAttribute(HEIGHT)) {
             node.setHeight(xo.getDoubleAttribute(HEIGHT));
         }
-
         if (xo.hasAttribute(RATE)) {
             node.setRate(xo.getDoubleAttribute(RATE));
         }
-
         for (int i = 0; i < xo.getChildCount(); i++) {
             Object child = xo.getChild(i);
             if (child instanceof dr.evolution.tree.SimpleNode) {
@@ -61,28 +50,21 @@ public class SimpleNodeParser extends AbstractXMLObjectParser {
                 throw new XMLParseException("Unrecognized element found in node element!");
             }
         }
-
         if (taxon != null) {
             node.setTaxon(taxon);
         }
-
         return node;
     }
-
     public String getParserDescription() {
         return "This element represents a node in a tree.";
     }
-
     public Class getReturnType() { return SimpleNode.class; }
-
     public XMLSyntaxRule[] getSyntaxRules() { return rules; }
-
     private final XMLSyntaxRule[] rules = {
         AttributeRule.newDoubleRule(HEIGHT, true, "the age of the node"),
         AttributeRule.newDoubleRule(RATE, true, "the relative rate of evolution at this node - default is 1.0"),
         new XORRule(
             new ElementRule(Taxon.class, "The taxon of this leaf node"),
             new ElementRule(SimpleNode.class, "The children of this internal node", 2, 2))
-
     };
 }

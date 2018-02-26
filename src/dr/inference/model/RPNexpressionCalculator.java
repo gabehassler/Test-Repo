@@ -1,43 +1,31 @@
-
 package dr.inference.model;
-
 import java.util.Stack;
-
 public class RPNexpressionCalculator {
     public interface GetVariable {
         double get(String name);
     }
-
    private enum OP { OP_ADD, OP_SUB, OP_MULT, OP_DIV, OP_LOG, OP_EXP, OP_CHS, OP_CONST, OP_REF }
-
     private class Eelement {
         OP op;
         String name;
         private double value;
-
         Eelement(OP op) {
             this.op = op;
             name = null;
         }
-
          Eelement(String name) {
             this.op = OP.OP_REF;
             this.name = name;
         }
-
          Eelement(double val) {
              this.op = OP.OP_CONST;
              this.value = val;
          }
     }
-
     Eelement[] expression;
-
     public RPNexpressionCalculator(String expressionString) {
         String[] tokens = expressionString.trim().split("\\s+");
-
         expression = new Eelement[tokens.length];
-        
         for(int k = 0; k < tokens.length; ++k) {
             String tok = tokens[k];
             Eelement element;
@@ -66,10 +54,8 @@ public class RPNexpressionCalculator {
             expression[k] = element;
         }
     }
-
     public double evaluate(GetVariable variables) {
         Stack<Double> stack = new Stack<Double>();
-
         for( Eelement elem : expression ) {
             switch( elem.op ) {
                 case OP_ADD: {
@@ -124,13 +110,10 @@ public class RPNexpressionCalculator {
                 }
             }
         }
-
         return stack.pop();
     }
-
     public String validate() {
         int stackSize = 0;
-
         for(Eelement elem : expression) {
             switch( elem.op ) {
                 case OP_ADD:
@@ -161,11 +144,9 @@ public class RPNexpressionCalculator {
                 }
             }
         }
-
         if( stackSize != 1 ) {
             return "Stack size " + stackSize + " ( != 1 ) at end of expression evaluation";
         }
-
         return null;
     }
 }

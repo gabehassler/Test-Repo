@@ -1,12 +1,8 @@
-
 package dr.inference.model;
-
 import dr.xml.*;
-
 public class ParameterChooserParser extends dr.xml.AbstractXMLObjectParser {
     public static String VARIABLE_SELECTOR = "variableSelector";
     public static String INDEX = "index";
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
         String name = xo.getId();
         final ValuesPool pool = (ValuesPool) xo.getChild(ValuesPool.class);
@@ -18,22 +14,18 @@ public class ParameterChooserParser extends dr.xml.AbstractXMLObjectParser {
         }
         return new ParameterChooser(name, pool, which);
     }
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return new XMLSyntaxRule[] {
                 new ElementRule(ValuesPool.class,1,1),
                 AttributeRule.newIntegerArrayRule(INDEX, false),
         };
     }
-
     public String getParserDescription() {
         return "";
     }
-
     public Class getReturnType() {
         return ParameterChooser.class;
     }
-
     public String getParserName() {
         return VARIABLE_SELECTOR;
     }

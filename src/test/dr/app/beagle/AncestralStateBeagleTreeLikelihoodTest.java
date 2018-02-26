@@ -1,5 +1,4 @@
 package test.dr.app.beagle;
-
 import dr.app.beagle.evomodel.branchmodel.BranchModel;
 import dr.app.beagle.evomodel.branchmodel.HomogeneousBranchModel;
 import dr.app.beagle.evomodel.sitemodel.BranchSubstitutionModel;
@@ -23,25 +22,17 @@ import dr.app.beagle.evomodel.treelikelihood.AncestralStateBeagleTreeLikelihood;
 import dr.app.beagle.evomodel.treelikelihood.PartialsRescalingScheme;
 import dr.app.beagle.evomodel.sitemodel.GammaSiteRateModel;
 import dr.app.beagle.evomodel.sitemodel.HomogenousBranchSubstitutionModel;
-
-
 public class AncestralStateBeagleTreeLikelihoodTest extends TraceCorrelationAssert {
-
     private FlexibleTree tree;
-
     public AncestralStateBeagleTreeLikelihoodTest(String name) {
         super(name);
     }
-
     public void setUp() throws Exception {
         super.setUp();
-
         MathUtils.setSeed(666);
-
         NewickImporter importer = new NewickImporter("(0:2.0,(1:1.0,2:1.0):1.0);");
         tree = (FlexibleTree) importer.importTree(null);
     }
-
     // transition prob of JC69
     private double t(boolean same, double time) {
         if (same) {
@@ -50,45 +41,31 @@ public class AncestralStateBeagleTreeLikelihoodTest extends TraceCorrelationAsse
             return 0.25 - 0.25 * Math.exp(-4.0 / 3.0 * time);
         }
     }
-
     public void testJointLikelihood() {
-
         TreeModel treeModel = new TreeModel("treeModel", tree);
-
         Sequence[] sequence = new Sequence[3];
-
         sequence[0] = new Sequence(new Taxon("0"), "A");
         sequence[1] = new Sequence(new Taxon("1"), "C");
         sequence[2] = new Sequence(new Taxon("2"), "C");
-
         Taxa taxa = new Taxa();
         for (Sequence s : sequence) {
             taxa.addTaxon(s.getTaxon());
         }
-
         SimpleAlignment alignment = new SimpleAlignment();
         for (Sequence s : sequence) {
             alignment.addSequence(s);
         }
-
         Parameter mu = new Parameter.Default(1, 1.0);
-
         Parameter kappa = new Parameter.Default(1, 1.0);
         double[] pi = {0.25, 0.25, 0.25, 0.25};
-
         Parameter freqs = new Parameter.Default(pi);
         FrequencyModel f = new FrequencyModel(Nucleotides.INSTANCE, freqs);
         HKY hky = new HKY(kappa, f);
-
         GammaSiteRateModel siteRateModel = new GammaSiteRateModel("gammaModel", mu, null, -1, null);
         siteRateModel.setSubstitutionModel(hky);
-
         BranchModel branchModel = new HomogeneousBranchModel(
                 siteRateModel.getSubstitutionModel());
-
         BranchRateModel branchRateModel = null;
-
-
         AncestralStateBeagleTreeLikelihood treeLikelihood = new AncestralStateBeagleTreeLikelihood(
                 alignment,
                 treeModel,
@@ -104,23 +81,16 @@ public class AncestralStateBeagleTreeLikelihoodTest extends TraceCorrelationAsse
                 true, // useMap = true
                 false
         );
-
         double logLike = treeLikelihood.getLogLikelihood();
-
         StringBuffer buffer = new StringBuffer();
-
 //        Tree.Utils.newick(treeModel, treeModel.getRoot(), false, Tree.BranchLengthType.LENGTHS_AS_TIME,
 //                null, null, new NodeAttributeProvider[]{treeLikelihood}, null, null, buffer);
         Tree.Utils.newick(treeModel, treeModel.getRoot(), false, Tree.BranchLengthType.LENGTHS_AS_TIME,
                 null, null, new TreeTraitProvider[] { treeLikelihood }, null, buffer);
-
         System.out.println(buffer);
-
         System.out.println("t_CA(2) = " + t(false, 2.0));
         System.out.println("t_CC(1) = " + t(true, 1.0));
-
         double trueValue = 0.25 * t(false, 2.0) * Math.pow(t(true, 1.0), 3.0);
-
         assertEquals(logLike, Math.log(trueValue), 1e-6);
     }
 }

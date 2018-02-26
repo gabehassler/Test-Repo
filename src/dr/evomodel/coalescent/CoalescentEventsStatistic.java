@@ -1,23 +1,16 @@
-
 package dr.evomodel.coalescent;
-
 import dr.evolution.coalescent.IntervalType;
 import dr.inference.model.Statistic;
-
 public class CoalescentEventsStatistic extends Statistic.Abstract {
-
     public static final boolean DEBUG = true;
-
     private static final boolean FULL_FINAL_INTERVAL = true;
     private static final boolean LOG_COMBINATIONS = true;
     private static final boolean RETURN_RECIPROCAL = false;
-
     private final CoalescentIntervalProvider coalescent;
     //treeModel currently only required for debugging purposes
     //private TreeModel treeModel;
     private int coalescentEvents;
     private double[] coalescentValues;
-
     //public CoalescentEventsStatistic(CoalescentIntervalProvider coalescent, TreeModel treeModel) {
     public CoalescentEventsStatistic(CoalescentIntervalProvider coalescent) {
         this.coalescent = coalescent;
@@ -42,11 +35,9 @@ public class CoalescentEventsStatistic extends Statistic.Abstract {
             System.err.println("CoalescentEventsStatistic constructor: " + this.coalescentEvents);
         }
     }
-
     public int getDimension() {
         return this.coalescentEvents;
     }
-
     public double getStatisticValue(int i) {
         //System.err.println(treeModel);
         //i will go from 0 to getDimension()
@@ -114,9 +105,7 @@ public class CoalescentEventsStatistic extends Statistic.Abstract {
             return this.coalescentValues[i];
         }
     }
-
     public String getStatisticName() {
         return "coalescentEventsStatistic";
     }
-
 }

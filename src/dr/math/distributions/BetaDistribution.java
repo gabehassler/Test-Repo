@@ -1,53 +1,38 @@
-
 package dr.math.distributions;
-
 import dr.math.UnivariateFunction;
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.distribution.AbstractContinuousDistribution;
 import org.apache.commons.math.special.Beta;
 import org.apache.commons.math.special.Gamma;
-
 public class BetaDistribution extends AbstractContinuousDistribution implements Distribution {
-
     // Default inverse cumulative probability accurac
     public static final double DEFAULT_INVERSE_ABSOLUTE_ACCURACY = 1e-9;
-
     // first shape parameter
     private double alpha;
-
     // second shape parameter
     private double beta;
-
     // Normalizing factor used in density computations. updated whenever alpha or beta are changed.
     private double z;
-
     // Inverse cumulative probability accuracy
     private final double solverAbsoluteAccuracy;
-
-
     public BetaDistribution(double alpha, double beta) {
         this.alpha = alpha;
         this.beta = beta;
         z = Double.NaN;
         solverAbsoluteAccuracy = DEFAULT_INVERSE_ABSOLUTE_ACCURACY;
     }
-
-
     public double getAlpha() {
         return alpha;
     }
-
     public double getBeta() {
         return beta;
     }
-
     // Recompute the normalization factor.
     private void recomputeZ() {
         if (Double.isNaN(z)) {
             z = Gamma.logGamma(alpha) + Gamma.logGamma(beta) - Gamma.logGamma(alpha + beta);
         }
     }
-
     public double pdf(double x) {
         recomputeZ();
         if (x < 0 || x > 1) {
@@ -76,7 +61,6 @@ public class BetaDistribution extends AbstractContinuousDistribution implements 
             return Math.exp((alpha - 1) * logX + (beta - 1) * log1mX - z);
         }
     }
-
     public double logPdf(double x){
         recomputeZ();
         if (x < 0 || x > 1) {
@@ -105,7 +89,6 @@ public class BetaDistribution extends AbstractContinuousDistribution implements 
             return (alpha - 1) * logX + (beta - 1) * log1mX - z;
         }
     }
-
     public double quantile(double y){
         if (y == 0) {
             return 0;
@@ -118,27 +101,22 @@ public class BetaDistribution extends AbstractContinuousDistribution implements 
 //                throw MathRuntimeException.createIllegalArgumentException(                // AR - throwing exceptions deep in numerical code causes trouble. Catching runtime
                 // exceptions is bad. Better to return NaN and let the calling code deal with it.
                 return Double.NaN;
-
 //                    "Couldn't calculate beta quantile for alpha = " + alpha + ", beta = " + beta + ": " +e.getMessage());
             }
         }
     }
-
     @Override
     protected double getInitialDomain(double p) {
         return p;
     }
-
     @Override
     protected double getDomainLowerBound(double p) {
         return 0;
     }
-
     @Override
     protected double getDomainUpperBound(double p) {
         return 1;
     }
-
     public double cdf(double x)  {
         if (x <= 0) {
             return 0;
@@ -155,9 +133,7 @@ public class BetaDistribution extends AbstractContinuousDistribution implements 
 //                "Couldn't calculate beta cdf for alpha = " + alpha + ", beta = " + beta + ": " +e.getMessage());
             }
         }
-
     }
-
     public double cumulativeProbability(double x) throws MathException {
         if (x <= 0) {
             return 0;
@@ -167,50 +143,35 @@ public class BetaDistribution extends AbstractContinuousDistribution implements 
             return Beta.regularizedBeta(x, alpha, beta);
         }
     }
-
     @Override
     public double cumulativeProbability(double x0, double x1) throws MathException {
         return cumulativeProbability(x1) - cumulativeProbability(x0);
     }
-
     //Return the absolute accuracy setting of the solver used to estimate inverse cumulative probabilities.
     protected double getSolverAbsoluteAccuracy() {
         return solverAbsoluteAccuracy;
     }
-
-
 //    public double cdf(double x){
 //        throw new UnsupportedOperationException();
 //    }
-
-
     public double mean(){
         return (alpha / (alpha + beta));
     }
-
     public double variance(){
         return (alpha * beta) / ((alpha + beta)* (alpha + beta) * ( alpha + beta + 1) );
     }
-
     public final UnivariateFunction getProbabilityDensityFunction() {
         return pdfFunction;
     }
-
     private final UnivariateFunction pdfFunction = new UnivariateFunction() {
         public final double evaluate(double x) {
             return pdf(x);
         }
-
         public final double getLowerBound() {
             return 0.0;
         }
-
         public final double getUpperBound() {
             return 1.0;
         }
     };
-
-
 }
-
-

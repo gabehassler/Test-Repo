@@ -1,6 +1,4 @@
-
 package dr.inferencexml;
-
 import dr.inference.loggers.Logger;
 import dr.inference.markovchain.MarkovChain;
 import dr.inference.markovchain.MarkovChainDelegate;
@@ -10,19 +8,13 @@ import dr.inference.model.CompoundLikelihood;
 import dr.inference.model.Likelihood;
 import dr.inference.operators.OperatorSchedule;
 import dr.xml.*;
-
 import java.util.ArrayList;
-
 public class MCMCParser extends AbstractXMLObjectParser {
-
     public String getParserName() {
         return MCMC;
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         MCMC mcmc = new MCMC(xo.getAttribute(NAME, "mcmc1"));
-
         long chainLength = xo.getLongIntegerAttribute(CHAIN_LENGTH);
         boolean useCoercion = xo.getAttribute(COERCION, true);
         long coercionDelay = chainLength / 100;
@@ -32,15 +24,12 @@ public class MCMCParser extends AbstractXMLObjectParser {
         coercionDelay = xo.getAttribute(COERCION_DELAY, coercionDelay);
         double temperature = xo.getAttribute(TEMPERATURE, 1.0);
         long fullEvaluationCount = xo.getAttribute(FULL_EVALUATION, 2000);
-
         double evaluationTestThreshold = MarkovChain.EVALUATION_TEST_THRESHOLD;
         if (System.getProperty("mcmc.evaluation.threshold") != null) {
             evaluationTestThreshold = Double.parseDouble(System.getProperty("mcmc.evaluation.threshold"));
         }
         evaluationTestThreshold = xo.getAttribute(EVALUATION_THRESHOLD, evaluationTestThreshold);
-
         int minOperatorCountForFullEvaluation = xo.getAttribute(MIN_OPS_EVALUATIONS, 1);
-
         MCMCOptions options = new MCMCOptions(chainLength,
                 fullEvaluationCount,
                 minOperatorCountForFullEvaluation,
@@ -48,12 +37,9 @@ public class MCMCParser extends AbstractXMLObjectParser {
                 useCoercion,
                 coercionDelay,
                 temperature);
-
         OperatorSchedule opsched = (OperatorSchedule) xo.getChild(OperatorSchedule.class);
         Likelihood likelihood = (Likelihood) xo.getChild(Likelihood.class);
-
         likelihood.setUsed();
-
         // check that all models, parameters and likelihoods are being used
 //        for (Likelihood l : Likelihood.FULL_LIKELIHOOD_SET) {
 //            if (!l.isUsed()) {
@@ -73,11 +59,8 @@ public class MCMCParser extends AbstractXMLObjectParser {
 //                        ", of class " + p.getClass().getName() + " is not being handled by the MCMC.");
 //            }
 //        }
-
-
         ArrayList<Logger> loggers = new ArrayList<Logger>();
         ArrayList<MarkovChainDelegate> delegates = new ArrayList<MarkovChainDelegate>();
-
         for (int i = 0; i < xo.getChildCount(); i++) {
             Object child = xo.getChild(i);
             if (child instanceof Logger) {
@@ -87,33 +70,23 @@ public class MCMCParser extends AbstractXMLObjectParser {
                 delegates.add((MarkovChainDelegate) child);
             }
         }
-
         mcmc.setShowOperatorAnalysis(true);
         if (xo.hasAttribute(OPERATOR_ANALYSIS)) {
             mcmc.setOperatorAnalysisFile(XMLParser.getLogFile(xo, OPERATOR_ANALYSIS));
         }
-
-
         Logger[] loggerArray = new Logger[loggers.size()];
         loggers.toArray(loggerArray);
-
-
         java.util.logging.Logger.getLogger("dr.inference").info("Creating the MCMC chain:" +
                 "\n  chainLength=" + options.getChainLength() +
                 "\n  autoOptimize=" + options.useCoercion() +
                 (options.useCoercion() ? "\n  autoOptimize delayed for " + options.getCoercionDelay() + " steps" : "") +
                 (options.getFullEvaluationCount() == 0 ? "\n  full evaluation test off" : "")
         );
-
         MarkovChainDelegate[] delegateArray = new MarkovChainDelegate[delegates.size()];
         delegates.toArray(delegateArray);
-
         mcmc.init(options, likelihood, opsched, loggerArray, delegateArray);
-
-
         MarkovChain mc = mcmc.getMarkovChain();
         double initialScore = mc.getCurrentScore();
-
         if (initialScore == Double.NEGATIVE_INFINITY) {
             String message = "The initial posterior is zero";
             if (likelihood instanceof CompoundLikelihood) {
@@ -123,29 +96,22 @@ public class MCMCParser extends AbstractXMLObjectParser {
             }
             throw new IllegalArgumentException(message);
         }
-
         if (!xo.getAttribute(SPAWN, true))
             mcmc.setSpawnable(false);
-
         return mcmc;
     }
-
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
-
     public String getParserDescription() {
         return "This element returns an MCMC chain and runs the chain as a side effect.";
     }
-
     public Class getReturnType() {
         return MCMC.class;
     }
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     private final XMLSyntaxRule[] rules = {
             AttributeRule.newLongIntegerRule(CHAIN_LENGTH),
             AttributeRule.newBooleanRule(COERCION, true),
@@ -163,7 +129,6 @@ public class MCMCParser extends AbstractXMLObjectParser {
             new ElementRule(Logger.class, 1, Integer.MAX_VALUE),
             new ElementRule(MarkovChainDelegate.class, 0, Integer.MAX_VALUE)
     };
-
     public static final String COERCION = "autoOptimize";
     public static final String NAME = "name";
     public static final String PRE_BURNIN = "preBurnin";
@@ -177,6 +142,4 @@ public class MCMCParser extends AbstractXMLObjectParser {
     public static final String TEMPERATURE = "temperature";
     public static final String SPAWN = "spawn";
     public static final String OPERATOR_ANALYSIS = "operatorAnalysis";
-
-
 }

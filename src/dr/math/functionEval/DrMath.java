@@ -1,6 +1,4 @@
-
 package dr.math.functionEval;
-
 import java.io.PrintStream;
 public final class DrMath
 {
@@ -15,7 +13,6 @@ public final class DrMath
 	private static final double scales[] = {1.25, 2, 2.5, 4, 5, 7.5, 8, 10};
 	private static final double semiIntegerScales[] = {2, 2.5, 4, 5, 7.5, 8, 10};
 	private static final double integerScales[] = {2, 4, 5, 8, 10};
-
 private static void computeLargestNumber()
 {
 	double floatingRadix = getRadix();

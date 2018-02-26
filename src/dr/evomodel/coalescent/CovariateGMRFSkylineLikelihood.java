@@ -1,44 +1,28 @@
-
 package dr.evomodel.coalescent;
-
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
 import dr.inference.model.MatrixParameter;
 import dr.inference.model.Parameter;
-
 import java.util.ArrayList;
 import java.util.logging.Logger;
-
 public class CovariateGMRFSkylineLikelihood extends GMRFSkyrideLikelihood {
-
-
 	private Parameter covariateData;
 	private Parameter covariateTimes;
-
 	private ArrayList<CoalescentIntervalWithData> intervals;
 	private ArrayList<CoalescentIntervalWithData> storedIntervals;
-
-
 	public CovariateGMRFSkylineLikelihood(Tree tree, Parameter popParameter, Parameter precParameter,
 	                                      Parameter lambda, Parameter beta, MatrixParameter dMatrix,
 	                                      Parameter data, Parameter times) {
 		super(tree, popParameter, null, precParameter, lambda, beta, dMatrix, false, true);
-
 		covariateData = data;
 		covariateTimes = times;
-
 		fieldLength += covariateData.getDimension();
-
 		addVariable(covariateData); // this can have missing values for imputation
-
 	}
-
 	//	@Override
 	public void sSetupIntervals() {
-
 		intervals.clear();
 		intervals.ensureCapacity(fieldLength);
-
 		NodeRef x;
 		for (int i = 0; i < tree.getInternalNodeCount(); i++) {
 			x = tree.getInternalNode(i);
@@ -55,8 +39,6 @@ public class CovariateGMRFSkylineLikelihood extends GMRFSkyrideLikelihood {
 					covariateData.getParameterValue(i), CoalescentEventType.NOTHING));
 		}
 		dr.util.HeapSort.sort(intervals);
-
-
 		double a;
 		for (int i = 0; i < intervals.size() - 1; i++) {
 			a = intervals.get(i).length;
@@ -64,38 +46,30 @@ public class CovariateGMRFSkylineLikelihood extends GMRFSkyrideLikelihood {
 		}
 		intervals.remove(intervals.size() - 1);
 		intervalsKnown = true;
-
 	}
-
 	public void setupGMRFWeights() {
 		super.setupGMRFWeights();
 	}
-
 	public void storeState() {
 		storedIntervals = new ArrayList<CoalescentIntervalWithData>(intervals.size());
 		for (CoalescentIntervalWithData interval : intervals) {
 			storedIntervals.add(interval.clone());
 		}
 	}
-
 	public void restoreState() {
 		intervals = storedIntervals;
 		storedIntervals.clear();
 	}
-
 	private class CoalescentIntervalWithData implements Comparable<CoalescentIntervalWithData>, Cloneable {
 		public final CoalescentEventType type;
 		public double length;
 		public final double datum;
-
 		public CoalescentIntervalWithData(double length, double datum, CoalescentEventType type) {
 			this.length = length;
 			this.type = type;
 			this.datum = datum;
 		}
-
 		public int compareTo(CoalescentIntervalWithData a) {
-
 			if (a.length < this.length) {
 				return -1;
 			} else if (a.length == this.length) {
@@ -105,15 +79,11 @@ public class CovariateGMRFSkylineLikelihood extends GMRFSkyrideLikelihood {
 			}
 			return 1;
 		}
-
 		public String toString() {
 			return "(" + length + "," + type + "," + datum + ")";
 		}
-
 		public CoalescentIntervalWithData clone() {
 			return new CoalescentIntervalWithData(length, datum, type);
 		}
-
 	}
-
 }

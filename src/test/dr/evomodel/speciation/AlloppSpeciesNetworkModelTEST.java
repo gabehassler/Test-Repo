@@ -1,5 +1,4 @@
 package test.dr.evomodel.speciation;
-
 import dr.evomodel.speciation.AlloppMulLabTree;
 import dr.evomodel.speciation.AlloppSpeciesBindings;
 import dr.evomodel.speciation.AlloppSpeciesBindings.ApSpInfo;
@@ -9,35 +8,18 @@ import org.junit.Before;
 import org.junit.Test;
 import dr.evomodel.speciation.AlloppSpeciesBindings.Individual;
 import dr.evomodel.speciation.AlloppSpeciesNetworkModel;
-
-
-
 import static org.junit.Assert.assertEquals;
-
-
-
-
 public class AlloppSpeciesNetworkModelTEST {
-
     @Before
     public void setUp() throws Exception {
     }
-
-
-
-
     @Test
     public void testAlloppSpeciesNetworkModel() {
-
         //testGammaQuantile();
         testNetworkToMulLabTree();
         testLhoodMulLabTree();
         // grjtodo-soon would like a test of gene tree in network compatibility.
     }
-
-
-
-
     // trying to reproduce weird bug when quantile returned 4.9e-324
     public void testGammaQuantile() {
         MathUtils.setSeed(42);
@@ -50,8 +32,6 @@ public class AlloppSpeciesNetworkModelTEST {
             assert x > 1e-20;
         }
     }
-
-
     public void testNetworkToMulLabTree() {
         ApSpInfo[] apspecies = new ApSpInfo[5];
         apspecies[0] = new ApSpInfo("a", 2, new Individual[0]);
@@ -59,10 +39,8 @@ public class AlloppSpeciesNetworkModelTEST {
         apspecies[2] = new ApSpInfo("c", 4, new Individual[0]);
         apspecies[3] = new ApSpInfo("d", 4, new Individual[0]);
         apspecies[4] = new ApSpInfo("e", 2, new Individual[0]);
-
         AlloppSpeciesBindings testASB = new AlloppSpeciesBindings(apspecies);
         AlloppSpeciesNetworkModel testASNM = new AlloppSpeciesNetworkModel(testASB);
-
         System.out.println("Tests of Network To MulLabTree conversion with dips a,e and tets b,c,d");
         String newick;
         newick = testASNM.testExampleNetworkToMulLabTree(1);
@@ -83,23 +61,17 @@ public class AlloppSpeciesNetworkModelTEST {
         System.out.println("");
         System.out.println("");
     }
-
-
     public void testLhoodMulLabTree() {
         ApSpInfo[] apspecies = new ApSpInfo[3];
         apspecies[0] = new ApSpInfo("a", 2, new Individual[0]);
         apspecies[1] = new ApSpInfo("b", 2, new Individual[0]);
         apspecies[2] = new ApSpInfo("z", 4, new Individual[0]);
-
         AlloppSpeciesBindings testASB = new AlloppSpeciesBindings(apspecies);
         AlloppMulLabTree testamlt = new AlloppMulLabTree(testASB);
         double  llhood = testamlt.testGeneTreeInMULTreeLogLikelihood();
         assertEquals(llhood, -13.562218135041552713, 1e-10);
         System.out.println(llhood);
     }
-
-
-
 #     0   2   3   1
 #     a   z0  z1  b b'
 #     | # | # | # | |
@@ -118,8 +90,6 @@ public class AlloppSpeciesNetworkModelTEST {
 #          \ /
 #           v         root gene tree 0.045
 #           |
-
-
 # here, numbers 1-9 show branch or part-branch indices
 #     a   z0  z1  b b'
 #     | # 2 # 3 # | |
@@ -138,10 +108,6 @@ public class AlloppSpeciesNetworkModelTEST {
 #          \ /
 #           v         root gene tree 0.045
 #           |
-
-
-
-
 brs <- matrix(0, nrow=9, ncol=3)
 tms <- matrix(0, nrow=9, ncol=4)
 brs[1,] <- c(.003,  .001,    1);     tms[1,] <- c(.0,         .01,  -1,-1)
@@ -153,9 +119,6 @@ brs[6,] <- c(.003,  .001,    2);     tms[6,] <- c(.0,         .02,  -1,-1)
 brs[7,] <- c(.002,  .001,    2);     tms[7,] <- c(.01,  .015, .03,  -1)
 brs[8,] <- c(.002,  .001,    3);     tms[8,] <- c(.02,  .025, .03,  -1)
 brs[9,] <- c(.002,  .002,    3);     tms[9,] <- c(.03,  .035, .045, 999)
-
-
-
 branchllhood <- function(b, tm) {
   llhood <- 0
   tm <- tm[tm>=0]
@@ -177,32 +140,24 @@ branchllhood <- function(b, tm) {
     }
   llhood
   }
-
 linear.interp.pop <- function(t0, t1, p0, p1, x)
 {
 (p0*(t1-x) + p1*(x-t0))/(t1-t0)
 }
-
 onecoalllhood <- function(n, t0, t1, p0, p1) {
   x <- -log(p1) - integrate(pop.integrand, n=n, t0=t0, t1=t1, p0=p0, p1=p1, lower=t0, upper=t1)$value
   cat("onecoalllhood", "n", n, "t0", t0, "t1", t1, "p0", p0, "p1", p1, "llhood", x, "\n")
   x
   }
-
-
 nocoalllhood <- function(n, t0, t1, p0, p1) {
   x <- - integrate(pop.integrand, n=n, t0=t0, t1=t1, p0=p0, p1=p1, lower=t0, upper=t1)$value
   cat("nocoalllhood", "n", n, "t0", t0, "t1", t1, "p0", p0, "p1", p1, "llhood", x, "\n")
   x
   }
-
-
 pop.integrand <- function(x, n, t0, t1, p0, p1)
 {
 (n*(n-1)/2) * (t1-t0) / (p0*(t1-x) + p1*(x-t0))
 }
-
-
 llhood <- 0
 for (i in 1:dim(brs)[1]) {
   x <- branchllhood(brs[i,], tms[i,])
@@ -210,7 +165,4 @@ for (i in 1:dim(brs)[1]) {
   llhood <- llhood + x
   }
 llhood
-
-
 }
-

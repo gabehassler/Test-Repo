@@ -1,34 +1,20 @@
-
 package dr.evolution.util;
-
 import dr.util.Identifiable;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 public interface TaxonList extends Identifiable, Iterable<Taxon> {
-
 	public int getTaxonCount();
-
 	public Taxon getTaxon(int taxonIndex);
-
 	public String getTaxonId(int taxonIndex);
-
 	int getTaxonIndex(String id);
-
 	int getTaxonIndex(Taxon taxon);
-
     List<Taxon> asList();
-
 	public Object getTaxonAttribute(int taxonIndex, String name);
-
 	class Utils {
-
 		public static boolean hasAttribute(TaxonList taxa, int index, String name) {
 			return taxa.getTaxonAttribute(index, name) != null;
 		}
-
 		public static Set<String> getTaxonListIdSet(TaxonList taxa) {
 			Set<String> taxaSet = new HashSet<String>();
 			for (int i =0; i < taxa.getTaxonCount(); i++) {
@@ -36,7 +22,6 @@ public interface TaxonList extends Identifiable, Iterable<Taxon> {
 			}
 			return taxaSet;
 		}
-
         public static int findDuplicateTaxon(TaxonList taxonList) {
             Set<String> taxaSet = new HashSet<String>();
                         for (int i = 0; i < taxonList.getTaxonCount(); i++) {
@@ -48,7 +33,6 @@ public interface TaxonList extends Identifiable, Iterable<Taxon> {
             }
             return -1;
         }
-
         public static boolean areTaxaIdentical(TaxonList taxa1, TaxonList taxa2) {
             if (taxa1.getTaxonCount() != taxa2.getTaxonCount()) {
                 return false;
@@ -60,13 +44,9 @@ public interface TaxonList extends Identifiable, Iterable<Taxon> {
             }
             return true;
         }
-
-
 	}
-
 	class MissingTaxonException extends Exception {
 		private static final long serialVersionUID = 1864895946392309485L;
-
 		public MissingTaxonException(String message) { super(message); }
 	}
 }

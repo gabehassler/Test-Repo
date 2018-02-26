@@ -1,33 +1,22 @@
-
 package dr.evomodel.coalescent;
-
 import jebl.math.Binomial;
 import dr.evolution.coalescent.TreeIntervals;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.model.Likelihood;
-
 public class CoalescentConstantLikelihood extends Likelihood.Abstract {
-	
 	public final static boolean COALESCENT_EVENTS_ONLY = false;
-
 	private TreeModel treeModel;
 	private TreeIntervals intervals;
-	
 	// PUBLIC STUFF
 	public CoalescentConstantLikelihood(TreeModel treeModel) {
-
 		super(treeModel);
 		this.treeModel = treeModel;
 		this.intervals = new TreeIntervals(treeModel);
-
 	}
-
     // **************************************************************
 	// Likelihood IMPLEMENTATION
 	// **************************************************************
-
 	public double calculateLogLikelihood() {
-
 		intervals.setIntervalsUnknown();
 		final int nIntervals = intervals.getIntervalCount();
 		//System.err.println(treeModel);
@@ -46,7 +35,6 @@ public class CoalescentConstantLikelihood extends Likelihood.Abstract {
        			//System.err.println("PDF: " + Binomial.choose2(intervals.getLineageCount(i)));
        		}
         }
-        
         //START TEST CONTEMPORANEOUS
         for (int i = 5; i > 2; --i) {
             test += Math.log(Binomial.choose2(i));
@@ -56,11 +44,7 @@ public class CoalescentConstantLikelihood extends Likelihood.Abstract {
         	System.exit(0);
         }*/
         //END TEST CONTEMPORANEOUS
-        
         //System.err.println("logPDF = " + (-logPDF) + "\n");
-                
         return -logPDF;
-        
 	}
-
 }

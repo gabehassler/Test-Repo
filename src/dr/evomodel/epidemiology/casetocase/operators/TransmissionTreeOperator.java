@@ -1,6 +1,4 @@
-
 package dr.evomodel.epidemiology.casetocase.operators;
-
 import dr.evolution.tree.NodeRef;
 import dr.evomodel.epidemiology.casetocase.AbstractCase;
 import dr.evomodel.epidemiology.casetocase.BranchMapModel;
@@ -15,33 +13,24 @@ import dr.inference.operators.CoercableMCMCOperator;
 import dr.inference.operators.CoercionMode;
 import dr.inference.operators.OperatorFailedException;
 import dr.xml.*;
-
 import java.util.ArrayList;
 import java.util.Arrays;
-
-
 public class TransmissionTreeOperator extends AbstractCoercableOperator {
-
     private final CaseToCaseTreeLikelihood c2cLikelihood;
     private final AbstractTreeOperator innerOperator;
     public static final String TRANSMISSION_TREE_OPERATOR = "transmissionTreeOperator";
-
     public TransmissionTreeOperator(CaseToCaseTreeLikelihood c2cLikelihood, AbstractTreeOperator operator,
                                     CoercionMode mode) {
         super(mode);
         this.c2cLikelihood = c2cLikelihood;
         this.innerOperator = operator;
         this.setWeight(innerOperator.getWeight());
-
         // this doesn't work at all right now - it awaits the restoration of the TT=TMRCA version
-
         throw new RuntimeException("TransmissionTreeOperator only works on non-extended tree paintings");
     }
-
     public TransmissionTreeOperator(CaseToCaseTreeLikelihood c2cLikelihood, AbstractTreeOperator operator) {
         this(c2cLikelihood,operator,CoercionMode.COERCION_OFF);
     }
-
     public double doOperation() throws OperatorFailedException {
         TreeModel tree = c2cLikelihood.getTreeModel();
         BranchMapModel branchMap = c2cLikelihood.getBranchMap();
@@ -72,7 +61,6 @@ public class TransmissionTreeOperator extends AbstractCoercableOperator {
                                 tree.getNode(changedNodes.get(i)).getNumber(),newParents);
                     }
                 }
-
             } else if(innerOperator instanceof SubtreeSlideOperator || innerOperator instanceof WilsonBalding){
                 //this is a node transplantation operator
                 int movedNode = -1;
@@ -111,7 +99,6 @@ public class TransmissionTreeOperator extends AbstractCoercableOperator {
                         otherChild = otherChildObject.getNumber();
                     }
                 }
-
                 //If the child of the moved node is the earliest node with its painting:
                 if(branchMap.get(otherChild)!=branchMap.get(movedNode)){
                     newBranchMap[movedNode]=branchMap.get(newChild);
@@ -138,7 +125,6 @@ public class TransmissionTreeOperator extends AbstractCoercableOperator {
         c2cLikelihood.makeDirty();
         return hr;
     }
-
     private void paintUp(TreeModel tree, AbstractCase oldCase, AbstractCase newCase, BranchMapModel oldbranchMap,
                          AbstractCase[] newBranchMap, int nodeNo, int[] parents){
         if(parents[nodeNo]==-1){
@@ -150,7 +136,6 @@ public class TransmissionTreeOperator extends AbstractCoercableOperator {
             newParent = parents[newParent.getNumber()]== -1 ? null : tree.getNode(parents[newParent.getNumber()]);
         }
     }
-
     private int[] getParentsArray(TreeModel tree){
         int[] out = new int[tree.getNodeCount()];
         for(int i=0; i<tree.getNodeCount(); i++){
@@ -162,7 +147,6 @@ public class TransmissionTreeOperator extends AbstractCoercableOperator {
         }
         return out;
     }
-
     private double[] getHeightsArray(TreeModel tree){
         double[] out = new double[tree.getNodeCount()];
         for(int i=0; i<tree.getNodeCount(); i++){
@@ -170,14 +154,12 @@ public class TransmissionTreeOperator extends AbstractCoercableOperator {
         }
         return out;
     }
-
     public double getCoercableParameter() {
         if(innerOperator instanceof CoercableMCMCOperator){
             return ((CoercableMCMCOperator) innerOperator).getCoercableParameter();
         }
         throw new IllegalArgumentException();
     }
-
     public void setCoercableParameter(double value) {
         if(innerOperator instanceof CoercableMCMCOperator){
             ((CoercableMCMCOperator) innerOperator).setCoercableParameter(value);
@@ -185,56 +167,41 @@ public class TransmissionTreeOperator extends AbstractCoercableOperator {
         }
         throw new IllegalArgumentException();
     }
-
     public double getRawParameter() {
         if(innerOperator instanceof CoercableMCMCOperator){
             return ((CoercableMCMCOperator) innerOperator).getRawParameter();
         }
         throw new IllegalArgumentException();
     }
-
     public String getPerformanceSuggestion() {
         return "Not implemented";
     }
-
     public String getOperatorName() {
         return TRANSMISSION_TREE_OPERATOR;
     }
-
-
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
             CaseToCaseTreeLikelihood c2cL
                     = (CaseToCaseTreeLikelihood)xo.getChild(CaseToCaseTreeLikelihood.class);
             AbstractTreeOperator treeOp = (AbstractTreeOperator)xo.getChild(AbstractTreeOperator.class);
-
             CoercionMode mode = CoercionMode.COERCION_OFF;
-
             if(treeOp instanceof CoercableMCMCOperator){
                 mode = ((CoercableMCMCOperator) treeOp).getMode();
             }
-
             return new TransmissionTreeOperator(c2cL,treeOp,mode);
-
         }
-
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
-
         public String getParserDescription() {
             return "Performs a tree move then readjusts the transmission network in order to maintain its integrity.";
         }
-
         public Class getReturnType() {
             return TransmissionTreeOperator.class;
         }
-
         public String getParserName() {
             return TRANSMISSION_TREE_OPERATOR;
         }
-
         private final XMLSyntaxRule[] rules = {
                 new ElementRule(CaseToCaseTreeLikelihood.class, "The transmission network likelihood element"),
                 new ElementRule(AbstractTreeOperator.class, "A phylogenetic tree operator.")

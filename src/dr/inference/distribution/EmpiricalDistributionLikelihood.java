@@ -1,8 +1,5 @@
-
 package dr.inference.distribution;
-
 import dr.util.Attribute;
-
 import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -12,44 +9,32 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
-
-
 public abstract class EmpiricalDistributionLikelihood extends AbstractDistributionLikelihood {
-
     public static final String EMPIRICAL_DISTRIBUTION_LIKELIHOOD = "empiricalDistributionLikelihood";
-
     private static final double MIN_DENSITY_PROPORTION = 1E-2;
     private static final boolean DEBUG = false;
-
     private int from = -1;
     private int to = Integer.MAX_VALUE;
     private double offset = 0;
     private double lower = Double.NEGATIVE_INFINITY;
     private double upper = Double.POSITIVE_INFINITY;
-
     public EmpiricalDistributionLikelihood(String fileName, boolean inverse, boolean byColumn) {
         super(null);
         this.fileName = fileName;
-
         if (byColumn)
             readFileByColumn(fileName);
         else
             readFileByRow(fileName);
-
         this.inverse = inverse;    
     }
-
     public void setBounds(double lower, double upper) {
         this.lower = lower;
         this.upper = upper;
     }
-
     class ComparablePoint2D extends Point2D.Double implements Comparable<ComparablePoint2D> {
-
         ComparablePoint2D(double x, double y) {
             super(x,y);
         }
-
         public int compareTo(ComparablePoint2D pt0) {
             if (getX() > pt0.getX())
                 return 1;
@@ -58,13 +43,10 @@ public abstract class EmpiricalDistributionLikelihood extends AbstractDistributi
             return -1;
         }
     }
-
     protected void readFileByRow(String fileName) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(fileName));
-
             List<ComparablePoint2D> ptList = new ArrayList<ComparablePoint2D>();
-
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.charAt(0) != '#') {
@@ -81,15 +63,12 @@ public abstract class EmpiricalDistributionLikelihood extends AbstractDistributi
             }
             Collections.sort(ptList);
             // Prune off begining and ending zeros
-
             while( (ptList.get(0).getY() == 0) &&
                    (ptList.get(1).getY() == 0) )
                 ptList.remove(0);
-
             while( (ptList.get(ptList.size()-1).getY() == 0) &&
                    (ptList.get(ptList.size()-2).getY() == 0) )
                 ptList.remove(ptList.size()-1);
-            
             // Find min density
             double minDensity = Double.POSITIVE_INFINITY;
             for(ComparablePoint2D pt : ptList) {
@@ -114,13 +93,11 @@ public abstract class EmpiricalDistributionLikelihood extends AbstractDistributi
                 density[i] /= total;
             }
             reader.close();
-
             if (DEBUG) {
                 System.err.println("EDL File : "+fileName);
                 System.err.println("Min value: "+values[0]);
                 System.err.println("Max value: "+values[values.length-1]);
             }
-
         } catch (FileNotFoundException e) {
             System.err.println("File not found: "+fileName);
             System.exit(-1);
@@ -129,12 +106,9 @@ public abstract class EmpiricalDistributionLikelihood extends AbstractDistributi
             System.exit(-1);
         }
     }
-
     protected void readFileByColumn(String fileName) {
-
         try {
             BufferedReader reader = new BufferedReader(new FileReader(fileName));
-
             String line1 = reader.readLine();
             StringTokenizer st = new StringTokenizer(line1," ");
             values = new double[st.countTokens()];
@@ -145,9 +119,7 @@ public abstract class EmpiricalDistributionLikelihood extends AbstractDistributi
             density = new double[st.countTokens()];
             for(int i=0; i<density.length; i++)
                 density[i] = Double.valueOf(st.nextToken());
-
             reader.close();
-
         } catch (FileNotFoundException e) {
             System.err.println("File not found: "+fileName);
             System.exit(-1);
@@ -155,40 +127,29 @@ public abstract class EmpiricalDistributionLikelihood extends AbstractDistributi
             System.err.println("IO exception reading: "+fileName);
             System.exit(-1);
         }
-
     }
-
     public void setOffset(double offset) {
         this.offset = offset;
     }
-
-
     public void setRange(int from, int to) {
         this.from = from;
         this.to = to;
     }
-  
     // **************************************************************
     // Likelihood IMPLEMENTATION
     // **************************************************************
-
     public double calculateLogLikelihood() {
-
         double logL = 0.0;
-
         for (Attribute<double[]> data : dataList) {  
             // see comment in DistributionLikelihood
             final double[] attributeValue = data.getAttributeValue();
-
             for (int j = Math.max(0, from); j < Math.min(attributeValue.length, to); j++) {
-
                 double value = attributeValue[j] + offset;
                 if (value > lower && value < upper) {
                     logL += logPDF(value);
                 } else {
                     return Double.NEGATIVE_INFINITY;
                 }
-
                 if (DEBUG) {
                     if (Double.isInfinite(logL)) {
                         System.err.println("Infinite log density in "+
@@ -202,14 +163,9 @@ public abstract class EmpiricalDistributionLikelihood extends AbstractDistributi
         }
         return logL;
     }
-
     abstract protected double logPDF(double value);
-
     protected  double[] values;
     protected  double[] density;
-
     protected boolean inverse;
-
     protected String fileName;
 }
-

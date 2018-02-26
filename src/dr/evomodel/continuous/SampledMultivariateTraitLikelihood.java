@@ -1,6 +1,4 @@
-
 package dr.evomodel.continuous;
-
 import dr.evolution.tree.MultivariateTraitTree;
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
@@ -11,11 +9,8 @@ import dr.inference.model.CompoundSymmetricMatrix;
 import dr.inference.model.Model;
 import dr.math.matrixAlgebra.Matrix;
 import dr.math.matrixAlgebra.Vector;
-
 import java.util.List;
-
 public class SampledMultivariateTraitLikelihood extends AbstractMultivariateTraitLikelihood {
-
     public SampledMultivariateTraitLikelihood(String traitName,
                                               MultivariateTraitTree treeModel,
                                               MultivariateDiffusionModel diffusionModel,
@@ -28,15 +23,11 @@ public class SampledMultivariateTraitLikelihood extends AbstractMultivariateTrai
         super(traitName, treeModel, diffusionModel, traitParameter, missingIndices, cacheBranches, scaleByTime,
                 useTreeLength, rateModel, samplingDensity, reportAsMultivariate, reciprocalRates);
     }
-
     protected String extraInfo() {
         return "\tSampling internal trait values: true\n";
     }
-
     public double calculateLogLikelihood() {
-
         double logLikelihood;
-
         if (!cacheBranches)
             logLikelihood = traitLogLikelihood(null, treeModel.getRoot());
         else
@@ -46,42 +37,31 @@ public class SampledMultivariateTraitLikelihood extends AbstractMultivariateTrai
         }
         return logLikelihood;
     }
-
     protected double calculateAscertainmentCorrection(int taxonIndex) {
         throw new RuntimeException("Ascertainment correction not yet implemented for sampled trait likelihoods");
     }
-
     public final double getLogDataLikelihood() {
         double logLikelihood = 0;
         for (int i = 0; i < treeModel.getExternalNodeCount(); i++) {
             NodeRef tip = treeModel.getExternalNode(i); // TODO Do not include integrated tips; how to check???
-
             if (cacheBranches && validLogLikelihoods[tip.getNumber()])
                 logLikelihood += cachedLogLikelihoods[tip.getNumber()];
             else {
                 NodeRef parent = treeModel.getParent(tip);
-
                 double[] tipTrait = treeModel.getMultivariateNodeTrait(tip, traitName);
                 double[] parentTrait = treeModel.getMultivariateNodeTrait(parent, traitName);
                 double time = getRescaledBranchLengthForPrecision(tip);
-
                 logLikelihood += diffusionModel.getLogLikelihood(parentTrait, tipTrait, time);
             }
         }
         return logLikelihood;
     }
-
-
     private double traitCachedLogLikelihood(double[] parentTrait, NodeRef node) {
-
         double logL = 0.0;
         double[] childTrait = null;
         final int nodeNumber = node.getNumber();
-
         if (!treeModel.isRoot(node)) {
-
             if (!validLogLikelihoods[nodeNumber]) { // recompute
-
                 childTrait = treeModel.getMultivariateNodeTrait(node, traitName);
                 double time = getRescaledBranchLengthForPrecision(node);
                 if (parentTrait == null)
@@ -92,22 +72,16 @@ public class SampledMultivariateTraitLikelihood extends AbstractMultivariateTrai
             } else
                 logL = cachedLogLikelihoods[nodeNumber];
         }
-
         int childCount = treeModel.getChildCount(node);
         for (int i = 0; i < childCount; i++) {
             logL += traitCachedLogLikelihood(childTrait, treeModel.getChild(node, i));
         }
-
         return logL;
     }
-
     private double traitLogLikelihood(double[] parentTrait, NodeRef node) {
-
         double logL = 0.0;
         double[] childTrait = treeModel.getMultivariateNodeTrait(node, traitName);
-
         if (parentTrait != null) {
-
             double time = getRescaledBranchLengthForPrecision(node);
             logL = diffusionModel.getLogLikelihood(parentTrait, childTrait, time);
             if (new Double(logL).isNaN()) {
@@ -115,7 +89,6 @@ public class SampledMultivariateTraitLikelihood extends AbstractMultivariateTrai
                 System.err.println("time = " + time);
                 System.err.println("parent trait value = " + new Vector(parentTrait));
                 System.err.println("child trait value = " + new Vector(childTrait));
-
                 double[][] precisionMatrix = diffusionModel.getPrecisionmatrix();
                 if (precisionMatrix != null) {
                     System.err.println("precision matrix = " + new Matrix(diffusionModel.getPrecisionmatrix()));
@@ -131,19 +104,14 @@ public class SampledMultivariateTraitLikelihood extends AbstractMultivariateTrai
         for (int i = 0; i < childCount; i++) {
             logL += traitLogLikelihood(childTrait, treeModel.getChild(node, i));
         }
-
         if (new Double(logL).isNaN()) {
             System.err.println("logL = " + logL);
 //            System.err.println(new Matrix(diffusionModel.getPrecisionmatrix()));
             System.exit(-1);
         }
-
         return logL;
     }
-
-
     public double[] getTraitForNode(Tree treeModel, NodeRef node, String traitName) {
         return ((TreeModel) treeModel).getMultivariateNodeTrait(node, traitName);
     }
-
 }

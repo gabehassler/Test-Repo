@@ -1,57 +1,38 @@
-
 package dr.math;
-
-
 public class UnivariateMinimum
 {
 	//
 	// Public stuff
 	//
-
 	public double minx;
-
 	public double fminx;
-
 	public double f2minx;
-
 	public int numFun;
-
 	public int maxFun = 0;
-
 	public double findMinimum(double x, UnivariateFunction f)
 	{
 		double tol = MachineAccuracy.EPSILON;
-
 		return optimize(x, f, tol);
 	}
-
 	public double findMinimum(double x, UnivariateFunction f, int fracDigits)
 	{
 		double tol = Math.pow(10, -1-fracDigits);
-
 		final double optx = optimize(x, f, tol);
-
 		//return trim(optx, fracDigits);
 		return optx;
 	}
-
 	public double findMinimum(UnivariateFunction f)
 	{
 		double tol = MachineAccuracy.EPSILON;
-
 		return optimize(f, tol);
 	}
-
 	public double findMinimum(UnivariateFunction f, int fracDigits)
 	{
 		double tol = Math.pow(10, -1-fracDigits);
-
 		final double optx = optimize(f, tol);
-
 		//return trim(optx, fracDigits);
 		return optx;
 	}
-
 	public double optimize(UnivariateFunction f, double tol, double lowerBound, double upperBound)
 	{
 		numFun = 2;
@@ -61,11 +42,9 @@ public class UnivariateMinimum
 	{
 		return optimize(f,tol,f.getLowerBound(), f.getUpperBound());
 	}
-
 	public double optimize(double x, UnivariateFunction f, double tol, double lowerBound, double upperBound)
 	{
 		double[] range = bracketize(lowerBound, x, upperBound, f);
-
 		return minin(range[0], range[1], range[2], range[3], f, tol);
 	}
 	public double optimize(double x, UnivariateFunction f, double tol)
@@ -75,18 +54,14 @@ public class UnivariateMinimum
 	//
 	// Private stuff
 	//
-
 	private static final double C = (3.0- Math.sqrt(5.0))/2.0; // = 0.38197
 	private static final double GOLD = (Math.sqrt(5.0) + 1.0)/2.0; // = 1.61803
 	private static final double delta = 0.01; // Determines second trial point
-
 	// trim x to have a specified number of fractional digits
 	{
 		double m = Math.pow(10, fracDigits);
-
 		return Math.round(x*m)/m;
 	}*/
-
 	private double constrain(double x, boolean toMax, double min, double max)
 	{
 		if (toMax)
@@ -112,7 +87,6 @@ public class UnivariateMinimum
 			}
 		}
 	}
-
 	private double[] bracketize(double min, double a, double max, UnivariateFunction f)
 	{
 		if (min > max)
@@ -120,7 +94,6 @@ public class UnivariateMinimum
 			throw new IllegalArgumentException("Argument min (" + min +
 			") larger than argument max (" + max + ")");
 		}
-
 		if (a < min)
 		{
 			a = min;
@@ -129,15 +102,11 @@ public class UnivariateMinimum
 		{
 			a = max;
 		}
-
-
 		if (a < min || a > max)
 		{
 			throw new IllegalArgumentException("Starting point not in given range ("
 			+ min + ", " + a + ", " + max + ")");
 		}
-
-
 		// Get second point
 		double b;
 		if (a - min < max - a)
@@ -148,22 +117,17 @@ public class UnivariateMinimum
 		{
 			b = a - delta*(a - min);
 		}
-
 		numFun = 0;
-
 		double fa = f.evaluate(a); numFun++;
 		double fb = f.evaluate(b); numFun++;
-
 		double tmp;
 		if (fb > fa)
 		{
 			tmp = a; a = b; b = tmp;
 			tmp = fa; fa = fb; fb = tmp;
 		}
-
 		// From here on we always have fa >= fb
 		// Our aims is to determine a new point c with fc >= fb
-
 		// Direction of search (towards min or towards max)
 		boolean searchToMax;
 		double ulim;
@@ -177,12 +141,10 @@ public class UnivariateMinimum
 			searchToMax = false;
 			ulim = min;
 		}
-
 		// First guess: default magnification
 		double c = b + GOLD * (b - a);
 		c = constrain(c, searchToMax, min, max);
 		double fc = f.evaluate(c); numFun++;
-
 		while (fb > fc)
 		{
 			// Compute u as minimum of a parabola through a, b, c
@@ -195,22 +157,17 @@ public class UnivariateMinimum
 			double u = b - ((b - c) * q - (b - a) * r) / 2.0 / (q - r);
 			u = constrain(u, searchToMax, min, max);
 			double fu = 0; // Don't evaluate now
-
 			boolean magnify = false;
-
 			// Check out all possibilities
-
 			// u is between b and c
 			if ((b - u) * (u - c) > 0)
 			{
 				fu = f.evaluate(u); numFun++;
-
 				// minimum between b and c
 				if (fu < fc)
 				{
 					a = b; b = u;
 					fa = fb; fb = fu;
-
 					break;
 				}
 				// minimum between a and u
@@ -218,23 +175,19 @@ public class UnivariateMinimum
 				{
 					c = u;
 					fc = fu;
-
 					break;
 				}
-
 				magnify = true;
 								}
 			// u is between c and limit
 			else if ((c - u) * (u - ulim) > 0)
 			{
 				fu = f.evaluate(u); numFun++;
-
 				// u is not a minimum
 				if (fu < fc)
 				{
 					b = c; c = u;
 					fb = fc; fc = fu;
-
 					magnify = true;
 				}
 								}
@@ -248,7 +201,6 @@ public class UnivariateMinimum
 			{
 				magnify = true;
 			}
-
 			if (magnify)
 			{
 				// Next guess: default magnification
@@ -256,11 +208,9 @@ public class UnivariateMinimum
 				u = constrain(u, searchToMax, min, max);
 				fu = f.evaluate(u); numFun++;
 			}
-
 			a = b; b = c; c = u;
 			fa = fb; fb = fc; fc = fu;
 		}
-
 		// Once we are here be have a minimum in [a, c]
 		double[] result = new double[4];
 		result[0] = a;
@@ -269,35 +219,26 @@ public class UnivariateMinimum
 		result[3] = fc;
 		return result;
 	}
-
-
 	private double minin(double a, double b, double fa , double fb, UnivariateFunction f, double tol)
 	{
 		double z, d = 0, e, m, p, q, r, u, v, w, fu, fv, fw, fz, tmp;
-
 		if (tol <= 0)
 		{
 			throw new IllegalArgumentException("Nonpositive absolute tolerance tol");
 		}
-
 		if (a == b)
 		{
 			minx = a;
 			fminx = fa;
-
 			f2minx = NumericalDerivative.secondDerivative(f, minx);
-
 			return  minx;
-
 			//throw new IllegalArgumentException("Borders of range not distinct");
 		}
-
 		if (b < a)
 		{
 			tmp = a; a = b; b = tmp;
 			tmp = fa; fa = fb; fb = tmp;
 		}
-
 		w = a; fw = fa;
 		z = b; fz = fb;
 		if (fz > fw) // Exchange z and w
@@ -393,9 +334,7 @@ public class UnivariateMinimum
 		}
 		minx = z;
 		fminx = fz;
-
 		f2minx = NumericalDerivative.secondDerivative(f, minx);
-
 		return  z;
 	}
 }

@@ -1,35 +1,23 @@
-
 package dr.app.beauti.datapanel;
-
 import dr.app.beauti.options.PartitionSubstitutionModel;
 import dr.app.beauti.options.TraitData;
 import jam.panels.OptionsPanel;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.util.Collection;
-
 public class SelectTraitDialog {
-
     private JFrame frame;
-
     JComboBox traitCombo;
     JCheckBox copyCheck;
     JTextField nameField;
-
     OptionsPanel optionPanel;
-
     public SelectTraitDialog(JFrame frame) {
         this.frame = frame;
-
         traitCombo = new JComboBox();
-
         copyCheck = new JCheckBox("Name trait partition:");
         nameField = new JTextField();
         nameField.setColumns(20);
-
         optionPanel = new OptionsPanel(12, 12);
-
         copyCheck.addItemListener(
                 new java.awt.event.ItemListener() {
                     public void itemStateChanged(java.awt.event.ItemEvent ev) {
@@ -37,9 +25,7 @@ public class SelectTraitDialog {
                     }
                 }
         );
-
     }
-
     public int showDialog(Collection<TraitData> traits, String defaultName) {
         optionPanel.removeAll();
         if (traits == null) {
@@ -58,7 +44,6 @@ public class SelectTraitDialog {
             optionPanel.addComponents(copyCheck, nameField);
             nameField.setEnabled(copyCheck.isSelected());
         }
-
         JOptionPane optionPane = new JOptionPane(optionPanel,
                 JOptionPane.QUESTION_MESSAGE,
                 JOptionPane.OK_CANCEL_OPTION,
@@ -66,19 +51,14 @@ public class SelectTraitDialog {
                 null,
                 null);
         optionPane.setBorder(new EmptyBorder(12, 12, 12, 12));
-
         final JDialog dialog = optionPane.createDialog(frame, "Create New Partition");
         dialog.pack();
-
         int result;
         boolean isValid;
-
         do {
             dialog.setVisible(true);
-
             isValid = true;
             result = JOptionPane.CANCEL_OPTION;
-
             Integer value = (Integer) optionPane.getValue();
             if (value != null && value != -1) {
                 result = value;
@@ -90,20 +70,15 @@ public class SelectTraitDialog {
                 }
             }
         } while (!isValid);
-
         return result;
     }
-
     public TraitData getTrait() {
         return (TraitData) traitCombo.getSelectedItem();
     }
-
     public boolean getMakeCopy() {
         return copyCheck.isSelected();
     }
-
     public String getName() {
         return nameField.getText();
     }
-
 }

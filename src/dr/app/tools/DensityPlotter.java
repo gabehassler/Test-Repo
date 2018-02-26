@@ -1,6 +1,4 @@
-
 package dr.app.tools;
-
 import dr.app.beast.BeastVersion;
 import dr.app.util.Arguments;
 import dr.evolution.io.Importer;
@@ -8,16 +6,11 @@ import dr.evolution.io.NexusImporter;
 import dr.evolution.io.TreeImporter;
 import dr.evolution.tree.Tree;
 import dr.util.Version;
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-
-
 public class DensityPlotter {
-
 	private final static Version version = new BeastVersion();
-
 	public DensityPlotter(int burnin,
 	                      String inputFileName,
 	                      String outputFileName,
@@ -35,13 +28,9 @@ public class DensityPlotter {
 	                      boolean printHeaders,
 	                      boolean outputTIFF,
 	                      boolean logScale
-
 	) throws IOException {
-
 		System.out.println("Reading trees...");
-
 		DensityMap[] densityMaps;
-
 		if (trait2AttributeName != null) {
 			densityMaps = new DensityMap[timeBinCount];
 			for (int i = 0; i < densityMaps.length; i++) {
@@ -52,10 +41,8 @@ public class DensityPlotter {
 			densityMaps = new DensityMap[]{
 					new DensityMap(0, timeBinCount, value1BinCount,
 							timeUpper, timeLower, value1Upper, value1Lower, logScale)
-
 			};
 		}
-
 		boolean firstTree = true;
 		double maxTreeHeight = 0.0;
 		FileReader fileReader = new FileReader(inputFileName);
@@ -63,11 +50,9 @@ public class DensityPlotter {
 		try {
 			while (importer.hasTree()) {
 				Tree tree = importer.importNextTree();
-
 				if (firstTree) {
 					firstTree = false;
 				}
-
 				if (totalTrees >= burnin) {
 					if (trait2AttributeName != null) {
 						for (int i = 0; i < densityMaps.length; i++) {
@@ -79,18 +64,15 @@ public class DensityPlotter {
 					if (tree.getNodeHeight(tree.getRoot()) > maxTreeHeight) {
 						maxTreeHeight = tree.getNodeHeight(tree.getRoot());
 					}
-
 					totalTreesUsed += 1;
 				}
 				totalTrees += 1;
-
 			}
 		} catch (Importer.ImportException e) {
 			System.err.println("Error Parsing Input Tree: " + e.getMessage());
 			return;
 		}
 		fileReader.close();
-
 		double startTime = 0.0;
 		double endTime = maxTreeHeight;
 		if (timeUpper != Double.POSITIVE_INFINITY) {
@@ -100,7 +82,6 @@ public class DensityPlotter {
 			startTime = timeLower;
 		}
 		double deltaTime = (endTime - startTime) / (double) (timeBinCount);
-
 		// If we want a density plot then we have to read the trees
 		// again - the first time was to get the range of values,
 		// this read actually creates the map.
@@ -110,7 +91,6 @@ public class DensityPlotter {
 			totalTrees = 0;
 			while (importer.hasTree()) {
 				Tree tree = importer.importNextTree();
-
 				if (totalTrees >= burnin) {
 					if (trait2AttributeName != null) {
 						double sampleTime = startTime;
@@ -123,25 +103,21 @@ public class DensityPlotter {
 					}
 				}
 				totalTrees += 1;
-
 			}
 		} catch (Importer.ImportException e) {
 			System.err.println("Error Parsing Input Tree: " + e.getMessage());
 			return;
 		}
-
 //		PrintWriter printWriter = null;
 		if (trait2AttributeName != null) {
 			for (int i = 0; i < densityMaps.length; i++) {
 				if (outputTIFF) {
 					densityMaps[i].writeAsTIFF(outputFileName + "." + String.format("%03d", i) + ".tif");
-
 				} else {
 					PrintWriter printWriter = new PrintWriter(outputFileName + "." + String.format("%03d", i));
 					printWriter.println(densityMaps[i].toString(printHeaders));
 					printWriter.close();
 				}
-
 			}
 		} else {
 			PrintWriter printWriter = new PrintWriter(outputFileName);
@@ -149,13 +125,9 @@ public class DensityPlotter {
 			printWriter.close();
 		}
 //		printWriter.close();
-
-
 	}
-
 	int totalTrees = 0;
 	int totalTreesUsed = 0;
-
 	public static void printTitle() {
 		System.out.println();
 		centreLine("DensityPlotter " + version.getVersionString() + ", " + version.getDateString(), 60);
@@ -165,7 +137,6 @@ public class DensityPlotter {
 		System.out.println();
 		System.out.println();
 	}
-
 	public static void centreLine(String line, int pageWidth) {
 		int n = pageWidth - line.length();
 		int n1 = n / 2;
@@ -174,24 +145,17 @@ public class DensityPlotter {
 		}
 		System.out.println(line);
 	}
-
-
 	public static void printUsage(Arguments arguments) {
-
 		arguments.printUsage("densityplotter", "<input-file-name> [<output-file-name>]");
 		System.out.println();
 		System.out.println("  Example: densityplotter -burnin 100 -trait rate test.trees density.plot");
 		System.out.println();
 	}
-
 	//Main method
 	public static void main(String[] args) throws IOException {
-
 		String inputFileName = null;
 		String outputFileName = null;
-
 		printTitle();
-
 		Arguments arguments = new Arguments(
 				new Arguments.Option[]{
 						new Arguments.IntegerOption("burnin", "the number of states to be considered as 'burn-in' [default = 0]"),
@@ -210,7 +174,6 @@ public class DensityPlotter {
 						new Arguments.Option("help", "option to print this message"),
 						new Arguments.Option("logScale", "transform trait to log scale")
 				});
-
 		try {
 			arguments.parseArguments(args);
 		} catch (Arguments.ArgumentException ae) {
@@ -218,17 +181,14 @@ public class DensityPlotter {
 			printUsage(arguments);
 			System.exit(1);
 		}
-
 		if (arguments.hasOption("help")) {
 			printUsage(arguments);
 			System.exit(0);
 		}
-
 		int burnin = -1;
 		if (arguments.hasOption("burnin")) {
 			burnin = arguments.getIntegerOption("burnin");
 		}
-
 		String trait1AttributeName = "rate";
 		String trait2AttributeName = null;
 		int timeBinCount = 100;
@@ -241,75 +201,58 @@ public class DensityPlotter {
 		double value2Upper = Double.POSITIVE_INFINITY;
 		double value2Lower = Double.NEGATIVE_INFINITY;
 		boolean logScale = false;
-
 		if (arguments.hasOption("logScale"))
 			logScale = true;
-
 		if (arguments.hasOption("trait")) {
 			trait1AttributeName = arguments.getStringOption("trait");
 		}
-
 		if (arguments.hasOption("trait2")) {
 			trait2AttributeName = arguments.getStringOption("trait2");
 		}
-
 		if (arguments.hasOption("time_bins")) {
 			timeBinCount = arguments.getIntegerOption("time_bins");
 		}
-
 		if (arguments.hasOption("value_bins")) {
 			valueBinCount = arguments.getIntegerOption("value_bins");
 		}
 		value2BinCount = valueBinCount;
-
 		if (arguments.hasOption("value2_bins")) {
 			value2BinCount = arguments.getIntegerOption("value2_bins");
 		}
-
 		if (arguments.hasOption("time_upper")) {
 			timeUpper = arguments.getRealOption("time_upper");
 		}
-
 		if (arguments.hasOption("time_lower")) {
 			timeLower = arguments.getRealOption("time_lower");
 		}
-
 		if (arguments.hasOption("value_upper")) {
 			valueUpper = arguments.getRealOption("value_upper");
 		}
-
 		if (arguments.hasOption("value_lower")) {
 			valueLower = arguments.getRealOption("value_lower");
 		}
-
 		if (arguments.hasOption("value2_upper")) {
 			value2Upper = arguments.getRealOption("value2_upper");
 		}
-
 		if (arguments.hasOption("value2_lower")) {
 			value2Lower = arguments.getRealOption("value2_lower");
 		}
-
 		boolean printHeaders = true;
 		if (arguments.hasOption("headers")) {
 			String text = arguments.getStringOption("headers");
 			if (text.toUpperCase().compareTo("FALSE") == 0)
 				printHeaders = false;
 		}
-
 		boolean outputTIFF = false;
 		if (arguments.hasOption("tiff"))
 			outputTIFF = true;
-
 		String[] args2 = arguments.getLeftoverArguments();
-
 		if (args2.length > 2) {
 			System.err.println("Unknown option: " + args2[2]);
 			System.err.println();
 			printUsage(arguments);
 			System.exit(1);
 		}
-
 		if (args2.length == 2) {
 			inputFileName = args2[0];
 			outputFileName = args2[1];
@@ -318,7 +261,6 @@ public class DensityPlotter {
 			printUsage(arguments);
 			System.exit(1);
 		}
-
 		new DensityPlotter(burnin,
 				inputFileName,
 				outputFileName,
@@ -335,8 +277,6 @@ public class DensityPlotter {
 				value2Lower,
 				printHeaders, outputTIFF, logScale
 		);
-
 		System.exit(0);
 	}
-
 }

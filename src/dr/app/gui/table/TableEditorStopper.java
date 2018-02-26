@@ -1,6 +1,4 @@
-
 package dr.app.gui.table;
-
 import java.awt.Component;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -8,7 +6,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
-
 public class TableEditorStopper extends FocusAdapter implements PropertyChangeListener
 {
     public static void ensureEditingStopWhenTableLosesFocus(JTable table)

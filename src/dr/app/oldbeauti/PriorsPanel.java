@@ -1,6 +1,4 @@
-
 package dr.app.oldbeauti;
-
 import dr.app.gui.components.RealNumberField;
 import dr.app.gui.table.TableEditorStopper;
 import dr.util.NumberFormatter;
@@ -9,7 +7,6 @@ import jam.framework.Exportable;
 import jam.panels.OptionsPanel;
 import jam.table.HeaderRenderer;
 import jam.table.TableRenderer;
-
 import javax.swing.*;
 import javax.swing.plaf.BorderUIResource;
 import javax.swing.table.AbstractTableModel;
@@ -17,14 +14,11 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
-
 public class PriorsPanel extends JPanel implements Exportable {
-
     private static final long serialVersionUID = -2936049032365493416L;
     JScrollPane scrollPane = new JScrollPane();
     JTable priorTable = null;
     PriorTableModel priorTableModel = null;
-
     OptionsPanel treePriorPanel = new OptionsPanel();
     JComboBox treePriorCombo;
     JComboBox parameterizationCombo = new JComboBox(new String[]{
@@ -32,56 +26,40 @@ public class PriorsPanel extends JPanel implements Exportable {
     JComboBox bayesianSkylineCombo = new JComboBox(new String[]{
             "Piecewise-constant", "Piecewise-linear"});
     WholeNumberField groupCountField = new WholeNumberField(2, Integer.MAX_VALUE);
-
     RealNumberField samplingProportionField = new RealNumberField(Double.MIN_VALUE, 1.0);
-
     JCheckBox upgmaStartingTreeCheck = new JCheckBox("Use UPGMA to construct a starting tree");
-
     public ArrayList parameters = new ArrayList();
-
     BeautiFrame frame = null;
-
     public PriorsPanel(BeautiFrame parent) {
-
         this.frame = parent;
-
         priorTableModel = new PriorTableModel();
         priorTable = new JTable(priorTableModel);
-
         priorTable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
         priorTable.getTableHeader().setReorderingAllowed(false);
         priorTable.getTableHeader().setDefaultRenderer(
                 new HeaderRenderer(SwingConstants.LEFT, new Insets(0, 4, 0, 4)));
-
         priorTable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_LAST_COLUMN);
         priorTable.getColumnModel().getColumn(0).setCellRenderer(
                 new TableRenderer(SwingConstants.LEFT, new Insets(0, 4, 0, 4)));
         priorTable.getColumnModel().getColumn(0).setPreferredWidth(160);
-
         priorTable.getColumnModel().getColumn(1).setCellRenderer(
                 new ButtonRenderer(SwingConstants.LEFT, new Insets(0, 8, 0, 8)));
         priorTable.getColumnModel().getColumn(1).setCellEditor(
                 new ButtonEditor(SwingConstants.LEFT, new Insets(0, 8, 0, 8)));
         priorTable.getColumnModel().getColumn(1).setPreferredWidth(260);
-
         priorTable.getColumnModel().getColumn(2).setCellRenderer(
                 new TableRenderer(SwingConstants.LEFT, new Insets(0, 4, 0, 4)));
         priorTable.getColumnModel().getColumn(2).setPreferredWidth(400);
-
         TableEditorStopper.ensureEditingStopWhenTableLosesFocus(priorTable);
-
         scrollPane = new JScrollPane(priorTable,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-
         scrollPane.setOpaque(false);
-
         java.awt.event.ItemListener listener = new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent ev) {
                 if (!settingOptions) frame.priorsChanged();
             }
         };
-
         // order here must match corrosponding BeautiOptions constant, i.e. BeautiOptions.CONSTANT == 0 etc
         if (BeautiApp.developer) {
             treePriorCombo = new JComboBox(new String[]{
@@ -115,7 +93,6 @@ public class PriorsPanel extends JPanel implements Exportable {
                     }
                 }
         );
-
         KeyListener keyListener = new KeyAdapter() {
             public void keyTyped(java.awt.event.KeyEvent ev) {
                 if (!settingOptions && ev.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -123,10 +100,8 @@ public class PriorsPanel extends JPanel implements Exportable {
                 }
             }
         };
-
         groupCountField.addKeyListener(keyListener);
         samplingProportionField.addKeyListener(keyListener);
-
         FocusListener focusListener = new FocusAdapter() {
             public void focusLost(FocusEvent focusEvent) {
                 frame.priorsChanged();
@@ -134,34 +109,26 @@ public class PriorsPanel extends JPanel implements Exportable {
         };
         samplingProportionField.addFocusListener(focusListener);
         groupCountField.addFocusListener(focusListener);
-
         setupComponent(parameterizationCombo);
         parameterizationCombo.addItemListener(listener);
-
         setupComponent(bayesianSkylineCombo);
         bayesianSkylineCombo.addItemListener(listener);
-
         setupComponent(upgmaStartingTreeCheck);
-
         setOpaque(false);
         setLayout(new BorderLayout(0, 0));
         setBorder(new BorderUIResource.EmptyBorderUIResource(new java.awt.Insets(12, 12, 12, 12)));
-
         JPanel panel = new JPanel(new BorderLayout(0, 0));
         panel.setOpaque(false);
         panel.add(new JLabel("Priors for model parameters and statistics:"), BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
         panel.add(new JLabel("* Marked parameters currently have a default prior distribution. " +
                 "You should check that these are appropriate."), BorderLayout.SOUTH);
-
         treePriorPanel.setBorder(null);
         add(treePriorPanel, BorderLayout.NORTH);
         add(panel, BorderLayout.CENTER);
     }
-
     private void setupComponent(JComponent comp) {
         comp.setOpaque(false);
-
         if (comp instanceof JButton) {
             comp.putClientProperty("JButton.buttonType", "roundRect");
         }
@@ -169,11 +136,8 @@ public class PriorsPanel extends JPanel implements Exportable {
             comp.putClientProperty("JComboBox.isSquare", Boolean.TRUE);
         }
     }
-
     private void setupPanel() {
-
         treePriorPanel.removeAll();
-
         treePriorPanel.addComponentWithLabel("Tree Prior:", treePriorCombo);
         if (treePriorCombo.getSelectedIndex() == 1 || // exponential
                 treePriorCombo.getSelectedIndex() == 2 || // logistic
@@ -187,49 +151,34 @@ public class PriorsPanel extends JPanel implements Exportable {
             samplingProportionField.setColumns(8);
             treePriorPanel.addComponentWithLabel("Proportion of taxa sampled:", samplingProportionField);
         }
-
         treePriorPanel.addComponent(upgmaStartingTreeCheck);
-
         validate();
         repaint();
     }
-
     private boolean settingOptions = false;
-
     public void setOptions(BeautiOptions options) {
         settingOptions = true;
         parameters = options.selectParameters();
         priorTableModel.fireTableDataChanged();
-
         treePriorCombo.setSelectedIndex(options.nodeHeightPrior);
-
         groupCountField.setValue(options.skylineGroupCount);
         samplingProportionField.setValue(options.birthDeathSamplingProportion);
-
         parameterizationCombo.setSelectedIndex(options.parameterization);
         bayesianSkylineCombo.setSelectedIndex(options.skylineModel);
-
         upgmaStartingTreeCheck.setSelected(options.upgmaStartingTree);
-
         setupPanel();
-
         settingOptions = false;
-
         validate();
         repaint();
     }
-
     private PriorDialog priorDialog = null;
     private DiscretePriorDialog discretePriorDialog = null;
-
     private void priorButtonPressed(int row) {
         BeautiOptions.Parameter param = (BeautiOptions.Parameter) parameters.get(row);
-
         if (param.isDiscrete) {
             if (discretePriorDialog == null) {
                 discretePriorDialog = new DiscretePriorDialog(frame);
             }
-
             if (discretePriorDialog.showDialog(param) == JOptionPane.CANCEL_OPTION) {
                 return;
             }
@@ -237,19 +186,15 @@ public class PriorsPanel extends JPanel implements Exportable {
             if (priorDialog == null) {
                 priorDialog = new PriorDialog(frame);
             }
-
             if (priorDialog.showDialog(param) == JOptionPane.CANCEL_OPTION) {
                 return;
             }
         }
         param.priorEdited = true;
-
         priorTableModel.fireTableDataChanged();
     }
-
     public void getOptions(BeautiOptions options) {
         if (settingOptions) return;
-
         if (treePriorCombo.getSelectedIndex() == BeautiOptions.CONSTANT) {
             options.nodeHeightPrior = BeautiOptions.CONSTANT;
         } else if (treePriorCombo.getSelectedIndex() == BeautiOptions.EXPONENTIAL) {
@@ -281,35 +226,25 @@ public class PriorsPanel extends JPanel implements Exportable {
         } else {
             throw new RuntimeException("Unexpected value from treePriorCombo");
         }
-
         options.parameterization = parameterizationCombo.getSelectedIndex();
         options.skylineModel = bayesianSkylineCombo.getSelectedIndex();
-
         options.upgmaStartingTree = upgmaStartingTreeCheck.isSelected();
     }
-
     public JComponent getExportableComponent() {
         return priorTable;
     }
-
     NumberFormatter formatter = new NumberFormatter(4);
-
     class PriorTableModel extends AbstractTableModel {
-
         private static final long serialVersionUID = -8864178122484971872L;
         String[] columnNames = {"Parameter", "Prior", "Description"};
-
         public PriorTableModel() {
         }
-
         public int getColumnCount() {
             return columnNames.length;
         }
-
         public int getRowCount() {
             return parameters.size();
         }
-
         public Object getValueAt(int row, int col) {
             BeastGenerator.Parameter param = (BeastGenerator.Parameter) parameters.get(row);
             switch (col) {
@@ -322,29 +257,23 @@ public class PriorsPanel extends JPanel implements Exportable {
             }
             return null;
         }
-
         public String getColumnName(int column) {
             return columnNames[column];
         }
-
         public Class getColumnClass(int c) {
             return getValueAt(0, c).getClass();
         }
-
         public boolean isCellEditable(int row, int col) {
             return col == 1;
         }
-
         public String toString() {
             StringBuffer buffer = new StringBuffer();
-
             buffer.append(getColumnName(0));
             for (int j = 1; j < getColumnCount(); j++) {
                 buffer.append("\t");
                 buffer.append(getColumnName(j));
             }
             buffer.append("\n");
-
             for (int i = 0; i < getRowCount(); i++) {
                 buffer.append(getValueAt(i, 0));
                 for (int j = 1; j < getColumnCount(); j++) {
@@ -353,23 +282,16 @@ public class PriorsPanel extends JPanel implements Exportable {
                 }
                 buffer.append("\n");
             }
-
             return buffer.toString();
         }
     }
-
     class DoubleRenderer extends TableRenderer {
-
         private static final long serialVersionUID = -2614341608257369805L;
-
         public DoubleRenderer(int alignment, Insets insets) {
-
             super(true, alignment, insets);
         }
-
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
                                                        boolean hasFocus, int row, int column) {
-
             String s;
             if (((Double) value).isNaN()) {
                 s = "random";
@@ -377,20 +299,15 @@ public class PriorsPanel extends JPanel implements Exportable {
                 s = formatter.format((Double) value);
             }
             return super.getTableCellRendererComponent(table, s, isSelected, hasFocus, row, column);
-
         }
     }
-
     public class ButtonRenderer extends JButton implements TableCellRenderer {
-
         private static final long serialVersionUID = -2416184092883649169L;
-
         public ButtonRenderer(int alignment, Insets insets) {
             setOpaque(true);
             setHorizontalAlignment(alignment);
             setMargin(insets);
         }
-
         public Component getTableCellRendererComponent(JTable table, Object value,
                                                        boolean isSelected, boolean hasFocus, int row, int column) {
             setEnabled(table.isEnabled());
@@ -406,14 +323,12 @@ public class PriorsPanel extends JPanel implements Exportable {
             return this;
         }
     }
-
     public class ButtonEditor extends DefaultCellEditor {
         private static final long serialVersionUID = 6372738480075411674L;
         protected JButton button;
         private String label;
         private boolean isPushed;
         private int row;
-
         public ButtonEditor(int alignment, Insets insets) {
             super(new JCheckBox());
             button = new JButton();
@@ -426,7 +341,6 @@ public class PriorsPanel extends JPanel implements Exportable {
                 }
             });
         }
-
         public Component getTableCellEditorComponent(JTable table, Object value,
                                                      boolean isSelected, int row, int column) {
             button.setEnabled(table.isEnabled());
@@ -444,7 +358,6 @@ public class PriorsPanel extends JPanel implements Exportable {
             this.row = row;
             return button;
         }
-
         public Object getCellEditorValue() {
             if (isPushed) {
                 priorButtonPressed(row);
@@ -452,12 +365,10 @@ public class PriorsPanel extends JPanel implements Exportable {
             isPushed = false;
             return label;
         }
-
         public boolean stopCellEditing() {
             isPushed = false;
             return super.stopCellEditing();
         }
-
         protected void fireEditingStopped() {
             super.fireEditingStopped();
         }

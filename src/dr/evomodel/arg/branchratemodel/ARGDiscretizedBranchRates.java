@@ -1,6 +1,4 @@
-
 package dr.evomodel.arg.branchratemodel;
-
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
 import dr.evomodel.arg.ARGModel;
@@ -12,53 +10,35 @@ import dr.inference.model.Model;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import dr.xml.*;
-
 import java.util.logging.Logger;
-
 public class ARGDiscretizedBranchRates extends AbstractBranchRateModel {
-
-
     public static final String DISCRETIZED_BRANCH_RATES = "argDiscretizedBranchRates";
     public static final String DISTRIBUTION = "distribution";
     public static final String NUM_RATE_CATEGORIES = "numRateCategories";
     public static final String SINGLE_ROOT_RATE = "singleRootRate";
-
     private ParametricDistributionModel distributionModel;
     private ARGModel tree;
-
     // The rate categories of each branch
     private Parameter rateCategoryParameter;
-
     // the index of the root node.
     private int rootNodeNumber;
     private int storedRootNodeNumber;
-
     private final int categoryCount;
     private final double step;
     private final double[] rates;
-
     private boolean ratesKnown = false;
 //    private boolean orderKnown = false;
-
-
     public ARGDiscretizedBranchRates(ARGModel tree,
 //	                              Parameter rateCategoryParameter,
 int numRateCategories,
 ParametricDistributionModel model) {
-
-
         super(DISCRETIZED_BRANCH_RATES);
         this.tree = tree;
-
 //        categoryCount = tree.getNodeCount();
         categoryCount = numRateCategories;
-
         step = 1.0 / (double) categoryCount;
-
         rates = new double[categoryCount];
-
         this.distributionModel = model;
-
         this.rateCategoryParameter = rateCategoryParameter;
 //        if (rateCategoryParameter.getDimension() != tree.getNodeCount() -1 ) {
 //            throw new IllegalArgumentException("The rate category parameter must be of length nodeCount-1");
@@ -67,23 +47,17 @@ ParametricDistributionModel model) {
         if (numRateCategories > tree.getNodeCount() - 1) {
             throw new IllegalArgumentException("The rate category parameter must be less than the length 2*tipCount-1");
         }
-
 //        for (int i = 0; i < rateCategoryParameter.getDimension(); i++) {
 //            rateCategoryParameter.setParameterValue(i, i);
 //        }
-
         ratesKnown = false;
 //        orderKnown = false;
-
         addModel(model);
         addModel(tree);
-
 //        addVariable(rateCategoryParameter);
-
         rootNodeNumber = tree.getRoot().getNumber();
         storedRootNodeNumber = rootNodeNumber;
     }
-
     public void handleModelChangedEvent(Model model, Object object, int index) {
         if (model == distributionModel) {
             ratesKnown = false;
@@ -92,69 +66,50 @@ ParametricDistributionModel model) {
         }
         fireModelChanged();
     }
-
     protected final void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         fireModelChanged();
     }
-
     protected void storeState() {
         storedRootNodeNumber = rootNodeNumber;
     }
-
     protected void restoreState() {
         ratesKnown = false;
         rootNodeNumber = storedRootNodeNumber;
     }
-
     protected void acceptState() {
     }
-
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-
         public String getParserName() {
             return DISCRETIZED_BRANCH_RATES;
         }
-
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
             ARGModel tree = (ARGModel) xo.getChild(ARGModel.class);
             ParametricDistributionModel distributionModel = (ParametricDistributionModel) xo.getChild(DISTRIBUTION);
-
 //            Parameter rateCategoryParameter = (Parameter)xo.getSocketChild(RATE_CATEGORIES);
-
             int numRateCategories = xo.getIntegerAttribute(NUM_RATE_CATEGORIES);
-
             Logger.getLogger("dr.evomodel").info("Using discretized relaxed clock model.");
             Logger.getLogger("dr.evomodel").info("  parametric model = " + distributionModel.getModelName());
             Logger.getLogger("dr.evomodel").info("   rate categories = " + numRateCategories);
-
             if (xo.hasAttribute(SINGLE_ROOT_RATE)) {
                 //singleRootRate = xo.getBooleanAttribute(SINGLE_ROOT_RATE);
                 Logger.getLogger("dr.evomodel").warning("   WARNING: single root rate is not implemented!");
             }
-
-
             return new ARGDiscretizedBranchRates(tree, numRateCategories, distributionModel);
         }
-
         //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
-
         public String getParserDescription() {
             return
                     "This element returns an discretized relaxed clock model." +
                             "The branch rates are drawn from a discretized parametric distribution.";
         }
-
         public Class getReturnType() {
             return ARGDiscretizedBranchRates.class;
         }
-
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
-
         private XMLSyntaxRule[] rules = new XMLSyntaxRule[]{
 //            AttributeRule.newBooleanRule(SINGLE_ROOT_RATE, true, "Whether only a single rate should be used for the two children branches of the root"),
                 new ElementRule(ARGModel.class),
@@ -163,13 +118,10 @@ ParametricDistributionModel model) {
                 AttributeRule.newIntegerRule(NUM_RATE_CATEGORIES),
         };
     };
-
     public double getBranchRate(Tree tree, NodeRef node) {
-
         if (tree.isRoot(node)) {
             throw new IllegalArgumentException("root node doesn't have a rate!");
         }
-
         if (!ratesKnown) {
             setupRates();
             ratesKnown = true;
@@ -178,9 +130,7 @@ ParametricDistributionModel model) {
 //            shuffleIndices();
 //            orderKnown = true;
 //        }
-
 //        int nodeNumber = node.getNumber();
-
 //        int rateCategory = 0;
 //        if (nodeNumber < rootNodeNumber) {
 //            rateCategory = (int)Math.round(rateCategoryParameter.getParameterValue(nodeNumber));
@@ -194,9 +144,7 @@ ParametricDistributionModel model) {
 //	    System.err.println("rate = "+rates[rateCategory]+" : "+rateCategory);
         return rates[rateCategory];
     }
-
     private void setupRates() {
-
 //	    System.err.println("Setting up rates:");
 //	    System.err.println("catCount = "+categoryCount);
         double z = step / 2.0;
@@ -206,58 +154,42 @@ ParametricDistributionModel model) {
 //	        System.err.println(rates[i]);
         }
     }
-
     private void shuffleIndices() {
         int newRootNodeNumber = tree.getRoot().getNumber();
-
         //if (newRootNodeNumber != rootNodeNumber) {
         //    System.out.println("old root node number =" + rootNodeNumber);
         //    System.out.println("new root node number =" + newRootNodeNumber);
         //}
-
         if (rootNodeNumber > newRootNodeNumber) {
-
             //for (int i = 0; i < rateCategoryParameter.getDimension(); i++) {
             //    System.out.print((int)Math.round(rateCategoryParameter.getParameterValue(i)) + "\t");
             //}
             //System.out.println();
-
             int oldRateIndex = (int) Math.round(
                     rateCategoryParameter.getParameterValue(newRootNodeNumber));
-
             int end = Math.min(rateCategoryParameter.getDimension() - 1, rootNodeNumber);
             for (int i = newRootNodeNumber; i < end; i++) {
                 rateCategoryParameter.setParameterValue(i, rateCategoryParameter.getParameterValue(i + 1));
             }
-
             rateCategoryParameter.setParameterValue(end, oldRateIndex);
-
             //for (int i = 0; i < rateCategoryParameter.getDimension(); i++) {
             //    System.out.print((int)Math.round(rateCategoryParameter.getParameterValue(i)) + "\t");
             //}
             //System.out.println();
-
         } else if (rootNodeNumber < newRootNodeNumber) {
-
             //System.out.println("old root node number =" + rootNodeNumber);
             //System.out.println("new root node number =" + newRootNodeNumber);
-
             //for (int i = 0; i < rateCategoryParameter.getDimension(); i++) {
             //    System.out.print((int)Math.round(rateCategoryParameter.getParameterValue(i)) + "\t");
             //}
             //System.out.println();
-
             int end = Math.min(rateCategoryParameter.getDimension() - 1, newRootNodeNumber);
-
             int oldRateIndex = (int) Math.round(
                     rateCategoryParameter.getParameterValue(end));
-
             for (int i = end; i > rootNodeNumber; i--) {
                 rateCategoryParameter.setParameterValue(i, rateCategoryParameter.getParameterValue(i - 1));
             }
-
             rateCategoryParameter.setParameterValue(rootNodeNumber, oldRateIndex);
-
             //for (int i = 0; i < rateCategoryParameter.getDimension(); i++) {
             //    System.out.print((int)Math.round(rateCategoryParameter.getParameterValue(i)) + "\t");
             //}
@@ -265,5 +197,4 @@ ParametricDistributionModel model) {
         }
         rootNodeNumber = newRootNodeNumber;
     }
-
 }

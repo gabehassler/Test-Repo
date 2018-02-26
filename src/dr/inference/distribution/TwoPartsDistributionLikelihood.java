@@ -1,18 +1,13 @@
-
 package dr.inference.distribution;
-
 import dr.math.distributions.Distribution;
 import dr.inference.model.Parameter;
-
 public class TwoPartsDistributionLikelihood extends DistributionLikelihood{
     public static final int PRESENT = 1;
     public static final int ABSENT = 0;
     protected Distribution prior;
     protected Distribution pseudoPrior;
-
     protected Parameter bitVector;
     protected int paramIndex;
-
     public TwoPartsDistributionLikelihood(
             Distribution prior,
             Distribution pseudoPrior,
@@ -24,13 +19,10 @@ public class TwoPartsDistributionLikelihood extends DistributionLikelihood{
         this.bitVector = bitVector;
         this.paramIndex = paramIndex;
     }
-
     // **************************************************************
     // Likelihood IMPLEMENTATION
     // **************************************************************
-
     public double calculateLogLikelihood() {
-
         int paramStatus = (int)bitVector.getParameterValue(paramIndex);
         //System.out.println(paramStatus);
         if(paramStatus == PRESENT){

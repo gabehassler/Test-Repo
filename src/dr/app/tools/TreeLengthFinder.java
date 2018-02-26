@@ -1,6 +1,4 @@
-
 package dr.app.tools;
-
 import dr.app.beast.BeastVersion;
 import dr.app.util.Arguments;
 import dr.app.util.Utils;
@@ -11,21 +9,13 @@ import dr.evolution.io.TreeImporter;
 import dr.evolution.io.NexusImporter;
 import dr.evolution.io.Importer;
 import dr.evolution.tree.Tree;
-
 import java.io.*;
-
-
 public class TreeLengthFinder {
-
     private final static Version version = new BeastVersion();
-
-
     public TreeLengthFinder(int burnin, String inputFileName, String outputFileName/*, boolean verbose,
                        boolean hpds, boolean ess, boolean stdErr,
                        String marginalLikelihood*/) throws IOException, TraceException {
-
         File parentFile = new File(inputFileName);
-
         if (parentFile.isDirectory()) {
             System.out.println("Analysing all trees files below directory: " + inputFileName);
         } else if (parentFile.isFile()) {
@@ -34,25 +24,18 @@ public class TreeLengthFinder {
             System.err.println(inputFileName + " does not exist!");
             System.exit(0);
         }
-
         if (outputFileName != null) {
             FileOutputStream outputStream = new FileOutputStream(outputFileName);
             System.setOut(new PrintStream(outputStream));
         }
-
         analyze(parentFile, burnin/*, verbose, new boolean[]{true}, hpds, ess, stdErr, marginalLikelihood*/);
     }
-
     private void analyze(File file, int burnin) throws TraceException {
-
         if (file.isFile()) {
             try {
-
                 String name = file.getCanonicalPath();
-
                 report(name, burnin);
                 //TraceAnalysis.report(name, burnin, marginalLikelihood);
-
             } catch (IOException e) {
                 //e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
@@ -68,12 +51,9 @@ public class TreeLengthFinder {
             }
         }
     }
-
-
     private void report(String name, int burnin) {
         double treeLength = 0.0;
         int count = 0;
-
         try {
             FileReader fileReader = new FileReader(new File(name));
             TreeImporter importer = new NexusImporter(fileReader);
@@ -81,7 +61,6 @@ public class TreeLengthFinder {
                 Tree tree = importer.importNextTree();
                 if(count>=burnin) {
                     treeLength += TreeLength.FACTORY.createStatistic().getSummaryStatistic(tree)[0];
-
                 }
                 count++;
             }
@@ -93,7 +72,6 @@ public class TreeLengthFinder {
             System.err.println("Error Parsing Input Tree: " + e.getMessage());
         }
     }
-
     public static void printTitle() {
         System.out.println();
         centreLine("TreeLengthFinder " + version.getVersionString() + ", " + version.getDateString(), 60);
@@ -111,7 +89,6 @@ public class TreeLengthFinder {
         System.out.println();
         System.out.println();
     }
-
     public static void centreLine(String line, int pageWidth) {
         int n = pageWidth - line.length();
         int n1 = n / 2;
@@ -120,24 +97,17 @@ public class TreeLengthFinder {
         }
         System.out.println(line);
     }
-
-
     public static void printUsage(Arguments arguments) {
-
         //arguments.printUsage("loganalyser", "[-burnin <burnin>] [-short][-hpd] [-std] [<input-file-name> [<output-file-name>]]");
         arguments.printUsage("treelengthfinder", "[-burnin <burnin>][<input-file-name> [<output-file-name>]]");
         System.out.println();
         System.out.println("  Example: treelengthfinder test.tree");
         System.out.println("  Example: treelengthfinder -burnin 10000 trees.log out.txt");
         System.out.println();
-
     }
-
     //Main method
     public static void main(String[] args) throws IOException, TraceException {
-
         printTitle();
-
         Arguments arguments = new Arguments(
                 new Arguments.Option[]{
                         new Arguments.IntegerOption("burnin", "the number of states to be considered as 'burn-in'"),
@@ -149,7 +119,6 @@ public class TreeLengthFinder {
 //				new Arguments.Option("svg", "generate svg graphics"),
                         new Arguments.Option("help", "option to print this message")
                 });
-
         try {
             arguments.parseArguments(args);
         } catch (Arguments.ArgumentException ae) {
@@ -157,61 +126,46 @@ public class TreeLengthFinder {
             printUsage(arguments);
             System.exit(1);
         }
-
         if (arguments.hasOption("help")) {
             printUsage(arguments);
             System.exit(0);
         }
-
         int burnin = -1;
         if (arguments.hasOption("burnin")) {
             burnin = arguments.getIntegerOption("burnin");
         }
-
-
-
-
         boolean ess = arguments.hasOption("ess");
         boolean stdErr = arguments.hasOption("stdErr");
         boolean shortReport = arguments.hasOption("short");
-
         String marginalLikelihood = null;
         if (arguments.hasOption("marginal")) {
             marginalLikelihood = arguments.getStringOption("marginal");
         }*/
-
         String inputFileName = null;
         String outputFileName = null;
-
         String[] args2 = arguments.getLeftoverArguments();
-
         if (args2.length > 2) {
             System.err.println("Unknown option: " + args2[2]);
             System.err.println();
             printUsage(arguments);
             System.exit(1);
         }
-
         if (args2.length > 0) {
             inputFileName = args2[0];
         }
         if (args2.length > 1) {
             outputFileName = args2[1];
         }
-
         if (inputFileName == null) {
             // No input file name was given so throw up a dialog box...
             inputFileName = Utils.getLoadFileName("TreeLengthFinder " + version.getVersionString() + " - Select tree file to analyse");
         }
-
         if(burnin==-1) {
             System.out.println("Enter number of trees to burn-in (integer): ");
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             burnin = Integer.parseInt(br.readLine());
         }
-
         new TreeLengthFinder(burnin, inputFileName, outputFileName/*, !shortReport, hpds, ess, stdErr, marginalLikelihood*/);
-
         System.exit(0);
     }
 }

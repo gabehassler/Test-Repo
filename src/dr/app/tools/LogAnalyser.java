@@ -1,30 +1,21 @@
-
 package dr.app.tools;
-
 import dr.app.beast.BeastVersion;
 import dr.app.util.Arguments;
 import dr.app.util.Utils;
 import dr.inference.trace.TraceAnalysis;
 import dr.inference.trace.TraceException;
 import dr.util.Version;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Locale;
-
 public class LogAnalyser {
-
     private final static Version version = new BeastVersion();
-
-
     public LogAnalyser(int burnin, String inputFileName, String outputFileName, boolean verbose,
                        boolean hpds, boolean ess, boolean stdErr,
                        String marginalLikelihood) throws java.io.IOException, TraceException {
-
         File parentFile = new File(inputFileName);
-
         if (parentFile.isDirectory()) {
             System.out.println("Analysing all log files below directory: " + inputFileName);
         } else if (parentFile.isFile()) {
@@ -33,19 +24,15 @@ public class LogAnalyser {
             System.err.println(inputFileName + " does not exist!");
             System.exit(0);
         }
-
         if (outputFileName != null) {
             FileOutputStream outputStream = new FileOutputStream(outputFileName);
             System.setOut(new PrintStream(outputStream));
         }
-
         analyze(parentFile, burnin, verbose, new boolean[]{true}, hpds, ess, stdErr, marginalLikelihood);
     }
-
     public LogAnalyser(int burnin, File[] files, String outputFileName, boolean verbose,
                        boolean hpds, boolean ess, boolean stdErr,
                        String marginalLikelihood) throws java.io.IOException, TraceException {
-
         for (File f : files) {
             if (f.isFile()) {
                 System.out.println("Analysing log file: " + f.getAbsoluteFile());
@@ -53,12 +40,10 @@ public class LogAnalyser {
                 System.err.println(f.getAbsoluteFile() + " does not exist!");
                 System.exit(0);
             }
-
             if (outputFileName != null) {
                 FileOutputStream outputStream = new FileOutputStream(outputFileName);
                 System.setOut(new PrintStream(outputStream));
             }
-            
 //            setDefaultDir(f);
             analyze(f, burnin, verbose, new boolean[]{true}, hpds, ess, stdErr, marginalLikelihood);
         }
@@ -74,14 +59,11 @@ public class LogAnalyser {
 //            openDefaultDirectory = null;
 //        }
 //    }
-
     private void analyze(File file, int burnin, boolean verbose, boolean[] drawHeader,
                          boolean hpds, boolean ess, boolean stdErr,
                          String marginalLikelihood) throws TraceException {
-
         if (file.isFile()) {
             try {
-
                 String name = file.getCanonicalPath();
                 if (verbose) {
                     TraceAnalysis.report(name, burnin, marginalLikelihood);
@@ -105,7 +87,6 @@ public class LogAnalyser {
             }
         }
     }
-
     public static void printTitle() {
         System.out.println();
         centreLine("LogAnalyser " + version.getVersionString() + ", " + version.getDateString(), 60);
@@ -123,7 +104,6 @@ public class LogAnalyser {
         System.out.println();
         System.out.println();
     }
-
     public static void centreLine(String line, int pageWidth) {
         int n = pageWidth - line.length();
         int n1 = n / 2;
@@ -132,27 +112,19 @@ public class LogAnalyser {
         }
         System.out.println(line);
     }
-
-
     public static void printUsage(Arguments arguments) {
-
         arguments.printUsage("loganalyser", "[-burnin <burnin>] [-short][-hpd] [-std] [<input-file-name> [<output-file-name>]]");
         System.out.println();
         System.out.println("  Example: loganalyser test.log");
         System.out.println("  Example: loganalyser -burnin 10000 trees.log out.txt");
         System.out.println();
-
     }
-
     //Main method
     public static void main(String[] args) throws java.io.IOException, TraceException {
-
         // There is a major issue with languages that use the comma as a decimal separator.
         // To ensure compatibility between programs in the package, enforce the US locale.
         Locale.setDefault(Locale.US);
-
         printTitle();
-
         Arguments arguments = new Arguments(
                 new Arguments.Option[]{
                         new Arguments.IntegerOption("burnin", "the number of states to be considered as 'burn-in'"),
@@ -165,7 +137,6 @@ public class LogAnalyser {
 //				new Arguments.Option("svg", "generate svg graphics"),
                         new Arguments.Option("help", "option to print this message")
                 });
-
         try {
             arguments.parseArguments(args);
         } catch (Arguments.ArgumentException ae) {
@@ -173,59 +144,46 @@ public class LogAnalyser {
             printUsage(arguments);
             System.exit(1);
         }
-
         if (arguments.hasOption("help")) {
             printUsage(arguments);
             System.exit(0);
         }
-
         int burnin = -1;
         if (arguments.hasOption("burnin")) {
             burnin = arguments.getIntegerOption("burnin");
         }
-
         boolean hpds = arguments.hasOption("hpd");
         boolean ess = arguments.hasOption("ess");
         boolean stdErr = arguments.hasOption("stdErr");
         boolean shortReport = arguments.hasOption("short");
-
         String marginalLikelihood = null;
         if (arguments.hasOption("marginal")) {
             marginalLikelihood = arguments.getStringOption("marginal");
         }
-
         String inputFileName = null;
         String outputFileName = null;
-
         String[] args2 = arguments.getLeftoverArguments();
-
         if (args2.length > 2) {
             System.err.println("Unknown option: " + args2[2]);
             System.err.println();
             printUsage(arguments);
             System.exit(1);
         }
-
         if (args2.length > 0) {
             inputFileName = args2[0];
         }
         if (args2.length > 1) {
             outputFileName = args2[1];
         }
-
         if (inputFileName == null) {
             // No input file name was given so throw up a dialog box...
 //            inputFileName = Utils.getLoadFileName("LogAnalyser " + version.getVersionString() + " - Select log file to analyse");
             File[] files = Utils.getLoadFiles("LogAnalyser " + version.getVersionString() + " - Select log file to analyse",
                     openDefaultDirectory, "BEAST log (*.log) Files", "log", "txt");
             new LogAnalyser(burnin, files, outputFileName, !shortReport, hpds, ess, stdErr, marginalLikelihood);
-
         } else {
-
             new LogAnalyser(burnin, inputFileName, outputFileName, !shortReport, hpds, ess, stdErr, marginalLikelihood);
         }
-
         System.exit(0);
     }
 }
-

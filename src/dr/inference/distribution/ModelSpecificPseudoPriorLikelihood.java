@@ -1,16 +1,11 @@
-
 package dr.inference.distribution;
-
 import dr.math.distributions.Distribution;
 import dr.inference.model.Parameter;
-
 public class ModelSpecificPseudoPriorLikelihood extends DistributionLikelihood{
-
     private int[] models;
     protected Distribution prior;
     protected Distribution pseudoPrior;
     private Parameter modelIndicator;
-
     public ModelSpecificPseudoPriorLikelihood(
             Distribution prior,
             Distribution pseudoPrior,
@@ -22,8 +17,6 @@ public class ModelSpecificPseudoPriorLikelihood extends DistributionLikelihood{
         this.models = models;
         this.modelIndicator = modelIndicator;
     }
-
-
     public double calculateLogLikelihood() {
         boolean inModel = false;
         int modelCode = (int)modelIndicator.getParameterValue(0);
@@ -33,7 +26,6 @@ public class ModelSpecificPseudoPriorLikelihood extends DistributionLikelihood{
                 break;
             }
         }
-
         if(inModel){
             distribution = prior;
         }else{
@@ -42,5 +34,4 @@ public class ModelSpecificPseudoPriorLikelihood extends DistributionLikelihood{
         double logL = super.calculateLogLikelihood();
         return logL;
     }
-
 }

@@ -1,6 +1,4 @@
-
 package dr.app.beauti.treespanel;
-
 import dr.app.beauti.BeautiFrame;
 import dr.app.beauti.BeautiPanel;
 import dr.app.beauti.options.BeautiOptions;
@@ -18,7 +16,6 @@ import dr.evolution.tree.NeighborJoiningTree;
 import dr.evolution.tree.Tree;
 import dr.evolution.tree.UPGMATree;
 import jam.panels.OptionsPanel;
-
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -28,9 +25,7 @@ import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.EnumSet;
-
 public class OldTreesPanel extends BeautiPanel {
-
     private OptionsPanel treePriorPanel = new OptionsPanel();
     public JComboBox treePriorCombo;
     private JComboBox parameterizationCombo = new JComboBox(new String[]{
@@ -38,59 +33,42 @@ public class OldTreesPanel extends BeautiPanel {
     private JComboBox bayesianSkylineCombo = new JComboBox(new String[]{
             "Piecewise-constant", "Piecewise-linear"});
     private WholeNumberField groupCountField = new WholeNumberField(2, Integer.MAX_VALUE);
-
     JComboBox extendedBayesianSkylineCombo = new JComboBox(new String[]{
             "Single-Locus", "Multi-Loci"});
-
     JComboBox gmrfBayesianSkyrideCombo = new JComboBox(new String[]{
             "Uniform", "Time-aware"});
-
 //    RealNumberField samplingProportionField = new RealNumberField(Double.MIN_VALUE, 1.0);
-
     private JComboBox startingTreeCombo = new JComboBox(StartingTreeType.values());
     private JComboBox userTreeCombo = new JComboBox();
     private JButton button;
-
     private CreateTreeAction createTreeAction = new CreateTreeAction();
     private TreeDisplayPanel treeDisplayPanel;
-
     private BeautiFrame frame = null;
     private BeautiOptions options = null;
-
     private JScrollPane scrollPane = new JScrollPane();
     private JTable treesTable = null;
     private TreesTableModel treesTableModel = null;
-
     private GenerateTreeDialog generateTreeDialog = null;
-
     public OldTreesPanel(BeautiFrame parent) {
-
         this.frame = parent;
-
         treesTableModel = new TreesTableModel();
         treesTable = new JTable(treesTableModel);
-
         treesTable.getTableHeader().setReorderingAllowed(false);
         treesTable.getTableHeader().setResizingAllowed(false);
 //        treesTable.getTableHeader().setDefaultRenderer(
 //                new HeaderRenderer(SwingConstants.LEFT, new Insets(0, 4, 0, 4)));
-
         final TableColumnModel model = treesTable.getColumnModel();
-
         TableEditorStopper.ensureEditingStopWhenTableLosesFocus(treesTable);
-
         treesTable.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         treesTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             public void valueChanged(ListSelectionEvent evt) {
                 selectionChanged();
             }
         });
-
         scrollPane = new JScrollPane(treesTable,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setOpaque(false);
-
         JToolBar toolBar1 = new JToolBar();
         toolBar1.setFloatable(false);
         toolBar1.setOpaque(false);
@@ -99,12 +77,10 @@ public class OldTreesPanel extends BeautiPanel {
         createTreeAction.setEnabled(true);
         PanelUtils.setupComponent(button);
         toolBar1.add(button);
-
 //        button = new JButton(linkModelAction);
 //        linkModelAction.setEnabled(false);
 //        PanelUtils.setupComponent(button);
 //        toolBar1.add(button);
-
 //        ActionPanel actionPanel1 = new ActionPanel(false);
 //        actionPanel1.setAddAction(addTreeAction);
 //        actionPanel1.setRemoveAction(removeTreeAction);
@@ -112,15 +88,12 @@ public class OldTreesPanel extends BeautiPanel {
 //        JPanel controlPanel1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
 //        controlPanel1.setOpaque(false);
 //        controlPanel1.add(actionPanel1);
-
         ItemListener listener = new ItemListener() {
             public void itemStateChanged(ItemEvent ev) {
                 fireTreePriorsChanged();
             }
         };
-
         treePriorCombo = new JComboBox(EnumSet.range(TreePriorType.CONSTANT, TreePriorType.BIRTH_DEATH).toArray());
-
         PanelUtils.setupComponent(treePriorCombo);
         treePriorCombo.addItemListener(
                 new ItemListener() {
@@ -130,7 +103,6 @@ public class OldTreesPanel extends BeautiPanel {
                     }
                 }
         );
-
         KeyListener keyListener = new KeyAdapter() {
             public void keyTyped(KeyEvent ev) {
                 if (ev.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -138,10 +110,8 @@ public class OldTreesPanel extends BeautiPanel {
                 }
             }
         };
-
         groupCountField.addKeyListener(keyListener);
 //        samplingProportionField.addKeyListener(keyListener);
-
         FocusListener focusListener = new FocusAdapter() {
             public void focusLost(FocusEvent focusEvent) {
                 fireTreePriorsChanged();
@@ -149,19 +119,14 @@ public class OldTreesPanel extends BeautiPanel {
         };
         groupCountField.addFocusListener(focusListener);
 //        samplingProportionField.addFocusListener(focusListener);
-
         PanelUtils.setupComponent(parameterizationCombo);
         parameterizationCombo.addItemListener(listener);
-
         PanelUtils.setupComponent(bayesianSkylineCombo);
         bayesianSkylineCombo.addItemListener(listener);
-
         PanelUtils.setupComponent(extendedBayesianSkylineCombo);
         extendedBayesianSkylineCombo.addItemListener(listener);
-
         PanelUtils.setupComponent(gmrfBayesianSkyrideCombo);
         gmrfBayesianSkyrideCombo.addItemListener(listener);
-
         PanelUtils.setupComponent(startingTreeCombo);
         startingTreeCombo.addItemListener(
                 new ItemListener() {
@@ -171,7 +136,6 @@ public class OldTreesPanel extends BeautiPanel {
                     }
                 }
         );
-
         PanelUtils.setupComponent(userTreeCombo);
         userTreeCombo.addItemListener(
                 new ItemListener() {
@@ -180,43 +144,33 @@ public class OldTreesPanel extends BeautiPanel {
                     }
                 }
         );
-
         JPanel panel1 = new JPanel(new BorderLayout(0, 0));
         panel1.setOpaque(false);
         panel1.add(scrollPane, BorderLayout.CENTER);
 //        panel1.add(controlPanel1, BorderLayout.SOUTH);
-
         treeDisplayPanel = new TreeDisplayPanel(parent);
-
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel1, treeDisplayPanel);
         splitPane.setDividerLocation(180);
         splitPane.setContinuousLayout(true);
         splitPane.setBorder(BorderFactory.createEmptyBorder());
         splitPane.setOpaque(false);
-
         JPanel panel2 = new JPanel(new BorderLayout(0, 0));
         panel2.setOpaque(false);
         panel2.add(toolBar1, BorderLayout.NORTH);
         panel2.add(splitPane, BorderLayout.CENTER);
-
         setOpaque(false);
         setLayout(new BorderLayout(0, 0));
         setBorder(new BorderUIResource.EmptyBorderUIResource(new Insets(12, 12, 12, 12)));
-
         treePriorPanel.setBorder(null);
         add(treePriorPanel, BorderLayout.NORTH);
-
         add(panel2, BorderLayout.CENTER);
-
         setupPanel();
     }
-
     private void fireTreePriorsChanged() {
         if (!settingOptions) {
             frame.setDirty();
         }
     }
-
     private void selectionChanged() {
         int selRow = treesTable.getSelectedRow();
         if (selRow >= 0) {
@@ -225,22 +179,18 @@ public class OldTreesPanel extends BeautiPanel {
             treeDisplayPanel.setTree(null);
         }
     }
-
     private void createTree() {
         if (generateTreeDialog == null) {
             generateTreeDialog = new GenerateTreeDialog(frame);
         }
-
         int result = generateTreeDialog.showDialog(options);
         if (result != JOptionPane.CANCEL_OPTION) {
             GenerateTreeDialog.MethodTypes methodType = generateTreeDialog.getMethodType();
             PartitionData partition = generateTreeDialog.getDataPartition();
-
             Patterns patterns = new Patterns(partition.getAlignment());
             DistanceMatrix distances = new F84DistanceMatrix(patterns);
             Tree tree;
             TemporalRooting temporalRooting;
-
             switch (methodType) {
                 case NJ:
                     tree = new NeighborJoiningTree(distances);
@@ -254,22 +204,16 @@ public class OldTreesPanel extends BeautiPanel {
                 default:
                     throw new IllegalArgumentException("unknown method type");
             }
-
             tree.setId(generateTreeDialog.getName());
             options.userTrees.add(tree);
             treesTableModel.fireTableDataChanged();
             int row = options.userTrees.size() - 1;
             treesTable.getSelectionModel().setSelectionInterval(row, row);
         }
-
         fireTreePriorsChanged();
-
     }
-
     private void setupPanel() {
-
         treePriorPanel.removeAll();
-
         treePriorPanel.addComponentWithLabel("Tree Prior:", treePriorCombo);
         if (treePriorCombo.getSelectedItem() == TreePriorType.EXPONENTIAL ||
                 treePriorCombo.getSelectedItem() == TreePriorType.LOGISTIC ||
@@ -294,9 +238,7 @@ public class OldTreesPanel extends BeautiPanel {
         } else {
         	button.setEnabled(true);
         }
-
         treePriorPanel.addSeparator();
-
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panel.setOpaque(false);
         panel.add(startingTreeCombo);
@@ -305,24 +247,16 @@ public class OldTreesPanel extends BeautiPanel {
             panel.add(userTreeCombo);
         }
         treePriorPanel.addComponentWithLabel("                          Starting Tree:", panel);
-
         treePriorPanel.addSeparator();
-
         createTreeAction.setEnabled(options != null && options.dataPartitions.size() > 0);
-
         treesTableModel.fireTableDataChanged();
-
         validate();
         repaint();
     }
-
     private boolean settingOptions = false;
-
     public void setOptions(BeautiOptions options) {
         this.options = options;
-
         settingOptions = true;
-
 //        treePriorCombo.setSelectedItem(options.nodeHeightPrior);
 //
 //        groupCountField.setValue(options.skylineGroupCount);
@@ -336,7 +270,6 @@ public class OldTreesPanel extends BeautiPanel {
 //        gmrfBayesianSkyrideCombo.setSelectedIndex(options.skyrideSmoothing);
 //
 //        startingTreeCombo.setSelectedItem(options.startingTreeType);
-
         userTreeCombo.removeAllItems();
         if (options.userTrees.size() == 0) {
             userTreeCombo.addItem("no trees loaded");
@@ -347,15 +280,11 @@ public class OldTreesPanel extends BeautiPanel {
             }
             userTreeCombo.setEnabled(true);
         }
-
         setupPanel();
-
         settingOptions = false;
-
         validate();
         repaint();
     }
-
     public void getOptions(BeautiOptions options) {
 //        options.nodeHeightPrior = (TreePriorType) treePriorCombo.getSelectedItem();
 //
@@ -386,7 +315,6 @@ public class OldTreesPanel extends BeautiPanel {
 //        options.startingTreeType = (StartingTreeType) startingTreeCombo.getSelectedItem();
 //        options.userStartingTree = getSelectedUserTree();
     }
-
     private Tree getSelectedUserTree() {
         String treeId = (String) userTreeCombo.getSelectedItem();
         for (Tree tree : options.userTrees) {
@@ -396,28 +324,21 @@ public class OldTreesPanel extends BeautiPanel {
         }
         return null;
     }
-
     public JComponent getExportableComponent() {
         return treeDisplayPanel;
     }
-
     class TreesTableModel extends AbstractTableModel {
-
         private static final long serialVersionUID = -6707994233020715574L;
         String[] columnNames = {"Trees"};
-
         public TreesTableModel() {
         }
-
         public int getColumnCount() {
             return columnNames.length;
         }
-
         public int getRowCount() {
             if (options == null) return 0;
             return options.userTrees.size();
         }
-
         public Object getValueAt(int row, int col) {
             Tree tree = options.userTrees.get(row);
             switch (col) {
@@ -427,7 +348,6 @@ public class OldTreesPanel extends BeautiPanel {
                     throw new IllegalArgumentException("unknown column, " + col);
             }
         }
-
         public void setValueAt(Object aValue, int row, int col) {
             Tree tree = options.userTrees.get(row);
             switch (col) {
@@ -440,10 +360,8 @@ public class OldTreesPanel extends BeautiPanel {
             }
             fireTreePriorsChanged();
         }
-
         public boolean isCellEditable(int row, int col) {
             boolean editable;
-
             switch (col) {
                 case 0:// name
                     editable = true;
@@ -451,32 +369,25 @@ public class OldTreesPanel extends BeautiPanel {
                 default:
                     editable = false;
             }
-
             return editable;
         }
-
-
         public String getColumnName(int column) {
             return columnNames[column];
         }
-
         public Class getColumnClass(int c) {
             if (getRowCount() == 0) {
                 return Object.class;
             }
             return getValueAt(0, c).getClass();
         }
-
         public String toString() {
             StringBuffer buffer = new StringBuffer();
-
             buffer.append(getColumnName(0));
             for (int j = 1; j < getColumnCount(); j++) {
                 buffer.append("\t");
                 buffer.append(getColumnName(j));
             }
             buffer.append("\n");
-
             for (int i = 0; i < getRowCount(); i++) {
                 buffer.append(getValueAt(i, 0));
                 for (int j = 1; j < getColumnCount(); j++) {
@@ -485,21 +396,16 @@ public class OldTreesPanel extends BeautiPanel {
                 }
                 buffer.append("\n");
             }
-
             return buffer.toString();
         }
     }
-
     public class CreateTreeAction extends AbstractAction {
         public CreateTreeAction() {
             super("Create Tree");
             setToolTipText("Create a NJ or UPGMA tree using a data partition");
         }
-
         public void actionPerformed(ActionEvent ae) {
             createTree();
         }
     }
-
-
 }

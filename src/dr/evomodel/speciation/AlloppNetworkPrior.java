@@ -1,48 +1,28 @@
-
 package dr.evomodel.speciation;
-
 import dr.inference.distribution.ParametricDistributionModel;
 import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
-
 import java.util.ArrayList;
-
-
-
-
-
-
-
 public class AlloppNetworkPrior extends Likelihood.Abstract {
 	AlloppSpeciesNetworkModel asnm;
 	AlloppNetworkPriorModel prior;
     double numHybsLogL[];
-
-
-
     public AlloppNetworkPrior(AlloppNetworkPriorModel prior, AlloppSpeciesNetworkModel asnm) {
 		super(prior);
 		this.asnm = asnm;
 		this.prior = prior;
         asnm.setHybPopModel(prior.getHybridPopModel());
-
         int ndips = asnm.getNofDiploids();
         numHybsLogL = new double[asnm.maxNumberOfHybPopParameters()+1];
         for (int h = 0; h < numHybsLogL.length; h++) {
             numHybsLogL[h] = -h * Math.log(7.0*Math.sqrt(ndips));
             // grjtodo-soon the form of the function is experimental
         }
-
-		
 	}
-	
-	
-
 	@Override
 	protected boolean getLikelihoodKnown() {
 		return false;
 	}
-
 	@Override
 	protected double calculateLogLikelihood() {
         double llhood = 0.0;
@@ -71,24 +51,14 @@ public class AlloppNetworkPrior extends Likelihood.Abstract {
         //System.out.println(llhood);
         return llhood;
 	}
-
-
-
-
-
     private double loglikeNumHybridizations() {
         int nhybs = asnm.getNumberOfTetraTrees();
         //System.out.print(nhybs); System.out.print(" ");
         return numHybsLogL[nhybs];
     }
-
-
     private double loglikelihoodEvents() {
-
         double lambda = prior.getRate().getParameterValue(0);
-
         ArrayList<Double> heights = new ArrayList<Double>();
-
         AlloppDiploidHistory adhist = asnm.getDiploidHistory();
         adhist.collectInternalAndHybHeights(heights);
         int nttrees = asnm.getNumberOfTetraTrees();
@@ -102,10 +72,7 @@ public class AlloppNetworkPrior extends Likelihood.Abstract {
         }
         return loglhood;
     }
-
-
     private double logexpPDF(double x, double rate) {
         return Math.log(rate) - rate*x;
     }
-
 }

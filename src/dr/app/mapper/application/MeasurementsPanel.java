@@ -1,6 +1,4 @@
-
 package dr.app.mapper.application;
-
 import dr.app.gui.FileDrop;
 import dr.app.gui.table.DateCellEditor;
 import dr.app.gui.table.TableEditorStopper;
@@ -11,7 +9,6 @@ import dr.util.DataTable;
 import jam.framework.Exportable;
 import jam.table.HeaderRenderer;
 import jam.table.TableRenderer;
-
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
@@ -21,63 +18,46 @@ import javax.swing.table.AbstractTableModel;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
-
 public class MeasurementsPanel extends JPanel implements Exportable, MapperDocument.Listener {
-
     private JScrollPane scrollPane = new JScrollPane();
     private JTable dataTable = null;
     private DataTableModel dataTableModel = null;
-
     private final MapperFrame frame;
     private final MapperDocument document;
-
-
     public MeasurementsPanel(final MapperFrame parent, final MapperDocument document) {
-
         this.frame = parent;
         this.document = document;
-
         dataTableModel = new DataTableModel();
         TableSorter sorter = new TableSorter(dataTableModel);
         dataTable = new JTable(sorter);
-
         sorter.setTableHeader(dataTable.getTableHeader());
-
         dataTable.getTableHeader().setReorderingAllowed(false);
         dataTable.getTableHeader().setDefaultRenderer(
                 new HeaderRenderer(SwingConstants.LEFT, new Insets(0, 4, 0, 4)));
-
         dataTable.getColumnModel().getColumn(0).setCellRenderer(
                 new TableRenderer(SwingConstants.LEFT, new Insets(0, 4, 0, 4)));
         dataTable.getColumnModel().getColumn(0).setPreferredWidth(80);
-
         dataTable.getColumnModel().getColumn(1).setCellRenderer(
                 new TableRenderer(SwingConstants.LEFT, new Insets(0, 4, 0, 4)));
         dataTable.getColumnModel().getColumn(1).setPreferredWidth(80);
         dataTable.getColumnModel().getColumn(1).setCellEditor(
                 new DateCellEditor());
-
         dataTable.getColumnModel().getColumn(2).setCellRenderer(
                 new TableRenderer(SwingConstants.LEFT, new Insets(0, 4, 0, 4)));
         dataTable.getColumnModel().getColumn(2).setPreferredWidth(80);
-
         TableEditorStopper.ensureEditingStopWhenTableLosesFocus(dataTable);
-
         dataTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             public void valueChanged(ListSelectionEvent evt) {
                 selectionChanged();
             }
         });
-
         scrollPane = new JScrollPane(dataTable,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         scrollPane.setOpaque(false);
-
         JToolBar toolBar1 = new JToolBar();
         toolBar1.setFloatable(false);
         toolBar1.setOpaque(false);
-
 //        toolBar1.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 //        JButton button = new JButton(clearDatesAction);
 //        PanelUtils.setupComponent(button);
@@ -90,14 +70,11 @@ public class MeasurementsPanel extends JPanel implements Exportable, MapperDocum
 //        toolBar1.add(unitsLabel);
 //        toolBar1.add(unitsCombo);
 //        toolBar1.add(directionCombo);
-
         setOpaque(false);
         setBorder(new BorderUIResource.EmptyBorderUIResource(new Insets(12, 12, 12, 12)));
         setLayout(new BorderLayout(0, 0));
-
         add(toolBar1, "North");
         add(scrollPane, "Center");
-
         Color focusColor = UIManager.getColor("Focus.color");
         Border focusBorder = BorderFactory.createMatteBorder(2, 2, 2, 2, focusColor);
         scrollPane.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
@@ -106,41 +83,30 @@ public class MeasurementsPanel extends JPanel implements Exportable, MapperDocum
                 frame.importMeasurementFiles(files);
             }   // end filesDropped
         }); // end FileDrop.Listener
-
     }
-
     @Override
     public void taxaChanged() {
         dataTableModel.fireTableDataChanged();
     }
-
     public JComponent getExportableComponent() {
         return dataTable;
     }
-
     public void selectionChanged() {
         // nothing to do
     }
-
     class DataTableModel extends AbstractTableModel {
-
         String[] columnNames = {"Serum", "Virus", "Titre", "Table"};
-
         public DataTableModel() {
         }
-
         public int getColumnCount() {
             return columnNames.length;
         }
-
         public int getRowCount() {
             java.util.List<MapperDocument.Measurement> measurementList = document.getMeasurements();
             return measurementList.size();
         }
-
         public Object getValueAt(int row, int col) {
             MapperDocument.Measurement measurement = document.getMeasurements().get(row);
-
             switch (col) {
                 case 0:
                     return measurement.columnStrain.getId();
@@ -156,7 +122,6 @@ public class MeasurementsPanel extends JPanel implements Exportable, MapperDocum
             }
             return null;
         }
-
         public void setValueAt(Object aValue, int row, int col) {
 //            java.util.List<Taxon> taxonList = document.getTaxa();
 //
@@ -173,7 +138,6 @@ public class MeasurementsPanel extends JPanel implements Exportable, MapperDocum
 //
 //            timeScaleChanged();
         }
-
         public boolean isCellEditable(int row, int col) {
 //            if (col == 0) return true;
 //            if (col == 1) {
@@ -182,25 +146,20 @@ public class MeasurementsPanel extends JPanel implements Exportable, MapperDocum
 //            }
             return false;
         }
-
         public String getColumnName(int column) {
             return columnNames[column];
         }
-
         public Class getColumnClass(int c) {
             return getValueAt(0, c).getClass();
         }
-
         public String toString() {
             StringBuffer buffer = new StringBuffer();
-
             buffer.append(getColumnName(0));
             for (int j = 1; j < getColumnCount(); j++) {
                 buffer.append("\t");
                 buffer.append(getColumnName(j));
             }
             buffer.append("\n");
-
             for (int i = 0; i < getRowCount(); i++) {
                 buffer.append(getValueAt(i, 0));
                 for (int j = 1; j < getColumnCount(); j++) {
@@ -209,7 +168,6 @@ public class MeasurementsPanel extends JPanel implements Exportable, MapperDocum
                 }
                 buffer.append("\n");
             }
-
             return buffer.toString();
         }
     }

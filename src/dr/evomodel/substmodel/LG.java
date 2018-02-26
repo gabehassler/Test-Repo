@@ -1,28 +1,19 @@
-
 package dr.evomodel.substmodel;
-
 import dr.evolution.datatype.AminoAcids;
 import dr.util.Author;
 import dr.util.Citation;
-
 import java.util.Arrays;
 import java.util.List;
-
 public class LG extends EmpiricalRateMatrix.AbstractAminoAcid {
-	
 	public static final LG INSTANCE = new LG();
-
 	// The rates below are specified assuming that the amino acids are in this order:
 	// ARNDCQEGHILKMFPSTWYV
 	// but the AminoAcids dataType wants them in this order:
 	// ACDEFGHIKLMNPQRSTVWY
 	// This is solved by calling the setEmpiricalRates and setEmpiricalFrequencies methods
 	private LG() { super("LG");
-
 		int n = AminoAcids.INSTANCE.getStateCount();
-		
 		double[][] rate = new double[n][n];
-		
 		// Q matrix
 		rate[0][1] = 0.425093;
 		rate[0][2] = 0.276818; 
@@ -43,7 +34,6 @@ public class LG extends EmpiricalRateMatrix.AbstractAminoAcid {
 		rate[0][17] = 0.180717; 
 		rate[0][18] = 0.218959; 
 		rate[0][19] = 2.547870; 
-
 		rate[1][2] = 0.751878; 
 		rate[1][3] = 0.123954; 
 		rate[1][4] = 0.534551; 
@@ -62,7 +52,6 @@ public class LG extends EmpiricalRateMatrix.AbstractAminoAcid {
 		rate[1][17] = 0.593607; 
 		rate[1][18] = 0.314440; 
 		rate[1][19] = 0.170887; 
-
 		rate[2][3] = 5.076149; 
 		rate[2][4] = 0.528768; 
 		rate[2][5] = 1.695752; 
@@ -80,7 +69,6 @@ public class LG extends EmpiricalRateMatrix.AbstractAminoAcid {
 		rate[2][17] = 0.045376; 
 		rate[2][18] = 0.612025; 
 		rate[2][19] = 0.083688; 
-
 		rate[3][4] = 0.062556; 
 		rate[3][5] = 0.523386; 
 		rate[3][6] = 5.243870; 
@@ -97,7 +85,6 @@ public class LG extends EmpiricalRateMatrix.AbstractAminoAcid {
 		rate[3][17] = 0.029890; 
 		rate[3][18] = 0.135107; 
 		rate[3][19] = 0.037967; 
-
 		rate[4][5] = 0.084808; 
 		rate[4][6] = 0.003499; 
 		rate[4][7] = 0.569265; 
@@ -113,7 +100,6 @@ public class LG extends EmpiricalRateMatrix.AbstractAminoAcid {
 		rate[4][17] = 0.670128; 
 		rate[4][18] = 1.165532; 
 		rate[4][19] = 1.959291; 
-
 		rate[5][6] = 4.128591; 
 		rate[5][7] = 0.267959; 
 		rate[5][8] = 4.813505; 
@@ -128,7 +114,6 @@ public class LG extends EmpiricalRateMatrix.AbstractAminoAcid {
 		rate[5][17] = 0.236199; 
 		rate[5][18] = 0.257336; 
 		rate[5][19] = 0.210332; 
-
 		rate[6][7] = 0.348847; 
 		rate[6][8] = 0.423881; 
 		rate[6][9] = 0.044265; 
@@ -142,7 +127,6 @@ public class LG extends EmpiricalRateMatrix.AbstractAminoAcid {
 		rate[6][17] = 0.077852; 
 		rate[6][18] = 0.120037; 
 		rate[6][19] = 0.245034; 
-
 		rate[7][8] = 0.311484; 
 		rate[7][9] = 0.008705; 
 		rate[7][10] = 0.044261; 
@@ -155,7 +139,6 @@ public class LG extends EmpiricalRateMatrix.AbstractAminoAcid {
 		rate[7][17] = 0.268491; 
 		rate[7][18] = 0.054679; 
 		rate[7][19] = 0.076701; 
-		
 		rate[8][9] = 0.108882; 
 		rate[8][10] = 0.366317; 
 		rate[8][11] = 0.697264; 
@@ -167,7 +150,6 @@ public class LG extends EmpiricalRateMatrix.AbstractAminoAcid {
 		rate[8][17] = 0.597054; 
 		rate[8][18] = 5.306834; 
 		rate[8][19] = 0.119013; 
-
 		rate[9][10] = 4.145067; 
 		rate[9][11] = 0.159069; 
 		rate[9][12] = 4.273607; 
@@ -178,7 +160,6 @@ public class LG extends EmpiricalRateMatrix.AbstractAminoAcid {
 		rate[9][17] = 0.111660; 
 		rate[9][18] = 0.232523; 
 		rate[9][19] = 10.649107; 
-		
 		rate[10][11] = 0.137500; 
 		rate[10][12] = 6.312358; 
 		rate[10][13] = 2.592692; 
@@ -188,7 +169,6 @@ public class LG extends EmpiricalRateMatrix.AbstractAminoAcid {
 		rate[10][17] = 0.619632; 
 		rate[10][18] = 0.299648; 
 		rate[10][19] = 1.702745; 
-		
 		rate[11][12] = 0.656604; 
 		rate[11][13] = 0.023918; 
 		rate[11][14] = 0.390322; 
@@ -197,7 +177,6 @@ public class LG extends EmpiricalRateMatrix.AbstractAminoAcid {
 		rate[11][17] = 0.049906; 
 		rate[11][18] = 0.131932; 
 		rate[11][19] = 0.185202; 
-		
 		rate[12][13] = 1.798853; 
 		rate[12][14] = 0.099849; 
 		rate[12][15] = 0.346960; 
@@ -205,36 +184,28 @@ public class LG extends EmpiricalRateMatrix.AbstractAminoAcid {
 		rate[12][17] = 0.696175; 
 		rate[12][18] = 0.481306; 
 		rate[12][19] = 1.898718; 
-		
 		rate[13][14] = 0.094464; 
 		rate[13][15] = 0.361819; 
 		rate[13][16] = 0.165001; 
 		rate[13][17] = 2.457121; 
 		rate[13][18] = 7.803902; 
 		rate[13][19] = 0.654683; 
-		
 		rate[14][15] = 1.338132; 
 		rate[14][16] = 0.571468; 
 		rate[14][17] = 0.095131; 
 		rate[14][18] = 0.089613; 
 		rate[14][19] = 0.296501; 
-		
 		rate[15][16] = 6.472279; 
 		rate[15][17] = 0.248862; 
 		rate[15][18] = 0.400547; 
 		rate[15][19] = 0.098369; 
-		
 		rate[16][17] = 0.140825; 
 		rate[16][18] = 0.245841; 
 		rate[16][19] = 2.188158; 
-		
 		rate[17][18] = 3.151815; 
 		rate[17][19] = 0.189510; 
-		
 		rate[18][19] = 0.249313; 
-		
 		setEmpiricalRates(rate, "ARNDCQEGHILKMFPSTWYV");
-
 		//the order of the amino acid codes below
 		//Ala = A
 		//Arg = R
@@ -279,11 +250,9 @@ public class LG extends EmpiricalRateMatrix.AbstractAminoAcid {
 		f[19] = 0.069147;
 		setEmpiricalFrequencies(f, "ARNDCQEGHILKMFPSTWYV");
 	}
-
     public List<Citation> getCitations() {
         return Arrays.asList(CITATION);
     }
-
     public static Citation CITATION = new Citation(
             new Author[]{
                     new Author("S. Q.", "Le"),

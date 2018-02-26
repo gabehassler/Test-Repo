@@ -1,6 +1,4 @@
-
 package dr.app.beastgen;
-
 import dr.app.beauti.options.*;
 import dr.app.util.Utils;
 import dr.evolution.alignment.Alignment;
@@ -22,36 +20,27 @@ import dr.evolution.util.TaxonList;
 import dr.evolution.util.Units;
 import jebl.evolution.io.NewickExporter;
 import org.jdom.JDOMException;
-
 import javax.swing.*;
 import java.io.*;
 import java.util.*;
 import java.util.List;
-
-
 public class DataModelImporter {
-
     private final DateGuesser guesser;
-
     public DataModelImporter() {
         this.guesser = null;
     }
-
     public DataModelImporter(DateGuesser guesser) {
         this.guesser = guesser;
     }
-
     public HashMap importFromFile(File file) throws IOException, Importer.ImportException {
         HashMap dataModel = new HashMap();
         try {
             Reader reader = new FileReader(file);
-
             BufferedReader bufferedReader = new BufferedReader(reader);
             String line = bufferedReader.readLine();
             while (line != null && line.length() == 0) {
                 line = bufferedReader.readLine();
             }
-
             if ((line != null && line.toUpperCase().contains("#NEXUS"))) {
                 // is a NEXUS file
                 importNexusFile(file, guesser, dataModel);
@@ -67,30 +56,21 @@ public class DataModelImporter {
             } else {
                 throw new ImportException("Unrecognized format for imported file.");
             }
-
             bufferedReader.close();
         } catch (IOException e) {
             throw new IOException(e.getMessage());
         }
-
         return dataModel;
-
     }
-
     // xml
     private void importBEASTFile(File file, DateGuesser guesser, Map dataModel) throws IOException, ImportException {
         try {
             FileReader reader = new FileReader(file);
-
             BeastImporter importer = new BeastImporter(reader);
-
             List<TaxonList> taxonLists = new ArrayList<TaxonList>();
             List<Alignment> alignments = new ArrayList<Alignment>();
-
             importer.importBEAST(taxonLists, alignments);
-
             TaxonList taxa = taxonLists.get(0);
-
             int count = 1;
             for (Alignment alignment : alignments) {
                 String name = file.getName();
@@ -102,10 +82,8 @@ public class DataModelImporter {
                     }
                 }
                 setData(dataModel, guesser, name, taxa, taxonLists, alignment, null, null, null);
-
                 count++;
             }
-
             reader.close();
         } catch (JDOMException e) {
             throw new ImportException(e.getMessage());
@@ -114,105 +92,73 @@ public class DataModelImporter {
         } catch (IOException e) {
             throw new IOException(e.getMessage());
         }
-
     }
-
     // nexus
     private void importNexusFile(File file, DateGuesser guesser, Map dataModel) throws IOException, ImportException {
         TaxonList taxa = null;
         SimpleAlignment alignment = null;
         List<Tree> trees = new ArrayList<Tree>();
         List<NexusApplicationImporter.CharSet> charSets = new ArrayList<NexusApplicationImporter.CharSet>();
-
         try {
             FileReader reader = new FileReader(file);
-
             NexusApplicationImporter importer = new NexusApplicationImporter(reader);
-
             boolean done = false;
-
             while (!done) {
                 try {
-
                     NexusBlock block = importer.findNextBlock();
-
                     if (block == NexusImporter.TAXA_BLOCK) {
-
                         if (taxa != null) {
                             throw new MissingBlockException("TAXA block already defined");
                         }
-
                         taxa = importer.parseTaxaBlock();
-
                         dataModel.put("taxa", createTaxonList(taxa));
-
                     } else if (block == NexusImporter.CALIBRATION_BLOCK) {
                         if (taxa == null) {
                             throw new MissingBlockException("TAXA or DATA block must be defined before a CALIBRATION block");
                         }
-
                         importer.parseCalibrationBlock(taxa);
-
                     } else if (block == NexusImporter.CHARACTERS_BLOCK) {
-
                         if (taxa == null) {
                             throw new MissingBlockException("TAXA block must be defined before a CHARACTERS block");
                         }
-
                         if (alignment != null) {
                             throw new MissingBlockException("CHARACTERS or DATA block already defined");
                         }
-
                         alignment = (SimpleAlignment) importer.parseCharactersBlock(taxa);
-
                     } else if (block == NexusImporter.DATA_BLOCK) {
-
                         if (alignment != null) {
                             throw new MissingBlockException("CHARACTERS or DATA block already defined");
                         }
-
                         // A data block doesn't need a taxon block before it
                         // but if one exists then it will use it.
                         alignment = (SimpleAlignment) importer.parseDataBlock(taxa);
                         if (taxa == null) {
                             taxa = alignment;
                         }
-
                     } else if (block == NexusImporter.TREES_BLOCK) {
-
                         // I guess there is no reason not to allow multiple trees blocks
 //                        if (trees.size() > 0) {
 //                            throw new MissingBlockException("TREES block already defined");
 //                        }
-
                         Tree[] treeArray = importer.parseTreesBlock(taxa);
                         trees.addAll(Arrays.asList(treeArray));
-
                         if (taxa == null && trees.size() > 0) {
                             taxa = trees.get(0);
                         }
-
-
                     } else if (block == NexusApplicationImporter.ASSUMPTIONS_BLOCK) {
-
                         importer.parseAssumptionsBlock(charSets);
-
                     } else {
                         // Ignore the block..
                     }
-
                 } catch (EOFException ex) {
                     done = true;
                 }
             }
-
             reader.close();
-
             // Allow the user to load taxa only (perhaps from a tree file) so that they can sample from a prior...
             if (alignment == null && taxa == null) {
                 throw new MissingBlockException("TAXON, DATA or CHARACTERS block is missing");
             }
-
         } catch (IOException e) {
             throw new IOException(e.getMessage());
         } catch (ImportException e) {
@@ -220,22 +166,15 @@ public class DataModelImporter {
 //        } catch (Exception e) {
 //            throw new Exception(e.getMessage());
         }
-
         setData(dataModel, guesser, file.getName(), taxa, null, alignment, charSets, null, trees);
     }
-
     // FASTA
-
     private void importFastaFile(File file, DateGuesser guesser, Map dataModel) throws IOException, ImportException {
         try {
             FileReader reader = new FileReader(file);
-
             FastaImporter importer = new FastaImporter(reader, Nucleotides.INSTANCE);
-
             Alignment alignment = importer.importAlignment();
-
             reader.close();
-
             setData(dataModel, guesser, file.getName(), alignment, null, alignment, null, null, null);
         } catch (ImportException e) {
             throw new ImportException(e.getMessage());
@@ -243,48 +182,36 @@ public class DataModelImporter {
             throw new IOException(e.getMessage());
         }
     }
-
     public Map importFromTreeFile(String fileName, Map dataModel) throws IOException, Importer.ImportException {
         Tree tree = null;
         try {
             Reader reader = new FileReader(fileName);
-
             BufferedReader bufferedReader = new BufferedReader(reader);
             String line = bufferedReader.readLine();
             while (line != null && line.length() == 0) {
                 line = bufferedReader.readLine();
             }
-
             reader = new FileReader(fileName);
-
             if ((line != null && line.toUpperCase().contains("#NEXUS"))) {
                 // is a NEXUS file
                 NexusImporter importer = new NexusImporter(reader);
                 tree = importer.importNextTree();
-
             } else {
                 NewickImporter importer = new NewickImporter(reader);
                 tree = importer.importNextTree();
             }
-
             bufferedReader.close();
         } catch (IOException e) {
             throw new IOException(e.getMessage());
         }
-
         if (tree != null) {
             dataModel.put("tree", Tree.Utils.newick(tree));
         }
-
         return dataModel;
-
     }
-
-
     private boolean isMissingValue(String value) {
         return (value.equals("?") || value.equals("NA") || value.length() == 0);
     }
-
 //    public void importTraits(final File file, Map dataModel) throws Exception {
 //        List<TraitData> importedTraits = new ArrayList<TraitData>();
 //        Taxa taxa = options.taxonList;
@@ -355,41 +282,32 @@ public class DataModelImporter {
 //        }
 //        setData(dataModel, file.getName(), taxa, null, null, null, importedTraits, null);
 //    }
-
     // for Alignment
     private void setData(Map dataModel, DateGuesser guesser, String fileName, TaxonList taxonList, List<TaxonList> taxonLists, Alignment alignment,
                          List<NexusApplicationImporter.CharSet> charSets,
                          List<TraitData> traits, List<Tree> trees) throws ImportException, IllegalArgumentException {
         String fileNameStem = Utils.trimExtensions(fileName,
                 new String[]{"NEX", "NEXUS", "FA", "FAS", "FASTA", "TRE", "TREE", "XML", "TXT"});
-
         checkTaxonList(taxonList, guesser);
         dataModel.put("taxa", createTaxonList(taxonList));
         dataModel.put("taxon_count", Integer.toString(taxonList.getTaxonCount()));
         dataModel.put("taxon_count_minus_one", Integer.toString(taxonList.getTaxonCount()-1));
-
         if (taxonLists != null) {
             List<Map> tss = new ArrayList<Map>();
-
             for (TaxonList tl : taxonLists) {
                 Map ts = new HashMap();
                 ts.put("id", tl.getId());
                 ts.put("taxa", createTaxonList(taxonList));
-
                 tss.add(ts);
             }
             dataModel.put("taxonSets", tss);
         }
-
         dataModel.put("alignment", createAlignment(alignment));
         dataModel.put("site_count", Integer.toString(alignment.getSiteCount()));
-
         dataModel.put("filename", fileName);
         dataModel.put("filename_stem", fileNameStem);
     }
-
     private void checkTaxonList(TaxonList taxonList, DateGuesser guesser) throws ImportException {
-
         // check the taxon names for invalid characters
         boolean foundAmp = false;
         for (Taxon taxon : taxonList) {
@@ -403,7 +321,6 @@ public class DataModelImporter {
                     "These characters will prevent BEAST from reading the resulting XML file.\n\n" +
                     "Please edit the taxon name(s) before reloading the data file.");
         }
-
         if (guesser != null) {
             guesser.guessDates(taxonList);
         } else {
@@ -411,24 +328,19 @@ public class DataModelImporter {
             for (int i = 0; i < taxonList.getTaxonCount(); i++) {
                 if (taxonList.getTaxonAttribute(i, "date") == null) {
                     Date origin = new Date(0);
-
                     dr.evolution.util.Date date = dr.evolution.util.Date.createTimeSinceOrigin(0.0, Units.Type.YEARS, origin);
                     taxonList.getTaxon(i).setAttribute("date", date);
                 }
             }
         }
     }
-
     private List<Map> createTaxonList(TaxonList taxa) {
-
         List<Map> tl = new ArrayList<Map>();
         for (Taxon taxon : taxa) {
             tl.add(createTaxon(taxon));
         }
-
         return tl;
     }
-
     private Map createTaxon(Taxon taxon) {
         Map t = new HashMap();
         t.put("id", taxon.getId());
@@ -437,22 +349,17 @@ public class DataModelImporter {
         }
         return t;
     }
-
     private Map createAlignment(Alignment alignment) {
-
         Map a = new HashMap();
         a.put("id",  (alignment.getId() != null ? alignment.getId() : "alignment"));
-
         List<Map> ss = new ArrayList<Map>();
         for (int i = 0; i < alignment.getSequenceCount(); i++) {
             Sequence sequence = alignment.getSequence(i);
             ss.add(createSequence(sequence));
         }
-
         a.put("sequences", ss);
         return a;
     }
-
     private Map createSequence(Sequence sequence) {
         Map s = new HashMap();
         s.put("taxon", createTaxon(sequence.getTaxon()));

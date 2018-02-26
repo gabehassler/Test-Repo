@@ -1,9 +1,6 @@
-
 package dr.evolution.datatype;
 import java.util.ArrayList;
-
 public class Microsatellite extends DataType {
-
     public static final String DESCRIPTION = "microsatellite";
     public static int UNKNOWN_STATE_LENGTH = -1;
     private int min;
@@ -11,17 +8,13 @@ public class Microsatellite extends DataType {
     private int unitLength;
     private String name;
     public static final Microsatellite INSTANCE = new Microsatellite();
-
     public Microsatellite() {}
-
     public Microsatellite(String name, int min, int max){
         this(name, min, max, 1);
     }
-
     public Microsatellite(int min, int max){
         this("microsat", min, max, 1);
     }
-
     public Microsatellite(String name, int min, int max, int unitLength){
         this.min = min;
         this.max = max;
@@ -31,9 +24,7 @@ public class Microsatellite extends DataType {
         ambiguousStateCount = stateCount + 1;
     }
     public Microsatellite(int[] pattern, int extRange, int unitLength){
-
          this.unitLength = unitLength;
-
          //find the current max and min in the pattern parameter
          min = pattern[0];
          max = pattern[0];
@@ -45,23 +36,18 @@ public class Microsatellite extends DataType {
                  max=pattern[i];
              }
          }
-
          //new max and min according to the extRange provided
          max = max + extRange*this.unitLength;
          min = min - extRange*this.unitLength;
-
          //set stateCount
          if((max-min)%this.unitLength == 0){
              stateCount = (max - min)/this.unitLength + 1;
          }else{
              throw new IllegalArgumentException("Incorrect microsatellite unit length.");
          }
-
          //set ambiguous stateCount
          ambiguousStateCount = stateCount + 1;
-
     }
-
     public int getState(String srtRawLength){
         char chRawLength =  srtRawLength.charAt(0);
         try{
@@ -73,9 +59,7 @@ public class Microsatellite extends DataType {
         }catch(java.lang.NumberFormatException exp){
             throw new java.lang.NumberFormatException(srtRawLength+" can not be converted. State needs to be an integer or unknown (?).");
         }
-
     }
-
     public int getState(int rawLength){
         if(rawLength > UNKNOWN_STATE_LENGTH){
             return (int)Math.ceil(((double)rawLength - min)/unitLength);
@@ -83,14 +67,10 @@ public class Microsatellite extends DataType {
             return stateCount;
         }
     }
-
-
     public static int[] convertToLengths(ArrayList<String> strStates){
         return convertToLengths(strStates.toArray(new String[strStates.size()]));
     }
-
     public static int[] convertToLengths(String[] strStates){
-
         int[] lengths = new int[strStates.length];
         for(int i = 0; i < strStates.length; i++){
             char ch = strStates[i].charAt(0);
@@ -106,7 +86,6 @@ public class Microsatellite extends DataType {
         }
         return lengths;
     }
-
     public int getActualLength(int stateCode){
         if(stateCode <  stateCount){
             return (stateCode+min);
@@ -116,62 +95,47 @@ public class Microsatellite extends DataType {
             throw new java.lang.RuntimeException("The given state must be an integer greater or equal to -1");
         }
     }
-
     public boolean isWithinRange(int state){
         return (state >= min && state <= max);
     }
-
     public int getMax(){
         return max;
     }
-
     public int getMin(){
         return min;
     }
-
     public void setMax(int max){
         this.max = max;
     }
-
     public void setMin(int min){
         this.min = min;
     }
-
     public boolean isUnknownState(int stateCode){
         return (stateCode == stateCount);
     }
-
     @Override
     public char[] getValidChars() {
         return null;
     }
-
     public int getStateCount(){
         return stateCount;
     }
-
     public int getAmbiguousStateCount(){
         return ambiguousStateCount;
     }
-
     public int getUnitLength(){
         return unitLength;
     }
-
     public void setName(String name) {
         this.name = name;
     }
-
     public String getName() {
         return name;
     }    
-
     public String getDescription() {
 		return DESCRIPTION;
 	}
-
     public int getType(){
         return MICRO_SAT;
     }
-
 }

@@ -1,53 +1,36 @@
-
 package dr.math;
-
-
 public class DifferentialEvolution extends MultivariateMinimum
 {
 	//
 	// Public stuff
 	//
-
 	// Variables that control aspects of the inner workings of the
 				// minimization algorithm. Setting them is optional, they
 				// are all set to some reasonable default values given below.
-
 	public double F = 0.7 /* 0.5*/;
-
 	public double CR = 0.9 /*1.0*/;
-
 	public int prin = 0;
-
-
 	public DifferentialEvolution (int dim)
 	{
 		this(dim, 5*dim);
 	}
-
 	public DifferentialEvolution (int dim, int popSize)
 	{
-
 		// Dimension and Population size
 		dimension = dim;
 		populationSize = popSize;
-
 		numFun = 0;
-
 		// Allocate memory
 		currentPopulation = new double[populationSize][dimension];
 		nextPopulation = new double[populationSize][dimension];
 		costs = new double[populationSize];
 		trialVector = new double[dimension];
-
 		// helper variable
 		//numr = 5; // for strategy DE/best/2/bin
 		numr = 3; // for stragey DE/rand-to-best/1/bin
 		r = new int[numr];
 	}
-
-
 	// implementation of abstract method
-
 	public void optimize(MultivariateFunction func, double[] xvec, double tolfx, double tolx)
 	{
 		optimize(func,xvec,tolfx,tolx,null);
@@ -56,24 +39,19 @@ public class DifferentialEvolution extends MultivariateMinimum
 	{
 		f = func;
 		x = xvec;
-
 		// Create first generation
 		firstGeneration ();
-
 		stopCondition(fx, x, tolfx, tolx, true);
-
 		while (true)
 		{
 			boolean xHasChanged;
 			do
 			{
 				xHasChanged = nextGeneration ();
-
 				if (maxFun > 0 && numFun > maxFun)
 				{
 					break;
 				}
-
 				if (prin > 1 && currGen % 20 == 0)
 				{
 					printStatistics();
@@ -83,44 +61,34 @@ public class DifferentialEvolution extends MultivariateMinimum
 				}
 			}
 			while (!xHasChanged);
-
-
 			if (stopCondition(fx, x, tolfx, tolx, false) ||
 				(maxFun > 0 && numFun > maxFun))
 			{
 				break;
 			}
 		}
-
 		if (prin > 0) printStatistics();
 	}
-
 	//
 	// Private stuff
 	//
-
 	private MultivariateFunction f;
 	private int currGen;
 	private double fx;
 	private double[] x;
-
 	// Dimension
 	private int dimension;
-
 	// Population size
 	private int populationSize;
-
 	// Population data
 	private double trialCost;
 	private double[] costs;
 	private double[] trialVector;
 	private double[][] currentPopulation;
 	private double[][] nextPopulation;
-
 	// Helper variable
 	private int numr;
 	private int[] r;
-
 	private void printStatistics()
 	{
 		// Compute mean
@@ -130,7 +98,6 @@ public class DifferentialEvolution extends MultivariateMinimum
 			meanCost += costs[i];
 		}
 		meanCost = meanCost/populationSize;
-
 		// Compute variance
 		double varCost = 0.0;
 		for (int i = 0; i < populationSize; i++)
@@ -139,7 +106,6 @@ public class DifferentialEvolution extends MultivariateMinimum
 			varCost += tmp*tmp;
 		}
 		varCost = varCost/(populationSize-1);
-
 		System.out.println();
 		System.out.println();
 		System.out.println();
@@ -155,17 +121,14 @@ public class DifferentialEvolution extends MultivariateMinimum
 		System.out.println("Populations size (populationSize): " + populationSize);
 		System.out.println("Average value: " + meanCost);
 		System.out.println("Variance: " + varCost);
-
 		System.out.println("Weight factor (F): " + F);
 		System.out.println("Crossing-over (CR): " + CR);
 		System.out.println();
 	}
-
 	// Generate starting population
 	private void firstGeneration()
 	{
 		currGen = 1;
-
 		// Construct populationSize random start vectors
 		for (int i = 0; i < populationSize; i++)
 		{
@@ -173,19 +136,15 @@ public class DifferentialEvolution extends MultivariateMinimum
 			{
 				double min = f.getLowerBound(j);
 				double max = f.getUpperBound(j);
-
 				double diff = max - min;
-
 				// Uniformly distributed sample points
 				currentPopulation[i][j] = min + diff* MathUtils.nextDouble();
 			}
 			costs[i] = f.evaluate(currentPopulation[i]);
 		}
 		numFun += populationSize;
-
 		findSmallestCost ();
 	}
-
 	// check whether a parameter is out of range
 	private double checkBounds(double param, int numParam)
 	{
@@ -202,21 +161,17 @@ public class DifferentialEvolution extends MultivariateMinimum
 			return param;
 		}
 	}
-
 	// Generate next generation
 	private boolean nextGeneration()
 	{
 		boolean updateFlag = false;
 		int best = 0; // to avoid compiler complaints
 		double[][] swap;
-
 		currGen++;
-
 		// Loop through all population vectors
 		for (int r0 = 0; r0 < populationSize; r0++)
 		{
 			// Choose ri so that r0 != r[1] != r[2] != r[3] != r[4] ...
-
 			r[0] = r0;
 			for (int k = 1; k < numr; k++)
 			{
@@ -229,7 +184,6 @@ public class DifferentialEvolution extends MultivariateMinimum
 					}
 				}
 			}
-
 			copy(trialVector, currentPopulation[r0]);
 			int n = randomInteger (dimension);
 			for (int i = 0; i < dimension; i++) // perform binomial trials
@@ -242,14 +196,11 @@ public class DifferentialEvolution extends MultivariateMinimum
 					trialVector[n] = trialVector[n] +
 						F*(x[n] - trialVector[n]) +
 						F*(currentPopulation[r[1]][n] - currentPopulation[r[2]][n]);
-
 					//DE/rand-to-best/2/bin
 					//double K = rng.nextDouble();
 					//trialVector[n] = trialVector[n] +
 					//	K*(x[n] - trialVector[n]) +
 					//	F*(currentPopulation[r[1]][n] - currentPopulation[r[2]][n]);
-
-
 								// DE/best/2/bin
 					// (change to 'numr=5' in constructor when using this strategy)
 								//trialVector[n] = x[n] +
@@ -258,14 +209,11 @@ public class DifferentialEvolution extends MultivariateMinimum
 				}
 				n = (n+1) % dimension;
 			}
-
 			// make sure that trial vector obeys boundaries
 			for (int i = 0; i < dimension; i++)
 			{
 				trialVector[i] = checkBounds(trialVector[i], i);
 			}
-
-
 			// Test this choice
 			trialCost = f.evaluate(trialVector);
 			if (trialCost < costs[r0])
@@ -273,7 +221,6 @@ public class DifferentialEvolution extends MultivariateMinimum
 				// Better than old vector
 				costs[r0] = trialCost;
 				copy(nextPopulation[r0], trialVector);
-
 				// Check for new best vector
 				if (trialCost < fx)
 				{
@@ -289,27 +236,22 @@ public class DifferentialEvolution extends MultivariateMinimum
 			}
 		}
 		numFun += populationSize;
-
 		// Update best vector
 		if (updateFlag)
 		{
 			copy(x, nextPopulation[best]);
 		}
-
 		// Switch pointers
 		swap = currentPopulation;
 		currentPopulation = nextPopulation;
 		nextPopulation = swap;
-
 		return updateFlag;
 	}
-
 	// Determine vector with smallest cost in current population
 	private void findSmallestCost()
 	{
 		int best = 0;
 		fx = costs[0];
-
 		for (int i = 1; i < populationSize; i++)
 		{
 			if (costs[i] < fx)
@@ -320,11 +262,9 @@ public class DifferentialEvolution extends MultivariateMinimum
 		}
 		copy(x, currentPopulation[best]);
 	}
-
 	// draw random integer in the range from 0 to n-1
 	private int randomInteger(int n)
 	{
 		return MathUtils.nextInt(n);
 	}
 }
-

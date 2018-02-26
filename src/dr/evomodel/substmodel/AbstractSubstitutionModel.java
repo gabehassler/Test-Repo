@@ -1,84 +1,58 @@
-
 package dr.evomodel.substmodel;
-
 import dr.evolution.datatype.DataType;
 import dr.inference.model.AbstractModel;
 import dr.inference.model.Model;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import dr.math.MachineAccuracy;
-
 import java.util.LinkedList;
 import java.util.List;
-
-
 public abstract class AbstractSubstitutionModel extends AbstractModel implements SubstitutionModel {
-
     public static final String MODEL = "model";
-
     protected DataType dataType = null;
-
     protected FrequencyModel freqModel;
     protected double[] relativeRates;
-
     public double[] getRelativeRates() {
         return relativeRates;
     }
-
     protected double[] storedRelativeRates;
-
     protected int stateCount;
     protected int rateCount;
-
     protected boolean eigenInitialised = false;
     protected boolean updateMatrix = true;
     protected boolean storedUpdateMatrix = true;
-
     AbstractSubstitutionModel(String name, DataType dataType, FrequencyModel freqModel) {
         super(name);
-
         this.dataType = dataType;
-
         setStateCount(dataType.getStateCount());
-
         if (freqModel != null) {
             // freqModel can be null at this point but must be
             // in place by the time setupMatrix is called.
-
             if (freqModel.getDataType() != dataType) {
                 throw new IllegalArgumentException("Datatypes do not match!");
             }
-
             this.freqModel = freqModel;
             addModel(freqModel);
-
             checkFrequencies();
         }
-
         updateMatrix = true;
     }
-
     public int getStateCount() {
         return stateCount;
     }
-
     private void setStateCount(int stateCount) {
         eigenInitialised = false;
-
         this.stateCount = stateCount;
         rateCount = ((stateCount - 1) * stateCount) / 2;
-
         relativeRates = new double[rateCount];
         storedRelativeRates = new double[rateCount];
         for (int i = 0; i < rateCount; i++) {
             relativeRates[i] = 1.0;
         }
     }
-
     // *****************************************************************
     // Interface Model
     // *****************************************************************
-
     protected void handleModelChangedEvent(Model model, Object object, int index) {
         // frequencyModel changed!
         updateMatrix = true;
@@ -87,73 +61,52 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
         assert( model == freqModel ) ;
         frequenciesChanged();
     }
-
     protected void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         // relativeRates changed
         updateMatrix = true;
         ratesChanged();
     }
-
     protected void storeState() {
-
         storedUpdateMatrix = updateMatrix;
-
         System.arraycopy(relativeRates, 0, storedRelativeRates, 0, rateCount);
-
         System.arraycopy(Eval, 0, storedEval, 0, stateCount);
         for (int i = 0; i < stateCount; i++) {
             System.arraycopy(Ievc[i], 0, storedIevc[i], 0, stateCount);
             System.arraycopy(Evec[i], 0, storedEvec[i], 0, stateCount);
         }
-
     }
-
     protected void restoreState() {
-
         updateMatrix = storedUpdateMatrix;
-
         // To restore all this stuff just swap the pointers...
         double[] tmp1 = storedRelativeRates;
         storedRelativeRates = relativeRates;
         relativeRates = tmp1;
-
         tmp1 = storedEval;
         storedEval = Eval;
         Eval = tmp1;
-
         double[][] tmp2 = storedIevc;
         storedIevc = Ievc;
         Ievc = tmp2;
-
         tmp2 = storedEvec;
         storedEvec = Evec;
         Evec = tmp2;
-
     }
-
     protected void acceptState() {
     } // nothing to do
-
     // called when any registered model changes
     abstract protected void frequenciesChanged();
-
     // called when any registered variable changes
     abstract protected void ratesChanged();
-
     abstract protected void setupRelativeRates();
-
     public FrequencyModel getFrequencyModel() {
         return freqModel;
     }
-
     public DataType getDataType() {
         return dataType;
     }
-
     public void getTransitionProbabilities(double distance, double[] matrix) {
         int i, j, k;
         double temp;
-
         // this must be synchronized to avoid being called simultaneously by
         // two different likelihood threads - AJD
         synchronized (this) {
@@ -161,7 +114,6 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
                 setupMatrix();
             }
         }
-
         // implemented a pool of iexp matrices to support multiple threads
         // without creating a new matrix each call. - AJD
         double[][] iexp = popiexp();
@@ -171,7 +123,6 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
                 iexp[i][j] = Ievc[i][j] * temp;
             }
         }
-
         int u = 0;
         for (i = 0; i < stateCount; i++) {
             for (j = 0; j < stateCount; j++) {
@@ -179,14 +130,12 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
                 for (k = 0; k < stateCount; k++) {
                     temp += Evec[i][k] * iexp[k][j];
                 }
-
                 matrix[u] = Math.abs(temp);
                 u++;
             }
         }
         pushiexp(iexp);
     }
-
     public double[][] getEigenVectors() {
         synchronized (this) {
             if (updateMatrix) {
@@ -195,7 +144,6 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
         }
         return Evec;
     }
-
     public double[][] getInverseEigenVectors() {
         synchronized (this) {
             if (updateMatrix) {
@@ -204,7 +152,6 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
         }
         return Ievc;
     }
-
     public double[] getEigenValues() {
         synchronized (this) {
             if (updateMatrix) {
@@ -213,15 +160,11 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
         }
         return Eval;
     }
-
     public void setupMatrix() {
         setupRelativeRates();
-
         if (!eigenInitialised)
             initialiseEigen();
-
         int i, j, k = 0;
-
         // Set the instantaneous rate matrix
         for (i = 0; i < stateCount; i++) {
             for (j = i + 1; j < stateCount; j++) {
@@ -232,21 +175,17 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
         }
         makeValid(amat, stateCount);
         normalize(amat, freqModel.getFrequencies());
-
         // copy q matrix for unit testing
         for (i = 0; i < amat.length; i++) {
             System.arraycopy(amat[i], 0, q[i], 0, amat[i].length);
         }
-
         // compute eigenvalues and eigenvectors
         elmhes(amat, ordr, stateCount);
         eltran(amat, Evec, ordr, stateCount);
         hqr2(stateCount, 1, stateCount, amat, Evec, Eval, evali);
         luinverse(Evec, Ievc, stateCount);
-
         updateMatrix = false;
     }
-
     // Make it a valid rate matrix (make sum of rows = 0)
     void makeValid(double[][] matrix, int dimension) {
         for (int i = 0; i < dimension; i++) {
@@ -258,28 +197,22 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
             matrix[i][i] = -sum;
         }
     }
-
     void normalize(double[][] matrix, double[] pi) {
         double subst = 0.0;
         int dimension = pi.length;
-
         for (int i = 0; i < dimension; i++)
             subst += -matrix[i][i] * pi[i];
-
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
                 matrix[i][j] = matrix[i][j] / subst;
             }
         }
     }
-
     private void checkFrequencies() {
         // required frequency difference
         double MINFDIFF = 1.0E-10;
-
         // lower limit on frequency
         double MINFREQ = 1.0E-10;
-
         int maxi = 0;
         double sum = 0.0;
         double maxfreq = 0.0;
@@ -294,7 +227,6 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
         }
         double diff = 1.0 - sum;
         freqModel.setFrequency(maxi, freqModel.getFrequency(maxi) + diff);
-
         for (int i = 0; i < stateCount - 1; i++) {
             for (int j = i + 1; j < stateCount; j++) {
                 if (freqModel.getFrequency(i) == freqModel.getFrequency(j)) {
@@ -304,27 +236,20 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
             }
         }
     }
-
     protected void initialiseEigen() {
-
         Eval = new double[stateCount];
         Evec = new double[stateCount][stateCount];
         Ievc = new double[stateCount][stateCount];
-
         storedEval = new double[stateCount];
         storedEvec = new double[stateCount][stateCount];
         storedIevc = new double[stateCount][stateCount];
-
         amat = new double[stateCount][stateCount];
         q = new double[stateCount][stateCount];
-
         ordr = new int[stateCount];
         evali = new double[stateCount];
-
         eigenInitialised = true;
         updateMatrix = true;
     }
-
     // Eigenvalues, eigenvectors, and inverse eigenvectors
     protected double[] Eval;
     protected double[] storedEval;
@@ -332,34 +257,26 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
     protected double[][] storedEvec;
     protected double[][] Ievc;
     protected double[][] storedIevc;
-
     List<double[][]> iexpPool = new LinkedList<double[][]>();
-
     private int[] ordr;
     private double[] evali;
     double amat[][];
     private double q[][];
-
     public double[][] getQ() {
         return q;
     }
-
     protected synchronized double[][] popiexp() {
-
         if (iexpPool.size() == 0) {
             iexpPool.add(new double[stateCount][stateCount]);
         }
         return iexpPool.remove(0);
     }
-
     protected synchronized void pushiexp(double[][] iexp) {
         iexpPool.add(0, iexp);
     }
-
     private void elmhes(double[][] a, int[] ordr, int n) {
         int m, j, i;
         double y, x;
-
         for (i = 0; i < n; i++) {
             ordr[i] = 0;
         }
@@ -402,13 +319,10 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
             }
         }
     }
-
     // Helper variables for mcdiv
     private double cr, ci;
-
     private void mcdiv(double ar, double ai, double br, double bi) {
         double s, ars, ais, brs, bis;
-
         s = Math.abs(br) + Math.abs(bi);
         ars = ar / s;
         ais = ai / s;
@@ -418,14 +332,11 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
         cr = (ars * brs + ais * bis) / s;
         ci = (ais * brs - ars * bis) / s;
     }
-
     void hqr2(int n, int low, int hgh, double[][] h, double[][] zz,
               double[] wr, double[] wi) throws ArithmeticException {
         int i, j, k, l = 0, m, en, na, itn, its;
         double p = 0, q = 0, r = 0, s = 0, t, w, x = 0, y, ra, sa, vi, vr, z = 0, norm, tst1, tst2;
         boolean notLast;
-
-
         norm = 0.0;
         k = 1;
         for (i = 0; i < n; i++) {
@@ -461,7 +372,6 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
                 if (fullLoop) {
                     l = low;
                 }
-
                 x = h[en - 1][en - 1];    /* form shift */
                 if (l == en || l == na) {
                     break;
@@ -796,10 +706,8 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
             }
         }
     }
-
     private void eltran(double[][] a, double[][] zz, int[] ordr, int n) {
         int i, j, m;
-
         for (i = 0; i < n; i++) {
             for (j = i + 1; j < n; j++) {
                 zz[i][j] = 0.0;
@@ -824,24 +732,19 @@ public abstract class AbstractSubstitutionModel extends AbstractModel implements
             }
         }
     }
-
     void luinverse(double[][] inmat, double[][] imtrx, int size) throws IllegalArgumentException {
         int i, j, k, l, maxi = 0, idx, ix, jx;
         double sum, tmp, maxb, aw;
         int[] index;
         double[] wk;
         double[][] omtrx;
-
-
         index = new int[size];
         omtrx = new double[size][size];
-
         for (i = 0; i < size; i++) {
             for (j = 0; j < size; j++) {
                 omtrx[i][j] = inmat[i][j];
             }
         }
-
         wk = new double[size];
         aw = 1.0;
         for (i = 0; i < size; i++) {

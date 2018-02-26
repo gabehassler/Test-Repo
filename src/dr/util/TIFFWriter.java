@@ -1,43 +1,29 @@
-
 package dr.util;
-
-
-
 //import java.awt.*;
-
 import dr.geo.color.ChannelColorScheme;
 import dr.geo.color.ColorScheme;
-
 import java.awt.image.BufferedImage;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 //import java.awt.image.IndexColorModel;
-
 public class TIFFWriter {
-
     public static final short MAXROWS = 6000;    // maximum # of rows
     public static final short MAXCOLUMNS = 3000; // maximum # of columns
-
     public static void writeDoubleArray(String fileName, double[][] inputImageInt) {
         writeDoubleArray(fileName, inputImageInt, "png", ColorScheme.HEATMAP);
     }
-
     public static void writeDoubleArrayMultiChannel(String fileName, List<double[][]> inputImageIntList, String format,
                                                     ChannelColorScheme scheme) {
         // Get size, assumes the same for all matrix in list
         int dim1 = inputImageIntList.get(0).length;
         int dim2 = (inputImageIntList.get(0))[0].length;
         BufferedImage image = new BufferedImage(dim1, dim2, BufferedImage.TYPE_INT_ARGB);
-
         List<Double> max = new ArrayList<Double>();
         List<Double> min = new ArrayList<Double>();
-
         final int channels = inputImageIntList.size();
-
         for (int c = 0; c < channels; ++c) {
             double[][] inputImageInt = inputImageIntList.get(c);
             double tmax = Double.NEGATIVE_INFINITY;
@@ -52,7 +38,6 @@ public class TIFFWriter {
             max.add(tmax);
             min.add(tmin);
         }
-
         for (int i = 0; i < dim1; ++i) {
             for (int j = 0; j < dim2; ++j) {
                 List<Double> input = new ArrayList<Double>();
@@ -63,17 +48,14 @@ public class TIFFWriter {
                 image.setRGB(i, j, scheme.getColor(input, min, max).getRGB());
             }
         }
-
         try {
             javax.imageio.ImageIO.write(image, format, new File(fileName));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
     public static void writeDoubleArray(String fileName, double[][] inputImageInt, String format, ColorScheme scheme) {
         BufferedImage image = new BufferedImage(inputImageInt.length, inputImageInt[0].length, BufferedImage.TYPE_INT_ARGB);
-
         double max = Double.NEGATIVE_INFINITY;
         double min = Double.POSITIVE_INFINITY;
         for (int i = 0; i < inputImageInt.length; ++i) {
@@ -83,64 +65,51 @@ public class TIFFWriter {
                 else if (value < min) min = value;
             }
         }
-
         for (int i = 0; i < inputImageInt.length; ++i) {
             for (int j = 0; j < inputImageInt[i].length; ++j) {
                 double value = inputImageInt[i][j];
                 image.setRGB(i, j, scheme.getColor(value, min, max).getRGB());
             }
         }
-
         try {
             javax.imageio.ImageIO.write(image, format, new File(fileName));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
 //    public static double getRampValue(double input, double min, double max) {
 //        double end = 1.0 / 6.0;
 //        double start = 0.0;
 //        return (input - min) / (max - min) * (end - start);
 //    }
-
 //    public static Color getColor(double input, double min, double max) {
 //        float hue = (float) getRampValue(input, min, max);
 //        float saturation = 0.85f;
 //        float alpha = 1.0f;
 //        return Color.getHSBColor(hue, saturation, alpha);
 //    }
-
     // Create TIFF image of integer array
     public static void writeDoubleArray(
             DataOutputStream dataOut,
             double[][] inputImageInt) {
-
         final int rows = inputImageInt.length;
         final int columns = inputImageInt[0].length;
-
         if (rows < 0 || rows > MAXROWS || columns < 0 || columns > MAXCOLUMNS)
             throw new RuntimeException("Invalid # rows and # columns");
-
         // offset to the end of data (gray values) in file
         int pos = 8 + rows * columns;
-
         try {
-
             short i, j;
             i = (short) 'I';
             j = (short) (i * 256 + i);
             fputword(dataOut, j);
             fputword(dataOut, (short) 42);
             fputlong(dataOut, pos);
-
             for (i = 0; i < rows; i++)
                 for (j = 0; j < columns; j++) {
                     int datum = (int) inputImageInt[i][j];
                     dataOut.writeByte((byte) datum);
                 }
-
-
             fputword(dataOut, (short) 8);                                                                                                    // # of tags
             writetiftag(dataOut, SubFileType, TIFFshort, 1, 1);
             writetiftag(dataOut, ImageWidth, TIFFshort, 1, columns);
@@ -150,22 +119,17 @@ public class TIFFWriter {
             writetiftag(dataOut, PhotoMetricInterp, TIFFshort, 1, 1);                      // for gray values only
             writetiftag(dataOut, StripOffsets, TIFFlong, 1, 8);                                        // beginning of image data
             writetiftag(dataOut, PlanarConfiguration, TIFFshort, 1, 1);
-
             fputlong(dataOut, 0);
-
         } catch (java.io.IOException read) {
             System.out.println("Error occured while writing output file.");
         }
-
     }
-
     static void writetiftag(DataOutputStream dataOut, short tag, short type, int length, int offset) {
         fputword(dataOut, tag);
         fputword(dataOut, type);
         fputlong(dataOut, length);
         fputlong(dataOut, offset);
     } /* writetiftag */
-
     static void fputword(DataOutputStream dataOut, short n) {
         try {
             dataOut.writeByte((byte) n);
@@ -173,9 +137,7 @@ public class TIFFWriter {
         } catch (java.io.IOException read) {
             System.out.println("Error occured while writing output file.");
         }
-
     } /* fputword */
-
     static void fputlong(DataOutputStream dataOut, int n) {
         try {
             dataOut.writeByte((byte) n);
@@ -185,27 +147,21 @@ public class TIFFWriter {
         } catch (java.io.IOException read) {
             System.out.println("Error occured while writing output file.");
         }
-
     } /* fputlong */
-
-
     public static final short GOOD_WRITE = 0;
     public static final short BAD_WRITE = 1;
     public static final short BAD_READ = 2;
     public static final short MEMORY_ERROR = 3;
     public static final short WRONG_BITS = 4;
-
     public static final short RGB_RED = 0;
     public static final short RGB_GREEN = 1;
     public static final short RGB_BLUE = 2;
     public static final short RGB_SIZE = 3;
-
     public static final short TIFFbyte = 1;
     public static final short TIFFascii = 2;
     public static final short TIFFshort = 3;
     public static final short TIFFlong = 4;
     public static final short TIFFrational = 5;
-
     public static final short NewSubFile = 254;
     public static final short SubFileType = 255;
     public static final short ImageWidth = 256;
@@ -249,9 +205,4 @@ public class TIFFWriter {
     public static final short DateTime = 306;
     public static final short HostComputer = 316;
     public static final short Software = 305;
-
 }
-
-
-
-

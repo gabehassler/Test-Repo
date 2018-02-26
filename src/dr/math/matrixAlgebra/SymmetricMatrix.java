@@ -1,27 +1,19 @@
-
 package dr.math.matrixAlgebra;
-
 public class SymmetricMatrix extends Matrix {
-
 	private static int lupCRLCriticalDimension = 36;
-
 	public SymmetricMatrix(double[][] a) {
 		super(a);
 	}
-
 	public SymmetricMatrix(int n) throws NegativeArraySizeException {
 		super(n, n);
 	}
-
 	public SymmetricMatrix(int n, int m) throws NegativeArraySizeException {
 		super(n, m);
 	}
-
 	public SymmetricMatrix add(SymmetricMatrix a)
 			throws IllegalDimension {
 		return new SymmetricMatrix(addComponents(a));
 	}
-
 	private SymmetricMatrix crlInverse() throws ArithmeticException {
 		if (rows() == 1)
 			return inverse1By1();
@@ -39,7 +31,6 @@ public class SymmetricMatrix extends Matrix {
 				cb1.transposedProductComponents(splitMatrices[2])));
 		return SymmetricMatrix.join(splitMatrices);
 	}
-
 	public static SymmetricMatrix fromComponents(double[][] comp)
 			throws IllegalDimension, NonSymmetricComponents {
 		if (comp.length != comp[0].length)
@@ -57,7 +48,6 @@ public class SymmetricMatrix extends Matrix {
 		}
 		return new SymmetricMatrix(comp);
 	}
-
 	public static SymmetricMatrix identityMatrix(int n) {
 		double[][] a = new double[n][n];
 		for (int i = 0; i < n; i++) {
@@ -66,20 +56,17 @@ public class SymmetricMatrix extends Matrix {
 		}
 		return new SymmetricMatrix(a);
 	}
-
 	public Matrix inverse() throws ArithmeticException {
 		return rows() < lupCRLCriticalDimension
 				? new SymmetricMatrix(
 				(new LUPDecomposition(this)).inverseMatrixComponents())
 				: crlInverse();
 	}
-
 	private SymmetricMatrix inverse1By1() {
 		double[][] newComponents = new double[1][1];
 		newComponents[0][0] = 1 / components[0][0];
 		return new SymmetricMatrix(newComponents);
 	}
-
 	private SymmetricMatrix inverse2By2() {
 		double[][] newComponents = new double[2][2];
 		double inverseDeterminant = 1 / (components[0][0] * components[1][1]
@@ -90,7 +77,6 @@ public class SymmetricMatrix extends Matrix {
 				-inverseDeterminant * components[1][0];
 		return new SymmetricMatrix(newComponents);
 	}
-
 	private static SymmetricMatrix join(Matrix[] a) {
 		int p = a[0].rows();
 		int n = p + a[1].rows();
@@ -108,7 +94,6 @@ public class SymmetricMatrix extends Matrix {
 		}
 		return new SymmetricMatrix(newComponents);
 	}
-
 	private int largestPowerOf2SmallerThan(int n) {
 		int m = 2;
 		int m2;
@@ -119,15 +104,12 @@ public class SymmetricMatrix extends Matrix {
 			m = m2;
 		}
 	}
-
 	public Matrix product(double a) {
 		return new SymmetricMatrix(productComponents(a));
 	}
-
 	public SymmetricMatrix product(SymmetricMatrix a) throws IllegalDimension {
 		return new SymmetricMatrix(productComponents(a));
 	}
-
 	public SymmetricMatrix productWithTransposed(SymmetricMatrix a)
 			throws IllegalDimension {
 		if (a.columns() != columns())
@@ -138,19 +120,15 @@ public class SymmetricMatrix extends Matrix {
 							+ a.rows() + " by " + a.columns() + " matrix");
 		return new SymmetricMatrix(productWithTransposedComponents(a));
 	}
-
 	protected SymmetricMatrix secureAdd(SymmetricMatrix a) {
 		return new SymmetricMatrix(addComponents(a));
 	}
-
 	protected SymmetricMatrix secureProduct(SymmetricMatrix a) {
 		return new SymmetricMatrix(productComponents(a));
 	}
-
 	protected SymmetricMatrix secureSubtract(SymmetricMatrix a) {
 		return new SymmetricMatrix(subtractComponents(a));
 	}
-
 	private Matrix[] split() {
 		int n = rows();
 		int p = largestPowerOf2SmallerThan(n);
@@ -174,16 +152,13 @@ public class SymmetricMatrix extends Matrix {
 		answer[2] = new Matrix(c);
 		return answer;
 	}
-
 	public SymmetricMatrix subtract(SymmetricMatrix a)
 			throws IllegalDimension {
 		return new SymmetricMatrix(subtractComponents(a));
 	}
-
 	public Matrix transpose() {
 		return this;
 	}
-
 	public SymmetricMatrix transposedProduct(SymmetricMatrix a)
 			throws IllegalDimension {
 		if (a.rows() != rows())

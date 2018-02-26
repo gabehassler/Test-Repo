@@ -1,9 +1,6 @@
-
 package dr.evomodel.speciation;
-
 import java.util.*;
 import java.util.logging.Logger;
-
 import dr.evolution.tree.*;
 import dr.evomodel.tree.TreeLogger;
 import dr.evomodelxml.speciation.PopsIOSpeciesTreeModelParser;
@@ -21,22 +18,16 @@ import dr.util.Citation;
 import jebl.util.FixedBitSet;
 import dr.evolution.util.Taxon;
 import dr.math.MathUtils;
-
-
 nodes[] and root are the fundamental data here. They are used for
 the SlidableTree implementation, not just supporting the MCMC move,
 but also the calculations dealing with coalescences (compatibility
 and likelihood).
-
 oldtree stores the state so it can be restored after a rejected move. It
 only stores taxa at tips, topology and node times. The other data (unions, lineages,
 coalescences) are reconstructed from that.
-
 stree is used to implement Tree, which is used for logging and for
 calculation of the tree prior (eg Yule model). stree is a copy of
 topology and node times  from nodes[].
-
-
 public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTree, Tree,
                                                Scalable, TreeLogger.LogUpon, Citable {
     private final PopsIOSpeciesBindings piosb;
@@ -47,36 +38,28 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
     private PopsIONode[] oldpionodes;
     private int oldrootn;
     private SimpleTree stree;
-
     @Override
     public boolean logNow(long state) {
         // for debugging, set logEvery=0 in XML:
         //    <!--  species tree log file.  -->
         //    <logTree id="pioTreeFileLog" logEvery="0" fileName="C:\Users\....
-
         if (state % 10000 == 0) {
             System.out.println("DEBUGGING: PopsIOSpeciesTreeModel.logNow(), state = " + state);
         }
         return (state % 2500) == 0;
     }
-
-
     public static class PriorComponent {
         private final double weight;
         private final double alpha;
         private final double beta;
-
         // inv gamma pdf is parameterized as  b^a/Gamma(a)  x^(-a-1)  exp(-b/x)
         // mean is b/(a-1) if a>1, var is  b^2/((a-1)^2 (a-2)) if a>2.
-
         public PriorComponent(double weight, double alpha, double beta) {
             this.weight = weight;
             this.alpha = alpha;
             this.beta = beta;
         }
     }
-
-
     private class PopsIONode extends AlloppNode.Abstract implements AlloppNode, NodeRef {
         private int anc;
         private int lft;
@@ -89,7 +72,6 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
         private int coalcount;
         private double coalintensity;
         private int nodeNumber;
-
         // dud constuctor
         PopsIONode(int nn) {
             anc = -1;
@@ -103,9 +85,6 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
             coalintensity = 0.0;
             nodeNumber = nn;
         }
-
-
-
         // copy constructor
         public PopsIONode(PopsIONode node) {
             anc = node.anc;
@@ -114,10 +93,6 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
             nodeNumber = node.nodeNumber;
             copyNonTopologyFields(node);
         }
-
-
-
-
         private void copyNonTopologyFields(PopsIONode node) {
             height = node.height;
             taxon = new Taxon(node.taxon.getId());
@@ -132,10 +107,6 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
                 coalheights.add(node.coalheights.get(i));
             }
         }
-
-
-
-
         public String asText(int indentlen) {
             StringBuilder s = new StringBuilder();
             Formatter formatter = new Formatter(s, Locale.US);
@@ -155,48 +126,38 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
             }
             return s.toString();
         }
-
-
         @Override
         public int getNumber() {
             return nodeNumber;
         }
-
         @Override
         public void setNumber(int n) {
             nodeNumber = n;
         }
-
         @Override
         public int nofChildren() {
             return (lft < 0) ? 0 : 2;
         }
-
         @Override
         public AlloppNode getChild(int ch) {
             return ch==0 ? pionodes[lft] : pionodes[rgt];
         }
-
         @Override
         public AlloppNode getAnc() {
             return pionodes[anc];
         }
-
         @Override
         public Taxon getTaxon() {
             return taxon;
         }
-
         @Override
         public double getHeight() {
             return height;
         }
-
         @Override
         public FixedBitSet getUnion() {
             return union;
         }
-
         @Override
         public void setChild(int ch, AlloppNode newchild) {
             int newch = ((PopsIONode)newchild).nodeNumber;
@@ -206,31 +167,22 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
                 rgt = newch;
             }
         }
-
         @Override
         public void setAnc(AlloppNode anc) {
             this.anc = ((PopsIONode)anc).nodeNumber;
-
         }
-
         @Override
         public void setTaxon(String name) {
             this.taxon = new Taxon(name);
-
         }
-
         @Override
         public void setHeight(double height) {
             this.height = height;
-
         }
-
         @Override
         public void setUnion(FixedBitSet union) {
             this.union = union;
-
         }
-
         @Override
         public void addChildren(AlloppNode c0, AlloppNode c1) {
             lft = ((PopsIONode)c0).nodeNumber;
@@ -238,20 +190,14 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
             rgt = ((PopsIONode)c1).nodeNumber;
             pionodes[rgt].anc = nodeNumber;
         }
-
     }
-
-
     public PopsIOSpeciesTreeModel(PopsIOSpeciesBindings piosb,  Parameter popPriorScale, PriorComponent[] priorComponents) {
         super(PopsIOSpeciesTreeModelParser.PIO_SPECIES_TREE);
         this.piosb = piosb;
-
         this.popPriorScale = popPriorScale;
         addVariable(popPriorScale);
         popPriorScale.addBounds(new Parameter.DefaultBounds(Double.POSITIVE_INFINITY, 0.0, 1));
-
         this.priorComponents = priorComponents;
-
         PopsIOSpeciesBindings.SpInfo[] species = piosb.getSpecies();
         int nTaxa = species.length;
         int nNodes = 2 * nTaxa - 1;
@@ -282,19 +228,13 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
             tojoin.add(nTaxa+i);
         }
         rootn = pionodes.length - 1;
-
         double scale = 0.99 * piosb.initialMinGeneNodeHeight() / pionodes[rootn].height;
         scaleAllHeights(scale);
         pionodes[rootn].fillinUnionsInSubtree(piosb.getSpecies().length);
-
         stree = makeSimpleTree();
-
         Logger.getLogger("dr.evomodel.speciation.popsio").info("\tConstructing a PopsIO Species Tree Model, please cite:\n"
                 + Citable.Utils.getCitationString(this));
     }
-
-
-
     public List<Citation> getCitations() {
         List<Citation> citations = new ArrayList<Citation>();
         citations.add(new Citation(
@@ -307,10 +247,6 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
         ));
         return citations;
     }
-
-
-
-
     public String toString() {
         int ngt = piosb.numberOfGeneTrees();
         String nl = System.getProperty("line.separator");
@@ -322,50 +258,33 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
         s += nl;
         return s;
     }
-
-
-
     public LogColumn[] getColumns() {
         LogColumn[] columns = new LogColumn[1];
         columns[0] = new LogColumn.Default("    species-tree and gene trees", this);
         return columns;
     }
-
-
-
     private int scaleAllHeights(double scale) {
         for (int nn = 0; nn < pionodes.length; nn++) {
             pionodes[nn].height *= scale;
         }
         return pionodes.length;
     }
-
-
     String pioTreeAsText() {
         String header = "topology             height         union         nlin coalheights" + System.getProperty("line.separator");
-
         String s = "";
         Stack<Integer> x = new Stack<Integer>();
         return header + subtreeAsText(pionodes[rootn], s, x, 0, "");
     }
-
     public boolean coalescenceIsCompatible(double height, FixedBitSet union) {
         PopsIONode node = (PopsIONode) pionodes[rootn].nodeOfUnionInSubtree(union);
         return (node.height <= height);
     }
-
-
-
     public void zeroCoalCountsIntensities() {
         zeroSubtreeCoalCountsIntensities(pionodes[rootn]);
     }
-
     public void clearCoalescences() {
         clearSubtreeCoalescences(pionodes[rootn]);
     }
-
-
-
     public void recordCoalescence(double height, FixedBitSet union) {
         PopsIONode node = (PopsIONode) pionodes[rootn].nodeOfUnionInSubtree(union);
         assert (node.height <= height);
@@ -373,28 +292,20 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
             node = pionodes[node.anc];
         }
         node.coalheights.add(height);
-
     }
-
     public void sortCoalescences() {
         for (PopsIONode node : pionodes) {
             Collections.sort(node.coalheights);
         }
     }
-
     public void recordLineageCounts() {
         recordSubtreeLineageCounts(pionodes[rootn]);
     }
-
-
     public void accumCoalCountsIntensities() {
         accumSubtreeCoalCountsIntensities(pionodes[rootn]);
     }
-
-
     public double logLhoodAllGeneTreesInSpeciesTree() {
         double [] llhoodcpts = new double[priorComponents.length];
-
         double totalweight = 0.0;
         for (int i = 0; i < priorComponents.length; i++) {
             totalweight += priorComponents[i].weight;
@@ -408,9 +319,6 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
         }
         return logsumexp(llhoodcpts);
     }
-
-
-
     private double logsumexp(double x[]) {
         double maxx = Double.MIN_VALUE;
         for (double d : x) {
@@ -422,16 +330,10 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
         }
         return maxx + Math.log(sum);
     }
-
-
     public void fixupAfterNodeSlide() {
         pionodes[rootn].fillinUnionsInSubtree(piosb.getSpecies().length);
         stree = makeSimpleTree();
     }
-
-
-
-
     private String subtreeAsText(PopsIONode node, String s, Stack<Integer> x, int depth, String b) {
         Integer[] y = x.toArray(new Integer[x.size()]);
         StringBuffer indent = new StringBuffer();
@@ -456,8 +358,6 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
         }
         return s + subs;
     }
-
-
     private double logLhoodAllGeneTreesInSpeciesSubtree(PopsIONode node, double alpha, double beta) {
         double loglike = 0.0;
         if (node.lft >= 0) {
@@ -467,8 +367,6 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
         loglike += branchLLInPopsIOtree(node, alpha, beta);
         return loglike;
     }
-
-
     private double branchLLInPopsIOtree(PopsIONode node, double alpha, double beta) {
         int q = node.coalcount;
         double gamma = node.coalintensity;
@@ -480,7 +378,6 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
         llhood -= (alpha + q) * Math.log(beta + gamma);
         return llhood;
     }
-
     private SimpleTree makeSimpleTree() {
         SimpleNode[] snodes = new SimpleNode[pionodes.length];
         for (int n = 0; n < pionodes.length; n++) {
@@ -490,8 +387,6 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
         makesimplesubtree(snodes, 0, pionodes[rootn]);
         return new SimpleTree(snodes[pionodes.length-1]);
     }
-
-
     // for makeSimpleTree()
     private int makesimplesubtree(SimpleNode[] snodes, int nextsn, PopsIONode pionode) {
         if (pionode.lft < 0) {
@@ -511,9 +406,6 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
         snodes[nextsn].setHeight(pionode.height);
         return nextsn+1;
     }
-
-
-
     private void zeroSubtreeCoalCountsIntensities(PopsIONode node) {
         if (node.lft >= 0) {
             zeroSubtreeCoalCountsIntensities(pionodes[node.lft]);
@@ -522,9 +414,6 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
         node.coalcount = 0;
         node.coalintensity = 0.0;
     }
-
-
-
     private void clearSubtreeCoalescences(PopsIONode node) {
         if (node.lft >= 0) {
             clearSubtreeCoalescences(pionodes[node.lft]);
@@ -538,8 +427,6 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
         }
         node.coalheights.clear();
     }
-
-
     private void recordSubtreeLineageCounts(PopsIONode node) {
         if (node.lft < 0) {
             int spIndex = piosb.speciesId2index(node.getTaxon().getId());
@@ -552,8 +439,6 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
             node.nlineages += pionodes[node.rgt].nlineages - pionodes[node.rgt].coalheights.size();
         }
     }
-
-
     private void accumSubtreeCoalCountsIntensities(PopsIONode node) {
         if (node.lft >= 0) {
             accumSubtreeCoalCountsIntensities(pionodes[node.lft]);
@@ -572,15 +457,10 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
             node.coalintensity += (t[i + 1] - t[i]) * 0.5 * (n - i) * (n - i - 1);
         }
     }
-
-
     private double randomnodeheight(double rate) {
         return MathUtils.nextExponential(rate) + 1e-6/rate;
         // 1e-6/rate to avoid very tiny heights
     }
-
-
-
     // for Scalable.
     @Override
     public int scale(double factor, int nDims) throws OperatorFailedException {
@@ -588,23 +468,18 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
         stree = makeSimpleTree();
         return n;
     }
-
-
     @Override
     public String getName() {
         return PopsIOSpeciesTreeModelParser.PIO_SPECIES_TREE;
-
     }
     // for AbstractModel.
     @Override
     protected void handleModelChangedEvent(Model model, Object object, int index) {
         fireModelChanged();
     }
-
     @Override
     protected void handleVariableChangedEvent(Variable variable, int index, Variable.ChangeType type) {
     }
-
     @Override
     protected void storeState() {
         oldpionodes = new PopsIONode[pionodes.length];
@@ -613,7 +488,6 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
         }
         oldrootn = rootn;
     }
-
     @Override
     protected void restoreState() {
         pionodes = new PopsIONode[oldpionodes.length];
@@ -623,62 +497,48 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
         rootn = oldrootn;
         stree = makeSimpleTree();
     }
-
     @Override
     protected void acceptState() {
     }
-
-
-
     // for SlidableTree.
     @Override
     public NodeRef getSlidableRoot() {
         assert pionodes[rootn].anc < 0;
         return pionodes[rootn];
-
     }
-
     @Override
     public void replaceSlidableRoot(NodeRef newroot) {
         rootn = newroot.getNumber();
         pionodes[rootn].anc = -1;
     }
-
     @Override
     public int getSlidableNodeCount() {
         return pionodes.length;
     }
-
     @Override
     public Taxon getSlidableNodeTaxon(NodeRef node) {
         assert node == pionodes[node.getNumber()];
         return ((PopsIONode)node).getTaxon();
     }
-
-
     @Override
     public double getSlidableNodeHeight(NodeRef node) {
         assert node == pionodes[node.getNumber()];
         return ((PopsIONode)node).getHeight();
     }
-
     @Override
     public void setSlidableNodeHeight(NodeRef node, double height) {
         assert node == pionodes[node.getNumber()];
         ((PopsIONode)node).height = height;
     }
-
     @Override
     public boolean isExternalSlidable(NodeRef node) {
         return (pionodes[node.getNumber()].lft < 0);
     }
-
     @Override
     public NodeRef getSlidableChild(NodeRef node, int j) {
         int n = node.getNumber();
         return j == 0 ? pionodes[ pionodes[n].lft ] : pionodes[ pionodes[n].rgt ];
     }
-
     @Override
     public void replaceSlidableChildren(NodeRef node, NodeRef lft, NodeRef rgt) {
         int nn = node.getNumber();
@@ -690,181 +550,141 @@ public class PopsIOSpeciesTreeModel extends AbstractModel implements SlidableTre
         pionodes[lftn].anc = pionodes[nn].nodeNumber;
         pionodes[rgtn].anc = pionodes[nn].nodeNumber;
     }
-
-
-
     // For Tree
-
     @Override
     public NodeRef getRoot() {
         return stree.getRoot();
     }
-
     @Override
     public int getNodeCount() {
         return stree.getNodeCount();
     }
-
     @Override
     public NodeRef getNode(int i) {
         return stree.getNode(i);
     }
-
     @Override
     public NodeRef getInternalNode(int i) {
         return stree.getInternalNode(i);
     }
-
     @Override
     public NodeRef getExternalNode(int i) {
         return stree.getExternalNode(i);
     }
-
     @Override
     public int getExternalNodeCount() {
         return stree.getExternalNodeCount();
     }
-
     @Override
     public int getInternalNodeCount() {
         return stree.getInternalNodeCount();
     }
-
     @Override
     public Taxon getNodeTaxon(NodeRef node) {
         return stree.getNodeTaxon(node);
     }
-
     @Override
     public boolean hasNodeHeights() {
         return stree.hasNodeHeights();
     }
-
     @Override
     public double getNodeHeight(NodeRef node) {
         return stree.getNodeHeight(node);
     }
-
     @Override
     public boolean hasBranchLengths() {
         return stree.hasBranchLengths();
     }
-
     @Override
     public double getBranchLength(NodeRef node) {
         return stree.getBranchLength(node);
     }
-
     @Override
     public double getNodeRate(NodeRef node) {
         return stree.getNodeRate(node);
     }
-
     @Override
     public Object getNodeAttribute(NodeRef node, String name) {
         return stree.getNodeAttribute(node, name);
     }
-
     @Override
     public Iterator getNodeAttributeNames(NodeRef node) {
         return stree.getNodeAttributeNames(node);
     }
-
     @Override
     public boolean isExternal(NodeRef node) {
         return stree.isExternal(node);
     }
-
     @Override
     public boolean isRoot(NodeRef node) {
         return stree.isRoot(node);
     }
-
     @Override
     public int getChildCount(NodeRef node) {
         return stree.getChildCount(node);
     }
-
     @Override
     public NodeRef getChild(NodeRef node, int j) {
         return stree.getChild(node, j);
     }
-
     @Override
     public NodeRef getParent(NodeRef node) {
         return stree.getParent(node);
     }
-
     @Override
     public Tree getCopy() {
         return stree.getCopy();
     }
-
     @Override
     public void setAttribute(String name, Object value) {
         stree.setAttribute(name, value);
     }
-
     @Override
     public Object getAttribute(String name) {
         return stree.getAttribute(name);
     }
-
     @Override
     public Iterator<String> getAttributeNames() {
         return stree.getAttributeNames();
     }
-
     @Override
     public int getTaxonCount() {
         return stree.getTaxonCount();
     }
-
     @Override
     public Taxon getTaxon(int taxonIndex) {
         return stree.getTaxon(taxonIndex);
     }
-
     @Override
     public String getTaxonId(int taxonIndex) {
         return stree.getTaxonId(taxonIndex);
     }
-
     @Override
     public int getTaxonIndex(String id) {
         return stree.getTaxonIndex(id);
     }
-
     @Override
     public int getTaxonIndex(Taxon taxon) {
         return stree.getTaxonIndex(taxon);
     }
-
     @Override
     public List<Taxon> asList() {
         return stree.asList();
     }
-
     @Override
     public Object getTaxonAttribute(int taxonIndex, String name) {
         return stree.getTaxonAttribute(taxonIndex, name);
     }
-
     @Override
     public Iterator<Taxon> iterator() {
         return stree.iterator();
     }
-
     @Override
     public Type getUnits() {
         return stree.getUnits();
     }
-
     @Override
     public void setUnits(Type units) {
         stree.setUnits(units);
     }
-
-
 }
-

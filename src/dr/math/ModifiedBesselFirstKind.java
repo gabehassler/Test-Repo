@@ -1,26 +1,15 @@
-
 package dr.math;
-
-
 import cern.jet.math.Bessel;
-
-
 public class ModifiedBesselFirstKind {
-
     //Adapted from Numerical Recipes for C
-
     public static final int ACC = 40;
     public static final double BIGNO = 1.0e10;
     public static final double BIGNI = 1.0e-10;
-
     public static double bessi(double x, int n) {
-
         if (n == 0) return Bessel.i0(x);
         if (n == 1) return Bessel.i1(x);
-
         int j;
         double bi, bim, bip, tox, ans;
-
         if (x == 0.0)
             return 0.0;
         else {

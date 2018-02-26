@@ -1,6 +1,4 @@
-
 package test.dr.evomodel.substmodel;
-
 import dr.app.beagle.evomodel.substmodel.ComplexSubstitutionModel;
 import dr.app.beagle.evomodel.substmodel.EigenDecomposition;
 import dr.app.beagle.evomodel.substmodel.FrequencyModel;
@@ -10,9 +8,7 @@ import dr.math.MathUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
-
 public class EigendecompositionTest {
-
     int dim;
     int[][] columnNumberLookup;
     double tolerance;
@@ -20,7 +16,6 @@ public class EigendecompositionTest {
     Parameter.Default freqVector;
     Parameter.Default rateMatrix;
     FrequencyModel freqModel;
-
     public EigendecompositionTest(int dim, double tolerance){
         this.dim = dim;
         this.tolerance = tolerance;
@@ -56,7 +51,6 @@ public class EigendecompositionTest {
         freqModel = new FrequencyModel(dataType, freqVector);
         rateMatrix = new Parameter.Default(dim*(dim-1));
     }
-
     private Parameter.Default inputMatrix(){
         Scanner keyboard = new Scanner(System.in);
         Parameter.Default out = new Parameter.Default(dim*(dim-1));
@@ -69,58 +63,34 @@ public class EigendecompositionTest {
                 }
             }
         }
-
         return out;
-
     }
-
-
     private void doTest(Parameter.Default rateMatrix){
-
         normalise(rateMatrix);
-
         ComplexSubstitutionModel substModel = new ComplexSubstitutionModel("test", dataType, freqModel, rateMatrix);
-
         boolean eigenDecompOK = testEigenDecomposition(substModel);
-
         double[] probs = new double[dim*dim];
-
         substModel.getTransitionProbabilities(1, probs);
-
         boolean connCheckResult = true;
-
         String eSuccess = eigenDecompOK ? "Succeeded" : "Failed (all zero eigenvectors returned)";
         String cSuccess = connCheckResult ? "Passed" : "Failed";
-
         System.out.println("Eigendecomposition: "+eSuccess);
         System.out.println("Connectivity check: "+cSuccess);
         System.out.println("Transition probability matrix:");
-
         for(int row=0; row<dim; row++){
             for(int col=0; col<dim; col++){
                 System.out.print(probs[row*dim+col]+" ");
             }
             System.out.println();
         }
-
-
-
     }
-
     private void doRandomTests(){
-
         ComplexSubstitutionModel substModel = new ComplexSubstitutionModel("test", dataType, freqModel, rateMatrix);
-
         ArrayList<Integer[]> indicators = makeMatrices(getAllPossibilities(dim), columnNumberLookup);
-
         for(Integer[] ind:indicators){
-
             int successED = 0;
             int[] successTP = new int[dim];
-
             int[] zeroRows = new int[dim];
-
-
             for(int row=0; row<dim; row++){
                 boolean zeroRow = true;
                 for(int col=0; col<dim; col++){
@@ -130,15 +100,11 @@ public class EigendecompositionTest {
                 }
                 zeroRows[row] = zeroRow ? 1:0;
             }
-
             for(int run = 0; run<100; run++){
-
                 for(int i=0; i<dim*(dim-1); i++){
                     rateMatrix.setParameterValue(i, MathUtils.nextDouble()*ind[i]);
                 }
-
                 normalise(rateMatrix);
-
                 boolean EigenDecompOK = testEigenDecomposition(substModel);
                 if(!EigenDecompOK){
                     for(int row=0; row<dim; row++){
@@ -153,14 +119,10 @@ public class EigendecompositionTest {
                     }
                     System.out.println();
                 }
-
-
                 Boolean[] transProbsOK = new Boolean[dim];
-
                 for(int i=0; i<dim; i++){
                     transProbsOK[i] = zeroRows[i] != 1 || testProbMatrix(substModel, i, dim, tolerance);
                 }
-
                 if(EigenDecompOK){successED++;}
                 for(int i=0; i<dim; i++)
                     if(EigenDecompOK && transProbsOK[i]){successTP[i]++;}
@@ -180,37 +142,27 @@ public class EigendecompositionTest {
                 System.out.println();
             }
         }
-
     }
     private static boolean testEigenDecomposition(ComplexSubstitutionModel model){
         EigenDecomposition eigen = model.getEigenDecomposition();
-
         for(int i=0; i<eigen.getEigenVectors().length; i++){
             if(eigen.getEigenVectors()[i]!=0){
                 return true;
             }
         }
-
-
-
         return false;
-
     }
-
     private static ArrayList<Integer[]> getAllPossibleZeroRows(int dim){
         ArrayList<Integer[]> allPossibleZeroRows = new ArrayList<Integer[]>();
         for(int zeroRow=0; zeroRow<dim; zeroRow++){
             Integer[] possibility = new Integer[dim];
             for(int i=0; i<dim; i++){
                 possibility[i] = i==zeroRow ? 0:1;
-
             }
             allPossibleZeroRows.add(possibility);
         }
         return allPossibleZeroRows;
     }
-
-
     private static ArrayList<Integer[]> makeMatrices(ArrayList<Integer[]> configs, int[][] lookup){
         ArrayList<Integer[]> out = new ArrayList<Integer[]>();
         int dim = configs.get(0).length;
@@ -235,7 +187,6 @@ public class EigendecompositionTest {
         }
         return out;
     }
-
     private static ArrayList<Integer[]> getAllPossibilities(int length){
         ArrayList<Integer[]> allPossibilities = new ArrayList<Integer[]>();
         if(length == 1){
@@ -259,31 +210,23 @@ public class EigendecompositionTest {
         }
         return allPossibilities;
     }
-
     public static <T> T[] concat(T[] first, T[] second) {
         T[] result = Arrays.copyOf(first, first.length + second.length);
         System.arraycopy(second, 0, result, first.length, second.length);
         return result;
     }
-
     private static Parameter.Default normalise(Parameter.Default matrix){
         double sum = getMatrixSum(matrix);
         int dim = matrix.getDimension();
-
         for(int i=0; i<dim; i++){
             matrix.setParameterValue(i,matrix.getParameterValue(i)*dim/sum);
         }
-
         return matrix;
     }
-
     private static boolean testProbMatrix(ComplexSubstitutionModel model, int rowOfInterest, int dim, double tolerance){
         boolean out = true;
-
         double[] probs = new double[dim*dim];
-
         model.getTransitionProbabilities(1, probs);
-
         for(int i=rowOfInterest*dim; i<rowOfInterest*dim+dim; i++){
             if(i!=rowOfInterest*dim+rowOfInterest){
                 if(probs[i]>tolerance){
@@ -291,12 +234,8 @@ public class EigendecompositionTest {
                 }
             }
         }
-
-
         return out;
-
     }
-
     private static double getMatrixSum(Parameter.Default matrix){
         double sum = 0;
         for(int i=0; i<matrix.getDimension(); i++){
@@ -304,25 +243,15 @@ public class EigendecompositionTest {
         }
         return sum;
     }
-
     public static void main(String[] args){
         Scanner keyboard = new Scanner(System.in);
-
         System.out.print("Enter dimension of matrices (number of discrete states): ");
         int dim = keyboard.nextInt();
-
         System.out.print("Enter tolerance for declaring transition probability matrix entries to be zero: ");
         double tolerance = keyboard.nextDouble();
-
         EigendecompositionTest run = new EigendecompositionTest(dim, tolerance);
-
 //        run.doRandomTests();
-
-
-
-
         Parameter.Default matrix = run.inputMatrix();
         run.doTest(matrix);
     }
-
 }

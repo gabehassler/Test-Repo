@@ -1,14 +1,10 @@
-
 package dr.app.bfe;
-
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
 public class XMLMerger implements ActionListener, ListSelectionListener {
-
     private JButton linkButton;
     private JPanel panel;
     private XMLViewer XMLViewer1;
@@ -17,11 +13,8 @@ public class XMLMerger implements ActionListener, ListSelectionListener {
     private JButton unlinkButton;
     private JTextField linkingField;
     private JFrame frame;
-
     public XMLMerger() {
-
     }
-
     public XMLMerger(boolean standalone) {
         XMLViewer1.getIdElementList().addListSelectionListener(this);
         if (standalone) {
@@ -32,11 +25,9 @@ public class XMLMerger implements ActionListener, ListSelectionListener {
             frame.setVisible(true);
         }
     }
-
     public static void main(String[] args) {
         XMLMerger z = new XMLMerger(true);
     }
-
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == linkButton) {
             String id1 = (String) XMLViewer1.getIdElementList().getSelectedValue();
@@ -50,10 +41,8 @@ public class XMLMerger implements ActionListener, ListSelectionListener {
                 linkingList.updateUI();
             }
         } else if (e.getSource() == unlinkButton) {
-
         }
     }
-
     public void valueChanged(ListSelectionEvent listSelectionEvent) {
         if (listSelectionEvent.getSource() == linkingList) {
             linkButton.setEnabled(false);
@@ -62,7 +51,6 @@ public class XMLMerger implements ActionListener, ListSelectionListener {
             if (XMLViewer1.getIdElementList().getSelectedIndex() != -1 && XMLViewer2.getIdElementList().getSelectedIndex() != -1) {
                 linkButton.setEnabled(true);
             }
-
         }
     }
 }

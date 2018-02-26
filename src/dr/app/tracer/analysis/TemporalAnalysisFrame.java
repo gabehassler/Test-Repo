@@ -1,6 +1,4 @@
-
 package dr.app.tracer.analysis;
-
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.pdf.DefaultFontMapper;
@@ -11,176 +9,129 @@ import dr.app.tracer.application.TracerFileMenuHandler;
 import dr.stats.Variate;
 import jam.framework.AuxilaryFrame;
 import jam.framework.DocumentFrame;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.geom.Rectangle2D;
 import java.io.*;
-
 public class TemporalAnalysisFrame extends AuxilaryFrame implements TracerFileMenuHandler {
     private int binCount;
     private double minTime;
     private double maxTime;
-
     private boolean rangeSet;
-
     TemporalAnalysisPlotPanel temporalAnalysisPlotPanel = null;
-
     public TemporalAnalysisFrame(DocumentFrame frame, String title, int binCount) {
         this(frame, title, binCount, 0.0, 0.0);
         rangeSet = false;
     }
-
     public TemporalAnalysisFrame(DocumentFrame frame, String title, int binCount, double minTime, double maxTime) {
-
         super(frame);
-
         setTitle(title);
-
         this.binCount = binCount;
         this.minTime = minTime;
         this.maxTime = maxTime;
-
         rangeSet = true;
-
         temporalAnalysisPlotPanel = new TemporalAnalysisPlotPanel(this);
-
         setContentsPanel(temporalAnalysisPlotPanel);
-
         getSaveAction().setEnabled(false);
         getSaveAsAction().setEnabled(false);
-
         getCutAction().setEnabled(false);
         getCopyAction().setEnabled(true);
         getPasteAction().setEnabled(false);
         getDeleteAction().setEnabled(false);
         getSelectAllAction().setEnabled(false);
         getFindAction().setEnabled(false);
-
         getZoomWindowAction().setEnabled(false);
     }
-
     public void initializeComponents() {
-
         setSize(new java.awt.Dimension(640, 480));
     }
-
     public void addDemographic(String title, Variate.D xData,
                                Variate.D yDataMean, Variate.D yDataMedian,
                                Variate.D yDataUpper, Variate.D yDataLower,
                                double timeMean, double timeMedian,
                                double timeUpper, double timeLower) {
-
         if (!rangeSet) {
             throw new RuntimeException("Range not set");
         }
-
         if (getTitle().length() == 0) {
             setTitle(title);
         }
-
         temporalAnalysisPlotPanel.addDemographicPlot(title, xData, yDataMean, yDataMedian, yDataUpper, yDataLower,
                 timeMean, timeMedian, timeUpper, timeLower);
         setVisible(true);
     }
-
     public void addDensity(String title, Variate.D xData, Variate.D yData) {
-
         if (!rangeSet) {
             throw new RuntimeException("Range not set");
         }
-
         temporalAnalysisPlotPanel.addDensityPlot(title, xData, yData);
         setVisible(true);
     }
-
     public boolean useExportAction() {
         return true;
     }
-
     public JComponent getExportableComponent() {
         return temporalAnalysisPlotPanel.getExportableComponent();
     }
-
     public void doCopy() {
         java.awt.datatransfer.Clipboard clipboard =
                 Toolkit.getDefaultToolkit().getSystemClipboard();
-
         java.awt.datatransfer.StringSelection selection =
                 new java.awt.datatransfer.StringSelection(this.toString());
-
         clipboard.setContents(selection, selection);
     }
-
     public int getBinCount() {
         return binCount;
     }
-
     public double getMinTime() {
         if (!rangeSet) {
             throw new RuntimeException("Range not set");
         }
-
         return minTime;
     }
-
     public double getMaxTime() {
         if (!rangeSet) {
             throw new RuntimeException("Range not set");
         }
-
         return maxTime;
     }
-
     public void setRange(double minTime, double maxTime) {
         if (rangeSet) {
             throw new RuntimeException("Range already set");
         }
-
         this.minTime = minTime;
         this.maxTime = maxTime;
         rangeSet = true;
     }
-
     public boolean isRangeSet() {
         return rangeSet;
     }
-
     public final void doExportData() {
-
         FileDialog dialog = new FileDialog(this,
                 "Export Data...",
                 FileDialog.SAVE);
-
         dialog.setVisible(true);
         if (dialog.getFile() != null) {
             File file = new File(dialog.getDirectory(), dialog.getFile());
-
             try {
                 FileWriter writer = new FileWriter(file);
                 writer.write(toString());
                 writer.close();
-
-
             } catch (IOException ioe) {
                 JOptionPane.showMessageDialog(this, "Unable to write file: " + ioe,
                         "Unable to write file",
                         JOptionPane.ERROR_MESSAGE);
             }
         }
-
     }
-
     public final void doExportPDF() {
         FileDialog dialog = new FileDialog(this,
                 "Export PDF Image...",
                 FileDialog.SAVE);
-
         dialog.setVisible(true);
         if (dialog.getFile() != null) {
             File file = new File(dialog.getDirectory(), dialog.getFile());
-
             Rectangle2D bounds = temporalAnalysisPlotPanel.getExportableComponent().getBounds();
             Document document = new Document(new com.lowagie.text.Rectangle((float) bounds.getWidth(), (float) bounds.getHeight()));
             try {
@@ -210,12 +161,9 @@ public class TemporalAnalysisFrame extends AuxilaryFrame implements TracerFileMe
             document.close();
         }
     }
-
     public String toString() {
         StringBuffer buffer = new StringBuffer();
-
         java.util.List<TemporalAnalysisPlotPanel.AnalysisData> analyses = temporalAnalysisPlotPanel.getAnalysisData();
-
         // Sources line
         for (TemporalAnalysisPlotPanel.AnalysisData analysis : analyses) {
             // first \t is for the time
@@ -226,7 +174,6 @@ public class TemporalAnalysisFrame extends AuxilaryFrame implements TracerFileMe
             }
         }
         buffer.append("\n");
-
         buffer.append("Time");
         for (TemporalAnalysisPlotPanel.AnalysisData analysis : analyses) {
             if (analysis.isDemographic) {
@@ -236,11 +183,9 @@ public class TemporalAnalysisFrame extends AuxilaryFrame implements TracerFileMe
             }
         }
         buffer.append("\n");
-
         Variate timeScale = temporalAnalysisPlotPanel.getTimeScale();
         for (int i = 0; i < timeScale.getCount(); i++) {
             buffer.append(String.valueOf(timeScale.get(i)));
-
             for (TemporalAnalysisPlotPanel.AnalysisData analysis : analyses) {
                 if (analysis.isDemographic) {
                     buffer.append("\t");
@@ -258,28 +203,22 @@ public class TemporalAnalysisFrame extends AuxilaryFrame implements TracerFileMe
             }
             buffer.append("\n");
         }
-
         return buffer.toString();
     }
-
     public Action getExportDataAction() {
         return exportDataAction;
     }
-
     public Action getExportPDFAction() {
         return exportPDFAction;
     }
-
     private AbstractAction exportDataAction = new AbstractAction("Export Data...") {
         public void actionPerformed(ActionEvent ae) {
             doExportData();
         }
     };
-
     private AbstractAction exportPDFAction = new AbstractAction("Export PDF...") {
         public void actionPerformed(ActionEvent ae) {
             doExportPDF();
         }
     };
-
 }

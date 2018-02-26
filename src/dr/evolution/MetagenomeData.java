@@ -1,10 +1,7 @@
-
 package dr.evolution;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import dr.evolution.alignment.Alignment;
 import dr.evolution.tree.Tree;
 import dr.evolution.util.Taxa;
@@ -12,16 +9,13 @@ import dr.evolution.util.Taxon;
 import dr.evolution.util.TaxonList;
 import dr.util.Attributable;
 import dr.util.Identifiable;
-
 public class MetagenomeData implements Attributable, Identifiable {
-
 	protected String id = null;
 	protected Alignment alignment;
 	protected Taxa referenceTaxa;
 	protected Taxa reads;
 	protected LinkageConstraints constraints;
 	protected boolean fixedReferenceTree;
-
 	public MetagenomeData(TaxonList taxa, Alignment alignment)
 	{
 		this(taxa, alignment, null, false);
@@ -46,64 +40,52 @@ public class MetagenomeData implements Attributable, Identifiable {
 			this.constraints = new LinkageConstraints(new ArrayList<LinkedGroup>());
 		}
 	}
-	
 	public TaxonList getReferenceTaxa(){
 		return referenceTaxa;
 	}
 	public TaxonList getReadsTaxa(){
 		return reads;
 	}
-	
 	public Alignment getAlignment() {
 		return alignment;
 	}
-
 	public void setAlignment(Alignment alignment) {
 		this.alignment = alignment;
 	}
-
 	public ArrayList<LinkedGroup> getConstraints(){
 		return constraints.getLinkedGroups();
 	}
-
 	public boolean getFixedReferenceTree(){
 		return fixedReferenceTree;
 	}
 	public void setFixedReferenceTree(boolean fixedReferenceTree){
 		this.fixedReferenceTree = fixedReferenceTree;
 	}
-
 	public String getId() {
 		return id;
 	}
-
 	public void setId(String id) {
 		this.id = id;
 	}
     // **************************************************************
     // Attributable IMPLEMENTATION
     // **************************************************************
-
     private Attributable.AttributeHelper attributes = null;
-
     public void setAttribute(String name, Object value) {
         if (attributes == null)
             attributes = new Attributable.AttributeHelper();
         attributes.setAttribute(name, value);
     }
-
     public Object getAttribute(String name) {
         if (attributes == null)
             return null;
         else
             return attributes.getAttribute(name);
     }
-
     public Iterator<String> getAttributeNames() {
         if (attributes == null)
             return null;
         else
             return attributes.getAttributeNames();
     }
-
 }

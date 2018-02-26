@@ -1,6 +1,4 @@
-
 package dr.evomodel.ibd;
-
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
 import dr.evolution.tree.TreeTrait;
@@ -12,9 +10,7 @@ import dr.evomodel.substmodel.HKY;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.model.*;
 import dr.xml.*;
-
 public class IBDReporter extends AbstractModel implements TreeTraitProvider {
-
     protected double[] ibdweights;
     protected double[][] ibdForward;
     protected double[][] ibdBackward;
@@ -24,7 +20,6 @@ public class IBDReporter extends AbstractModel implements TreeTraitProvider {
     protected TreeModel treeModel;
     protected BranchRateModel branchRateModel;
     protected Parameter mutationParameter;
-
     IBDReporter(Parameter mutationParameter, TreeModel treeModel, BranchRateModel branchRateModel, AbstractSubstitutionModel substitutionModel) {
         super("IBDReporter");
         this.substitutionModel = (HKY) substitutionModel;
@@ -36,7 +31,6 @@ public class IBDReporter extends AbstractModel implements TreeTraitProvider {
         this.mutationParameter = mutationParameter;
         addVariable(this.mutationParameter);
     }
-
     public void forwardIBD() {
         int numNodes = treeModel.getNodeCount();
         int stateCount = substitutionModel.getStateCount();
@@ -45,16 +39,13 @@ public class IBDReporter extends AbstractModel implements TreeTraitProvider {
             NodeRef node = treeModel.getNode(nodeId);
             NodeRef parent = treeModel.getParent(node);
             if (parent == null) { // handle the root
-
             } else if (treeModel.isExternal(node)) { // Handle the tip
                 double branchTime = branchRateModel.getBranchRate(treeModel, node) * (treeModel.getNodeHeight(parent) - treeModel.getNodeHeight(node));
-
                 for (int state = 0; state < stateCount; ++state) {
                     ibdForward[nodeId][state] = Math.exp(-diag[state] * branchTime);
                 }
             } else { // Handle internal node
                 double branchTime = branchRateModel.getBranchRate(treeModel, node) * (treeModel.getNodeHeight(parent) - treeModel.getNodeHeight(node));
-
                 int childCount = treeModel.getChildCount(node);
                 for (int state = 0; state < stateCount; ++state) {
                     ibdForward[nodeId][state] = 0;
@@ -67,7 +58,6 @@ public class IBDReporter extends AbstractModel implements TreeTraitProvider {
             }
         }
     }
-
     public void backwardIBD(NodeRef node) {
         int stateCount = substitutionModel.getStateCount();
         if (node == null) {
@@ -99,9 +89,7 @@ public class IBDReporter extends AbstractModel implements TreeTraitProvider {
             NodeRef childNode = treeModel.getChild(node, child);
             backwardIBD(childNode);
         }
-
     }
-
     public void expectedIBD() {
         int stateCount = substitutionModel.getStateCount();
         int nodeCount = treeModel.getNodeCount();
@@ -111,7 +99,6 @@ public class IBDReporter extends AbstractModel implements TreeTraitProvider {
             ibdBackward = new double[nodeCount][stateCount];
             diag = new double[stateCount];
         }
-
         double[] freq = substitutionModel.getFrequencyModel().getFrequencies();
         forwardIBD();
         backwardIBD(null);
@@ -123,28 +110,23 @@ public class IBDReporter extends AbstractModel implements TreeTraitProvider {
             }
         }
     }
-
     protected void getDiagonalRates(double[] diagonalRates) {
         double kappa = substitutionModel.getKappa();
         double[] freq = substitutionModel.getFrequencyModel().getFrequencies();
         double mutationRate = mutationParameter.getParameterValue(0);
         double beta = 0.5 / ((freq[0] + freq[2]) * (freq[1] + freq[3]) + kappa * (freq[0] * freq[2] + freq[1] * freq[3]));
-
         diagonalRates[0] = ((freq[1] + freq[3]) + freq[2] * kappa) * mutationRate * beta;
         diagonalRates[1] = ((freq[0] + freq[2]) + freq[3] * kappa) * mutationRate * beta;
         diagonalRates[2] = ((freq[1] + freq[3]) + freq[0] * kappa) * mutationRate * beta;
         diagonalRates[3] = ((freq[0] + freq[2]) + freq[1] * kappa) * mutationRate * beta;
     }
-
     TreeTrait ibdWeight = new TreeTrait.D() {
         public String getTraitName() {
             return "IBDWeight";
         }
-
         public Intent getIntent() {
             return Intent.NODE;
         }
-
         public Double getTrait(Tree tree, NodeRef node) {
             if (!weightsKnown) {
                 expectedIBD();
@@ -156,16 +138,13 @@ public class IBDReporter extends AbstractModel implements TreeTraitProvider {
             return null;
         }
     };
-
     public TreeTrait[] getTreeTraits() {
         return new TreeTrait[] { ibdWeight };
     }
-
     public TreeTrait getTreeTrait(String key) {
         // ignore the key - it must be the one they wanted, no?
         return ibdWeight;
     }
-
     private double getIBDWeight(Tree tree, NodeRef node) {
         if (!weightsKnown) {
             expectedIBD();
@@ -177,47 +156,34 @@ public class IBDReporter extends AbstractModel implements TreeTraitProvider {
         }
         return 0;
     }
-
-
     public static final String IBD_REPORTER_LIKELIHOOD = "ibdReporter";
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-
         public String getParserName() {
             return IBD_REPORTER_LIKELIHOOD;
         }
-
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
-
             TreeModel treeModel = (TreeModel) xo.getChild(TreeModel.class);
             Parameter mutationParameter = (Parameter) xo.getChild(Parameter.class);
             AbstractSubstitutionModel substitutionModel =
                     (AbstractSubstitutionModel) xo.getChild(AbstractSubstitutionModel.class);
-
             BranchRateModel branchRateModel = (BranchRateModel) xo.getChild(BranchRateModel.class);
             if (branchRateModel == null) {
                 branchRateModel = new DefaultBranchRateModel();
             }
-
             return new IBDReporter(mutationParameter, treeModel, branchRateModel, substitutionModel);
         }
-
         //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
-
         public String getParserDescription() {
             return "This element represents a reporter for expected number of tips ibd.";
         }
-
         public Class getReturnType() {
             return Likelihood.class;
         }
-
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
-
         private XMLSyntaxRule[] rules = new XMLSyntaxRule[]{
                 new ElementRule(TreeModel.class),
                 new ElementRule(BranchRateModel.class, true),
@@ -225,7 +191,6 @@ public class IBDReporter extends AbstractModel implements TreeTraitProvider {
                 new ElementRule(Parameter.class)
         };
     };
-
     protected void handleModelChangedEvent(Model model, Object object, int index) {
         if (model == branchRateModel || model == treeModel || model == substitutionModel) {
             weightsKnown = false;
@@ -233,7 +198,6 @@ public class IBDReporter extends AbstractModel implements TreeTraitProvider {
             System.err.println("Weird call back to IBDReporter from " + model.getModelName());
         }
     }
-
     protected final void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         if (variable == mutationParameter) {
             weightsKnown = false;
@@ -241,14 +205,10 @@ public class IBDReporter extends AbstractModel implements TreeTraitProvider {
             System.err.println("Weird call back to IBDReporter from " + variable.getVariableName());
         }
     }
-
     protected void storeState() {
     }
-
     protected void restoreState() {
     }
-
     protected void acceptState() {
     }
-
 }

@@ -1,20 +1,14 @@
-
 package dr.evomodel.antigenic;
-
 import dr.inference.model.*;
 import dr.math.MathUtils;
 import dr.util.*;
 import dr.xml.*;
-
 import java.io.*;
 import java.util.*;
 import java.util.logging.Logger;
-
 @Deprecated // for the moment at least
 public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood implements Citable {
-
     public final static String ANTIGENIC_TRAIT_LIKELIHOOD = "antigenicTraitLikelihood";
-
     public ContinuousAntigenicTraitLikelihood(
             int mdsDimension,
             Parameter mdsPrecision,
@@ -25,29 +19,21 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
             Map<String, String> assayAntiserumMap,
             List<String> virusLocationStatisticList,
             final boolean log2Transform) {
-
         super(ANTIGENIC_TRAIT_LIKELIHOOD);
-
         String[] virusNames = dataTable.getRowLabels();
         String[] assayNames = dataTable.getColumnLabels();
-
         // the total number of viruses is the number of rows in the table
         int virusCount = dataTable.getRowCount();
         int assayCount = dataTable.getColumnCount();
-
         int[] assayToSerumIndices = new int[assayNames.length];
-
         double[][] observationValueTable = new double[virusCount][assayCount];
         ObservationType[][] observationTypeTable = new ObservationType[virusCount][assayCount];
-
         initalizeTable(dataTable, observationValueTable, observationTypeTable, log2Transform);
-
         // This removes viruses that are not in the tree
         List<String> tipLabels = null;
         if (tipTraitParameter != null) {
             tipLabels = new ArrayList<String>();
             int tipCount = tipTraitParameter.getParameterCount();
-
             for (int i = 0; i < tipCount; i++) {
                 String label = tipTraitParameter.getParameter(i).getParameterName();
                 if (label.endsWith(".antigenic")) {
@@ -56,22 +42,18 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
                 tipLabels.add(label);
             }
         }
-
         // locations are either viruses or sera (or both)
         List<String> locationLabelsList = new ArrayList<String>();
         int[] virusToLocationIndices = new int[virusCount];
         int count = 0;
         for (String virusName : virusNames) {
             String name = null;
-
             if (virusAntiserumMap != null) {
                 name = virusAntiserumMap.get(virusName);
             }
-
             if (name == null) {
                 name = virusName;
             }
-
             if (tipLabels == null || tipLabels.contains(name)) {
                 virusToLocationIndices[count] = locationLabelsList.size();
                 locationLabelsList.add(name);
@@ -80,20 +62,16 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
             }
             count++;
         }
-
         List<String> serumNamesList = new ArrayList<String>();
         count = 0;
         for (String assayName : assayNames) {
             String name = null;
-
             if (assayAntiserumMap != null) {
                 name = assayAntiserumMap.get(assayName);
             }
-
             if (name == null) {
                 name = assayName;
             }
-
             int index = serumNamesList.indexOf(name);
             if (index == -1) {
                 index = serumNamesList.size();
@@ -104,7 +82,6 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
         }
         String[] serumNames = new String[serumNamesList.size()];
         serumNamesList.toArray(serumNames);
-
         int serumCount = serumNames.length;
         int[] serumToLocationIndices = new int[serumCount];
         count = 0;
@@ -117,44 +94,32 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
             serumToLocationIndices[count] = index;
             count++;
         }
-
         String[] locationLabels = new String[locationLabelsList.size()];
         locationLabelsList.toArray(locationLabels);
         int locationCount = locationLabels.length;
-
         List<Double> observationList = new ArrayList<Double>();
         List<ObservationType> observationTypeList = new ArrayList<ObservationType>();
-
         int[] virusObservationCounts = new int[virusCount];
         int[] serumObservationCounts = new int[serumCount];
-
         List<Pair> locationPairs = new ArrayList<Pair>();
-
         // Build a sparse matrix of non-missing assay values
         for (int i = 0; i < virusCount; i++) {
-
             if (virusToLocationIndices[i] != -1) {
                 // viruses with location indices of minus one have been excluded
-
                 for (int j = 0; j < assayCount; j++) {
                     int k = assayToSerumIndices[j];
-
                     Double value = observationValueTable[i][j];
                     ObservationType type = observationTypeTable[i][j];
-
                     if (type != ObservationType.MISSING) {
                         observationList.add(value);
                         observationTypeList.add(type);
-
                         locationPairs.add(new Pair(virusToLocationIndices[i], serumToLocationIndices[k]));
-
                         virusObservationCounts[i]++;
                         serumObservationCounts[k]++;
                     }
                 }
             }
         }
-
         // check that all the viruses and sera have observations
         for (int i = 0; i < virusCount; i++) {
             if (virusToLocationIndices[i] != -1 && virusObservationCounts[i] == 0) {
@@ -166,44 +131,36 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
                 System.err.println("WARNING: Antisera " + serumNames[j] + " has 0 observations");
             }
         }
-
         // Convert into arrays
         double[] observations = new double[observationList.size()];
         for (int i = 0; i < observationList.size(); i++) {
             observations[i] = observationList.get(i);
         }
-
         int[] rowLocationIndices = new int[locationPairs.size()];
         for (int i = 0; i < rowLocationIndices.length; i++) {
             rowLocationIndices[i] = locationPairs.get(i).location1;
         }
-
         int[] columnLocationIndices = new int[locationPairs.size()];
         for (int i = 0; i < columnLocationIndices.length; i++) {
             columnLocationIndices[i] = locationPairs.get(i).location2;
         }
-
         ObservationType[] observationTypes = new ObservationType[observationTypeList.size()];
         observationTypeList.toArray(observationTypes);
-
         int thresholdCount = 0;
         for (int i = 0; i < observations.length; i++) {
             thresholdCount += (observationTypes[i] != ObservationType.POINT ? 1 : 0);
         }
-
         if (tipTraitParameter != null) {
             //  the location -> tip map
             tipIndices = new int[locationCount];
             for (int i = 0; i < locationCount; i++) {
                 tipIndices[i] = tipLabels.indexOf(locationLabels[i]);
             }
-
             for (int i = 0; i < locationCount; i++) {
                 if (tipIndices[i] == -1) {
                     System.err.println("Location, " + locationLabels[i] + ", not found in tree");
                 }
             }
-
             for (String tipLabel : tipLabels) {
                 if (!locationLabelsList.contains(tipLabel)) {
                     System.err.println("Tip, " + tipLabel + ", not found in location list");
@@ -212,7 +169,6 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
         } else {
             tipIndices = null;
         }
-
         StringBuilder sb = new StringBuilder();
         sb.append("\tAntigenicTraitLikelihood:\n");
         sb.append("\t\t" + virusNames.length + " viruses\n");
@@ -223,9 +179,7 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
         sb.append("\t\t" + observations.length + " observations\n");
         sb.append("\t\t" + thresholdCount + " threshold observations\n");
         Logger.getLogger("dr.evomodel").info(sb.toString());
-
         this.tipTraitParameter = tipTraitParameter;
-
         initialize(
                 mdsDimension,
                 false,
@@ -236,7 +190,6 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
                 observationTypes,
                 rowLocationIndices,
                 columnLocationIndices);
-
         // some random initial locations
         for (int i = 0; i < locationsParameter.getParameterCount(); i++) {
             for (int j = 0; j < mdsDimension; j++) {
@@ -249,7 +202,6 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
                     r = MathUtils.nextGaussian();
                 }
                 locationsParameter.getParameter(i).setParameterValueQuietly(j, r);
-
                 if (tipTraitParameter != null) {
                     if (tipIndices[i] != -1) {
                         tipTraitParameter.setParameterValue((tipIndices[i] * mdsDimension) + j, r);
@@ -257,7 +209,6 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
                 }
             }
         }
-
         int i = 0;
         for (String virusName : virusNames) {
 	        if (virusLocationStatisticList.contains(virusName)) {
@@ -265,44 +216,33 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
 	        }
             i++;
         }
-
     }
-
     @Override
     protected void handleVariableChangedEvent(Variable variable, int index, Variable.ChangeType type) {
         if (tipTraitParameter != null && variable == getLocationsParameter()) {
             int mdsDimension = getMDSDimension();
-
             int location = index / mdsDimension;
             int dim = index % mdsDimension;
-
             if (tipIndices[location] != -1) {
                 double value = getLocationsParameter().getParameterValue(index);
                 tipTraitParameter.setParameterValue((tipIndices[location] * mdsDimension) + dim, value);
             }
         }
-
         super.handleVariableChangedEvent(variable, index, type);
     }
-
     public CompoundParameter getTipTraitParameter() {
         return tipTraitParameter;
     }
-
     public int[] getTipIndices() {
         return tipIndices;
     }
-
     private CompoundParameter tipTraitParameter;
     private int[] tipIndices;
-
     public class VirusLocation extends Statistic.Abstract {
-
         public VirusLocation(String statisticName, int virusIndex) {
             super(statisticName);
             this.virusIndex = virusIndex;
         }
-
         @Override
         public String getDimensionName(final int dim) {
             if (getMDSDimension() == 2) {
@@ -311,19 +251,15 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
                 return getStatisticName() + "_" + (dim + 1);
             }
         }
-
         public int getDimension() {
             return getMDSDimension();
         }
-
         public double getStatisticValue(final int dim) {
             Parameter loc = getLocationsParameter().getParameter(virusIndex);
             return loc.getParameterValue(dim);
         }
-
         private final int virusIndex;
     }
-
     private class Pair {
         Pair(final int location1, final int location2) {
             if (location1 < location2) {
@@ -334,41 +270,31 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
                 this.location2 = location1;
             }
         }
-
         int location1;
         int location2;
-
         @Override
         public boolean equals(final Object o) {
             return ((Pair)o).location1 == location1 && ((Pair)o).location2 == location2;
         }
     };
-
     // **************************************************************
     // XMLObjectParser
     // **************************************************************
-
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
         public final static String FILE_NAME = "fileName";
         public final static String VIRUS_MAP_FILE_NAME = "virusMapFile";
         public final static String ASSAY_MAP_FILE_NAME = "assayMapFile";
-
         public final static String TIP_TRAIT = "tipTrait";
         public final static String LOCATIONS = "locations";
         public static final String MDS_DIMENSION = "mdsDimension";
         public static final String MDS_PRECISION = "mdsPrecision";
-
         public static final String VIRUS_LOCATIONS = "virusLocations";
-
         public static final String LOG_2_TRANSFORM = "log2Transform";
         public static final String TITRATION_THRESHOLD = "titrationThreshold";
-
         public String getParserName() {
             return ANTIGENIC_TRAIT_LIKELIHOOD;
         }
-
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
             String fileName = xo.getStringAttribute(FILE_NAME);
             DataTable<String[]> assayTable;
             try {
@@ -376,7 +302,6 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
             } catch (IOException e) {
                 throw new XMLParseException("Unable to read assay data from file: " + e.getMessage());
             }
-
             Map<String, String> virusAntiserumMap = null;
             if (xo.hasAttribute(VIRUS_MAP_FILE_NAME)) {
                 try {
@@ -385,7 +310,6 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
                     throw new XMLParseException("Virus map file not found: " + xo.getStringAttribute(VIRUS_MAP_FILE_NAME));
                 }
             }
-
             Map<String, String> assayAntiserumMap = null;
             if (xo.hasAttribute(ASSAY_MAP_FILE_NAME)) {
                 try {
@@ -394,20 +318,16 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
                     throw new XMLParseException("Assay map file not found: " + xo.getStringAttribute(ASSAY_MAP_FILE_NAME));
                 }
             }
-
             int mdsDimension = xo.getIntegerAttribute(MDS_DIMENSION);
-
             boolean log2Transform = false;
             if (xo.hasAttribute(LOG_2_TRANSFORM)) {
                 log2Transform = xo.getBooleanAttribute(LOG_2_TRANSFORM);
             }
-
             List<String> virusLocationStatisticList = null;
             String[] virusLocations = xo.getStringArrayAttribute(VIRUS_LOCATIONS);
             if (virusLocations != null) {
                 virusLocationStatisticList = Arrays.asList(virusLocations);
             }
-
             // This parameter needs to be linked to the one in the IntegratedMultivariateTreeLikelihood (I suggest that the parameter is created
             // here and then a reference passed to IMTL - which optionally takes the parameter of tip trait values, in which case it listens and
             // updates accordingly.
@@ -415,23 +335,15 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
             if (xo.hasChildNamed(TIP_TRAIT)) {
                 tipTraitParameter = (CompoundParameter) xo.getElementFirstChild(TIP_TRAIT);
             }
-
             MatrixParameter locationsParameter = (MatrixParameter) xo.getElementFirstChild(LOCATIONS);
-
             Parameter mdsPrecision = (Parameter) xo.getElementFirstChild(MDS_PRECISION);
-
             ContinuousAntigenicTraitLikelihood AGTL = new ContinuousAntigenicTraitLikelihood(mdsDimension, mdsPrecision, tipTraitParameter, locationsParameter, assayTable, virusAntiserumMap, assayAntiserumMap, virusLocationStatisticList, log2Transform);
-
             Logger.getLogger("dr.evomodel").info("Using EvolutionaryCartography model. Please cite:\n" + Utils.getCitationString(AGTL));
-
             return AGTL;
         }
-
         private  Map<String, String> readMap(String fileName) throws IOException {
             BufferedReader reader = new BufferedReader(new FileReader(fileName));
-
             Map<String, String> map = new HashMap<String, String>();
-
             String line = reader.readLine();
             while (line != null) {
                 if (line.trim().length() > 0) {
@@ -442,27 +354,19 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
                 }
                 line = reader.readLine();
             }
-
             reader.close();
-
             return map;
         }
-
-
-
         //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
-
         public String getParserDescription() {
             return "Provides the likelihood of immunological assay data such as Hemagglutinin inhibition (HI) given vectors of coordinates" +
                     "for viruses and sera/antisera in some multidimensional 'antigenic' space.";
         }
-
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
-
         private final XMLSyntaxRule[] rules = {
                 AttributeRule.newStringRule(FILE_NAME, false, "The name of the file containing the assay table"),
                 AttributeRule.newStringRule(VIRUS_MAP_FILE_NAME, true, "The name of the file containing the virus to serum map"),
@@ -474,12 +378,10 @@ public class ContinuousAntigenicTraitLikelihood extends AntigenicTraitLikelihood
                 new ElementRule(LOCATIONS, MatrixParameter.class),
                 new ElementRule(MDS_PRECISION, Parameter.class)
         };
-
         public Class getReturnType() {
             return ContinuousAntigenicTraitLikelihood.class;
         }
     };
-
     public List<Citation> getCitations() {
         List<Citation> citations = new ArrayList<Citation>();
         citations.add(new Citation(

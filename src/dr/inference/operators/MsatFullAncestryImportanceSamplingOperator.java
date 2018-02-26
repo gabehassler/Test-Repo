@@ -1,6 +1,4 @@
-
 package dr.inference.operators;
-
 import dr.evomodel.tree.MicrosatelliteSamplerTreeModel;
 import dr.evomodel.tree.TreeModel;
 import dr.evomodel.substmodel.MicrosatelliteModel;
@@ -9,23 +7,18 @@ import dr.inference.model.Parameter;
 import dr.evolution.tree.Tree;
 import dr.evolution.tree.NodeRef;
 import dr.math.MathUtils;
-
 public class MsatFullAncestryImportanceSamplingOperator extends SimpleMCMCOperator{
-
     public static final String MSAT_FULL_ANCESTRY_IMPORTANCE_SAMPLING_OPERATOR = "MsatFullAncestryImportanceSamplingOperator";
     private Parameter parameter;
     private MicrosatelliteSamplerTreeModel msatSamplerTreeModel;
     private MicrosatelliteModel msatModel;
     private BranchRateModel branchRateModel;
-
-
     public MsatFullAncestryImportanceSamplingOperator(
             Parameter parameter,
             MicrosatelliteSamplerTreeModel msatSamplerTreeModel,
             MicrosatelliteModel msatModel,
             BranchRateModel branchRateModel,
             double weight){
-
         super();
         this.parameter = parameter;
         this.msatSamplerTreeModel = msatSamplerTreeModel;
@@ -33,21 +26,16 @@ public class MsatFullAncestryImportanceSamplingOperator extends SimpleMCMCOperat
         this.branchRateModel = branchRateModel;
         setWeight(weight);
     }
-
     public double doOperation(){
         TreeModel tree = msatSamplerTreeModel.getTreeModel();
-
         //get postOrder
         int[] postOrder = new int[tree.getNodeCount()];
         Tree.Utils.postOrderTraversalList(tree,postOrder);
-
         int extNodeCount = tree.getExternalNodeCount();
         double logq=0.0;
         for(int i = 0; i < postOrder.length; i ++){
-
             //if it's an internal node
             if(postOrder[i] >= extNodeCount){
-
                 //getLikelihoodGiven the children
                 NodeRef node = tree.getNode(postOrder[i]);
                 NodeRef lc = tree.getChild(node,0);
@@ -67,24 +55,18 @@ public class MsatFullAncestryImportanceSamplingOperator extends SimpleMCMCOperat
                     for(int j = 0; j < lik.length; j++){
                         lik[j] = probLbranch[j]*probRbranch[j]*statDist[j];
                     }
-
                 }else{
-
                     for(int j = 0; j < lik.length; j++){
                         lik[j] = probLbranch[j]*probRbranch[j];
                     }
-
                 }
-
                 int sampledState = MathUtils.randomChoicePDF(lik);
                 logq = logq + Math.log(lik[currState]) - Math.log(lik[sampledState]);
                 parameter.setParameterValue(msatSamplerTreeModel.getParameterIndexFromNodeNumber(postOrder[i]),sampledState);
             }
         }
-        
         return logq;
     }
-
     public String getPerformanceSuggestion(){
         return "None";
     }

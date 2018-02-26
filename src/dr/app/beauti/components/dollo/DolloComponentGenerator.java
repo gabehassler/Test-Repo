@@ -1,6 +1,4 @@
-
 package dr.app.beauti.components.dollo;
-
 import dr.app.beauti.generator.BaseComponentGenerator;
 import dr.app.beauti.options.*;
 import dr.app.beauti.util.XMLWriter;
@@ -23,23 +21,16 @@ import dr.evoxml.SitePatternsParser;
 import dr.inference.model.ParameterParser;
 import dr.util.Attribute;
 import dr.xml.XMLParser;
-
-
 public class DolloComponentGenerator extends BaseComponentGenerator {
-
 	protected DolloComponentGenerator(BeautiOptions options) {
 		super(options);
 	}
-
 	public boolean usesInsertionPoint(InsertionPoint point) {
-
 		DolloComponentOptions component = (DolloComponentOptions) options
 				.getComponentOptions(DolloComponentOptions.class);
-
         if (!component.isActive()) {
             return false;
         }
-
 		switch (point) {
         case AFTER_TAXA:
         case AFTER_SUBSTITUTION_MODEL:
@@ -54,18 +45,13 @@ public class DolloComponentGenerator extends BaseComponentGenerator {
 		default:
 			return false;
 		}
-
 	}// END: usesInsertionPoint
-
 	protected void generate(final InsertionPoint point, final Object item, final String prefix, final XMLWriter writer) {
-
 		DolloComponentOptions component = (DolloComponentOptions) options
 				.getComponentOptions(DolloComponentOptions.class);
-
         if (!includeStochasticDollo()) {
             return;
         }
-
 		switch (point) {
         case AFTER_TAXA:
             writeDataType(writer);
@@ -81,7 +67,6 @@ public class DolloComponentGenerator extends BaseComponentGenerator {
 //        case IN_MCMC_LIKELIHOOD:
 //            writeDolloTreeLikelihoodReferences(writer);
 //            break;
-            
         case IN_SCREEN_LOG:
             writeScreenLogEntries(writer, component);
             break;            
@@ -99,12 +84,9 @@ public class DolloComponentGenerator extends BaseComponentGenerator {
 					"This insertion point is not implemented for "
 							+ this.getClass().getName());
 		}
-
 	}// END: generate
-
     private void writeScreenLogEntries(XMLWriter writer, DolloComponentOptions component) {
     }
-
 //    private void writeDolloTreeLikelihoodReferences(XMLWriter writer) {
 //
 //        for (AbstractPartitionData partition : options.dataPartitions) {
@@ -116,7 +98,6 @@ public class DolloComponentGenerator extends BaseComponentGenerator {
 //            }
 //        }
 //    }
-
     private void writeLog(XMLWriter writer, DolloComponentOptions component) {
         for (AbstractPartitionData partition : options.dataPartitions) {
             PartitionSubstitutionModel model = partition.getPartitionSubstitutionModel();
@@ -127,7 +108,6 @@ public class DolloComponentGenerator extends BaseComponentGenerator {
             }
         }
     }
-
     private void writeDataType(XMLWriter writer) {
         writer.writeOpenTag(MutationDeathTypeParser.MODEL_NAME,
                 new Attribute.Default<String>(XMLParser.ID, DolloComponentOptions.DATA_NAME));
@@ -141,8 +121,6 @@ public class DolloComponentGenerator extends BaseComponentGenerator {
                     new Attribute.Default<String>(MutationDeathTypeParser.CODE, "?"), true);
         writer.writeCloseTag(MutationDeathTypeParser.MODEL_NAME);
     }
-
-
     private boolean includeStochasticDollo() {
         for (AbstractPartitionData partition : options.dataPartitions) {
             PartitionSubstitutionModel model = partition.getPartitionSubstitutionModel();
@@ -152,14 +130,11 @@ public class DolloComponentGenerator extends BaseComponentGenerator {
         }
         return false;
     }
-
     @Override
     protected String getCommentLabel() {
         return "Stochastic Dollo";
     }
-
     private void writeDolloSubstitutionModels(XMLWriter writer, DolloComponentOptions component) {
-
         // generate tree likelihoods for stochastic Dollo partitions
         for (AbstractPartitionData partition : options.dataPartitions) {
             PartitionSubstitutionModel model = partition.getPartitionSubstitutionModel();
@@ -170,7 +145,6 @@ public class DolloComponentGenerator extends BaseComponentGenerator {
             }
         }
     }
-
     private void writeDolloSubstitutionModel(AbstractPartitionData partition, XMLWriter writer, DolloComponentOptions component) {
         String prefix = partition.getName() + ".";
 //        String prefix = partition.getPrefix(); // TODO Fix
@@ -182,36 +156,28 @@ public class DolloComponentGenerator extends BaseComponentGenerator {
         writer.writeCloseTag(MutationDeathModelParser.MD_MODEL);
         writer.write("\n");
     }
-
     private void writeDolloSiteModel(AbstractPartitionData partition, XMLWriter writer, DolloComponentOptions components) {
         String prefix = partition.getName() + ".";
         writer.writeOpenTag(ALSSiteModelParser.ALS_SITE_MODEL,
                 new Attribute[]{new Attribute.Default<String>(XMLParser.ID, prefix + SiteModel.SITE_MODEL)});
-
-
         writer.writeOpenTag(GammaSiteModelParser.SUBSTITUTION_MODEL);
         writer.writeIDref(MutationDeathModelParser.MD_MODEL, prefix + DolloComponentOptions.MODEL_NAME);
         writer.writeCloseTag(GammaSiteModelParser.SUBSTITUTION_MODEL);
-
         PartitionSubstitutionModel model = partition.getPartitionSubstitutionModel();
         if (model.hasCodon()) {
             writeParameter(GammaSiteModelParser.RELATIVE_RATE, "mu", model, writer);
         }
-
         if (model.isGammaHetero()) {
             writer.writeOpenTag(GammaSiteModelParser.GAMMA_SHAPE,
                     new Attribute.Default<String>(GammaSiteModelParser.GAMMA_CATEGORIES, "" + model.getGammaCategories()));
             writeParameter(prefix + "alpha", model, writer);
             writer.writeCloseTag(GammaSiteModelParser.GAMMA_SHAPE);
         }
-
         if (model.isInvarHetero()) {
             writeParameter(GammaSiteModelParser.PROPORTION_INVARIANT, "pInv", model, writer);
         }
-
         writer.writeCloseTag(ALSSiteModelParser.ALS_SITE_MODEL);
     }
-
 //    private void writeDolloTreeLikelihoods(XMLWriter writer, DolloComponentOptions component) {
 //
 //        // generate tree likelihoods for stochastic Dollo partitions
@@ -222,17 +188,13 @@ public class DolloComponentGenerator extends BaseComponentGenerator {
 //            }
 //        }
 //    }
-
     private void writeDolloTreeLikelihood(String id, int num, AbstractPartitionData partition, XMLWriter writer) {
         PartitionSubstitutionModel substModel = partition.getPartitionSubstitutionModel();
         PartitionTreeModel treeModel = partition.getPartitionTreeModel();
         PartitionClockModel clockModel = partition.getPartitionClockModel();
-
         String prefix = partition.getName() + ".";
         String oldPrefix = partition.getPrefix(); // TODO Get working
-
         writer.writeComment("Likelihood for tree given a stochastic Dollo model");
-
         writer.writeOpenTag(
                 ALSTreeLikelihoodParser.LIKE_NAME,
                 new Attribute[]{
@@ -240,7 +202,6 @@ public class DolloComponentGenerator extends BaseComponentGenerator {
                         new Attribute.Default<Boolean>(TreeLikelihoodParser.USE_AMBIGUITIES, true),
                         new Attribute.Default<Boolean>(ALSTreeLikelihoodParser.INTEGRATE_GAIN_RATE, true)}
         );
-
         if (!options.samplePriorOnly) {
             writer.writeIDref(SitePatternsParser.PATTERNS, partition.getPrefix() + SitePatternsParser.PATTERNS);
         } else {
@@ -249,14 +210,11 @@ public class DolloComponentGenerator extends BaseComponentGenerator {
                 writer.writeIDref(AlignmentParser.ALIGNMENT, ((PartitionData) partition).getAlignment().getId());
             }
         }
-
         writer.writeIDref(TreeModel.TREE_MODEL, treeModel.getPrefix() + TreeModel.TREE_MODEL);
         writer.writeIDref(GammaSiteModel.SITE_MODEL, prefix + SiteModel.SITE_MODEL);
-
         writer.writeTag(ALSTreeLikelihoodParser.OBSERVATION_PROCESS,
                 new Attribute.Default<String>(ALSTreeLikelihoodParser.OBSERVATION_TYPE,ALSTreeLikelihoodParser.ANY_TIP),
                 true);
-
         switch (clockModel.getClockType()) {
             case STRICT_CLOCK:
                 writer.writeIDref(StrictClockBranchRatesParser.STRICT_CLOCK_BRANCH_RATES, clockModel.getPrefix()
@@ -270,7 +228,6 @@ public class DolloComponentGenerator extends BaseComponentGenerator {
                 writer.writeIDref(RandomLocalClockModelParser.LOCAL_BRANCH_RATES, clockModel.getPrefix()
                         + BranchRateModel.BRANCH_RATES);
                 break;
-
             case AUTOCORRELATED:
                 throw new UnsupportedOperationException("Autocorrelated relaxed clock model not implemented yet");
             default:
@@ -278,5 +235,4 @@ public class DolloComponentGenerator extends BaseComponentGenerator {
         }
         writer.writeCloseTag(ALSTreeLikelihoodParser.LIKE_NAME);
     }
-
 }// END: class

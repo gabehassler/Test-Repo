@@ -1,6 +1,4 @@
-
 package dr.inference.operators;
-
 import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.model.LatentFactorModel;
 import dr.inference.model.MatrixParameter;
@@ -11,10 +9,8 @@ import dr.math.distributions.NormalDistribution;
 import dr.math.matrixAlgebra.CholeskyDecomposition;
 import dr.math.matrixAlgebra.IllegalDimension;
 import dr.math.matrixAlgebra.SymmetricMatrix;
-
 import java.util.ArrayList;
 import java.util.ListIterator;
-
 public class LoadingsGibbsOperator extends SimpleMCMCOperator implements GibbsOperator {
     NormalDistribution prior;
     LatentFactorModel LFM;
@@ -23,21 +19,15 @@ public class LoadingsGibbsOperator extends SimpleMCMCOperator implements GibbsOp
     ArrayList<double[]> meanArray;
     boolean randomScan;
     double pathParameter=1.0;
-
-
     double priorPrecision;
     double priorMeanPrecision;
-
     public LoadingsGibbsOperator(LatentFactorModel LFM, DistributionLikelihood prior, double weight, boolean randomScan) {
         setWeight(weight);
-
         this.prior = (NormalDistribution) prior.getDistribution();
         this.LFM = LFM;
         precisionArray = new ArrayList<double[][]>();
         double[][] temp;
         this.randomScan = randomScan;
-
-
         meanArray = new ArrayList<double[]>();
         meanMidArray = new ArrayList<double[]>();
         double[] tempMean;
@@ -50,7 +40,6 @@ public class LoadingsGibbsOperator extends SimpleMCMCOperator implements GibbsOp
                 tempMean = new double[i + 1];
                 meanArray.add(tempMean);
             }
-
             for (int i = 0; i < LFM.getFactorDimension(); i++) {
                 tempMean = new double[i + 1];
                 meanMidArray.add(tempMean);
@@ -64,19 +53,16 @@ public class LoadingsGibbsOperator extends SimpleMCMCOperator implements GibbsOp
                 tempMean = new double[LFM.getFactorDimension() - i];
                 meanArray.add(tempMean);
             }
-
             for (int i = 0; i < LFM.getFactorDimension(); i++) {
                 tempMean = new double[LFM.getFactorDimension() - i];
                 meanMidArray.add(tempMean);
             }
         }
-
 //            vectorProductAnswer=new MatrixParameter[LFM.getLoadings().getRowDimension()];
 //            for (int i = 0; i <vectorProductAnswer.length ; i++) {
 //                vectorProductAnswer[i]=new MatrixParameter(null);
 //                vectorProductAnswer[i].setDimensions(i+1, 1);
 //            }
-
 //        priorMeanVector=new MatrixParameter[LFM.getLoadings().getRowDimension()];
 //            for (int i = 0; i <priorMeanVector.length ; i++) {
 //                priorMeanVector[i]=new MatrixParameter(null, i+1, 1, this.prior.getMean()/(this.prior.getSD()*this.prior.getSD()));
@@ -86,14 +72,11 @@ public class LoadingsGibbsOperator extends SimpleMCMCOperator implements GibbsOp
         priorPrecision = 1 / (this.prior.getSD() * this.prior.getSD());
         priorMeanPrecision = this.prior.getMean() * priorPrecision;
     }
-
     private void getPrecisionOfTruncated(MatrixParameter full, int newRowDimension, int row, double[][] answer) {
-
 //        MatrixParameter answer=new MatrixParameter(null);
 //        answer.setDimensions(this.getRowDimension(), Right.getRowDimension());
 //        System.out.println(answer.getRowDimension());
 //        System.out.println(answer.getColumnDimension());
-
         int p = full.getColumnDimension();
         for (int i = 0; i < newRowDimension; i++) {
             for (int j = i; j < newRowDimension; j++) {
@@ -110,10 +93,7 @@ public class LoadingsGibbsOperator extends SimpleMCMCOperator implements GibbsOp
             }
         }
     }
-
-
     private void getTruncatedMean(int newRowDimension, int dataColumn, double[][] variance, double[] midMean, double[] mean) {
-
 //        MatrixParameter answer=new MatrixParameter(null);
 //        answer.setDimensions(this.getRowDimension(), Right.getRowDimension());
 //        System.out.println(answer.getRowDimension());
@@ -135,9 +115,7 @@ public class LoadingsGibbsOperator extends SimpleMCMCOperator implements GibbsOp
                 sum += variance[i][k] * midMean[k];
             mean[i] = sum;
         }
-
     }
-
     private void getPrecision(int i, double[][] answer) {
         int size = LFM.getFactorDimension();
         if (i < size) {
@@ -146,7 +124,6 @@ public class LoadingsGibbsOperator extends SimpleMCMCOperator implements GibbsOp
             getPrecisionOfTruncated(LFM.getFactors(), size, i, answer);
         }
     }
-
     private void getMean(int i, double[][] variance, double[] midMean, double[] mean) {
 //        Matrix factors=null;
         int size = LFM.getFactorDimension();
@@ -175,16 +152,13 @@ public class LoadingsGibbsOperator extends SimpleMCMCOperator implements GibbsOp
         for (int j = 0; j <mean.length ; j++) {//TODO implement for generic prior
             mean[j]*=pathParameter;
         }
-
     }
-
     private void copy(int i, double[] random) {
         TransposedBlockUpperTriangularMatrixParameter changing = (TransposedBlockUpperTriangularMatrixParameter) LFM.getLoadings();
         for (int j = 0; j < random.length; j++) {
-            changing.setParameterValue(i, j, random[j]);
+            changing.setParameterValueQuietly(i, j, random[j]);
         }
     }
-
     private void drawI(int i, ListIterator<double[][]> currentPrecision, ListIterator<double[]> currentMidMean, ListIterator<double[]> currentMean) {
         double[] draws = null;
         double[][] precision = null;
@@ -197,7 +171,6 @@ public class LoadingsGibbsOperator extends SimpleMCMCOperator implements GibbsOp
         }
         else
             precision = currentPrecision.previous();
-
         if (currentMidMean.hasNext()) {
             midMean = currentMidMean.next();
         }
@@ -210,15 +183,12 @@ public class LoadingsGibbsOperator extends SimpleMCMCOperator implements GibbsOp
             mean= currentMean.previous();
         getPrecision(i, precision);
         variance = (new SymmetricMatrix(precision)).inverse().toComponents();
-
         try {
             cholesky = new CholeskyDecomposition(variance).getL();
         } catch (IllegalDimension illegalDimension) {
             illegalDimension.printStackTrace();
         }
-
         getMean(i, variance, midMean, mean);
-
         draws = MultivariateNormalDistribution.nextMultivariateNormalCholesky(mean, cholesky);
 //    if(i<draws.length)
 //
@@ -234,29 +204,22 @@ public class LoadingsGibbsOperator extends SimpleMCMCOperator implements GibbsOp
         } else {
             copy(i, draws);
         }
-
 //       copy(i, draws);
-
     }
-
     @Override
     public int getStepCount() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
-
     @Override
     public String getPerformanceSuggestion() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
-
     @Override
     public String getOperatorName() {
         return "loadingsGibbsOperator";  //To change body of implemented methods use File | Settings | File Templates.
     }
-
     @Override
     public double doOperation() throws OperatorFailedException {
-
         int size = LFM.getLoadings().getRowDimension();
         if (!randomScan) {
             ListIterator<double[][]> currentPrecision = precisionArray.listIterator();
@@ -281,11 +244,11 @@ public class LoadingsGibbsOperator extends SimpleMCMCOperator implements GibbsOp
                 currentMean = meanArray.listIterator();
             }
             drawI(i, currentPrecision, currentMidMean, currentMean);
+            LFM.getLoadings().fireParameterChangedEvent();
 //            LFM.getLoadings().fireParameterChangedEvent();
         }
         return 0;
     }
-
     public void setPathParameter(double beta){
         pathParameter=beta;
     }

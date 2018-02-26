@@ -1,15 +1,11 @@
-
 package dr.math.matrixAlgebra;
-
 import dr.math.iterations.IterativeProcess;
-
 public class LargestEigenvalueFinder extends IterativeProcess
 {
 	private double eigenvalue;
 	private Vector eigenvector;
 	private Vector transposedEigenvector;
 	private Matrix matrix;
-
 public LargestEigenvalueFinder ( double prec, Matrix a)
 {
 	this(a);

@@ -1,8 +1,6 @@
-
 //package dr.inference.prior;
 //
 //import dr.inference.model.Parameter;
-
 //public interface ParameterPrior extends Prior {
 //
 //	/**

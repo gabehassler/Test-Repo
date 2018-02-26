@@ -1,23 +1,13 @@
-
 package dr.math.distributions;
-
 import dr.stats.DiscreteStatistics;
-
 import java.util.Random;
-
-
 public class GammaKDEDistribution extends KernelDensityEstimatorDistribution {
-
-
     public GammaKDEDistribution(Double[] sample) {
         this(sample, null);
     }
-
     public GammaKDEDistribution(Double[] sample, Double bandWidth) {
         super(sample, 0.0, Double.POSITIVE_INFINITY, bandWidth);
-
     }
-
     protected void processBounds(Double lowerBound, Double upperBound) {
         if (lowerBound > DiscreteStatistics.min(sample)) {
             throw new RuntimeException("Sample min out of bounds.  Gamma kernel for use with positive data only: " + DiscreteStatistics.min(sample));
@@ -26,9 +16,7 @@ public class GammaKDEDistribution extends KernelDensityEstimatorDistribution {
         }
         this.lowerBound = lowerBound;
         this.upperBound = upperBound;
-
     }
-
     protected void setBandWidth(Double bandWidth) {
         if (bandWidth == null) {
             double sigma = DiscreteStatistics.stdev(sample);
@@ -36,14 +24,10 @@ public class GammaKDEDistribution extends KernelDensityEstimatorDistribution {
             this.bandWidth = sigma * Math.pow(N, -0.2);
         } else
             this.bandWidth = bandWidth;
-
     }
-
     protected double evaluateKernel(double x) {
-
         double shape;
         double scale;
-
         if (x >= 2 * bandWidth) {
             shape = x / bandWidth;
         } else {
@@ -57,37 +41,24 @@ public class GammaKDEDistribution extends KernelDensityEstimatorDistribution {
         }
         return pdf / N;
     }
-
     private double gamma(double value) {
         return cern.jet.stat.Gamma.gamma(value);
-
     }
-
     public static void main(String[] args) {
-
         long start = System.currentTimeMillis();
-
         Random random = new Random(1234);
-
         Double[] samples = new Double[10000000];
         for (int i = 0; i < samples.length; i++) {
             samples[i] = random.nextDouble();
         }
         GammaKDEDistribution nKDE = new GammaKDEDistribution(samples);
-
         for (int i = 0; i < 100; i++) {
             nKDE.evaluateKernel(random.nextDouble());
         }
-
         long end = System.currentTimeMillis();
-
         System.out.println("Time: " + (end-start));
-
     }
-
 //    private double sampleMean() {return DiscreteStatistics.mean(sample);}
-
-
 // public static void main(String[] args) {
 //    String fileName = "/Users/jen/School/Programs/BEAST/kdeTest/simulUExp.txt";
 //    //String fileName = "/Users/jen/School/Programs/BEAST/kdeTest/simulUNorm.txt";

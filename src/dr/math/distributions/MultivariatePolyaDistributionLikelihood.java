@@ -1,14 +1,10 @@
-
 package dr.math.distributions;
-
 import dr.inference.loggers.LogColumn;
 import dr.inference.loggers.NumberColumn;
 import dr.inference.model.*;
 import dr.math.GammaFunction;
 import dr.xml.*;
-
 public class MultivariatePolyaDistributionLikelihood extends AbstractModel implements Likelihood {
-
     protected Parameter frequencies;
     protected Parameter dispersion;
     protected Parameter alphas;
@@ -25,8 +21,6 @@ public class MultivariatePolyaDistributionLikelihood extends AbstractModel imple
     protected boolean isFixedNormKnown;
     protected boolean isVariableNormKnown;
     protected double rowSums[];
-
-
     public MultivariatePolyaDistributionLikelihood(String modelID, MatrixParameter data, Parameter frequencies, Parameter dispersion) {
         super(modelID);
         this.frequencies = frequencies;
@@ -43,13 +37,11 @@ public class MultivariatePolyaDistributionLikelihood extends AbstractModel imple
             System.err.println("Dimensions of the frequency vector and number of columns do not match!");
         }
     }
-
     public MultivariatePolyaDistributionLikelihood(String modelID, MatrixParameter data, Parameter alphas) {
         super(modelID);
         this.alphas = alphas;
         isAlphasKnown = true;
         usingAlphas = true;
-
         this.frequencies = new Parameter.Default(alphas.getDimension());
         this.dispersion = new Parameter.Default(1);
         this.data = data;
@@ -61,22 +53,18 @@ public class MultivariatePolyaDistributionLikelihood extends AbstractModel imple
             System.err.println("Dimensions of the frequency vector and number of columns do not match!");
         }
     }
-
     protected void computeAlphas(){
         double disp=dispersion.getParameterValue(0);
         double[] freqs = frequencies.getParameterValues();
-
         for(int i=0; i<alphas.getDimension(); ++i){
             alphas.setParameterValueQuietly(i, disp*freqs[i]);
         }
         alphas.setParameterValueNotifyChangedAll(0, alphas.getParameterValue(0));
         isAlphasKnown = true;
     }
-
     public MultivariatePolyaDistributionLikelihood(String modelID) {
         super(modelID);
     }
-
     public double calculateLogLikelihood() {
         // R code for this function:
         // //assuming X[,1] is row totals, lfactX is log factorial of X //
@@ -91,14 +79,11 @@ public class MultivariatePolyaDistributionLikelihood extends AbstractModel imple
             computeVariableNorm();
         }
         double logP = fixedNorm + variableNorm;
-
         double disp = 0;
         double[] a = alphas.getParameterValues();
         for(int i = 0; i< alphas.getDimension(); ++i){
             disp = disp + a[i];
         }
-
-        
         for (int i = 0; i < data.getRowDimension(); ++i) {
             for (int j = 0; j < data.getColumnDimension(); ++j) {
                 logP += GammaFunction.lnGamma(data.getParameterValue(i, j) + a[j]);
@@ -107,7 +92,6 @@ public class MultivariatePolyaDistributionLikelihood extends AbstractModel imple
         }
         return logP;
     }
-
     protected void computeFixedNorm() {
         rowSums = new double[data.getRowDimension()];
         for (int i = 0; i < data.getRowDimension(); ++i) {
@@ -116,7 +100,6 @@ public class MultivariatePolyaDistributionLikelihood extends AbstractModel imple
                 rowSums[i] += data.getParameterValue(i, j);
             }
         }
-
         fixedNorm = 0;
         for (int i = 0; i < data.getRowDimension(); ++i) {
             for (int j = 0; j < data.getColumnDimension(); ++j) {
@@ -124,10 +107,8 @@ public class MultivariatePolyaDistributionLikelihood extends AbstractModel imple
             }
             fixedNorm += GammaFunction.lnGamma(rowSums[i] + 1);
         }
-
         isFixedNormKnown = true;
     }
-
     protected void computeVariableNorm() {
         double disp = 0;
         double[] a = alphas.getParameterValues();
@@ -135,16 +116,13 @@ public class MultivariatePolyaDistributionLikelihood extends AbstractModel imple
             disp = disp + a[i];
         }
         variableNorm = GammaFunction.lnGamma(disp);
-
         for (int i = 0; i < alphas.getDimension(); ++i) {
             variableNorm -= GammaFunction.lnGamma(a[i]);
         }
         variableNorm *= data.getRowDimension();
     }
-
     protected void handleModelChangedEvent(Model model, Object object, int index) {
     }
-
     protected void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         if (variable.getVariableName().equals(frequencies.getVariableName()) || variable.getVariableName().equals(dispersion.getVariableName())) {
             isAlphasKnown = false;
@@ -156,52 +134,41 @@ public class MultivariatePolyaDistributionLikelihood extends AbstractModel imple
             isVariableNormKnown = false;
         }
     }
-
     protected void storeState() {
         storedVariableNorm = variableNorm;
         storedFixedNorm = fixedNorm;
         storedLogLikelihood = logLikelihood;
     }
-
     protected void restoreState() {
         variableNorm = storedVariableNorm;
         fixedNorm = storedFixedNorm;
         logLikelihood = storedLogLikelihood;
         if(!usingAlphas) computeAlphas();
     }
-
     protected void acceptState() {
     }
-
     public Model getModel() {
         return this;
     }
-
     public double getLogLikelihood() {
         if (!isLogLikelihoodKnown) {
             logLikelihood = calculateLogLikelihood();
         }
         return logLikelihood;
     }
-
     public void makeDirty() {
         isLogLikelihoodKnown = false;
         isVariableNormKnown = false;
         isFixedNormKnown = false;
     }
-
     public String prettyName() {
         return "Multivariate Polya Distribution Likelihood";
     }
-
     public boolean evaluateEarly() {
         return false;
     }
-
     public void setUsed() {
     }
-
-
     public LogColumn[] getColumns() {
         return new LogColumn[]{
                 new NumberColumn(this.getId()) {
@@ -211,25 +178,20 @@ public class MultivariatePolyaDistributionLikelihood extends AbstractModel imple
                 }
         };
     }
-
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-
         public String getParserName() {
             return MVPLIKE;
         }
-
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
             MatrixParameter data;
             Parameter dispersion;
             Parameter frequencies;
             Parameter rates;
-
             if (xo.hasChildNamed(DATA)) {
                 data = (MatrixParameter) xo.getChild(DATA).getChild(MatrixParameter.class);
             } else {
                 throw new XMLParseException("Missing data element!");
             }
-
             if (xo.hasChildNamed(RATES)) {
                 rates = (Parameter) xo.getChild(RATES).getChild(Parameter.class);
                 if (rates.getDimension() != data.getColumnDimension()) {
@@ -248,40 +210,31 @@ public class MultivariatePolyaDistributionLikelihood extends AbstractModel imple
                 if (dispersion.getDimension() != 1) {
                     throw new XMLParseException("Dispersion parameter must be of dimmension exactly 1!");
                 }
-
                 if (frequencies.getDimension() != data.getColumnDimension()) {
                     throw new XMLParseException("The number of data columns must match the dimension of "+ FREQ
                             + " parameter (" + data.getColumnDimension() + " != " + frequencies.getDimension() + "!");
                 }
                 return new MultivariatePolyaDistributionLikelihood(MVPLIKE, data, frequencies, dispersion);
-
             } else {
                 throw new XMLParseException("Either " + FREQ + " or " + RATES + "element has to be specified!");
             }
-
-
             return new MultivariatePolyaDistributionLikelihood(MVPLIKE, data, rates);
         }
-
         //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
-
         public String getParserDescription() {
             return "A matrix parameter constructed from its component parameters.";
         }
-
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
-
         private final XMLSyntaxRule[] rules = {
                 new ElementRule(DATA, new XMLSyntaxRule[]{new ElementRule(MatrixParameter.class)}, false),
                 new XORRule(new ElementRule(RATES, new XMLSyntaxRule[]{new ElementRule(Parameter.class)}, false),
                         new ElementRule(FREQ, new XMLSyntaxRule[]{new ElementRule(Parameter.class)}, false)),
                 new ElementRule(DISPERSION, new XMLSyntaxRule[]{new ElementRule(Parameter.class)}, true),
         };
-
         public Class getReturnType() {
             return MatrixParameter.class;
         }

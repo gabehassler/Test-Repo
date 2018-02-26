@@ -1,16 +1,9 @@
-
 package dr.app.beauti.alignmentviewer;
-
 import jebl.evolution.sequences.Nucleotides;
-
 import java.awt.*;
-
 public class NucleotideDecorator implements StateDecorator {
-
 	public static final NucleotideDecorator INSTANCE = new NucleotideDecorator();
-
     Paint[] paints = new Paint[Nucleotides.getStateCount()];
-
     public NucleotideDecorator() {
         paints[Nucleotides.A_STATE.getIndex()] = Color.RED;
         paints[Nucleotides.C_STATE.getIndex()] = Color.BLUE;
@@ -30,7 +23,6 @@ public class NucleotideDecorator implements StateDecorator {
         paints[Nucleotides.UNKNOWN_STATE.getIndex()] = Color.GRAY;
         paints[Nucleotides.GAP_STATE.getIndex()] = Color.GRAY;
     }
-
     public Paint getStatePaint(int stateIndex) {
         if (stateIndex >= paints.length) {
             return paints[paints.length - 1];

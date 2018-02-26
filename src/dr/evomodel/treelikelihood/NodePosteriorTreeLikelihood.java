@@ -1,6 +1,4 @@
-
 package dr.evomodel.treelikelihood;
-
 import dr.evolution.alignment.PatternList;
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
@@ -13,16 +11,13 @@ import dr.evomodel.tree.TreeModel;
 import dr.evomodelxml.treelikelihood.TreeLikelihoodParser;
 import dr.inference.model.Likelihood;
 import dr.xml.*;
-
 public class NodePosteriorTreeLikelihood extends TreeLikelihood implements TreeTraitProvider {
-
     protected double[][] nodePosteriors;
     protected double[][] forwardProbs;
     protected double[] likes;
     boolean posteriorsKnown;
     private double[] childPartials;
     private double[] partialLikelihood;
-
     public NodePosteriorTreeLikelihood(PatternList patternList, TreeModel treeModel, SiteModel siteModel, BranchRateModel branchRateModel, TipStatesModel tipStatesModel, boolean useAmbiguities, boolean allowMissingTaxa, boolean storePartials, boolean forceJavaCore) {
         super(patternList, treeModel, siteModel, branchRateModel, tipStatesModel, useAmbiguities, allowMissingTaxa, storePartials, forceJavaCore, false);
         // TreeLikelihood does not initialize the partials for tips, we'll do it ourselves
@@ -36,16 +31,13 @@ public class NodePosteriorTreeLikelihood extends TreeLikelihood implements TreeT
         partialLikelihood = new double[stateCount * patternCount];
         posteriorsKnown = false;
     }
-
     TreeTrait posteriors = new TreeTrait.DA() {
         public String getTraitName() {
             return "posteriors";
         }
-
         public Intent getIntent() {
             return Intent.NODE;
         }
-
         public double[] getTrait(Tree tree, NodeRef node) {
             if (tree != treeModel) {
                 throw new RuntimeException("Can only calculate node posteriors on treeModel given to constructor");
@@ -55,29 +47,23 @@ public class NodePosteriorTreeLikelihood extends TreeLikelihood implements TreeT
             }
             return nodePosteriors[node.getNumber()];
         }
-
     };
-    
     public TreeTrait[] getTreeTraits() {
         return new TreeTrait[] { posteriors };
     }
-
     public TreeTrait getTreeTrait(String key) {
         // ignore the key - it must be the one they wanted, no?
         return posteriors;
     }
-
     public double[] getPosteriors(int nodeNum) {
         if (!posteriorsKnown) {
             calculatePosteriors();
         }
         return nodePosteriors[nodeNum];
     }
-
     public void getNodeMatrix(int nodeNum, double[] probabilities) {
         ((AbstractLikelihoodCore) likelihoodCore).getNodeMatrix(nodeNum, 0, probabilities);
     }
-
     public void calculatePosteriors() {
         int nodeCount = treeModel.getNodeCount();
         traverseForward(treeModel, treeModel.getRoot());
@@ -90,14 +76,10 @@ public class NodePosteriorTreeLikelihood extends TreeLikelihood implements TreeT
         }
         posteriorsKnown = true;
     }
-
     protected double calculateLogLikelihood() {
         posteriorsKnown = false;
-
         return super.calculateLogLikelihood();
     }
-
-
     public void traverseForward(TreeModel tree, NodeRef node) {
         if (nodePosteriors == null) {
             nodePosteriors = new double[tree.getNodeCount()][patternCount * stateCount];
@@ -106,17 +88,13 @@ public class NodePosteriorTreeLikelihood extends TreeLikelihood implements TreeT
             forwardProbs = new double[tree.getNodeCount()][patternCount * stateCount];
         }
         int nodeNum = node.getNumber();
-
         NodeRef parent = tree.getParent(node);
-
-
         if (parent == null) {/* this is the root */
             double[] rootFreqs = frequencyModel.getFrequencies();
             double[] rootPartials = getRootPartials();
             if (likes == null) {
                 likes = new double[patternCount];
             }
-
             for (int j = 0; j < patternCount; j++) {
                 System.arraycopy(rootFreqs, 0, forwardProbs[nodeNum], j * stateCount, stateCount);
                 likes[j] = 0.0;
@@ -125,13 +103,10 @@ public class NodePosteriorTreeLikelihood extends TreeLikelihood implements TreeT
                     likes[j] = likes[j] + rootPartials[stateCount * j + k] * rootFreqs[k];
                 }
             }
-
         } else { /* regular internal node */
             int parentNum = parent.getNumber();
             int numChildren = tree.getChildCount(parent);
-
             System.arraycopy(forwardProbs[parentNum], 0, forwardProbs[nodeNum], 0, stateCount * patternCount);
-
             for (int child = 0; child < numChildren; ++child) {
                 NodeRef childNode = tree.getChild(parent, child);
                 int childNum = childNode.getNumber();
@@ -141,10 +116,8 @@ public class NodePosteriorTreeLikelihood extends TreeLikelihood implements TreeT
                     accumulateMatrixMultiply(probabilities, childPartials, forwardProbs[nodeNum]);
                 }
             }
-
             getNodeMatrix(nodeNum, probabilities);
             likelihoodCore.getPartials(nodeNum, partialLikelihood);
-
             matrixMultiplyBackward(probabilities, forwardProbs[nodeNum], nodePosteriors[nodeNum]);
             for (int i = 0; i < patternCount * stateCount; ++i) {
                 forwardProbs[nodeNum][i] = nodePosteriors[nodeNum][i];
@@ -158,11 +131,9 @@ public class NodePosteriorTreeLikelihood extends TreeLikelihood implements TreeT
             }
         }
     }
-
     public void accumulateMatrixMultiply(double[] probabilities, double[] partials, double[] out) {
         int u = 0;
         int v = 0;
-
         for (int k = 0; k < patternCount; ++k) {
             int w = 0;
             for (int i = 0; i < stateCount; ++i) {
@@ -177,7 +148,6 @@ public class NodePosteriorTreeLikelihood extends TreeLikelihood implements TreeT
             v += stateCount;
         }
     }
-
     public void matrixMultiplyBackward(double[] probabilities, double[] partials, double[] out) {
         int u = 0;
         int v = 0;
@@ -195,46 +165,33 @@ public class NodePosteriorTreeLikelihood extends TreeLikelihood implements TreeT
             v += stateCount;
         }
     }
-
-
     public static final String NODE_POSTERIOR_LIKELIHOOD = "nodePosteriorLikelihood";
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-
         public String getParserName() {
             return NODE_POSTERIOR_LIKELIHOOD;
         }
-
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
             boolean useAmbiguities = xo.getAttribute(TreeLikelihoodParser.USE_AMBIGUITIES, false);
             boolean storePartials = xo.getAttribute(TreeLikelihoodParser.STORE_PARTIALS, true);
-
             PatternList patternList = (PatternList) xo.getChild(PatternList.class);
             TreeModel treeModel = (TreeModel) xo.getChild(TreeModel.class);
             SiteModel siteModel = (SiteModel) xo.getChild(SiteModel.class);
-
             BranchRateModel branchRateModel = (BranchRateModel) xo.getChild(BranchRateModel.class);
-
             return new NodePosteriorTreeLikelihood(patternList, treeModel, siteModel,
                     branchRateModel, null, useAmbiguities, false, storePartials, false);
         }
-
         //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
-
         public String getParserDescription() {
             return "This element represents the likelihood of a patternlist on a tree given the site model.";
         }
-
         public Class getReturnType() {
             return Likelihood.class;
         }
-
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
-
         private XMLSyntaxRule[] rules = new XMLSyntaxRule[]{
                 AttributeRule.newBooleanRule(TreeLikelihoodParser.USE_AMBIGUITIES, true),
                 AttributeRule.newBooleanRule(TreeLikelihoodParser.ALLOW_MISSING_TAXA, true),
@@ -245,6 +202,4 @@ public class NodePosteriorTreeLikelihood extends TreeLikelihood implements TreeT
                 new ElementRule(SubstitutionModel.class)
         };
     };
-
 }
-

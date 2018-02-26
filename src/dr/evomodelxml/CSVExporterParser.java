@@ -1,37 +1,26 @@
-
 package dr.evomodelxml;
-
 import dr.inference.model.Parameter;
 import dr.util.FileHelpers;
 import dr.util.TabularData;
 import dr.xml.*;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-
 public class CSVExporterParser extends AbstractXMLObjectParser {
-
     final static public String CSV_EXPORT = "CSVexport";
-
     public String getParserName() {
         return CSV_EXPORT;
     }
-
     public String getParserDescription() {
         return "Write tabular data as an CSV file.";
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
         final String fileName = xo.getStringAttribute(FILE_NAME);
-
         final PrintWriter writer = XMLParser.getFilePrintWriter(xo, fileName);
-
         final String sep = xo.getAttribute(SEPARATOR, "\t");
-
         for (int k = 0; k < xo.getChildCount(); ++k) {
             final XMLObject columns = (XMLObject) xo.getChild(k);
             if (columns.getName().equals(COLUMNS)) {
@@ -40,7 +29,6 @@ public class CSVExporterParser extends AbstractXMLObjectParser {
                 List<Integer> iColumns = new ArrayList<Integer>();
                 List<Parameter[]> adds = new ArrayList<Parameter[]>();
                 int maxAdds = 0;
-
                 for (int nc = 0; nc < columns.getChildCount(); ++nc) {
                     final Object child = columns.getChild(nc);
                     if (child instanceof XMLObject) {
@@ -52,22 +40,17 @@ public class CSVExporterParser extends AbstractXMLObjectParser {
                                 throw new XMLParseException("column '" + name + "' not found in log.");
                             }
                             iColumns.add(n);
-
                             final int nAddtional = column.getChildCount();
                             Parameter[] additionals = nAddtional > 0 ? new Parameter[nAddtional] : null;
                             for (int nc1 = 0; nc1 < nAddtional; ++nc1) {
                                 additionals[nc1] = (Parameter) column.getChild(nc1);
                             }
                             maxAdds = Math.max(maxAdds, nAddtional);
-
                             adds.add(additionals);
                         }
                     }
                 }
-
                 final boolean hasAllAttribute = columns.hasAttribute(ALL_COLUMNS);
-
-
                 if (iColumns.size() == 0) {
                     // when no columns specified - default is all
                     if (!hasAllAttribute || columns.getBooleanAttribute(ALL_COLUMNS)) {
@@ -87,16 +70,13 @@ public class CSVExporterParser extends AbstractXMLObjectParser {
                         }
                     }
                 }
-
                 if (columns.hasAttribute(AS_ROWS) && columns.getBooleanAttribute(AS_ROWS)) {
                     for (int nc = 0; nc < iColumns.size(); ++nc) {
                         writer.print(source.columnName(iColumns.get(nc)));
-
                         for (int nr = 0; nr < source.nRows(); ++nr) {
                             final Object value = source.data(nr, iColumns.get(nc));
                             writer.print(sep);
                             writer.print(value);
-
                         }
                         for (int nr = 0; nr < maxAdds; ++nr) {
                             final Parameter[] addsnc = adds.get(nc);
@@ -108,7 +88,6 @@ public class CSVExporterParser extends AbstractXMLObjectParser {
                         }
                         writer.println();
                     }
-
                 } else {
                     for (int nc = 0; nc < iColumns.size(); ++nc) {
                         if (nc > 0) {
@@ -117,7 +96,6 @@ public class CSVExporterParser extends AbstractXMLObjectParser {
                         writer.print(source.columnName(iColumns.get(nc)));
                     }
                     writer.println();
-
                     for (int nr = 0; nr < source.nRows(); ++nr) {
                         for (int nc = 0; nc < iColumns.size(); ++nc) {
                             if (nc > 0) {
@@ -128,7 +106,6 @@ public class CSVExporterParser extends AbstractXMLObjectParser {
                         }
                         writer.println();
                     }
-
                     for (int nr = 0; nr < maxAdds; ++nr) {
                         for (int nc = 0; nc < iColumns.size(); ++nc) {
                             if (nc > 0) {
@@ -148,7 +125,6 @@ public class CSVExporterParser extends AbstractXMLObjectParser {
         writer.close();
         return null;
     }
-
     public static final String FILE_NAME = "fileName";
     public static final String SEPARATOR = "separator";
     public static final String COLUMNS = "columns";
@@ -156,7 +132,6 @@ public class CSVExporterParser extends AbstractXMLObjectParser {
     public static final String AS_ROWS = "rows";
     public static final String COLUMN = "CSVcolumn";
     public static final String COLUMN_NAME = "name";
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return new XMLSyntaxRule[]{
                 new StringAttributeRule(FILE_NAME,
@@ -175,8 +150,6 @@ public class CSVExporterParser extends AbstractXMLObjectParser {
                 }, "A subset of columns from one source", 1, Integer.MAX_VALUE)
         };
     }
-
-
     public Class getReturnType() {
         return CSVExporterParser.class; //TODO write CSVExporter
     }

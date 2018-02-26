@@ -1,26 +1,17 @@
-
 package dr.evomodel.substmodel;
-
 import dr.evolution.datatype.Microsatellite;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
-
 import java.util.ArrayList;
-
 public class LinearBiasModel extends OnePhaseModel{
-
     private Parameter biasConst;
     private Parameter biasLin;
     private ArrayList<Variable<Double>> submodelParameters = null;
     private boolean estimateSubmodelParams = false;
     private boolean updateSubmodelRates = false;
     private boolean inLogitSpace = false;
-
     public static final double delta = 1e-15;
-
     public static final String LINEAR_BIAS_MODEL = "LINEARBIASModel";
-
-
     public LinearBiasModel(
             Microsatellite microsatellite,
             FrequencyModel freqModel,
@@ -30,36 +21,27 @@ public class LinearBiasModel extends OnePhaseModel{
             boolean inLogitSpace,
             boolean estimateSubmodelParams,
             boolean isSubmodel){
-
         super(LINEAR_BIAS_MODEL, microsatellite, freqModel, null);
-
         isNested = isSubmodel;
         this.subModel = submodel;
         this.estimateSubmodelParams = estimateSubmodelParams;
         if(this.estimateSubmodelParams){
             submodelParameters = new ArrayList<Variable<Double>>();
             for(int i = 0; i < subModel.getNestedParameterCount(); i++){
-
                 if(isNested){
                     addVariable(subModel.getNestedParameter(i));
                 }
-
                 addParam(subModel.getNestedParameter(i));
                 submodelParameters.add(subModel.getNestedParameter(i));
             }
             updateSubmodelRates = true;
         }
-
-
-
         //The default setting of the parameters gives infinitesimal rates with no directional bias.
         if(biasConst != null){
             this.biasConst = biasConst;
         }else{
             this.biasConst = new Parameter.Default(0.5);
         }
-
-
         if(biasLinear != null){
             biasLin = biasLinear;
         }else{
@@ -67,37 +49,28 @@ public class LinearBiasModel extends OnePhaseModel{
         }
         addParam(this.biasConst);
         addParam(this.biasLin);
-
         this.inLogitSpace = inLogitSpace;
-
         //printDetails();
-
         setupInfinitesimalRates();
-
         if(freqModel == null){
             useStationaryFreqs = true;
             computeStationaryDistribution();
         }else{
             this.freqModel = freqModel;
-
         }
         addModel(this.freqModel);
-
     }
     protected void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         if(submodelParameters !=null && submodelParameters.indexOf((Parameter)variable) != -1){
             updateSubmodelRates = true;
         }
         updateMatrix = true;
-
     }
-
      public void setupInfinitesimalRates(){
         if(updateSubmodelRates){
             subModel.setupInfinitesimalRates();
             updateSubmodelRates = false;
         }
-
         double biasConst = this.biasConst.getParameterValue(0);
         double biasLin = this.biasLin.getParameterValue(0);
         setupInfinitesimalRates(
@@ -108,10 +81,7 @@ public class LinearBiasModel extends OnePhaseModel{
                 stateCount,
                 inLogitSpace
         );
-
     }
-
-
     public static void setupInfinitesimalRates(
             double[][] rates,
             double[][] subModelRateMatrix,
@@ -128,9 +98,7 @@ public class LinearBiasModel extends OnePhaseModel{
                 System.out.println("changing expan prob from " + expansionProb+ " to " + delta
                 +"\nbiasConst: "+biasConst+", biasLin: "+biasLin);
                 expansionProb = delta;
-
             }else if (expansionProb > (1.0-delta)){
-
                 System.out.println("changing expan prob from " + expansionProb+ " to " + (1.0-delta)
                         +"\nbiasConst: "+biasConst+", biasLin: "+biasLin);
                 expansionProb = 1.0-delta;
@@ -143,12 +111,9 @@ public class LinearBiasModel extends OnePhaseModel{
                 rates[i][i + 1] = subModelRateMatrix[i][i+1]*expansionProb;
                 rowSum = rowSum + rates[i][i + 1];
             }
-
             rates[i][i] = rowSum*-1;
-
         }
     }
-
     public static double computeExpansionProb(double biasConst, double biasLin, int length, boolean inLogitSpace){
         double expanProb = 0.5;
         if(inLogitSpace){
@@ -158,26 +123,19 @@ public class LinearBiasModel extends OnePhaseModel{
             expanProb = biasConst+biasLin*length;
         }
         return  expanProb;
-
     }
-
-
     public Parameter getBiasConstant(){
         return biasConst;
     }
-
     public Parameter getBiasLinearPercent(){
         return biasLin;
     }
-
     public boolean isEstimatingSubmodelParams(){
         return estimateSubmodelParams;
     }
-
     public boolean isInLogitSpace(){
         return inLogitSpace;
     }
-
     public void printDetails(){
         System.out.println("Details of the Linear Bias Model and its paramters:");
         System.out.println("a submodel:                     "+isNested);
@@ -190,5 +148,4 @@ public class LinearBiasModel extends OnePhaseModel{
         System.out.println("bias constant:                  "+biasConst.getParameterValue(0));
         System.out.println("bias linear coefficient:        "+biasLin.getParameterValue(0));
     }
-
 }

@@ -1,79 +1,58 @@
-
 package dr.evolution.parsimony;
-
 import dr.evolution.alignment.*;
 import dr.evolution.io.NexusImporter;
 import dr.evolution.tree.*;
 import dr.evolution.datatype.PairedDataType;
-
 import java.io.FileReader;
-
 public class TestParsimony {
-
     public final static String alignmentFileName = "ABLV.G.nuc";
     public final static String treeFileName = "ABLV.G.tree";
-
     public static void main(String[] args) throws Exception {
-
         // read alignments
         NexusImporter importer = new NexusImporter(new FileReader(alignmentFileName));
         Alignment alignment = importer.importAlignment();
        // alignment = new GapStrippedAlignment(alignment);
-
         // read trees
         Tree tree = null;
         importer = new NexusImporter(new FileReader(treeFileName));
         try {
             tree = importer.importTree(alignment);
             //((FlexibleTree)tree).resolveTree();
-
         } catch (Exception e) {
             System.err.println("Exception attempting to read tree: " + e.getMessage());
             System.exit(0);
         }
-
         //testParsimony(new FitchParsimony(alignment, false), alignment, tree);
         System.out.println("single:");
         testParsimony(new SankoffParsimony(alignment), alignment, tree);
         System.out.println("paired:");
         testPairedSites(alignment, tree);
     }
-
     static void testPairedSites(SiteList siteList, Tree tree) {
-
         ParsimonyCriterion singleParsimony = new SankoffParsimony(siteList);
         double[] singleScores = singleParsimony.getSiteScores(tree);
-
         PairedDataType pairedDataType = new PairedDataType(siteList.getDataType());
         for (int i = 0; i < siteList.getSiteCount(); i++) {
             if (singleScores[i] > 0) {
                 SimpleSiteList pairedSites = new SimpleSiteList(pairedDataType, siteList);
-
                 int[] siteIndices = new int[siteList.getSiteCount()];
                 int u = 0;
-
                 for (int j = i + 1; j < siteList.getSiteCount(); j++) {
                     if (singleScores[j] > 0) {
-
                         int[] pairedPattern = new int[siteList.getTaxonCount()];
-
                         int[] pattern1 = siteList.getSitePattern(i);
                         int[] pattern2 = siteList.getSitePattern(j);
-
                         for (int k = 0; k < pairedPattern.length; k ++) {
                             pairedPattern[k] = pairedDataType.getState(pattern1[k], pattern2[k]);
                         }
                         pairedSites.addPattern(pairedPattern);
-
                         siteIndices[u] = j;
                         u++;
                     }
                 }
-
                 //testParsimony(new FitchParsimony(pairedSites, false), pairedSites, tree);
                 ParsimonyCriterion parsimony = new SankoffParsimony(pairedSites);
                 double[] scores = parsimony.getSiteScores(tree);
-
                 for (int k = 0; k < pairedSites.getSiteCount(); k++) {
                     if (scores[k] > 1 /*&& isEpistatic(parsimony, pairedDataType, k, tree, tree.getRoot())*/) {
                         System.out.println("site {" + Integer.toString(i + 1) + ", " + Integer.toString(siteIndices[k] + 1)  + "}: " +  scores[k] + " steps");
@@ -82,23 +61,17 @@ public class TestParsimony {
                 }
             }
         }
-
     }
-
     static void testParsimony(ParsimonyCriterion parsimony, SiteList siteList, Tree tree) {
         double[] scores = parsimony.getSiteScores(tree);
-
         for (int i = 0; i < siteList.getSiteCount(); i++) {
             if (scores[i] > 1) {
                 System.out.println("site" + i  + " (" +  scores[i] + " steps):");
                 showChanges(parsimony, i, tree, tree.getRoot());
             }
         }
-
     }
-
     static void showChanges(ParsimonyCriterion parsimony, int site, Tree tree, NodeRef node) {
-
         if (node != tree.getRoot()) {
             int stateB = parsimony.getStates(tree, node)[site];
             int stateA = parsimony.getStates(tree, tree.getParent(node))[site];
@@ -113,7 +86,5 @@ public class TestParsimony {
         for (int j = 0; j < tree.getChildCount(node); j++) {
             showChanges(parsimony, site, tree, tree.getChild(node, j));
         }
-
     }
-
 }

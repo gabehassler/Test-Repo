@@ -1,5 +1,4 @@
 package test.dr.evomodel.substmodel;
-
 import dr.evolution.datatype.DataType;
 import dr.evolution.datatype.TwoStateCovarion;
 import dr.evomodel.substmodel.FrequencyModel;
@@ -9,98 +8,68 @@ import dr.inference.model.Parameter;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
 public class TwoStateCovarionModelTest extends TestCase {
     public TwoStateCovarionModelTest(String name) {
         super(name);
     }
-
     public void setUp() throws Exception {
         super.setUp();
-
         frequencies = new Parameter.Default(new double[]{0.25, 0.25, 0.25, 0.25});
         alpha = new Parameter.Default(0.0);
         switchingRate = new Parameter.Default(1.0);
-
         FrequencyModel freqModel = new FrequencyModel(TwoStateCovarion.INSTANCE, frequencies);
         model = new TwoStateCovarionModel(TwoStateCovarion.INSTANCE, freqModel, alpha, switchingRate);
         dataType = model.getDataType();
     }
-
     public void testTransitionProbabilities() {
-
         // with alpha == 1, the transition probability should be the same as binary jukes cantor
         alpha.setParameterValue(0, 1.0);
         switchingRate.setParameterValue(0, 1.0);
-
         model.setupMatrix();
-
         double[] matrix = new double[16];
-
         double[] pi = model.getFrequencyModel().getFrequencies();
-
         for (double distance = 0.01; distance <= 1; distance += 0.01) {
             model.getTransitionProbabilities(distance, matrix);
-
             double pChange =
                     (matrix[1] + matrix[3]) * pi[0] +
                             (matrix[4] + matrix[6]) * pi[1] +
                             (matrix[9] + matrix[11]) * pi[2] +
                             (matrix[12] + matrix[14]) * pi[3];
-
             // analytical result for the probability of a mismatch in binary jukes cantor model
             double jc = 0.5 * (1 - Math.exp(-2.0 * distance));
-
 //            System.err.println("Testing d=" + distance);
             assertEquals(pChange, jc, 1e-14);
         }
     }
     public void testCompareToScilabCode() {
-
         // test against Scilab results for alpha = 0.0 and switching rate = 1.0, visible state freq = {0.25, 0.75}
-
         frequencies = new Parameter.Default(new double[]{0.125, 0.125, 0.375, 0.375});
-
         FrequencyModel freqModel = new FrequencyModel(TwoStateCovarion.INSTANCE, frequencies);
         model = new TwoStateCovarionModel(TwoStateCovarion.INSTANCE, freqModel, alpha, switchingRate);
         dataType = model.getDataType();
-
         alpha.setParameterValue(0, 0.5);
         switchingRate.setParameterValue(0, 1.0);
-
         model.setupMatrix();
-
         double[] matrix = new double[16];
-
         double[] pi = model.getFrequencyModel().getFrequencies();
-
         model.setupMatrix();
-
         int index = 0;
         for (double distance = 0.01; distance <= 1.005; distance += 0.01) {
             model.getTransitionProbabilities(distance, matrix);
-
             double pChange =
                     (matrix[1] + matrix[3]) * pi[0] +
                             (matrix[4] + matrix[6]) * pi[1] +
                             (matrix[9] + matrix[11]) * pi[2] +
                             (matrix[12] + matrix[14]) * pi[3];
-
             //System.out.println(distance + "\t" + pChange + "\t");
-
             double pChangeIndependent = matLabPChange[index];
-
             System.err.println("Testing against scilab d=" + distance);
             assertEquals(pChange, pChangeIndependent, 1e-14);
-
             index += 1;
         }
     } */
-
     public void testSetupRelativeRates() throws Exception {
-
         model.setupMatrix();
-
         assertEquals(alpha.getParameterValue(0), model.getRelativeRates()[0], 1e-8);
         assertEquals(switchingRate.getParameterValue(0), model.getRelativeRates()[1], 1e-8);
         assertEquals(0.0, model.getRelativeRates()[2], 1e-8);
@@ -108,15 +77,10 @@ public class TwoStateCovarionModelTest extends TestCase {
         assertEquals(switchingRate.getParameterValue(0), model.getRelativeRates()[4], 1e-8);
         assertEquals(1.0, model.getRelativeRates()[5], 1e-8);
     }
-
     public void testNormalize() {
-
         model.setupMatrix();
-
         double[] pi = model.getFrequencyModel().getFrequencies();
-
         int stateCount = dataType.getStateCount();
-
         double totalRate = 0.0;
         for (int i = 0; i < stateCount; i++) {
             for (int j = 0; j < stateCount; j++) {
@@ -126,57 +90,39 @@ public class TwoStateCovarionModelTest extends TestCase {
                 }
             }
         }
-
         System.out.println(SubstitutionModelUtils.toString(model.getQ(), dataType, 2));
-
         assertEquals(1.0, totalRate, 1e-8);
     }
-
     public static Test suite() {
         return new TestSuite(TwoStateCovarionModelTest.class);
     }
-
     TwoStateCovarionModel model;
     DataType dataType;
     Parameter frequencies;
     Parameter switchingRate;
     Parameter alpha;
-
-
       // The following Scilab code was written by Alexei Drummond
       // (adapted from Matlab code by David Bryant)
-
       Q = [-1,1;1,-1];
-
       // frequencies of visible states
       pi = diag([0.25,0.75]);
-
       Q = Q*pi;
-
       G = [-1,1;1,-1];
       D = diag([0.5,1]);
       I = eye(2,2);
       R = kron(D,Q) + kron(G, I);
-
       // frequencies of hidden states
       f = diag([0.5, 0.5]);
-
       // frequencies of big matrix
       pif = kron(f, pi);
-
       C = [0,1,0,1;1,0,1,0;0,1,0,1;1,0,1,0]
-
       rate = sum(sum(C.*(pif*R)))
-
       Rn = R/rate;
-
       for i = 1:1:100
         t = i*0.01;
         P = expm(Rn*t);
         pchange(i) = sum(sum(C .*(pif*P)));
       end;
-
-
     static final double[] matLabPChange = {
             0.009853754858257556,
             0.01942241145387763,
@@ -279,5 +225,4 @@ public class TwoStateCovarionModelTest extends TestCase {
             0.34562252094354134,
             0.3463642707600772
     };
-
 }

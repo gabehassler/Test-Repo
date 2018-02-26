@@ -1,17 +1,12 @@
-
 package dr.app.coalgen;
-
 import dr.evolution.coalescent.*;
 import dr.evolution.util.Taxa;
 import dr.evolution.util.TaxonList;
 import dr.evolution.util.Units;
 import dr.inference.trace.LogFileTraces;
-
 import java.io.File;
-
 public class CoalGenData {
     public static final String version = "1.0";
-
     public static String[] demographicModels = {"Constant Population",
             "Exponential Growth (Growth Rate)",
             "Exponential Growth (Doubling Time)",
@@ -22,7 +17,6 @@ public class CoalGenData {
             "Piecewise Constant (Skyline)",
             "Piecewise Linear (Skyline)",
             "Piecewise Linear (GMRF Skyride)"};
-
     public static String[][] argumentGuesses = {
             {"populationsize", "population", "popsize", "n0", "size", "pop"},
             {"ancestralsize", "ancestralproportion", "proportion", "ancestral", "n1"},
@@ -31,31 +25,24 @@ public class CoalGenData {
             {"logisticshape", "halflife", "t50", "time50", "shape"},
             {"populationsize", "population", "popsize", "n0", "size", "pop"},
             {"groupsize"}};
-
     public static String[] argumentNames = new String[]{
             "Population Size", "Ancestral Proportion", "Growth Rate", "Doubling Time", "Logistic Shape (Half-life)",
             "Population Sizes", "Group Sizes"
     };
-
     public int[][] argumentIndices = {{0}, {0, 2}, {0, 3}, {0, 2, 4}, {0, 3, 4}, {0, 1, 2}, {0, 1, 3}, {5, 6}, {5, 6}, {5}};
-
     public File logFile = null;
     public File treesFile = null;
     public LogFileTraces traces = null;
     public TaxonList taxonList = new Taxa();
     public int demographicModel = 0;
-
     public int popSizeCount = 0;
     public int groupSizeCount = 0;
-
     public double[] argumentValues = new double[] {1000, 0.1, 0.5, 10.0, 50.0, 1000, 1};
     public boolean[] argumentFromTraces = new boolean[argumentNames.length];
     public int[] argumentTraces = new int[argumentNames.length];
     public int replicateCount = 1000;
-
     public CoalGenData() {
     }
-
     public void setDemographicModel(int model) {
         demographicModel = model;
         argumentTraces = new int[argumentIndices[demographicModel].length];
@@ -63,40 +50,29 @@ public class CoalGenData {
             argumentTraces[i] = -1;
         }
     }
-
     private int current = 0;
-
     public boolean hasNext() {
         if (traces != null) {
             return (current < traces.getStateCount());
         }
-
         return (current < replicateCount);
     }
-
     private DemographicFunction demo = null;
-
     public DemographicFunction nextDemographic() {
         int n = replicateCount;
-
         if (traces != null) {
             n = traces.getStateCount();
         }
-
         if (current == n) {
             current = 0;
             demo = null;
             return null;
         }
-
         if (demo == null) {
-
             current = 0;
-
             if (traces != null) {
                 traces.setBurnIn(0);
             }
-
             if (demographicModel == 0) { // Constant Size
                 demo = new ConstantPopulation(Units.Type.YEARS);
             } else if (demographicModel == 1 || demographicModel == 2) { // Exponential Growth
@@ -112,18 +88,14 @@ public class CoalGenData {
             } else if (demographicModel == 9) { // Piecewise Linear (skyride)
                 demo = new PiecewiseLinearPopulation(Units.Type.YEARS);
             }
-
             guessArguments();
-
             if (demographicModel >= 7) { // is skyline or skyride
                 popSizeCount = getTraceRange(argumentTraces[0]);
                 if (demographicModel < 9) { // is skyline not skyride
                     groupSizeCount = getTraceRange(argumentTraces[1]);
                 }
             }
-
         }
-
         if (traces != null) {
             double value;
             if (demographicModel == 0) { // Constant Size
@@ -217,10 +189,8 @@ public class CoalGenData {
             }
         }
         current++;
-
         return demo;
     }
-
     public void setupSkyline() {
         guessArguments();
         popSizeCount = getTraceRange(argumentTraces[0]);
@@ -228,13 +198,11 @@ public class CoalGenData {
             groupSizeCount = getTraceRange(argumentTraces[1]);
         }     
     }
-
     public void getNextSkyline(double[] popSizes, double[] groupSizes) {
         int popSizeIndex = argumentTraces[0];
         for (int i = 0; i < popSizeCount; i++) {
             popSizes[i] = traces.getStateValue(popSizeIndex + i, current);
         }
-
         if (groupSizes != null) { // is skyline not skyride
             int groupSizeIndex = argumentTraces[1];
             for (int i = 0; i < groupSizeCount; i++) {
@@ -243,28 +211,20 @@ public class CoalGenData {
         }
         current++;
     }
-    
     public void reset() {
         current = 0;
     }
-
     private void guessArguments() {
         int argumentCount = argumentIndices[demographicModel].length;
-
         for (int i = 0; i < argumentCount; i++) {
-
             int index = -1;
-
             for (int j = 0; j < argumentGuesses[i].length; j++) {
                 if (index != -1) break;
-
                 index = findArgument(argumentGuesses[argumentIndices[demographicModel][i]][j]);
             }
-
             argumentTraces[i] = index;
         }
     }
-
     private int findArgument(String argument) {
         for (int i = 0; i < traces.getTraceCount(); i++) {
             String item = traces.getTraceName(i).toLowerCase();
@@ -272,19 +232,15 @@ public class CoalGenData {
         }
         return -1;
     }
-
     private int getTraceRange(int first) {
         int i = 1;
         int k = first;
-
         String name = traces.getTraceName(first);
         String root = name.substring(0, name.length() - 1);
         while (k < traces.getTraceCount() && traces.getTraceName(k).equals(root + i)) {
             i++;
             k++;
         }
-
         return i - 1;
     }
 }
-

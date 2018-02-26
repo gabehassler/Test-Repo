@@ -1,12 +1,8 @@
-
 package dr.util;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Hashtable;
-
-
 // todo not used?
 //
 //public class CollectionHash {

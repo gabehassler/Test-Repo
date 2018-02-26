@@ -1,31 +1,21 @@
-
 package dr.evomodel.epidemiology;
-
 import dr.evolution.util.Units;
 import dr.evoxml.util.XMLUnits;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 public class SIRepidemicModelParser extends AbstractXMLObjectParser {
-	
 	public static String POPULATION_SIZE = "populationSize";
 	public static String SIREPI_MODEL = "epidemicSIR";
-	
 	public static String GROWTH_RATE = "growthRate";
 	public static String DOUBLING_TIME = "doublingTime";
 	public static String TPEAK = "peakTime";
 	public static String GAMMA = "clearanceRate";
-	
 	public static String MIN_PREVALENCE = "minPrevalence";
-	
 	public String getParserName() { return SIREPI_MODEL; }
-	
 	public Object parseXMLObject(XMLObject xo) throws XMLParseException {
 		Units.Type units = XMLUnits.Utils.getUnitsAttr(xo);
-		
 		XMLObject cxo = (XMLObject)xo.getChild(POPULATION_SIZE);
 		Parameter N0Param = (Parameter)cxo.getChild(Parameter.class);		
-		
 		boolean usingGrowthRate = true;		
 		Parameter rParam = null;		
 		if (xo.getChild(GROWTH_RATE) != null) {			
@@ -36,30 +26,21 @@ public class SIRepidemicModelParser extends AbstractXMLObjectParser {
 			rParam = (Parameter)cxo.getChild(Parameter.class);
 			usingGrowthRate = false;
 		}
-		
 		cxo = (XMLObject)xo.getChild(TPEAK);
 		Parameter tpeakParam = (Parameter)cxo.getChild(Parameter.class);
-		
 		cxo = (XMLObject)xo.getChild(GAMMA);
 		Parameter gammaParam = (Parameter)cxo.getChild(Parameter.class);
-		
 		double minPrevalence = xo.getDoubleAttribute(MIN_PREVALENCE);
-		
 		return new SIRepidemicModel(N0Param, rParam, tpeakParam, gammaParam, units, usingGrowthRate, minPrevalence);
 	}
-	
 	//************************************************************************
 	// AbstractXMLObjectParser implementation
 	//************************************************************************
-	
 	public String getParserDescription() {
 		return "SIR epidemic model using RK.";
 	}
-	
 	public Class getReturnType() { return SIRepidemicModel.class; }
-	
 	public XMLSyntaxRule[] getSyntaxRules() { return rules; }
-	
 	private XMLSyntaxRule[] rules = new XMLSyntaxRule[] {
 	XMLUnits.SYNTAX_RULES[0],
 	new ElementRule(POPULATION_SIZE, 

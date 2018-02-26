@@ -1,11 +1,6 @@
-
 package dr.util;
-
 public class HTMLOutput {
-
-	
 	public static final String HTML_OPEN = "<html>\n";
-	
 	public static final String HTML_HEAD =
 		"  <head>\n" +			
 		"    <style type=\"text/css\">\n" +

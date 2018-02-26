@@ -1,11 +1,6 @@
-
 package dr.inference.model;
-
-
 import org.apache.commons.math.special.Beta;
-
 public class IndianBuffetProcessPrior extends AbstractModelLikelihood {
-
     public IndianBuffetProcessPrior(Parameter alpha, Parameter beta, MatrixParameter data) {
         super(null);
         this.alpha=alpha;
@@ -17,7 +12,6 @@ public class IndianBuffetProcessPrior extends AbstractModelLikelihood {
         this.data=data;
         addVariable(data);
     }
-
     private int factorial(int num){
         if(num<0){
             throw new RuntimeException("Cannot take a negative factorial");
@@ -34,7 +28,6 @@ public class IndianBuffetProcessPrior extends AbstractModelLikelihood {
             return fac;
         }
     }
-
     private double H(){
         if(!betaKnown) {
             H = 0;
@@ -44,12 +37,9 @@ public class IndianBuffetProcessPrior extends AbstractModelLikelihood {
         }
         return H;
     }
-
     @Override
     protected void handleModelChangedEvent(Model model, Object object, int index) {
-
     }
-
     @Override
     protected void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         likelihoodKnown=false;
@@ -57,9 +47,7 @@ public class IndianBuffetProcessPrior extends AbstractModelLikelihood {
             betaKnown=false;
         if(variable==data)
             dataKnown=false;
-
     }
-
     @Override
     protected void storeState() {
         storedBetaKnown=betaKnown;
@@ -72,9 +60,7 @@ public class IndianBuffetProcessPrior extends AbstractModelLikelihood {
         storedH=H;
         storedBottom=bottom;
         storedSum2=sum2;
-
     }
-
     @Override
     protected void restoreState() {
         betaKnown=storedBetaKnown;
@@ -88,17 +74,13 @@ public class IndianBuffetProcessPrior extends AbstractModelLikelihood {
         bottom=storedBottom;
         sum2=storedSum2;
     }
-
     @Override
     protected void acceptState() {
-
     }
-
     @Override
     public Model getModel() {
         return this;
     }
-
     @Override
     public double getLogLikelihood() {
         if(!likelihoodKnown){
@@ -107,11 +89,8 @@ public class IndianBuffetProcessPrior extends AbstractModelLikelihood {
         }
         return logLikelihood;
     }
-
     private double calculateLogLikelihood(){
-
         int sum;
-
         if(!dataKnown) {
             bottom=1;
             boolean[] isExplored= new boolean[data.getColumnDimension()];
@@ -146,11 +125,8 @@ public class IndianBuffetProcessPrior extends AbstractModelLikelihood {
                     }
                 }
                 bottom *= factorial(sum);
-
             }
         }
-
-
         if(!dataKnown || !betaKnown){
             sum2=0;
         KPlus=0;
@@ -171,14 +147,11 @@ public class IndianBuffetProcessPrior extends AbstractModelLikelihood {
         dataKnown=true;
         return p1+p2+p3;
     }
-
     @Override
     public void makeDirty() {
         betaKnown=false;
         dataKnown=false;
-
     }
-
     boolean likelihoodKnown;
     boolean storedLikelihoodKnown;
     double logLikelihood;
@@ -199,7 +172,6 @@ public class IndianBuffetProcessPrior extends AbstractModelLikelihood {
     int storedBottom;
     double sum2;
     double storedSum2;
-
     MatrixParameter data;
     Parameter alpha;
     Parameter beta;

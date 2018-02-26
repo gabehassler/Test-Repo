@@ -1,14 +1,10 @@
-
 package dr.app.beauti.util;
-
 import javax.swing.*;
 import java.awt.*;
-
 public class PanelUtils {
 	public static JPanel createAddRemoveButtonPanel(Action addAction,
 			Icon addIcon, String addToolTip, Action removeAction,
 			Icon removeIcon, String removeToolTip, int axis) {
-
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, axis));
 		buttonPanel.setOpaque(false);
@@ -21,7 +17,6 @@ public class PanelUtils {
 		addButton.putClientProperty("JButton.buttonType", "toolbar");
 		addButton.setOpaque(false);
 		addAction.setEnabled(false);
-
 		JButton removeButton = new JButton(removeAction);
 		if (removeIcon != null) {
 			removeButton.setIcon(removeIcon);
@@ -31,17 +26,13 @@ public class PanelUtils {
 		removeButton.putClientProperty("JButton.buttonType", "toolbar");
 		removeButton.setOpaque(false);
 		removeAction.setEnabled(false);
-
 		buttonPanel.add(addButton);
 		buttonPanel.add(new JToolBar.Separator(new Dimension(6, 6)));
 		buttonPanel.add(removeButton);
-
 		return buttonPanel;
 	}
-
 	public static void setupComponent(JComponent comp) {
 		comp.setOpaque(false);
-
 		// comp.setFont(UIManager.getFont("SmallSystemFont"));
 		// comp.putClientProperty("JComponent.sizeVariant", "small");
 		if (comp instanceof JButton) {
@@ -58,7 +49,6 @@ public class PanelUtils {
             ((JTextArea) comp).setWrapStyleWord(true);
         }
 	}
-
 	public static Frame getActiveFrame() {
 		Frame result = null;
 		Frame[] frames = Frame.getFrames();
@@ -71,5 +61,4 @@ public class PanelUtils {
 		}
 		return result;
 	}// END: getActiveFrame
-
 }

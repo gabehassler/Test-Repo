@@ -1,8 +1,5 @@
-
 package dr.app.beauti.types;
-
 public enum OldClockType {
-
     STRICT_CLOCK("Strict clock", ClockType.STRICT_CLOCK),
     UNCORRELATED_LOGNORMAL("Lognormal relaxed clock (Uncorrelated)", ClockType.UNCORRELATED, ClockDistributionType.LOGNORMAL),
     UNCORRELATED_GAMMA("Gamma relaxed clock (Uncorrelated)", ClockType.UNCORRELATED, ClockDistributionType.GAMMA),
@@ -11,29 +8,23 @@ public enum OldClockType {
     RANDOM_LOCAL_CLOCK("Random local clock", ClockType.RANDOM_LOCAL_CLOCK),
     FIXED_LOCAL_CLOCK("Fixed local clock", ClockType.FIXED_LOCAL_CLOCK),
     AUTOCORRELATED("Autocorrelated relaxed clock", ClockType.AUTOCORRELATED, ClockDistributionType.LOGNORMAL);
-
     OldClockType(String displayName, ClockType clockType) {
         this(displayName, clockType, null);
     }
-
     OldClockType(String displayName, ClockType clockType, ClockDistributionType clockDistributionType) {
         this.displayName = displayName;
         this.clockType = clockType;
         this.clockDistributionType = clockDistributionType;
     }
-
     public ClockType getClockType() {
         return clockType;
     }
-
     public ClockDistributionType getClockDistributionType() {
         return clockDistributionType;
     }
-
     public String toString() {
         return displayName;
     }
-
     public static OldClockType getType(final ClockType clockType, final ClockDistributionType clockDistributionType) {
         switch (clockType) {
             case STRICT_CLOCK:
@@ -61,7 +52,6 @@ public enum OldClockType {
                 throw new IllegalArgumentException("Unknown clock model");
         }
     }
-
     private final String displayName;
     private final ClockType clockType;
     private final ClockDistributionType clockDistributionType;

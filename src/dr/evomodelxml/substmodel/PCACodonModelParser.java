@@ -1,26 +1,19 @@
-
 package dr.evomodelxml.substmodel;
-
 import java.util.logging.Logger;
-
 import dr.evolution.datatype.Codons;
 import dr.evolution.datatype.DataType;
 import dr.evolution.datatype.GeneticCode;
 import dr.evomodel.substmodel.*;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 public class PCACodonModelParser extends AbstractXMLObjectParser {
     public static final String PCA_CODON_MODEL = "pcaCodonModel";
     public static final String PCATYPE = "pcaType";
     public static final String PCANUMBER = "pcaNumber";
     public static final String PCA_DIMENSION = "pcaDimension";
     public static final String PCA_DATA_DIR = "pcaDataDir";
-
     public String getParserName() { return PCA_CODON_MODEL; }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         Codons codons = Codons.UNIVERSAL;
         if (xo.hasAttribute(GeneticCode.GENETIC_CODE)) {
             String codeStr = xo.getStringAttribute(GeneticCode.GENETIC_CODE);
@@ -54,16 +47,13 @@ public class PCACodonModelParser extends AbstractXMLObjectParser {
                 codons = Codons.NO_STOPS;
             }
         }
-        
         // get number of PCs
         Parameter pcaDimensionParameter = (Parameter)xo.getElementFirstChild(PCA_DIMENSION);
-        
         // get directory with pca rate matrix files; fallback to default "pcadata"
         String dirString = "pcadata";
         if(xo.hasAttribute(PCA_DATA_DIR)) {
         	dirString = xo.getStringAttribute(PCA_DATA_DIR);
         }
-        
         // get type of rate matrix; fallback to mammalia pca
         AbstractPCARateMatrix pcaType = new PCARateMatrixMammalia(pcaDimensionParameter.getDimension(), dirString);
         // check for other type of pca
@@ -73,7 +63,6 @@ public class PCACodonModelParser extends AbstractXMLObjectParser {
                 pcaType = new PCARateMatrixMammalia(pcaDimensionParameter.getDimension(), dirString);
             }
         }
-        
         // decide if getting frequencies from csv or estimating from MSA
         FrequencyModel freqModel = null;
         if (xo.getChild(FrequencyModel.class) != null) {
@@ -81,10 +70,8 @@ public class PCACodonModelParser extends AbstractXMLObjectParser {
         } else {
         	freqModel = createNewFreqModel(codons, pcaType);
         }
-
         return new PCACodonModel(codons, pcaType, pcaDimensionParameter, freqModel);
     }
-    
     // read frequencies from XML and return FrequencyModel object
     private FrequencyModel createNewFreqModel(DataType codons, AbstractPCARateMatrix type) throws XMLParseException {
     	double[] freqs = type.getFrequencies();
@@ -92,30 +79,21 @@ public class PCACodonModelParser extends AbstractXMLObjectParser {
         for (int j = 0; j < freqs.length; j++) {
             sum += freqs[j];
         }
-
         if (Math.abs(sum - 1.0) > 1e-8) {
             throw new XMLParseException("Frequencies do not sum to 1 (they sum to " + sum + ")");
         }
-        
     	FrequencyModel fm = new FrequencyModel(codons, freqs);
-    	
     	Logger.getLogger("dr.evomodel").info("Using frequencies from data file");
-    	
     	return fm;
     }
-
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
-
     public String getParserDescription() {
         return "This element represents the PCA model of codon evolution.";
     }
-
     public Class getReturnType() { return PCACodonModel.class; }
-
     public XMLSyntaxRule[] getSyntaxRules() { return rules; }
-
     private XMLSyntaxRule[] rules = new XMLSyntaxRule[] {
         new StringAttributeRule(GeneticCode.GENETIC_CODE,
             "The genetic code to use",
@@ -147,4 +125,3 @@ public class PCACodonModelParser extends AbstractXMLObjectParser {
         new ElementRule(FrequencyModel.class, true)
     };
 }
-

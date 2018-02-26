@@ -1,6 +1,4 @@
-
 package dr.evomodel.branchratemodel;
-
 import dr.evolution.alignment.PatternList;
 import dr.evolution.datatype.DataType;
 import dr.evolution.parsimony.FitchParsimony;
@@ -14,69 +12,49 @@ import dr.inference.model.Model;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import dr.math.matrixAlgebra.Vector;
-
 public class DiscreteTraitBranchRateModel extends AbstractBranchRateModel {
     private static final boolean CACHING_RATES = true;
-
     enum Mode {
         NODE_STATES,
         MARKOV_JUMP_PROCESS,
         MARKOV_JUMP_COUNT,
         PARSIMONY
     }
-
     public static final String DISCRETE_TRAIT_BRANCH_RATE_MODEL = "discreteTraitRateModel";
-
     protected TreeTrait trait = null;
     private Parameter rateParameter;
     private Parameter relativeRatesParameter;
     private Parameter indicatorParameter;
     protected int traitIndex;
-
     private double[] rates;
     private double[] storedRates;
     private boolean[] rateKnown;
-
 //    private boolean normKnown = false;
 //    private boolean storedNormKnown = false;
 //    private double norm = 1.0;
 //    private double storedNorm = 1.0;
-
     private TreeTrait[] traits;
-
     private FitchParsimony fitchParsimony;
-
     private boolean treeChanged = true;
-
     private Mode mode;
     private DataType dataType;
 //    private int treeInitializeCounter = 0;
-
     public DiscreteTraitBranchRateModel(TreeModel treeModel, PatternList patternList, int traitIndex, Parameter ratesParameter) {
-
         this(treeModel, traitIndex, ratesParameter, null, null);
-
         if (!TaxonList.Utils.getTaxonListIdSet(treeModel).equals(TaxonList.Utils.getTaxonListIdSet(patternList))) {
             throw new IllegalArgumentException("Tree model and pattern list must have the same list of taxa!");
         }
-
         ratesParameter.setDimension(patternList.getDataType().getStateCount());
-
         fitchParsimony = new FitchParsimony(patternList, false);
         mode = Mode.PARSIMONY;
     }
-
     public DiscreteTraitBranchRateModel(TreeTraitProvider traitProvider, DataType dataType, TreeModel treeModel,
                                         TreeTrait trait, int traitIndex, Parameter rateParameter, Parameter relativeRatesParameter, Parameter indicatorParameter) {
-
         this(treeModel, traitIndex, rateParameter, relativeRatesParameter, indicatorParameter);
-
 //        if (trait.getTreeModel() != treeModel)
 //            throw new IllegalArgumentException("Tree Models for ancestral state tree likelihood and target model of these rates must match!");
-
         this.trait = trait;
         this.dataType = dataType;
-
         if (trait.getTraitName().equals("states")) {
             // Assume the trait is one or more discrete traits reconstructed at nodes
             mode = Mode.NODE_STATES;
@@ -86,29 +64,21 @@ public class DiscreteTraitBranchRateModel extends AbstractBranchRateModel {
         } /* else {
             throw new IllegalArgumentException("The trait class type is not suitable for use in this class.");
         } */
-
         relativeRatesParameter.setDimension(dataType.getStateCount());
-
         if (traitProvider instanceof Model) {
             addModel((Model)traitProvider);
         }
-
         if (trait instanceof Model) {
             addModel((Model)trait); // MAS: Does this ever occur?
         }
     }
-
     public DiscreteTraitBranchRateModel(TreeTraitProvider traitProvider, DataType dataType, TreeModel treeModel,
                                         TreeTrait trait, int traitIndex, Parameter ratesParameter) {
-
         this(treeModel, traitIndex, ratesParameter, null, null);
-
 //        if (trait.getTreeModel() != treeModel)
 //            throw new IllegalArgumentException("Tree Models for ancestral state tree likelihood and target model of these rates must match!");
-
         this.trait = trait;
         this.dataType = dataType;
-
         if (trait.getTraitName().equals("states")) {
             // Assume the trait is one or more discrete traits reconstructed at nodes
             mode = Mode.NODE_STATES;
@@ -118,58 +88,42 @@ public class DiscreteTraitBranchRateModel extends AbstractBranchRateModel {
         } /* else {
             throw new IllegalArgumentException("The trait class type is not suitable for use in this class.");
         } */
-
         ratesParameter.setDimension(dataType.getStateCount());
-
         if (traitProvider instanceof Model) {
             addModel((Model)traitProvider);
         }
-
         if (trait instanceof Model) {
             addModel((Model)trait); // MAS: Does this ever occur?
         }
     }
-
     public DiscreteTraitBranchRateModel(TreeTraitProvider traitProvider, TreeTrait[] traits, TreeModel treeModel, Parameter ratesParameter) {
-
         this(treeModel, 0, ratesParameter, null, null);
-
         this.traits = traits;
         mode = Mode.MARKOV_JUMP_PROCESS;
-
         ratesParameter.setDimension(traits.length);
-
-
         if (traitProvider instanceof Model) {
             addModel((Model)traitProvider);
         }
     }
-
     private DiscreteTraitBranchRateModel(TreeModel treeModel, int traitIndex,
                                          Parameter rateParameter, Parameter relativeRatesParameter, Parameter indicatorParameter) {
         super(DISCRETE_TRAIT_BRANCH_RATE_MODEL);
         addModel(treeModel);
         this.traitIndex = traitIndex;
-
         this.rateParameter = rateParameter;
         addVariable(rateParameter);
-
         this.relativeRatesParameter = relativeRatesParameter;
         if (relativeRatesParameter != null) {
             addVariable(relativeRatesParameter);
         }
-
         this.indicatorParameter = indicatorParameter;
         if (indicatorParameter != null) {
             addVariable(indicatorParameter);
         }
-
         rates = new double[treeModel.getNodeCount()];
         storedRates = new double[treeModel.getNodeCount()];
         rateKnown = new boolean[treeModel.getNodeCount()];
-
     }
-
     public void handleModelChangedEvent(Model model, Object object, int index) {
         // TreeModel has changed...
         for (int i = 0; i < rateKnown.length; i++) {
@@ -178,7 +132,6 @@ public class DiscreteTraitBranchRateModel extends AbstractBranchRateModel {
         treeChanged = true;
         fireModelChanged();
     }
-
     protected final void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         // Rate Parameters have changed
         for (int i = 0; i < rateKnown.length; i++) {
@@ -186,19 +139,16 @@ public class DiscreteTraitBranchRateModel extends AbstractBranchRateModel {
         }
         fireModelChanged();
     }
-
     protected void storeState() {
         if (CACHING_RATES) {
             System.arraycopy(rates, 0, storedRates, 0, rates.length);
         }
     }
-
     protected void restoreState() {
         if (CACHING_RATES) {
             double[] tmp = rates;
             rates = storedRates;
             storedRates = tmp;
-
             for (int i = 0; i < rateKnown.length; i++) {
                 rateKnown[i] = true;
             }
@@ -209,11 +159,9 @@ public class DiscreteTraitBranchRateModel extends AbstractBranchRateModel {
             treeChanged = true;
         }
     }
-
     protected void acceptState() {
         // nothing to do
     }
-
     protected int getStateCount() {
         int dimen = 0;
         if (mode == Mode.NODE_STATES || mode == Mode.MARKOV_JUMP_PROCESS) {
@@ -224,42 +172,33 @@ public class DiscreteTraitBranchRateModel extends AbstractBranchRateModel {
         }
         return dimen;
     }
-
     public double getBranchRate(final Tree tree, final NodeRef node) {
-
         if (CACHING_RATES) {
             if (!rateKnown[node.getNumber()]) {
                 rates[node.getNumber()] = getRawBranchRate(tree, node);
                 rateKnown[node.getNumber()] = true;
             }
-
             return rates[node.getNumber()];
         } else {
             return getRawBranchRate(tree, node);
         }
     }
-
     // produce weighted mean of rate for a branch
     // rate = absRate * branchWeight[0] * relativeRates[0] + absRate * branchWeight[1] * relativeRates[1]
     protected double getRawBranchRate(final Tree tree, final NodeRef node) {
-
         double rate = 0.0;
         int stateCount = getStateCount();
-
         double[] processValues = getProcessValues(tree, node);
         //    double[] processValues = {1.0, 1.0};
         double[] branchWeights = new double[stateCount];
         double totalTime = 0;
-
         for (int i = 0; i < stateCount; i++) {
             branchWeights[i] += processValues[i];
             totalTime += processValues[i];
         }
-
         for (int i = 0; i < stateCount; i++) {
             branchWeights[i] /= totalTime;
         }
-
         if (relativeRatesParameter != null && indicatorParameter == null) {
             double absRate = rateParameter.getParameterValue(0);
             for (int i = 0; i < stateCount; i++) {
@@ -277,16 +216,12 @@ public class DiscreteTraitBranchRateModel extends AbstractBranchRateModel {
                 totalTime += processValues[i];
             }
         }
-
         return rate;
     }
-
     private double[] getProcessValues(final Tree tree, final NodeRef node) {
-
         double[] processValues = null;
         int stateCount = getStateCount();
         double branchTime = tree.getBranchLength(node);
-
         if (mode == Mode.MARKOV_JUMP_PROCESS) {
             processValues = new double[stateCount];
             for (int i = 0; i < stateCount; i++) {
@@ -297,7 +232,6 @@ public class DiscreteTraitBranchRateModel extends AbstractBranchRateModel {
             // the state changes midpoint on the tree. Does a weighted
             // average of the equally parsimonious state reconstructions
             // at the top and bottom of each branch.
-
             if (treeChanged) {
                 fitchParsimony.initialize(tree);
                 // Debugging test to count work
@@ -309,16 +243,13 @@ public class DiscreteTraitBranchRateModel extends AbstractBranchRateModel {
             }
             int[] states = fitchParsimony.getStates(tree, node);
             int[] parentStates = fitchParsimony.getStates(tree, tree.getParent(node));
-
             processValues = new double[fitchParsimony.getPatterns().getStateCount()];
-
             for (int state : states) {
                 processValues[state] += branchTime / 2;
             }
             for (int state : parentStates) {
                 processValues[state] += branchTime / 2;
             }
-
             for (int i = 0; i < processValues.length; i++) {
                 // normalize by the number of equally parsimonious states at each end of the branch
                 // processValues should add up to the total branch length
@@ -326,7 +257,6 @@ public class DiscreteTraitBranchRateModel extends AbstractBranchRateModel {
             }
         } else if (mode == Mode.NODE_STATES) {
             processValues = new double[stateCount];
-
             // if the states are being sampled - then there is only one possible state at each
             // end of the branch.
             int state = ((int[])trait.getTrait(tree, node))[traitIndex];
@@ -335,8 +265,6 @@ public class DiscreteTraitBranchRateModel extends AbstractBranchRateModel {
             int parentState = ((int[])trait.getTrait(tree, parent))[traitIndex];
             processValues[parentState] += branchTime / 2;
         }
-
         return processValues;
     }
-
 }

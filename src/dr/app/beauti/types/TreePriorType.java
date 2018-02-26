@@ -1,8 +1,5 @@
-
 package dr.app.beauti.types;
-
 public enum TreePriorType {
-
     CONSTANT("Coalescent: Constant Size"),
     EXPONENTIAL("Coalescent: Exponential Growth"),
     LOGISTIC("Coalescent: Logistic Growth"),
@@ -20,14 +17,11 @@ public enum TreePriorType {
     SPECIES_YULE("Species Tree: Yule Process"),
     SPECIES_YULE_CALIBRATION("Species Tree: Calibrated Yule"),
     SPECIES_BIRTH_DEATH("Species Tree: Birth-Death Process");
-
     TreePriorType(String name) {
         this.name = name;
     }
-
     public String toString() {
         return name;
     }
-
     private final String name;
 }

@@ -1,66 +1,35 @@
-
 package dr.math;
-
 //import org.apfloat.Apfloat;
 //import org.apfloat.ApfloatMath;
-
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.Arrays;
-
-
 public interface Polynomial extends Cloneable {
-
     public int getDegree();
-
     public Polynomial multiply(Polynomial b);
-
     public Polynomial integrate();
-
     public double evaluate(double x);
-
     public double logEvaluate(double x);
-
     public double logEvaluateHorner(double x);
-
     public void expand(double x);
-
     public Polynomial integrateWithLowerBound(double bound);
-
     public double getCoefficient(int n);
-
     public String getCoefficientString(int n);
-
     public void setCoefficient(int n, double x);
-
     public Polynomial getPolynomial();
-
     public Polynomial copy();
-
     public abstract class Abstract implements Polynomial {
-
         public abstract int getDegree();
-
         public abstract Polynomial multiply(Polynomial b);
-
         public abstract Polynomial integrate();
-
         public abstract double evaluate(double x);
-
         public abstract double getCoefficient(int n);
-
         public abstract void setCoefficient(int n, double x);
-
         public abstract Polynomial integrateWithLowerBound(double bound);
-
         public Polynomial getPolynomial() { return this; }
-
         public abstract double logEvaluate(double x);
-
         public abstract double logEvaluateHorner(double x);
-
         public abstract void expand(double x);
-
         public String toString() {
             StringBuffer bf = new StringBuffer();
             for (int n = getDegree(); n >= 0; n--) {
@@ -72,16 +41,11 @@ public interface Polynomial extends Cloneable {
             }
             return bf.toString();
         }
-
         public abstract String getCoefficientString(int n);
-
-
         protected static final String FORMAT = "%3.2e";
         private static final String X = " x^";
     }
-
     public class LogDouble extends Abstract {
-
         public LogDouble(double[] coefficient) {
             this.logCoefficient = new double[coefficient.length];
             this.positiveCoefficient = new boolean[coefficient.length];
@@ -95,22 +59,17 @@ public interface Polynomial extends Cloneable {
                 }
             }
         }
-
         public double getLogCoefficient(int n) {
             return logCoefficient[n];
         }
-
         public void expand(double x) {
             final int degree = getDegree();
             for(int i=0; i<=degree; i++)
                 logCoefficient[i] = x + logCoefficient[i];
         }
-
         public String getCoefficientString(int n) {
                  return String.format(FORMAT, getCoefficient(n));
              }
-
-
         public LogDouble(double[] logCoefficient, boolean[] positiveCoefficient) {
             this.logCoefficient = logCoefficient;
             if (positiveCoefficient != null)
@@ -120,28 +79,22 @@ public interface Polynomial extends Cloneable {
                 Arrays.fill(this.positiveCoefficient,true);
             }
         }
-
         public LogDouble copy() {
             return new LogDouble(logCoefficient.clone(), positiveCoefficient.clone());
         }
-
         public int getDegree() {
             return logCoefficient.length - 1;
         }
-
         public LogDouble multiply(Polynomial inB) {
             if (!(inB.getPolynomial() instanceof LogDouble))
                 throw new RuntimeException("yuck!");
-
             LogDouble b = (LogDouble) inB.getPolynomial();
             final int degreeA = getDegree();
             final int degreeB = b.getDegree();
-
             double[] newLogCoefficient = new double[degreeA + degreeB + 1];
             boolean[] newPositiveCoefficient = new boolean[degreeA + degreeB + 1];
             Arrays.fill(newLogCoefficient, java.lang.Double.NEGATIVE_INFINITY);
             Arrays.fill(newPositiveCoefficient, true);
-
             for (int n = 0; n <= degreeA; n++) {
                 for (int m = 0; m <= degreeB; m++) {
                     final double change = logCoefficient[n] + b.logCoefficient[m];
@@ -168,7 +121,6 @@ public interface Polynomial extends Cloneable {
             }
             return new LogDouble(newLogCoefficient,newPositiveCoefficient);
         }
-
         public LogDouble integrate() {
             final int degree = getDegree();
             double[] newLogCoefficient = new double[degree + 2];
@@ -181,7 +133,6 @@ public interface Polynomial extends Cloneable {
             newPositiveCoefficient[0] = true;
             return new LogDouble(newLogCoefficient,newPositiveCoefficient);
         }
-
         public double evaluate(double x) {
             SignedLogDouble result = signedLogEvaluate(x);
             double value = Math.exp(result.value);
@@ -189,7 +140,6 @@ public interface Polynomial extends Cloneable {
                 value = -value;
             return value;
         }
-
         public double evaluateAsReal(double x) {
             double result = 0;
             double xn = 1;
@@ -198,9 +148,7 @@ public interface Polynomial extends Cloneable {
                 xn *= x;
             }
             return result;
-
         }
-
         public double logEvaluate(double x) {
             if (x < 0)
                 throw new RuntimeException("Negative arguments not yet implemented in Polynomial.LogDouble");
@@ -210,7 +158,6 @@ public interface Polynomial extends Cloneable {
             return java.lang.Double.NaN;
 //            return -result.value;
         }
-
         public double logEvaluateHorner(double x) {
             if (x < 0)
                 throw new RuntimeException("Negative arguments not yet implemented in Polynomial.LogDouble");
@@ -220,8 +167,6 @@ public interface Polynomial extends Cloneable {
             return java.lang.Double.NaN;
 //            return -result.value;
         }
-
-
         public SignedLogDouble signedLogEvaluateHorners(double x) {
             // Using Horner's Rule
             final double logX = Math.log(x);
@@ -243,7 +188,6 @@ public interface Polynomial extends Cloneable {
             }
             return new SignedLogDouble(logResult,positive);
         }
-
         private SignedLogDouble signedLogEvaluate(double x) {
             final double logX = Math.log(x);
             final int degree = getDegree();
@@ -265,14 +209,12 @@ public interface Polynomial extends Cloneable {
             }
             return new SignedLogDouble(logResult,positive);
         }
-
         public double getCoefficient(int n) {
             double coef = Math.exp(logCoefficient[n]);
             if (!positiveCoefficient[n])
                 coef *= -1;
             return coef;
         }
-
         public void setCoefficient(int n, double x) {
             if (x < 0) {
                 positiveCoefficient[n] = false;
@@ -281,7 +223,6 @@ public interface Polynomial extends Cloneable {
                 positiveCoefficient[n] = true;
             logCoefficient[n] = Math.log(x);
         }
-
         public Polynomial integrateWithLowerBound(double bound) {
             LogDouble integrand = integrate();
             SignedLogDouble signedLogDouble = integrand.signedLogEvaluate(bound);
@@ -289,55 +230,39 @@ public interface Polynomial extends Cloneable {
             integrand.positiveCoefficient[0] = !signedLogDouble.positive;
             return integrand;
         }
-
         double[] logCoefficient;
         boolean[] positiveCoefficient;
-
         class SignedLogDouble {
-
             double value;
             boolean positive;
-
             SignedLogDouble(double value, boolean positive) {
                 this.value = value;
                 this.positive = positive;
             }
         }
     }
-
     public class BigDouble extends Abstract {
-
         private static MathContext precision = new MathContext(1000);
-
         public BigDouble(double[] doubleCoefficient) {
             this.coefficient = new BigDecimal[doubleCoefficient.length];
             for(int i=0; i<doubleCoefficient.length; i++)
                 coefficient[i] = new BigDecimal(doubleCoefficient[i]);
         }
-
         public BigDouble copy() {
             return new BigDouble(coefficient.clone());
         }
-
         public String getCoefficientString(int n) {
             return coefficient[n].toString();
-
              }
-
          public void expand(double x) {
             throw new RuntimeException("Not yet implement: Polynomial.BigDouble.expand()");
         }
-
-
-
         public BigDouble(BigDecimal[] coefficient) {
             this.coefficient = coefficient;
         }
-
         public int getDegree() {
              return coefficient.length - 1;
         }
-
         public BigDouble multiply(Polynomial b) {
             if (!(b.getPolynomial() instanceof BigDouble))
                 throw new RuntimeException("Incompatiable polynomial types");
@@ -351,7 +276,6 @@ public interface Polynomial extends Cloneable {
             }
             return new BigDouble(newCoefficient);
         }
-
         public BigDouble integrate() {
             BigDecimal[] newCoefficient = new BigDecimal[getDegree()+2];
             for(int n=0; n<=getDegree(); n++) {
@@ -360,19 +284,15 @@ public interface Polynomial extends Cloneable {
             newCoefficient[0] = new BigDecimal(0.0);
             return new BigDouble(newCoefficient);
         }
-
         public double evaluate(double x) {
             return evaluateBigDecimal(new BigDecimal(x)).doubleValue();
         }
-
         public double logEvaluate(double x) {
             return BigDecimalUtils.ln(evaluateBigDecimal(new BigDecimal(x)),10).doubleValue();
         }
-
         public double logEvaluateHorner(double x) {
             return logEvaluate(x);
         }
-
         protected BigDecimal evaluateBigDecimal(BigDecimal x) {
             BigDecimal result = new BigDecimal(0.0);
             BigDecimal xn = new BigDecimal(1.0);
@@ -382,29 +302,23 @@ public interface Polynomial extends Cloneable {
             }
             return result;
         }
-
         public double getCoefficient(int n) {
             return coefficient[n].doubleValue();
         }
-
         public void setCoefficient(int n, double x) {
             coefficient[n] = new BigDecimal(x);
         }
-
         public Polynomial integrateWithLowerBound(double bound) {
             BigDouble integrand = integrate();
             final BigDecimal x0 = integrand.evaluateBigDecimal(new BigDecimal(bound));
             integrand.coefficient[0] = x0.multiply(new BigDecimal(-1.0));
             return integrand;
         }
-
         public void setCoefficient(int n, BigDecimal x) {
             coefficient[n] = x;
         }
-
         BigDecimal[] coefficient;
     }
-
 //    public class APDouble extends Abstract {
 //
 //        public String getCoefficientString(int n) {
@@ -546,51 +460,38 @@ public interface Polynomial extends Cloneable {
 //
 //         Apfloat[] coefficient;
 //     }
-
-
     public class Double extends Abstract {
-
         public Double(double[] coefficient) {
             this.coefficient = coefficient;
         }
-
         public Double copy() {
             return new Double(coefficient.clone());
         }
-
         public Double(Polynomial polynomial) {
             this.coefficient = new double[polynomial.getDegree() + 1];
             for (int n = 0; n <= polynomial.getDegree(); n++)
                 coefficient[n] = polynomial.getCoefficient(n);
         }
-
         public void expand(double x) {
             final int degree = getDegree();
             for(int i=0; i<=degree; i++)
                 coefficient[i] = x * coefficient[i];
         }
-
         public String getCoefficientString(int n) {
                  return String.format(FORMAT, getCoefficient(n));
              }
-
-
         public int getDegree() {
             return coefficient.length - 1;
         }
-
         public double getCoefficient(int n) {
             return coefficient[n];
         }
-
         public double logEvaluate(double x) {
             return Math.log(evaluate(x));
         }
-
         public double logEvaluateQuick(double x, int n) {
             return Math.log(evaluateQuick(x,n));
         }
-
         public double logEvaluateHorner(double x) {
             // Uses Horner's Rule in log scale
             final int degree = getDegree();
@@ -624,7 +525,6 @@ public interface Polynomial extends Cloneable {
                 return java.lang.Double.NaN;
             return logResult;
         }
-
         public Polynomial.Double multiply(Polynomial b) {
             double[] newCoefficient = new double[getDegree() + b.getDegree() + 1];
             for (int n = 0; n <= getDegree(); n++) {
@@ -634,7 +534,6 @@ public interface Polynomial extends Cloneable {
             }
             return new Double(newCoefficient);
         }
-
         public Polynomial.Double integrate() {
             double[] newCoefficient = new double[getDegree() + 2];
             for (int n = 0; n <= getDegree(); n++) {
@@ -642,7 +541,6 @@ public interface Polynomial extends Cloneable {
             }
             return new Double(newCoefficient);
         }
-
         public double evaluateHorners(double x) {
             // Uses Horner's Rule
             final int degree = getDegree();
@@ -651,7 +549,6 @@ public interface Polynomial extends Cloneable {
                 result = result*x + coefficient[n];
             return result;
         }
-
         public double evaluateQuick(double x, int n) {
             int m = getDegree();
             double xm = Math.pow(x,m);
@@ -663,7 +560,6 @@ public interface Polynomial extends Cloneable {
             }
             return result;
         }
-
         public double evaluate(double x) {
             double result = 0.0;
             double xn = 1;
@@ -673,21 +569,17 @@ public interface Polynomial extends Cloneable {
             }
             return result;
         }
-
         public Polynomial integrateWithLowerBound(double bound) {
             Double integrand = integrate();
 //            System.err.println("integrand = "+integrand);
             integrand.coefficient[0] = -integrand.evaluate(bound);
             return integrand;
         }
-
         public void setCoefficient(int n, double x) {
             coefficient[n] = x;
         }
-
         double[] coefficient;
     }
-
     public enum Type {
         DOUBLE, APDOUBLE, LOG_DOUBLE, BIG_DOUBLE//, RATIONAL
     }

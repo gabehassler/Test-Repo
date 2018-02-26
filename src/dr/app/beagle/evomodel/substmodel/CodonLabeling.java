@@ -1,37 +1,26 @@
-
 package dr.app.beagle.evomodel.substmodel;
-
 import dr.evolution.datatype.Codons;
-
-
 public enum CodonLabeling {
     SYN("S"), // synonymous mutations
     NON_SYN("N"); // non-synonymous mutations
-
     CodonLabeling(String text) {
         this.text = text;
     }
-
     public String getText() {
         return text;
     }
-
     public static double[] getRegisterMatrix(CodonLabeling labeling, Codons codonDataType) {
         return getRegisterMatrix(labeling, codonDataType, false);
     }
-
     public static double[] getRegisterMatrix(CodonLabeling labeling, Codons codonDataType, boolean base64) {
         final int stateCount = codonDataType.getStateCount();
         final int rateCount = ((stateCount - 1) * stateCount) / 2;
-
         byte[] rateMap = Codons.constructRateMap(
                 rateCount,
                 stateCount,
                 codonDataType,
                 codonDataType.getGeneticCode());
-
         double[] registerMatrix = new double[stateCount * stateCount];
-
         int index = 0;
         for (int i = 0; i < stateCount; i++) {
             for (int j = i + 1; j < stateCount; j++) {
@@ -45,7 +34,6 @@ public enum CodonLabeling {
                 index++;
             }
         }
-
         if (base64) { // Expand matrix back out to the 4 x 4 x 4 stateSpace for a product chain
             double[] oldRegisterMatrix = registerMatrix;
             registerMatrix = new double[64 * 64];
@@ -60,9 +48,7 @@ public enum CodonLabeling {
         }
         return registerMatrix;
     }
-
     private final String text;
-
     public static CodonLabeling parseFromString(String text) {
         for (CodonLabeling scheme : CodonLabeling.values()) {
             if (scheme.getText().compareToIgnoreCase(text) == 0)

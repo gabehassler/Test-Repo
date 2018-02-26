@@ -1,6 +1,4 @@
-
 package dr.app.vcs;
-
 import dr.evolution.coalescent.CoalescentSimulator;
 import dr.evolution.coalescent.PiecewiseLinearPopulation;
 import dr.evolution.tree.Tree;
@@ -9,19 +7,13 @@ import dr.evolution.util.Taxa;
 import dr.evolution.util.Taxon;
 import dr.evolution.util.Units;
 import ml.options.Options;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-
 public class VariableCoalescentSimulator {
-
     public static void main(String[] arg) throws IOException {
-
         long startTime = System.currentTimeMillis();
-
         Options options = new Options(arg, 0, 7);
-
         options.getSet().addOption("g", Options.Separator.EQUALS, Options.Multiplicity.ZERO_OR_ONE);
         options.getSet().addOption("n", Options.Separator.EQUALS, Options.Multiplicity.ZERO_OR_ONE);
         options.getSet().addOption("p", Options.Separator.EQUALS, Options.Multiplicity.ZERO_OR_ONE);
@@ -29,21 +21,18 @@ public class VariableCoalescentSimulator {
         options.getSet().addOption("ss", Options.Separator.EQUALS, Options.Multiplicity.ZERO_OR_ONE);
         options.getSet().addOption("reps", Options.Separator.EQUALS, Options.Multiplicity.ZERO_OR_ONE);
         options.getSet().addOption("f", Options.Multiplicity.ZERO_OR_ONE);
-
         if (!options.check()) {
             System.out.println(options.getCheckErrors());
             System.out.println();
             printUsage();
             System.exit(1);
         }
-
         double generationTime = 1.0;
         double popSizeScale = 1.0;
         int n = 50;
         double ss = -1;
         double se = -1;
         int reps = 1;
-
         boolean timeForward = options.getSet().isSet("f");
         if (options.getSet().isSet("g")) {
             String g = options.getSet().getOption("g").getResultValue(0);
@@ -75,20 +64,14 @@ public class VariableCoalescentSimulator {
             reps = Integer.parseInt(replicates);
             System.out.println("replicates = " + reps);
         }
-
         String filename = options.getSet().getData().get(0);
         String outfile = options.getSet().getData().get(1);
-
         // READ DEMOGRAPHIC FUNCTION
-
         BufferedReader reader = new BufferedReader(new FileReader(filename));
-
         List<Double> times = new ArrayList<Double>();
-
         String line = reader.readLine();
         String[] tokens = line.trim().split("[\t ]+");
         if (tokens.length < 2) throw new RuntimeException();
-
         ArrayList<ArrayList> popSizes = new ArrayList<ArrayList>();
         while (line != null) {
             double time = Double.parseDouble(tokens[0]) / generationTime;
@@ -104,55 +87,39 @@ public class VariableCoalescentSimulator {
             }
         }
         reader.close();
-
         // GENERATE SAMPLE
         double lastTime = times.get(times.size() - 1);
-
         if (ss == -1) {
             ss = timeForward ? lastTime : times.get(0);
         }
         if (se == -1) {
             se = timeForward ? lastTime : times.get(0);
         }
-
         double dt = (se - ss) / ((double) n - 1.0);
         double time = ss;
-
         Taxa taxa = new Taxa();
-
         for (int i = 0; i < n; i++) {
-
             double sampleTime;
             if (timeForward) {
                 sampleTime = (lastTime - time) / generationTime;
             } else sampleTime = time / generationTime;
-
             Taxon taxon = new Taxon(i + "");
             taxon.setAttribute(dr.evolution.util.Date.DATE, new Date(sampleTime, Units.Type.GENERATIONS, true));
             taxa.addTaxon(taxon);
             time += dt;
         }
-
         double minTheta = Double.MAX_VALUE;
         double maxTheta = 0.0;
-
         PrintWriter out = new PrintWriter(new FileWriter(outfile));
-
         int popHistory = 0;
-
         PiecewiseLinearPopulation[] demography = new PiecewiseLinearPopulation[popSizes.size()];
-
         for (List<Double> popSize : popSizes) {
             double[] thetas = new double[popSize.size()];
             double[] intervals = new double[times.size() - 1];
-
             for (int i = intervals.length; i >= 0; i--) {
-
                 int j = timeForward ? intervals.length - i : i - 1;
                 int k = timeForward ? i : intervals.length - i + 1;
-
                 if (i != 0) intervals[j] = times.get(k) - times.get(k - 1);
-
                 double theta = popSize.get(k) * popSizeScale;
                 thetas[j] = theta;
                 if (theta < minTheta) {
@@ -161,55 +128,37 @@ public class VariableCoalescentSimulator {
                 if (theta > maxTheta) {
                     maxTheta = theta;
                 }
-
                 //System.out.println(t + "\t" + theta);
             }
-
             System.out.println("N" + popHistory + "(t) range = [" + minTheta + ", " + maxTheta + "]");
-
             demography[popHistory] = new PiecewiseLinearPopulation(intervals, thetas, Units.Type.GENERATIONS);
-
             popHistory += 1;
         }
-
         CoalescentSimulator simulator = new CoalescentSimulator();
         for (int i = 0; i < reps; i++) {
-
             out.println("#rep " + i);
             for (int j = 0; j < demography.length; j++) {
                 Tree tree = simulator.simulateTree(taxa, demography[j]);
-
                 out.println(Tree.Utils.newick(tree));
                 //System.err.println(Tree.Utils.newick(tree));
             }
-
-
         }
-
         out.flush();
         out.close();
-
         long stopTime = System.currentTimeMillis();
         System.out.println("Took " + (stopTime - startTime) / 1000.0 + " seconds");
     }
-
     private static Taxa readSampleFile(String fileName, double generationTime) throws IOException {
-
         BufferedReader reader = new BufferedReader(new FileReader(fileName));
-
         String line = reader.readLine();
         Taxa taxa = new Taxa();
         int id = 0;
         while (line != null) {
-
             if (!line.startsWith("#")) {
-
                 String[] tokens = line.split("[\t ]+");
-
                 // sample times are in the same units as simulation
                 double sampleTime = Double.parseDouble(tokens[0]) / generationTime;
                 int count = Integer.parseInt(tokens[1]);
-
                 for (int i = 0; i < count; i++) {
                     Taxon taxon = new Taxon(id + "");
                     taxon.setAttribute(dr.evolution.util.Date.DATE, new Date(sampleTime, Units.Type.GENERATIONS, true));
@@ -219,12 +168,9 @@ public class VariableCoalescentSimulator {
             }
             line = reader.readLine();
         }
-
         return taxa;
     }
-
     private static void printUsage() {
-
         System.out.println(
                 "Usage: \n" +
                         "  java -jar vcs.jar [options] <infile> <outfile>\n" +
@@ -262,6 +208,5 @@ public class VariableCoalescentSimulator {
                         "          and should be ascending from zero. Subsequent columns contain the population size\n" +
                         "          histories, for which a tree will be simulated for each.\n" +
                         "<outfile> The file to which the trees will be written in newick format.");
-
     }
 }

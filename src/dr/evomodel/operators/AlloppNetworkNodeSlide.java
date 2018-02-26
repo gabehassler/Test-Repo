@@ -1,6 +1,4 @@
-
 package dr.evomodel.operators;
-
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.SlidableTree;
 import dr.evomodel.speciation.AlloppDiploidHistory;
@@ -12,50 +10,33 @@ import dr.inference.operators.OperatorFailedException;
 import dr.inference.operators.SimpleMCMCOperator;
 import dr.math.MathUtils;
 import jebl.util.FixedBitSet;
-
 import java.util.ArrayList;
-
-
-
-
-
-
 public class AlloppNetworkNodeSlide extends SimpleMCMCOperator {
-
     private final AlloppSpeciesNetworkModel apspnet;
     private final AlloppSpeciesBindings apsp;
-
     public AlloppNetworkNodeSlide(AlloppSpeciesNetworkModel apspnet, AlloppSpeciesBindings apsp, double weight) {
         this.apspnet = apspnet;
         this.apsp = apsp;
         setWeight(weight);
     }
-
     public String getPerformanceSuggestion() {
         return "None";
     }
-
     @Override
     public String getOperatorName() {
         return AlloppNetworkNodeSlideParser.NETWORK_NODE_REHEIGHT + "(" + apspnet.getId() +
                 "," + apsp.getId() + ")";
     }
-
     @Override
     public double doOperation() throws OperatorFailedException {
         operateOneNodeInNet(0.0);
         return 0;
     }
-
-
-
-
     private class NodeHeightInNetIndex {
         public int ploidy;  // 2 for diphist, 4 for a tetra tree
         public int tree;    // indexes tettree
         public int index;    // internal node in diphist or tettree, or foot index for hyb height
         public boolean doHybheight;
-
         public NodeHeightInNetIndex(int ploidy, int tree, int index, boolean doHybheight) {
             this.ploidy = ploidy;
             this.tree = tree;
@@ -63,14 +44,11 @@ public class AlloppNetworkNodeSlide extends SimpleMCMCOperator {
             this.doHybheight = doHybheight;
         }
     }
-
-
     private NodeHeightInNetIndex randomnode() {
         int noftettrees = apspnet.getNumberOfTetraTrees();
         int dhcount;
         int hybhcount;
         int count = 0;
-
         dhcount = apspnet.getNumberOfInternalNodesInDipHist();
         count += dhcount;
         hybhcount = noftettrees;
@@ -104,10 +82,6 @@ public class AlloppNetworkNodeSlide extends SimpleMCMCOperator {
         assert false;
         return new NodeHeightInNetIndex(-1, -1, -1, false);
     }
-
-
-
-
     private void operateOneNodeInNet(double factor)
             throws OperatorFailedException {
         assert apspnet.getDiploidHistory().diphistOK(apspnet.getDiploidRootIsRoot());
@@ -124,13 +98,9 @@ public class AlloppNetworkNodeSlide extends SimpleMCMCOperator {
             }
         }
     }
-
-
-
     private void operateHybridHeight(int footindex) {
         AlloppDiploidHistory diphist = apspnet.getDiploidHistory();
         ArrayList<Integer> feet = diphist.collectFeet();
-
         assert footindex < feet.size();
         int foot = feet.get(footindex);
         int tt = diphist.getNodeTettree(foot);
@@ -143,15 +113,10 @@ public class AlloppNetworkNodeSlide extends SimpleMCMCOperator {
         diphist.moveHybridHeight(f1, f2, minh);
         apspnet.endNetworkEdit();
     }
-
-
     private void operateOneNodeInTetraTree(AlloppLeggedTree tettree, int which, double factor) {
-
         // As TreeNodeSlide(). Randomly flip children at each node,
         // keeping track of node order (in-order order, left to right).
-
         NodeRef[] order = SlidableTree.Utils.mnlCanonical(tettree);
-
         // Find the time of the most recent gene coalescence which
         // has (species,sequence)'s to left and right of this node.
         FixedBitSet left = apsp.speciesseqEmptyUnion();
@@ -169,13 +134,10 @@ public class AlloppNetworkNodeSlide extends SimpleMCMCOperator {
             right.union(right1);
         }
         double genelimit = apsp.spseqUpperBound(left, right);
-
         // also keep this node more recent than the hybridization event that led to this tree.
         AlloppDiploidHistory diphist = apspnet.getDiploidHistory();
         double hybridheight = diphist.getHybHeight(tettree);
-
         final double limit = Math.min(genelimit, hybridheight);
-
         // On direct call, factor==0.0 and use limit. Else use passed in scaling factor
         double newHeight = -1.0;
         if( factor > 0 ) {
@@ -183,16 +145,12 @@ public class AlloppNetworkNodeSlide extends SimpleMCMCOperator {
         } else {
             newHeight = MathUtils.nextDouble() * limit;
         }
-
         apspnet.beginNetworkEdit();
         final NodeRef node = order[2 * which + 1];
         tettree.setSlidableNodeHeight(node, newHeight);
         SlidableTree.Utils.mnlReconstruct(tettree, order);
         apspnet.endNetworkEdit();
     }
-
-
-
     private class RootHeightRange {
         public double lowerlimit;
         public double upperlimit;
@@ -201,9 +159,6 @@ public class AlloppNetworkNodeSlide extends SimpleMCMCOperator {
             this.upperlimit = upperlimit;
         }
     }
-
-
-
     // find limit to keep root a diploid
     // 1. If node to slide is the root, and the second highest node is to left or
     // right of all diploids, then the root must stay the root: lowerlimit =  second highest.
@@ -248,17 +203,12 @@ public class AlloppNetworkNodeSlide extends SimpleMCMCOperator {
             rootrange.upperlimit = diphist.getSlidableNodeHeight(order[rootn]);
         }
         return rootrange;
-
     }
-
-
     private void operateOneNodeInDiploidHistory(int which, double factor) {
         apspnet.beginNetworkEdit();
         int slidingn =  2 * which + 1;
         AlloppDiploidHistory diphist = apspnet.getDiploidHistory();
-
         NodeRef[] order = SlidableTree.Utils.mnlCanonical(diphist);
-
         // Find the time of the most recent gene coalescence which
         // has (species,sequence)'s to left and right of this node.
         FixedBitSet left = apsp.speciesseqEmptyUnion();
@@ -272,7 +222,6 @@ public class AlloppNetworkNodeSlide extends SimpleMCMCOperator {
             right.union(u);
         }
         double genelimit = apsp.spseqUpperBound(left, right);
-
         // find limit due to hyb-tips - must be bigger than adjacent heights
         // Note that adjacent nodes in order[] are tips; if they are not hyb-tips
         // they have height zero anyway.
@@ -289,7 +238,6 @@ public class AlloppNetworkNodeSlide extends SimpleMCMCOperator {
         }
         final double upperlimit = Math.min(genelimit, rootrange.upperlimit);
         final double lowerlimit = Math.max(hybtiplimit, rootrange.lowerlimit);
-
         // On direct call, factor==0.0 and use limit. Else use passed in scaling factor
         double newHeight = -1.0;
         if( factor > 0 ) {
@@ -297,7 +245,6 @@ public class AlloppNetworkNodeSlide extends SimpleMCMCOperator {
         } else {
             newHeight = MathUtils.uniform(lowerlimit, upperlimit);
         }
-
         assert diphist.diphistOK(apspnet.getDiploidRootIsRoot());
         final NodeRef node = order[slidingn];
         diphist.setSlidableNodeHeight(node, newHeight);
@@ -308,5 +255,4 @@ public class AlloppNetworkNodeSlide extends SimpleMCMCOperator {
         assert diphist.diphistOK(apspnet.getDiploidRootIsRoot());
         apspnet.endNetworkEdit();
     }
-
 }

@@ -1,6 +1,4 @@
-
 package dr.app.beauti.generator;
-
 import dr.app.beauti.components.ComponentFactory;
 import dr.app.beauti.options.*;
 import dr.app.beauti.util.XMLWriter;
@@ -15,12 +13,9 @@ import dr.inferencexml.distribution.NormalDistributionModelParser;
 import dr.inferencexml.distribution.UniformDistributionModelParser;
 import dr.util.Attribute;
 import dr.xml.XMLParser;
-
 import java.util.ArrayList;
 import java.util.List;
-
 public abstract class Generator {
-
     protected static final String COALESCENT = "coalescent";
     public static final String SP_TREE = "sptree";
     protected static final String SP_START_TREE = "spStartingTree";
@@ -29,16 +24,12 @@ public abstract class Generator {
     protected static final String PDIST = "pdist";
     //	protected static final String STP = "stp";
     protected static final String SPOPS = TraitData.TRAIT_SPECIES + "." + "popSizesLikelihood";
-
     protected final BeautiOptions options;
-
     //    protected PartitionSubstitutionModel model;
     protected String modelPrefix = ""; // model prefix, could be PSM, PCM, PTM, PTP
-
     protected Generator(BeautiOptions options) {
         this.options = options;
     }
-
     public Generator(BeautiOptions options, ComponentFactory[] components) {
         this.options = options;
         if (components != null) {
@@ -47,15 +38,12 @@ public abstract class Generator {
             }
         }
     }
-
     public String getModelPrefix() {
         return modelPrefix;
     }
-
     public void setModelPrefix(String modelPrefix) {
         this.modelPrefix = modelPrefix;
     }
-
 //    public void fixParameter(Parameter parameter, double value) {
 ////        dr.app.beauti.options.Parameter parameter = options.getParameter(id);
 //        if (parameter == null) {
@@ -64,58 +52,46 @@ public abstract class Generator {
 //        parameter.isFixed = true;
 //        parameter.initial = value;
 //    }
-
-
     public void writeParameterRef(String wrapperName, String id, XMLWriter writer) {
         writer.writeOpenTag(wrapperName);
         writer.writeIDref(ParameterParser.PARAMETER, id);
         writer.writeCloseTag(wrapperName);
     }
-
     public void writeParameterRef(String id, XMLWriter writer) {
         writer.writeIDref(ParameterParser.PARAMETER, id);
     }
-
     public void writeParameter(String id, PartitionOptions options, XMLWriter writer) {
         Parameter parameter = options.getParameter(id);
         String prefix = options.getPrefix();
-
         if (parameter == null) {
             throw new IllegalArgumentException("parameter with name, " + id + ", is unknown; and its prefix is " + options.getPrefix());
         }
         writeParameter(prefix + id, parameter, writer);
     }
-
-
     public void writeParameter(int num, String id, PartitionSubstitutionModel model, XMLWriter writer) {
         Parameter parameter = model.getParameter(model.getPrefixCodon(num) + id);
         String prefix = model.getPrefix(num);
-
         if (parameter == null) {
             throw new IllegalArgumentException("parameter with name, " + id + ", is unknown; and its prefix is " + model.getPrefix());
         }
         writeParameter(prefix + id, parameter, writer);
     }
-
     public void writeParameter(String wrapperName, String id, int dimension, XMLWriter writer) {
         Parameter parameter = options.getParameter(id);
         writer.writeOpenTag(wrapperName);
         writeParameter(parameter, dimension, writer);
         writer.writeCloseTag(wrapperName);
     }
-
     public void writeParameter(int num, String wrapperName, String id, PartitionSubstitutionModel model, XMLWriter writer) {
         writer.writeOpenTag(wrapperName);
         writeParameter(num, id, model, writer);
         writer.writeCloseTag(wrapperName);
     }
-
     public void writeParameter(String wrapperName, String id, PartitionOptions options, XMLWriter writer) {
         writer.writeOpenTag(wrapperName);
         writeParameter(id, options, writer);
         writer.writeCloseTag(wrapperName);
     }
-
     public void writeParameter(Parameter parameter, int dimension, XMLWriter writer) {
 //        Parameter parameter = options.getParameter(id);
         if (parameter == null) {
@@ -136,23 +112,18 @@ public abstract class Generator {
             writeParameter(parameter.getName(), dimension, parameter.initial, lower, upper, writer);
         }
     }
-
     public void writeParameter(String parameterId, String parameterColumn, String fileName, int burnin, XMLWriter writer) {
         ArrayList<Attribute.Default> attributes = new ArrayList<Attribute.Default>();
         attributes.add(new Attribute.Default<String>(XMLParser.ID, parameterId));
-
         attributes.add(new Attribute.Default<String>("parameterColumn", parameterColumn));
         attributes.add(new Attribute.Default<String>("fileName", fileName));
         attributes.add(new Attribute.Default<String>("burnin", "" + burnin));
-
         Attribute[] attrArray = new Attribute[attributes.size()];
         for (int i = 0; i < attrArray.length; i++) {
             attrArray[i] = attributes.get(i);
         }
-
         writer.writeTag(ParameterParser.PARAMETER, attrArray, true);
     }
-
     public void writeParameter(String id, Parameter parameter, XMLWriter writer) {
         if (parameter.isFixed) {
             writeParameter(id, 1, parameter.initial, Double.NaN, Double.NaN, writer);
@@ -169,8 +140,6 @@ public abstract class Generator {
             writeParameter(id, 1, parameter.initial, lower, upper, writer);
         }
     }
-
-
     public void writeParameter(String id, int dimension, double value, double lower, double upper, XMLWriter writer) {
         ArrayList<Attribute.Default> attributes = new ArrayList<Attribute.Default>();
         attributes.add(new Attribute.Default<String>(XMLParser.ID, id));
@@ -186,21 +155,17 @@ public abstract class Generator {
         if (!Double.isNaN(upper)) {
             attributes.add(new Attribute.Default<String>(ParameterParser.UPPER, multiDimensionValue(dimension, upper)));
         }
-
         Attribute[] attrArray = new Attribute[attributes.size()];
         for (int i = 0; i < attrArray.length; i++) {
             attrArray[i] = attributes.get(i);
         }
-
         writer.writeTag(ParameterParser.PARAMETER, attrArray, true);
     }
-
     public void writeParameter(String wrapperName, String id, int dimension, double value, double lower, double upper, XMLWriter writer) {
         writer.writeOpenTag(wrapperName);
         writeParameter(id, dimension, value, lower, upper, writer);
         writer.writeCloseTag(wrapperName);
     }
-
     protected void writeCodonPatternsRef(String prefix, int num, int CodonPartitionCount, XMLWriter writer) {
         if (CodonPartitionCount == 2 && num == 1) { // "11" of "112", num start from 1
             writer.writeIDref(MergePatternsParser.MERGE_PATTERNS, prefix + SitePatternsParser.PATTERNS);
@@ -208,26 +173,18 @@ public abstract class Generator {
             writer.writeIDref(SitePatternsParser.PATTERNS, prefix + SitePatternsParser.PATTERNS);
         }
     }
-
     private String multiDimensionValue(int dimension, double value) {
         String multi = "";
-
         multi += value + "";
-
         // AR: A multidimensional parameter only needs to give initial values for every dimension
         // if they are actually different. A single value will automatically be expanded to every
         // dimension and make for a cleaner looking XML (and more robust to changes in the number
         // of groups/taxa etc.
-
 //        for (int i = 2; i <= dimension; i++)
 //            multi += " " + value;
-
         return multi;
     }
-
-
     protected void writeDistribution(Parameter parameter, boolean isRef, XMLWriter writer) {
-
         switch (parameter.priorType) {
             case UNIFORM_PRIOR:
                 String id = parameter.taxaId + "-uniformDist";
@@ -241,11 +198,9 @@ public abstract class Generator {
                     writer.writeOpenTag(UniformDistributionModelParser.LOWER);
                     writer.writeText(Double.toString(parameter.uniformLower));
                     writer.writeCloseTag(UniformDistributionModelParser.LOWER);
-
                     writer.writeOpenTag(UniformDistributionModelParser.UPPER);
                     writer.writeText(Double.toString(parameter.uniformUpper));
                     writer.writeCloseTag(UniformDistributionModelParser.UPPER);
-
                     writer.writeCloseTag(UniformDistributionModelParser.UNIFORM_DISTRIBUTION_MODEL);
                 }
                 break;
@@ -254,7 +209,6 @@ public abstract class Generator {
                 writer.writeOpenTag(DistributionModelParser.MEAN);
                 writer.writeText(Double.toString(parameter.mean));
                 writer.writeCloseTag(DistributionModelParser.MEAN);
-
                 writer.writeOpenTag(DistributionModelParser.OFFSET);
                 writer.writeText(Double.toString(parameter.offset));
                 writer.writeCloseTag(DistributionModelParser.OFFSET);
@@ -265,7 +219,6 @@ public abstract class Generator {
                 writer.writeOpenTag(NormalDistributionModelParser.MEAN);
                 writer.writeText(Double.toString(parameter.mean));
                 writer.writeCloseTag(NormalDistributionModelParser.MEAN);
-
                 writer.writeOpenTag(NormalDistributionModelParser.STDEV);
                 writer.writeText(Double.toString(parameter.stdev));
                 writer.writeCloseTag(NormalDistributionModelParser.STDEV);
@@ -280,11 +233,9 @@ public abstract class Generator {
                 writer.writeOpenTag(LogNormalDistributionModelParser.MEAN);
                 writer.writeText(Double.toString(parameter.mean));
                 writer.writeCloseTag(LogNormalDistributionModelParser.MEAN);
-
                 writer.writeOpenTag(LogNormalDistributionModelParser.STDEV);
                 writer.writeText(Double.toString(parameter.stdev));
                 writer.writeCloseTag(LogNormalDistributionModelParser.STDEV);
-
                 writer.writeOpenTag(LogNormalDistributionModelParser.OFFSET);
                 writer.writeText(Double.toString(parameter.offset));
                 writer.writeCloseTag(LogNormalDistributionModelParser.OFFSET);
@@ -295,11 +246,9 @@ public abstract class Generator {
                 writer.writeOpenTag(DistributionModelParser.SHAPE);
                 writer.writeText(Double.toString(parameter.shape));
                 writer.writeCloseTag(DistributionModelParser.SHAPE);
-
                 writer.writeOpenTag(DistributionModelParser.SCALE);
                 writer.writeText(Double.toString(parameter.scale));
                 writer.writeCloseTag(DistributionModelParser.SCALE);
-
                 writer.writeOpenTag(DistributionModelParser.OFFSET);
                 writer.writeText(Double.toString(parameter.offset));
                 writer.writeCloseTag(DistributionModelParser.OFFSET);
@@ -309,16 +258,13 @@ public abstract class Generator {
                 throw new IllegalArgumentException("Unknown Distribution Model for " + parameter.getName());
         }
     }
-
     public void writeReferenceComment(String[] lines, XMLWriter writer) {
         for (String line : lines)
             writer.writeComment(line);
     }
-
     public void generateInsertionPoint(final ComponentGenerator.InsertionPoint ip, final XMLWriter writer) {
         generateInsertionPoint(ip, null, writer);
     }
-
     public void generateInsertionPoint(final ComponentGenerator.InsertionPoint ip, final Object item, final XMLWriter writer) {
         for (ComponentGenerator component : components) {
             if (component.usesInsertionPoint(ip)) {
@@ -326,7 +272,6 @@ public abstract class Generator {
             }
         }
     }
-
     public void generateInsertionPoint(final ComponentGenerator.InsertionPoint ip, final Object item, final String prefix, final XMLWriter writer) {
         for (ComponentGenerator component : components) {
             if (component.usesInsertionPoint(ip)) {
@@ -334,24 +279,19 @@ public abstract class Generator {
             }
         }
     }
-
     private final List<ComponentGenerator> components = new ArrayList<ComponentGenerator>();
-
     public class GeneratorException extends Exception {
         public GeneratorException(String message) {
             super(message);
             switchToPanel = null;
         }
-
         public GeneratorException(String message, String switchToPanel) {
             super(message);
             this.switchToPanel = switchToPanel;
         }
-
         public String getSwitchToPanel() {
             return switchToPanel;
         }
-
         private final String switchToPanel;
     }
 }

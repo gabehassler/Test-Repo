@@ -1,6 +1,4 @@
-
 package dr.app.pathogen;
-
 import dr.app.gui.chart.*;
 import dr.app.gui.util.LongTask;
 import dr.evolution.tree.NodeRef;
@@ -28,7 +26,6 @@ import jam.util.IconUtils;
 import jebl.evolution.graphs.Node;
 import jebl.evolution.taxa.Taxon;
 import jebl.evolution.trees.RootedTree;
-
 import javax.swing.*;
 import javax.swing.plaf.BorderUIResource;
 import javax.swing.table.AbstractTableModel;
@@ -40,109 +37,77 @@ import java.io.Writer;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
-
 public class PathogenPanel extends JPanel implements Exportable {
-
     public static final String COLOUR = "Colour...";
     public static final String CLEAR_COLOURING = "Clear Colouring...";
-
     StatisticsModel statisticsModel;
     JTable statisticsTable = null;
-
     private Tree tree = null;
     private Tree currentTree = null;
     private Tree bestFittingRootTree = null;
-
     private final PathogenFrame frame;
     private final JTabbedPane tabbedPane = new JTabbedPane();
     private final JTextArea textArea = new JTextArea();
     private final JCheckBox showMRCACheck = new JCheckBox("Show ancestor traces");
-
     //    JTreeDisplay treePanel;
     private final SamplesPanel samplesPanel;
     private final FigTreePanel treePanel;
-
     private SearchPanel filterPanel;
     private JPopupMenu filterPopup;
-
     JChartPanel rootToTipPanel;
     JChart rootToTipChart;
     ScatterPlot rootToTipPlot;
-
     private static final boolean SHOW_NODE_DENSITY = true;
     JChartPanel nodeDensityPanel;
     JChart nodeDensityChart;
     ScatterPlot nodeDensityPlot;
-
     JChartPanel residualPanel;
     JChart residualChart;
     ScatterPlot residualPlot;
-
     ErrorBarPlot errorBarPlot;
     ParentPlot mrcaPlot;
-
     Map<Node, Integer> pointMap = new HashMap<Node, Integer>();
-
     Set<Integer> selectedPoints = new HashSet<Integer>();
-
     private boolean bestFittingRoot;
     private TemporalRooting.RootingFunction rootingFunction;
     private TemporalRooting temporalRooting = null;
-
     public PathogenPanel(PathogenFrame parent, TaxonList taxa, Tree tree) {
         frame = parent;
-
         samplesPanel = new SamplesPanel(parent, taxa);
-
         tabbedPane.addTab("Sample Dates", samplesPanel);
-
         statisticsModel = new StatisticsModel();
         statisticsTable = new JTable(statisticsModel);
-
         statisticsTable.getColumnModel().getColumn(0).setCellRenderer(
                 new TableRenderer(SwingConstants.RIGHT, new Insets(0, 4, 0, 4)));
         statisticsTable.getColumnModel().getColumn(1).setCellRenderer(
                 new TableRenderer(SwingConstants.LEFT, new Insets(0, 4, 0, 4)));
-
         JScrollPane scrollPane = new JScrollPane(statisticsTable,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-
         Box controlPanel1 = new Box(BoxLayout.PAGE_AXIS);
         controlPanel1.setOpaque(false);
-
         JPanel panel3 = new JPanel(new BorderLayout(0, 0));
         panel3.setOpaque(false);
         rootingCheck = new JCheckBox("Best-fitting root");
         panel3.add(rootingCheck, BorderLayout.CENTER);
-
         controlPanel1.add(panel3);
-
         final JComboBox rootingFunctionCombo = new JComboBox(TemporalRooting.RootingFunction.values());
-
         JPanel panel4 = new JPanel(new BorderLayout(0,0));
         panel4.setOpaque(false);
         panel4.add(new JLabel("Function: "), BorderLayout.WEST);
         panel4.add(rootingFunctionCombo, BorderLayout.CENTER);
         controlPanel1.add(panel4);
-
         JPanel panel1 = new JPanel(new BorderLayout(0, 0));
-
         panel1.setOpaque(false);
         panel1.add(scrollPane, BorderLayout.CENTER);
         panel1.add(controlPanel1, BorderLayout.NORTH);
-
         // Set up tree panel
-
         Toolbar toolBar = new Toolbar();
         toolBar.setOpaque(false);
         toolBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.darkGray));
-
         toolBar.setRollover(true);
         toolBar.setFloatable(false);
-
         Icon colourToolIcon = IconUtils.getIcon(this.getClass(), "images/coloursTool.png");
-
         final ToolbarAction colourToolbarAction = new ToolbarAction("Colour", COLOUR, colourToolIcon) {
             public void actionPerformed(ActionEvent e){
                 colourSelected();
@@ -151,11 +116,8 @@ public class PathogenPanel extends JPanel implements Exportable {
         ToolbarButton colourToolButton = new ToolbarButton(colourToolbarAction, true);
         colourToolButton.setFocusable(false);
         toolBar.addComponent(colourToolButton);
-
         toolBar.addFlexibleSpace();
-
         filterPopup = new JPopupMenu();
-
         final ButtonGroup bg = new ButtonGroup();
         boolean first = true;
         for (TreeViewer.TextSearchType searchType : TreeViewer.TextSearchType.values()) {
@@ -171,7 +133,6 @@ public class PathogenPanel extends JPanel implements Exportable {
         filterPanel.setOpaque(false);
 //        filterPanel.getSearchText().requestFocus();
         filterPanel.addSearchPanelListener(new SearchPanelListener() {
-
             public void searchStarted(String searchString) {
                 Enumeration e = bg.getElements();
                 String value = null;
@@ -181,127 +142,94 @@ public class PathogenPanel extends JPanel implements Exportable {
                         value = button.getText();
                     }
                 }
-
                 for (TreeViewer.TextSearchType searchType : TreeViewer.TextSearchType.values()) {
                     if (searchType.toString().equals(value)) {
                         treePanel.getTreeViewer().selectTaxa("!name", searchType, searchString, false);
                     }
                 }
             }
-
             public void searchStopped() {
 //                treeViewer.clearSelectedTaxa();
             }
         });
-
         JPanel panel5 = new JPanel(new FlowLayout());
         panel5.setOpaque(false);
         panel5.add(filterPanel);
         toolBar.addComponent(panel5);
-
         treePanel = new FigTreePanel(FigTreePanel.Style.SIMPLE);
-
         JPanel panel2 = new JPanel(new BorderLayout(0, 0));
         panel2.setOpaque(false);
         panel2.add(treePanel, BorderLayout.CENTER);
         panel2.add(toolBar, BorderLayout.NORTH);
-
         tabbedPane.add("Tree", panel2);
-
         treePanel.getTreeViewer().setSelectionMode(TreePaneSelector.SelectionMode.TAXA);
         treePanel.getTreeViewer().addTreeSelectionListener(new TreeSelectionListener() {
             public void selectionChanged() {
                 treeSelectionChanged();
             }
         });
-
         rootToTipChart = new JChart(new LinearAxis(), new LinearAxis(Axis.AT_ZERO, Axis.AT_MINOR_TICK));
-
         ChartSelector selector1 = new ChartSelector(rootToTipChart);
-
         rootToTipPanel = new JChartPanel(rootToTipChart, "", "time", "divergence");
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(rootToTipPanel, BorderLayout.CENTER);
         panel.add(showMRCACheck, BorderLayout.SOUTH);
         panel.setOpaque(false);
-
         tabbedPane.add("Root-to-tip", panel);
-
         residualChart = new JChart(new LinearAxis(), new LinearAxis(Axis.AT_ZERO, Axis.AT_MINOR_TICK));
-
         ChartSelector selector2 = new ChartSelector(residualChart);
-
         residualPanel = new JChartPanel(residualChart, "", "time", "residual");
         residualPanel.setOpaque(false);
-
         tabbedPane.add("Residuals", residualPanel);
-
 //        textArea.setEditable(false);
-
         JPanel panel6 = new JPanel(new BorderLayout(0, 0));
         panel6.setOpaque(false);
         panel6.add(tabbedPane, BorderLayout.CENTER);
 //        panel6.add(textArea, BorderLayout.SOUTH);
-
         if (SHOW_NODE_DENSITY) {
             nodeDensityChart = new JChart(new LinearAxis(), new LinearAxis(Axis.AT_ZERO, Axis.AT_MINOR_TICK));
             nodeDensityPanel = new JChartPanel(nodeDensityChart, "", "time", "node density");
             JPanel panel7 = new JPanel(new BorderLayout());
             panel7.add(nodeDensityPanel, BorderLayout.CENTER);
             panel7.setOpaque(false);
-
             ChartSelector selector3 = new ChartSelector(nodeDensityChart);
-
             tabbedPane.add("Node density", panel7);
         }
-
-
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel1, tabbedPane);
         splitPane.setDividerLocation(220);
         splitPane.setContinuousLayout(true);
         splitPane.setBorder(BorderFactory.createEmptyBorder());
         splitPane.setOpaque(false);
-
         setOpaque(false);
         setLayout(new BorderLayout(0, 0));
         setBorder(new BorderUIResource.EmptyBorderUIResource(new java.awt.Insets(12, 12, 12, 12)));
-
         add(splitPane, BorderLayout.CENTER);
-
         rootingCheck.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setBestFittingRoot(rootingCheck.isSelected(), (TemporalRooting.RootingFunction) rootingFunctionCombo.getSelectedItem());
             }
         });
-
         rootingFunctionCombo.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setBestFittingRoot(rootingCheck.isSelected(), (TemporalRooting.RootingFunction) rootingFunctionCombo.getSelectedItem());
             }
         });
-
         showMRCACheck.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setupPanel();
             }
         });
-
-
         setTree(tree);
     }
-
     public List<String> getSelectedTips() {
         List<String> tips = new ArrayList<String>();
         jebl.evolution.trees.Tree tree = treePanel.getTreeViewer().getTrees().get(0);
-
         for (Node node : treePanel.getTreeViewer().getSelectedTips()) {
             tips.add(tree.getTaxon(node).getName());
         }
         return tips;
     }
-
     private static Color lastColor = Color.GRAY;
-
     private void colourSelected() {
         Color color = JColorChooser.showDialog(this, "Select Colour", lastColor);
         if (color != null) {
@@ -310,7 +238,6 @@ public class PathogenPanel extends JPanel implements Exportable {
         }
         setupPanel();
     }
-
     private void treeSelectionChanged() {
         Set<Node> selectedTips = treePanel.getTreeViewer().getSelectedTips();
         frame.getCopyAction().setEnabled(selectedTips != null && selectedTips.size() > 0);
@@ -327,32 +254,24 @@ public class PathogenPanel extends JPanel implements Exportable {
         if (SHOW_NODE_DENSITY && nodeDensityPlot != null) {
             nodeDensityPlot.setSelectedPoints(selectedPoints);
         }
-
         selectMRCA();
     }
-
     private void plotSelectionChanged(final Set<Integer> selectedPoints) {
         this.selectedPoints = selectedPoints;
         Set<String> selectedTaxa = new HashSet<String>();
         for (Integer i : selectedPoints) {
             selectedTaxa.add(tree.getTaxon(i).toString());
         }
-
         treePanel.getTreeViewer().selectTaxa(selectedTaxa);
-
         selectMRCA();
     }
-
     private void selectMRCA() {
         if (mrcaPlot == null) return;
-
         if (selectedPoints != null && selectedPoints.size() > 0) {
-
             Set<String> selectedTaxa = new HashSet<String>();
             for (Integer i : selectedPoints) {
                 selectedTaxa.add(tree.getTaxon(i).toString());
             }
-
             Regression r = temporalRooting.getRootToTipRegression(currentTree);
             NodeRef mrca = Tree.Utils.getCommonAncestorNode(currentTree, selectedTaxa);
             double mrcaDistance1 = temporalRooting.getRootToTipDistance(currentTree, mrca);
@@ -362,14 +281,12 @@ public class PathogenPanel extends JPanel implements Exportable {
             }
             double mrcaDistance = temporalRooting.getRootToTipDistance(currentTree, mrca);
             double mrcaTime = r.getX(mrcaDistance);
-
             mrcaPlot.setSelectedPoints(selectedPoints, mrcaTime, mrcaDistance);
         } else {
             mrcaPlot.clearSelection();
         }
         repaint();
     }
-
     public void timeScaleChanged() {
         bestFittingRootTree = null;
         if (rootingCheck.isSelected()) {
@@ -378,16 +295,13 @@ public class PathogenPanel extends JPanel implements Exportable {
             setupPanel();
         }
     }
-
     public JComponent getExportableComponent() {
         return (JComponent) tabbedPane.getSelectedComponent();
     }
-
     public void setTree(Tree tree) {
         this.tree = tree;
         setupPanel();
     }
-
     public void setBestFittingRoot(boolean bestFittingRoot, final TemporalRooting.RootingFunction rootingFunction) {
         this.bestFittingRoot = bestFittingRoot;
         if (this.rootingFunction != rootingFunction) {
@@ -397,23 +311,18 @@ public class PathogenPanel extends JPanel implements Exportable {
         if (this.bestFittingRoot && bestFittingRootTree == null) {
             findRoot();
         }
-
         setupPanel();
     }
-
     public Tree getTree() {
         return tree;
     }
-
     public Tree getTreeAsViewed() {
         return currentTree;
     }
-
     public void writeDataFile(Writer writer) {
         PrintWriter pw = new PrintWriter(writer);
         String labels[] = temporalRooting.getTipLabels(currentTree);
         double yValues[] = temporalRooting.getRootToTipDistances(currentTree);
-
         if (temporalRooting.isContemporaneous()) {
             double meanY = DiscreteStatistics.mean(yValues);
             pw.println("tip\tdistance\tdeviation");
@@ -430,22 +339,18 @@ public class PathogenPanel extends JPanel implements Exportable {
             }
         }
     }
-
     public void setupPanel() {
         StringBuilder sb = new StringBuilder();
         NumberFormatter nf = new NumberFormatter(6);
-
         if (tree != null) {
             temporalRooting = new TemporalRooting(tree);
             currentTree = this.tree;
-
             if (bestFittingRoot && bestFittingRootTree != null) {
                 currentTree = bestFittingRootTree;
                 sb.append("Best-fitting root");
             } else {
                 sb.append("User root");
             }
-
             if (temporalRooting.isContemporaneous()) {
                 if (tabbedPane.getSelectedIndex() == 2) {
                     tabbedPane.setSelectedIndex(1);
@@ -454,27 +359,21 @@ public class PathogenPanel extends JPanel implements Exportable {
             } else {
                 tabbedPane.setEnabledAt(2, true);
             }
-
             RootedTree jtree = Tree.Utils.asJeblTree(currentTree);
-
             List<Color> colours = new ArrayList<Color>();
             for (Node tip : jtree.getExternalNodes()) {
                 Taxon taxon = jtree.getTaxon(tip);
                 colours.add((Color)taxon.getAttribute("!color"));
             }
-
             if (temporalRooting.isContemporaneous()) {
                 double[] dv = temporalRooting.getRootToTipDistances(currentTree);
-
                 List<Double> values = new ArrayList<Double>();
                 for (double d : dv) {
                     values.add(d);
                 }
-
                 rootToTipChart.removeAllPlots();
                 NumericalDensityPlot dp = new NumericalDensityPlot(values, 20, null);
                 dp.setLineColor(new Color(9, 70, 15));
-
                 double yOffset = (Double) dp.getYData().getMax() / 2;
                 List<Double> dummyValues = new ArrayList<Double>();
                 for (int i = 0; i < values.size(); i++) {
@@ -482,7 +381,6 @@ public class PathogenPanel extends JPanel implements Exportable {
                     double y = MathUtils.nextGaussian() * ((Double) dp.getYData().getMax() * 0.05);
                     dummyValues.add(yOffset + y);
                 }
-
                 rootToTipPlot = new ScatterPlot(values, dummyValues);
                 rootToTipPlot.setColours(colours);
                 rootToTipPlot.setMarkStyle(Plot.CIRCLE_MARK, 8, new BasicStroke(0.0F), new Color(44, 44, 44), new Color(129, 149, 149));
@@ -492,49 +390,38 @@ public class PathogenPanel extends JPanel implements Exportable {
                     public void markClicked(int index, double x, double y, boolean isShiftDown) {
                         rootToTipPlot.selectPoint(index, isShiftDown);
                     }
-
                     public void selectionChanged(final Set<Integer> selectedPoints) {
                         plotSelectionChanged(selectedPoints);
                     }
                 });
-
                 rootToTipChart.addPlot(rootToTipPlot);
                 rootToTipChart.addPlot(dp);
                 rootToTipPanel.setXAxisTitle("root-to-tip divergence");
                 rootToTipPanel.setYAxisTitle("proportion");
-
                 residualChart.removeAllPlots();
-
                 sb.append(", contemporaneous tips");
                 sb.append(", mean root-tip distance: " + nf.format(DiscreteStatistics.mean(dv)));
                 sb.append(", coefficient of variation: " + nf.format(DiscreteStatistics.stdev(dv) / DiscreteStatistics.mean(dv)));
                 sb.append(", stdev: " + nf.format(DiscreteStatistics.stdev(dv)));
                 sb.append(", variance: " + nf.format(DiscreteStatistics.variance(dv)));
-
                 showMRCACheck.setVisible(false);
             } else {
                 Regression r = temporalRooting.getRootToTipRegression(currentTree);
-
                 double[] residuals = temporalRooting.getRootToTipResiduals(currentTree, r);
                 pointMap.clear();
                 for (int i = 0; i < currentTree.getExternalNodeCount(); i++) {
                     NodeRef tip = currentTree.getExternalNode(i);
                     Node node = jtree.getNode(Taxon.getTaxon(currentTree.getNodeTaxon(tip).getId()));
                     node.setAttribute("residual", residuals[i]);
-
                     pointMap.put(node, i);
                 }
-
                 rootToTipChart.removeAllPlots();
-
                 if (showMRCACheck.isSelected()) {
                     double[] dv = temporalRooting.getParentRootToTipDistances(currentTree);
-
                     List<Double> parentDistances = new ArrayList<Double>();
                     for (int i = 0; i < dv.length; i++) {
                         parentDistances.add(i, dv[i]);
                     }
-
                     List<Double> parentTimes = new ArrayList<Double>();
                     for (int i = 0; i < parentDistances.size(); i++) {
                         parentTimes.add(i, r.getX(parentDistances.get(i)));
@@ -542,51 +429,37 @@ public class PathogenPanel extends JPanel implements Exportable {
                     mrcaPlot = new ParentPlot(r.getXData(), r.getYData(), parentTimes, parentDistances);
                     mrcaPlot.setLineColor(new Color(105, 202, 105));
                     mrcaPlot.setLineStroke(new BasicStroke(0.5F));
-
                     rootToTipChart.addPlot(mrcaPlot);
                 }
-
                 if (true) {
                     double[] datePrecisions = temporalRooting.getTipDatePrecisions(currentTree);
-
                     Variate.D ed = new Variate.D();
-
                     for (int i = 0; i < datePrecisions.length; i++) {
                         ed.add(datePrecisions[i]);
                     }
-
                     errorBarPlot = new ErrorBarPlot(ErrorBarPlot.Orientation.HORIZONTAL, r.getXData(), r.getYData(), ed);
                     errorBarPlot.setLineColor(new Color(44, 44, 44));
                     errorBarPlot.setLineStroke(new BasicStroke(1.0F));
-
                     rootToTipChart.addPlot(errorBarPlot);
                 }
-
                 rootToTipPlot = new ScatterPlot(r.getXData(), r.getYData());
                 rootToTipPlot.addListener(new Plot.Adaptor() {
                     public void selectionChanged(final Set<Integer> selectedPoints) {
                         plotSelectionChanged(selectedPoints);
                     }
                 });
-
                 rootToTipPlot.setColours(colours);
-
                 rootToTipPlot.setMarkStyle(Plot.CIRCLE_MARK, 8, new BasicStroke(0.0F), new Color(44, 44, 44), new Color(129, 149, 149));
                 rootToTipPlot.setHilightedMarkStyle(new BasicStroke(0.5F), new Color(44, 44, 44), UIManager.getColor("List.selectionBackground"));
-
                 rootToTipChart.addPlot(rootToTipPlot);
-
                 rootToTipChart.addPlot(new RegressionPlot(r));
-
                 rootToTipChart.getXAxis().addRange(r.getXIntercept(), (Double) r.getXData().getMax());
                 rootToTipPanel.setXAxisTitle("time");
                 rootToTipPanel.setYAxisTitle("root-to-tip divergence");
-
                 residualChart.removeAllPlots();
                 Variate.D values = (Variate.D) r.getYResidualData();
                 NumericalDensityPlot dp = new NumericalDensityPlot(values, 20);
                 dp.setLineColor(new Color(103, 128, 144));
-
                 double yOffset = (Double) dp.getYData().getMax() / 2;
                 Double[] dummyValues = new Double[values.getCount()];
                 for (int i = 0; i < dummyValues.length; i++) {
@@ -601,7 +474,6 @@ public class PathogenPanel extends JPanel implements Exportable {
                     public void markClicked(int index, double x, double y, boolean isShiftDown) {
                         rootToTipPlot.selectPoint(index, isShiftDown);
                     }
-
                     @Override
                     public void selectionChanged(final Set<Integer> selectedPoints) {
                         plotSelectionChanged(selectedPoints);
@@ -610,12 +482,10 @@ public class PathogenPanel extends JPanel implements Exportable {
                 residualPlot.setColours(colours);
                 residualPlot.setMarkStyle(Plot.CIRCLE_MARK, 8, new BasicStroke(0.0F), new Color(44, 44, 44), new Color(129, 149, 149));
                 residualPlot.setHilightedMarkStyle(new BasicStroke(0.5F), new Color(44, 44, 44), UIManager.getColor("List.selectionBackground"));
-
                 residualChart.addPlot(residualPlot);
                 residualChart.addPlot(dp);
                 residualPanel.setXAxisTitle("residual");
                 residualPanel.setYAxisTitle("proportion");
-
 //                residualChart.removeAllPlots();
 //                residualPlot = new ScatterPlot(r.getXData(), r.getYResidualData());
 //                residualPlot.addListener(new Plot.Adaptor() {
@@ -626,7 +496,6 @@ public class PathogenPanel extends JPanel implements Exportable {
 //                residualChart.addPlot(residualPlot);
 //                residualPanel.setXAxisTitle("residual");
 //                residualPanel.setYAxisTitle("proportion");
-
                 if (SHOW_NODE_DENSITY) {
                     Regression r2 = temporalRooting.getNodeDensityRegression(currentTree);
                     nodeDensityChart.removeAllPlots();
@@ -639,55 +508,40 @@ public class PathogenPanel extends JPanel implements Exportable {
                     nodeDensityPlot.setColours(colours);
                     nodeDensityPlot.setMarkStyle(Plot.CIRCLE_MARK, 8, new BasicStroke(0.0F), new Color(44, 44, 44), new Color(129, 149, 149));
                     nodeDensityPlot.setHilightedMarkStyle(new BasicStroke(0.5F), new Color(44, 44, 44), UIManager.getColor("List.selectionBackground"));
-
                     nodeDensityChart.addPlot(nodeDensityPlot);
-
                     nodeDensityChart.addPlot(new RegressionPlot(r2));
-
                     nodeDensityChart.getXAxis().addRange(r2.getXIntercept(), (Double) r2.getXData().getMax());
                     nodeDensityPanel.setXAxisTitle("time");
                     nodeDensityPanel.setYAxisTitle("node density");
                 }
-
                 sb.append(", dated tips");
                 sb.append(", date range: " + nf.format(temporalRooting.getDateRange()));
                 sb.append(", slope (rate): " + nf.format(r.getGradient()));
                 sb.append(", x-intercept (TMRCA): " + nf.format(r.getXIntercept()));
                 sb.append(", corr. coeff: " + nf.format(r.getCorrelationCoefficient()));
                 sb.append(", R^2: " + nf.format(r.getRSquared()));
-
                 showMRCACheck.setVisible(true);
             }
-
             treePanel.setTree(jtree);
             treePanel.setColourBy("residual");
-
         } else {
             treePanel.setTree(null);
             rootToTipChart.removeAllPlots();
             sb.append("No trees loaded");
         }
-
         textArea.setText(sb.toString());
-
         statisticsModel.fireTableStructureChanged();
         repaint();
     }
-
     private javax.swing.Timer timer = null;
-
-
     private void findRoot() {
-
 //        bestFittingRootTree = temporalRooting.findRoot(tree);
         final FindRootTask analyseTask = new FindRootTask();
-
         final ProgressMonitor progressMonitor = new ProgressMonitor(frame,
                 "Finding best-fit root",
                 "", 0, tree.getNodeCount());
         progressMonitor.setMillisToPopup(0);
         progressMonitor.setMillisToDecideToPopup(0);
-
         timer = new javax.swing.Timer(10, new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 progressMonitor.setProgress(analyseTask.getCurrent());
@@ -698,33 +552,24 @@ public class PathogenPanel extends JPanel implements Exportable {
                 }
             }
         });
-
         analyseTask.go();
         timer.start();
-
     }
-
     class FindRootTask extends LongTask {
-
         public FindRootTask() {
         }
-
         public int getCurrent() {
             return temporalRooting.getCurrentRootBranch();
         }
-
         public int getLengthOfTask() {
             return temporalRooting.getTotalRootBranches();
         }
-
         public String getDescription() {
             return "Calculating demographic reconstruction...";
         }
-
         public String getMessage() {
             return null;
         }
-
         public Object doWork() {
             bestFittingRootTree = temporalRooting.findRoot(tree, rootingFunction);
             EventQueue.invokeLater(
@@ -733,32 +578,22 @@ public class PathogenPanel extends JPanel implements Exportable {
                             setupPanel();
                         }
                     });
-
             return null;
         }
-
     }
-
-
     public TemporalRooting getTemporalRooting() {
         return temporalRooting;
     }
-
     class StatisticsModel extends AbstractTableModel {
-
         String[] rowNamesDatedTips = {"Date range", "Slope (rate)", "X-Intercept (TMRCA)", "Correlation Coefficient", "R squared", "Residual Mean Squared"};
         String[] rowNamesContemporaneousTips = {"Mean root-tip", "Coefficient of variation", "Stdev", "Variance"};
-
         private DecimalFormat formatter = new DecimalFormat("0.####E0");
         private DecimalFormat formatter2 = new DecimalFormat("####0.####");
-
         public StatisticsModel() {
         }
-
         public int getColumnCount() {
             return 2;
         }
-
         public int getRowCount() {
             if (temporalRooting == null) {
                 return 0;
@@ -768,16 +603,13 @@ public class PathogenPanel extends JPanel implements Exportable {
                 return rowNamesDatedTips.length;
             }
         }
-
         public Object getValueAt(int row, int col) {
-
             double value = 0;
             if (temporalRooting.isContemporaneous()) {
                 if (col == 0) {
                     return rowNamesContemporaneousTips[row];
                 }
                 double values[] = temporalRooting.getRootToTipDistances(currentTree);
-
                 switch (row) {
                     case 0:
                         value = DiscreteStatistics.mean(values);
@@ -818,12 +650,10 @@ public class PathogenPanel extends JPanel implements Exportable {
                         break;
                 }
             }
-
             if (value > 0 && (Math.abs(value) < 0.1 || Math.abs(value) >= 100000.0)) {
                 return formatter.format(value);
             } else return formatter2.format(value);
         }
-
         public String getColumnName(int column) {
             if (column > 0) {
                 return "";
@@ -836,21 +666,17 @@ public class PathogenPanel extends JPanel implements Exportable {
                 return "Dated Tips";
             }
         }
-
         public Class getColumnClass(int c) {
             return getValueAt(0, c).getClass();
         }
-
         public String toString() {
             StringBuffer buffer = new StringBuffer();
-
             buffer.append(getColumnName(0));
             for (int j = 1; j < getColumnCount(); j++) {
                 buffer.append("\t");
                 buffer.append(getColumnName(j));
             }
             buffer.append("\n");
-
             for (int i = 0; i < getRowCount(); i++) {
                 buffer.append(getValueAt(i, 0));
                 for (int j = 1; j < getColumnCount(); j++) {
@@ -859,11 +685,8 @@ public class PathogenPanel extends JPanel implements Exportable {
                 }
                 buffer.append("\n");
             }
-
             return buffer.toString();
         }
     }
-
     private JCheckBox rootingCheck;
-
 }

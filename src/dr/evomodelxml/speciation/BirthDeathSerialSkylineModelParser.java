@@ -1,17 +1,12 @@
-
 package dr.evomodelxml.speciation;
-
 import dr.evolution.util.Units;
 import dr.evomodel.speciation.BirthDeathSerialSamplingModel;
 import dr.evomodel.speciation.BirthDeathSerialSkylineModel;
 import dr.evoxml.util.XMLUnits;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 import java.util.logging.Logger;
-
 public class BirthDeathSerialSkylineModelParser extends AbstractXMLObjectParser {
-
     public static final String BIRTH_DEATH_SKYLINE_MODEL = "birthDeathSkyline";
     public static final String TIMES = "times";
     public static final String LAMBDA = "birthRate";
@@ -24,20 +19,14 @@ public class BirthDeathSerialSkylineModelParser extends AbstractXMLObjectParser 
     public static final String R = "r";
     public static final String ORIGIN = "origin";
     public static final String TREE_TYPE = "type";
-
     public String getParserName() {
         return BIRTH_DEATH_SKYLINE_MODEL;
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         final String modelName = xo.getId();
         final Units.Type units = XMLUnits.Utils.getUnitsAttr(xo);
-
         final Parameter times = (Parameter) xo.getElementFirstChild(TIMES);
         final Parameter lambda = (Parameter) xo.getElementFirstChild(LAMBDA);
-
-
         boolean relativeDeath = xo.hasChildNamed(RELATIVE_MU);
         Parameter mu;
         if (relativeDeath) {
@@ -45,52 +34,39 @@ public class BirthDeathSerialSkylineModelParser extends AbstractXMLObjectParser 
         } else {
             mu = (Parameter) xo.getElementFirstChild(MU);
         }
-
         final Parameter psi = (Parameter) xo.getElementFirstChild(PSI);
         final Parameter p = (Parameter) xo.getElementFirstChild(SAMPLE_PROBABILITY);
-
         final boolean timesStartFromOrigin = xo.getAttribute(TIMES_START_FROM_ORIGIN, false);
-
         Parameter origin = null;
         if (xo.hasChildNamed(ORIGIN)) {
             origin = (Parameter) xo.getElementFirstChild(ORIGIN);
         }
-
         final Parameter r = xo.hasChildNamed(SAMPLE_BECOMES_NON_INFECTIOUS) ?
                 (Parameter) xo.getElementFirstChild(SAMPLE_BECOMES_NON_INFECTIOUS) : new Parameter.Default(0.0);
 //        r.setParameterValueQuietly(0, 1 - r.getParameterValue(0)); // donot use it, otherwise log is changed improperly
-
         Logger.getLogger("dr.evomodel").info(xo.hasChildNamed(SAMPLE_BECOMES_NON_INFECTIOUS) ? getCitationRT() : getCitationPsiOrg());
-
         return new BirthDeathSerialSkylineModel(modelName, times, lambda, mu, psi, p, origin, relativeDeath,
                 false, timesStartFromOrigin, units);
     }
-
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
-
     public static String getCitationPsiOrg() {
 //        return "Stadler, T; Sampling-through-time in birth-death trees; JOURNAL OF THEORETICAL BIOLOGY (2010) 267:396-404";
         return "Stadler T et al (2011, in prep)";
     }
-
     public static String getCitationRT() {
         return "Stadler T et al (2011, in prep)";
     }
-
     public String getParserDescription() {
         return "Stadler T et al (2011, in prep)";
     }
-
     public Class getReturnType() {
         return BirthDeathSerialSamplingModel.class;
     }
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     private final XMLSyntaxRule[] rules = {
             AttributeRule.newStringRule(TREE_TYPE, true),
             AttributeRule.newBooleanRule(TIMES_START_FROM_ORIGIN, false, "if true, then the time vector represents the " +

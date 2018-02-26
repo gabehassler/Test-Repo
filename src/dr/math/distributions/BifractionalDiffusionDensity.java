@@ -1,64 +1,46 @@
-
 package dr.math.distributions;
-
 import dr.math.UnivariateFunction;
 import cern.jet.stat.Gamma;
-
-
-
 public class BifractionalDiffusionDensity implements Distribution {
-
     public BifractionalDiffusionDensity(double v, double alpha, double beta) {
         this.v = v;
         this.alpha = alpha;
         this.beta = beta;
         coefficients = constructBifractionalDiffusionCoefficients(alpha, beta);
     }
-
     public BifractionalDiffusionDensity(double alpha, double beta) {
         this(1.0, alpha, beta);
     }
-
     public double pdf(double x) {
         return pdf(x, v);
     }
-
     public double pdf(double x, double v) {
         return pdf(x, v, alpha, beta, coefficients);
     }
-
     public double logPdf(double x) {
         return logPdf(x, v, alpha, beta, coefficients);
     }
-
     public double cdf(double x) {
         throw new RuntimeException("Not yet implemented");
     }
-
     public double quantile(double y) {
         throw new RuntimeException("Not yet implemented");
     }
-
     public double mean() {
         throw new RuntimeException("Not yet implemented");
     }
-
     public double variance() {
         throw new RuntimeException("Not yet implemented");
     }
-
     public UnivariateFunction getProbabilityDensityFunction() {
         throw new RuntimeException("Not yet implemented");
     }
-
     public static double logPdf(double x, double v, double alpha, double beta) {
         return Math.log(pdf(x, v, alpha, beta));
     }
-
     public static double logPdf(double x, double v, double alpha, double beta, double[][][] coefficients) {
         return Math.log(pdf(x, v, alpha, beta, coefficients));
     }
-
 //    /*
 //     * Taken from:  Saichev AI and Zaslavsky GM (1997) Fractional kinetic equations: solutions and applications.
 //     *              Chaos, 7, 753-764
@@ -90,20 +72,15 @@ public class BifractionalDiffusionDensity implements Distribution {
 //
 //        return Math.log(density / (Math.PI * absX));
 //    }
-
-
     static class SignedDouble {
         double x;
         boolean positive;
-
         SignedDouble(double x, boolean positive) {
             this.x = x;
             this.positive = positive;
         }
     }
-
     public static SignedDouble logGamma(double z) {
-
         // To extend the gamma function to negative (non-integer) numbers, apply the relationship
         // \Gamma(z) = \frac{ \Gamma(z+n) }{ z(z+1)\cdots(z+n-1),
         // by choosing n such that z+n is positive
@@ -118,10 +95,7 @@ public class BifractionalDiffusionDensity implements Distribution {
         boolean positive = (n % 2 == 0);
         return new SignedDouble(Gamma.logGamma(z + n) - Gamma.logGamma(-z + 1) + Gamma.logGamma(-z - n + 1), positive);
     }
-
-
     public static double gamma(double z) {
-
         // To extend the gamma function to negative (non-integer) numbers, apply the relationship
         // \Gamma(z) = \frac{ \Gamma(z+n) }{ z(z+1)\cdots(z+n-1),
         // by choosing n such that z+n is positive
@@ -138,8 +112,6 @@ public class BifractionalDiffusionDensity implements Distribution {
         if (!positive) result *= -1;
         return result;
     }
-
-
 // The following comments out functions may be faster than using the generalized Wright function.
 // Keep for comparison
 //
@@ -234,7 +206,6 @@ public class BifractionalDiffusionDensity implements Distribution {
 //        }
 //        return sum;
 //    }
-
     private static double evaluateGreensFunctionAtZero(double t, double alpha, double beta) {
         if (beta == 1) {
             final double oneOverAlpha = 1.0 / alpha;
@@ -244,48 +215,35 @@ public class BifractionalDiffusionDensity implements Distribution {
             return 1.0 / (alpha * Math.pow(t, betaOverAlpha) * Math.sin(Math.PI / alpha) * gamma(1.0 - betaOverAlpha));
         }
     }
-
     private static double evaluateGreensFunctionAlphaEqualsBeta(double x, double t, double alpha) {
-
         final double absX = Math.abs(x);
         final double twoAlpha = 2.0 * alpha;
         final double tPowAlpha = Math.pow(t, alpha);
         final double piHalfAlpha = 0.5 * Math.PI * alpha;
-
         double green = Math.pow(absX, alpha - 1.0) * tPowAlpha * Math.sin(piHalfAlpha) /
                        (Math.pow(t, twoAlpha) + 2 * Math.pow(absX, alpha) * tPowAlpha * Math.cos(piHalfAlpha)
                                               + Math.pow(absX, twoAlpha));
         return oneOverPi * green;
     }
-
-
     private static double evaluateGreensFunctionBetaGreaterThanAlpha(double x, double t, double alpha, double beta,
                                                                      double[][][] coefficients) {
         double z = Math.pow(2.0, alpha) * Math.pow(t, beta) / Math.pow(Math.abs(x), alpha);
         return oneOverSqrtPi / Math.sqrt(Math.abs(x)) * generalizedWrightFunction(-z, coefficients[0], coefficients[1]);
     }
-
-
     private static double evaluateGreensFunctionAlphaGreaterThanBeta(double x, double t, double alpha, double beta,
                                                                      double[][][] coefficients) {
-
          double z1 = Math.pow(Math.abs(x),alpha) / (Math.pow(2,alpha) * Math.pow(t, beta));
          double z2 = x * x / (4.0 * Math.pow(t, 2 * beta / alpha));
-
          double green1 = oneOverSqrtPi * Math.pow(Math.abs(x), alpha - 1.0) /
                  (Math.pow(2,alpha) * Math.pow(t, beta)) *
                  generalizedWrightFunction(-z1, coefficients[2], coefficients[3]);
-        
          double green2 = oneOverSqrtPi /  (alpha * Math.pow(t, beta/alpha)) *
                  generalizedWrightFunction(-z2, coefficients[4], coefficients[5]);
-   
          return green1 + green2;
     }
-
     public static double pdf(double x, double v, double alpha, double beta) {
         return pdf(x, v, alpha, beta, null);
     }
-
     public static double pdf(double x, double v, double alpha, double beta, double[][][] coefficients) {
         final double t = 0.5 * v;
         if (x == 0) {
@@ -303,25 +261,19 @@ public class BifractionalDiffusionDensity implements Distribution {
             return evaluateGreensFunctionBetaGreaterThanAlpha(x, t, alpha, beta, coefficients);
         }
     }
-
     public static double[][][] constructBifractionalDiffusionCoefficients(double alpha, double beta) {
         double[][][] coefficients = new double[6][][];
-
         // coefficients[0:1][][] : Greens function beta > alpha
         coefficients[0] = new double[][]{{0.5, alpha / 2.0}, {1.0, 1.0}};
         coefficients[1] = new double[][]{{1.0, beta}, {0.0, -alpha / 2.0}};
-
         // coefficients[2:3][][] : Greens function #1 alpha > beta
         coefficients[2] = new double[][]{{0.5 - alpha / 2.0, -alpha / 2.0}, {1.0, 1.0}};
         coefficients[3] = new double[][]{{1.0 - beta, -beta}, {alpha / 2.0, alpha / 2.0}};
-
         // coefficients[4:5][][] : Greens function #2 alpha > beta
         coefficients[4] = new double[][]{{1.0 / alpha, 2.0 / alpha}, {1.0 - 1.0 / alpha, -2.0 / alpha}};
         coefficients[5] = new double[][]{{0.5, 1.0}, {1.0 - beta / alpha, -2.0 * beta / alpha}};
-
         return coefficients;
     }
-
     public static double generalizedWrightFunction(double z, double[][] aAp, double[][] bBq) {
         final int p = aAp.length;
         final int q = bBq.length;
@@ -329,13 +281,11 @@ public class BifractionalDiffusionDensity implements Distribution {
         double incr;
         double zPowK = 1.0;
         int k = 0;
-
         while (// incr > eps &&
                 k < maxK) {
             incr = 1;
             for (int i = 0; i < p; i++) {
                 final double[] aAi = aAp[i];
-
                 double x = gamma(aAi[0] + aAi[1] * k); // TODO Precompute these factors
                 if (!Double.isNaN(x)) {
                     incr *= x;
@@ -355,16 +305,13 @@ public class BifractionalDiffusionDensity implements Distribution {
             incr /= gamma(k+1); // k! TODO Precompute these factors
             incr *= zPowK;
             sum += incr;
-
             // Get ready for next loop
             zPowK *= z;
             k++;
         }
         return sum;
     }
-
     public static void main(String[] arg) {
-
         double alpha = 2.0;
         double beta = 0.8;
         double z1 = -2.34;
@@ -373,31 +320,22 @@ public class BifractionalDiffusionDensity implements Distribution {
         System.err.println("gamma("+z1+") = "+ gamma(z1));
         System.err.println("gamma(-2.0) = "+gamma(-2.0));
         System.err.println("");
-
         double var = 4.0;
         double t = 0.5 * var;
         double x = 1.0;
-
         double[][][] coefficients = constructBifractionalDiffusionCoefficients(alpha, beta);
         System.err.println("p(x = "+x+", v = "+var+") = " + evaluateGreensFunctionAlphaGreaterThanBeta(x, t, alpha,
                 beta, coefficients));
-
-
         alpha = 0.7;
         beta = 1.4;
         coefficients = constructBifractionalDiffusionCoefficients(alpha, beta);
 //        System.err.println("p(x = "+x+", v = "+var+") = " + evaluateGreensFunctionBetaGreaterThanAlpha(x, t, alpha, beta));
         System.err.println("p(x = "+x+", v = "+var+") = " + evaluateGreensFunctionBetaGreaterThanAlpha(x, t, alpha,
                 beta, coefficients));        
-
-
-
     }
-
     private static double oneOverSqrtPi = 1.0 / Math.sqrt(Math.PI);
     private static double oneOverPi = 1.0 / Math.PI;
     public static final int maxK = 50;
-
     private double alpha;
     private double beta;
     private double v;

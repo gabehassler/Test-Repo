@@ -1,8 +1,5 @@
-
 package dr.util;
-
 public class CommonCitations {
-
     public static Citation LEMEY_2010 = new Citation(
             new Author[]{
                     new Author("P", "Lemey"),
@@ -17,13 +14,11 @@ public class CommonCitations {
             1877, 1885,
             Citation.Status.PUBLISHED
     );
-
     public static Citation OBRIEN_2009 = new Citation(
             new Author[]{
                     new Author("JB", "O'Brien"),
                     new Author("VN", "Minin"),
                     new Author("MA", "Suchard")
-
             },
             "Learning to count: robust estimates for labeled distances between molecular sequences",
             2009,
@@ -32,7 +27,6 @@ public class CommonCitations {
             801, 814,
             Citation.Status.PUBLISHED
     );
-
     public static Citation ALEKSEYENKO_2008 = new Citation(
             new Author[]{
                     new Author("AV", "Alekseyenko"),
@@ -46,7 +40,6 @@ public class CommonCitations {
             772, 784,
             Citation.Status.PUBLISHED
     );
-
     public static Citation SUCHARD_2012 = new Citation(
             new Author[]{
                     new Author("MA", "Suchard"),
@@ -55,7 +48,6 @@ public class CommonCitations {
             },
             Citation.Status.IN_PREPARATION
     );
-
     public static Citation SHAPIRO_2012 = new Citation(
             new Author[]{
                     new Author("B", "Shapiro"),
@@ -63,7 +55,6 @@ public class CommonCitations {
             },
             Citation.Status.IN_PREPARATION
     );
-
     public static Citation LEMEY_2012 = new Citation(
             new Author[]{
                     new Author("P", "Lemey"),
@@ -73,7 +64,6 @@ public class CommonCitations {
             },
             Citation.Status.IN_PREPARATION
     );
-
     public static Citation LEMEY_MIXTURE_2012 = new Citation(
             new Author[]{
                     new Author("P", "Lemey"),
@@ -81,7 +71,6 @@ public class CommonCitations {
             },
             Citation.Status.IN_PREPARATION
     );
-
     public static Citation BLOOM_2012 = new Citation(
             new Author[]{
                     new Author("J", "Bloom"),
@@ -89,7 +78,6 @@ public class CommonCitations {
             },
             Citation.Status.IN_PREPARATION
     );
-
     public static Citation SUCHARD_2012_LATENT = new Citation(
             new Author[]{
                     new Author("MA", "Suchard"),

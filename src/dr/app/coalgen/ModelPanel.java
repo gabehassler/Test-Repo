@@ -1,57 +1,40 @@
-
 package dr.app.coalgen;
-
 import dr.app.gui.components.RealNumberField;
 import jam.framework.Exportable;
 import jam.panels.OptionsPanel;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-
 public class ModelPanel extends JPanel implements Exportable {
-
     private final CoalGenFrame frame;
     private final CoalGenData data;
-
     private JComboBox demographicCombo;
-
     private OptionsPanel optionPanel;
-
     private RealNumberField[] argumentFields = new RealNumberField[CoalGenData.argumentNames.length];
     private JCheckBox[] argumentCheckBoxes = new JCheckBox[CoalGenData.argumentNames.length];
     private JComboBox[] argumentCombos = new JComboBox[CoalGenData.argumentNames.length];
-
     public ModelPanel(final CoalGenFrame frame, final CoalGenData data) {
-
         super();
-
         this.frame = frame;
         this.data = data;
-
         setOpaque(false);
         setLayout(new BorderLayout());
-
         optionPanel = new OptionsPanel(12, 12, SwingConstants.CENTER);
         add(optionPanel, BorderLayout.NORTH);
-
         demographicCombo = new JComboBox();
         demographicCombo.setOpaque(false);
-
         for (String demographicModel : CoalGenData.demographicModels) {
             demographicCombo.addItem(demographicModel);
         }
-
         demographicCombo.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 setDemographicArguments();
                 frame.fireModelChanged();
             }
         });
-
         for (int i = 0; i < CoalGenData.argumentNames.length; i++) {
             argumentFields[i] = new RealNumberField();
             argumentFields[i].setColumns(8);
@@ -64,27 +47,22 @@ public class ModelPanel extends JPanel implements Exportable {
             argumentCheckBoxes[i].addActionListener(
                     new ArgumentActionListener(argumentCheckBoxes[i], argumentFields[i], argumentCombos[i]));
         }
-
         setDemographicArguments();
     }
-
     class ArgumentActionListener implements ActionListener {
         JCheckBox checkBox;
         RealNumberField field;
         JComboBox combo;
-
         ArgumentActionListener(JCheckBox checkBox, RealNumberField field, JComboBox combo) {
             this.checkBox = checkBox;
             this.field = field;
             this.combo = combo;
         }
-
         public void actionPerformed(ActionEvent ae) {
             field.setEnabled(!checkBox.isSelected());
             combo.setEnabled(checkBox.isSelected());
         }
     }
-
     private int findArgument(JComboBox comboBox, String argument) {
         for (int i = 0; i < comboBox.getItemCount(); i++) {
             String item = ((String) comboBox.getItemAt(i)).toLowerCase();
@@ -92,21 +70,14 @@ public class ModelPanel extends JPanel implements Exportable {
         }
         return -1;
     }
-
     private void setDemographicArguments() {
         optionPanel.removeAll();
-
         optionPanel.addComponents(new JLabel("Demographic Model:"), demographicCombo);
-
         optionPanel.addSeparator();
-
         optionPanel.addLabel("Select the parameter values (or obtain from a trace file):");
-
         int demo = demographicCombo.getSelectedIndex();
-
         for (int i = 0; i < data.argumentIndices[demo].length; i++) {
             int k = data.argumentIndices[demo][i];
-
             JPanel panel = new JPanel(new BorderLayout(6, 6));
             panel.add(argumentFields[k], BorderLayout.WEST);
             panel.add(argumentCheckBoxes[k], BorderLayout.CENTER);
@@ -118,10 +89,8 @@ public class ModelPanel extends JPanel implements Exportable {
         validate();
         repaint();
     }
-
     public final void tracesChanged() {
         demographicCombo.setSelectedIndex(data.demographicModel);
-
         if (data.traces != null) {
             for (int i = 0; i < CoalGenData.argumentNames.length; i++) {
                 argumentCombos[i].removeAllItems();
@@ -129,12 +98,9 @@ public class ModelPanel extends JPanel implements Exportable {
                     String statistic = data.traces.getTraceName(j);
                     argumentCombos[i].addItem(statistic);
                 }
-
                 int index = data.argumentTraces[i];
-
                 for (int j = 0; j < CoalGenData.argumentGuesses[i].length; j++) {
                     if (index != -1) break;
-
                     index = findArgument(argumentCombos[i], CoalGenData.argumentGuesses[i][j]);
                 }
                 if (index == -1) {
@@ -143,7 +109,6 @@ public class ModelPanel extends JPanel implements Exportable {
                 } else {
                     argumentCheckBoxes[i].setEnabled(true);
                 }
-
                 argumentCombos[i].setSelectedIndex(index);
             }
         }
@@ -152,7 +117,6 @@ public class ModelPanel extends JPanel implements Exportable {
         }
         setDemographicArguments();
     }
-
     public final void collectSettings() {
         data.demographicModel = demographicCombo.getSelectedIndex();
         for (int i = 0; i < CoalGenData.argumentNames.length; i++) {
@@ -164,7 +128,6 @@ public class ModelPanel extends JPanel implements Exportable {
             }
         }
     }
-
     public JComponent getExportableComponent() {
         return this;
     }

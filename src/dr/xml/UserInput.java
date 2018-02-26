@@ -1,18 +1,11 @@
-
 package dr.xml;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
 public class UserInput {
-
 	public static AbstractXMLObjectParser STRING_PARSER = new AbstractXMLObjectParser() {
-
 		public String getParserName() { return "string"; }
-			
 		public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-			
 			if (xo.hasAttribute("prompt")) {
 				String prompt = xo.getStringAttribute("prompt");	
 				System.out.print(prompt+": ");
@@ -22,20 +15,14 @@ public class UserInput {
 				return xo.getChild(String.class);
 			}
 		}
-		
 		//************************************************************************
 		// AbstractXMLObjectParser implementation
 		//************************************************************************
-		
 		public String getParserDescription() {
 			return "returns a String. If a prompt attribute exists then the user is prompted for input, otherwise the character contents of the element are returned.";
 		}
-		
 		public Class getReturnType() { return String.class; }
-		
-		
 		public XMLSyntaxRule[] getSyntaxRules() { return rules; }
-		
 		private XMLSyntaxRule[] rules = new XMLSyntaxRule[] {  
 			new XORRule(
 				new StringAttributeRule(
@@ -45,13 +32,9 @@ public class UserInput {
 				new ElementRule(String.class))
 		};
 	};
-	
 	public static AbstractXMLObjectParser DOUBLE_PARSER = new AbstractXMLObjectParser() {
-
 		public String getParserName() { return "double"; }
-			
 		public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-			
 			if (xo.hasAttribute("prompt")) {
 				String prompt = xo.getStringAttribute("prompt");	
 				System.out.print(prompt+": ");
@@ -61,19 +44,14 @@ public class UserInput {
 				return xo.getChild(Double.class);
 			}
 		}
-		
 		//************************************************************************
 		// AbstractXMLObjectParser implementation
 		//************************************************************************
-		
 		public String getParserDescription() {
 			return "returns a Double. If a prompt attribute exists then the user is prompted for input, otherwise the character contents of the element are returned as a Double.";
 		}
-		
 		public Class getReturnType() { return Double.class; }
-		
 		public XMLSyntaxRule[] getSyntaxRules() { return rules; }
-		
 		private XMLSyntaxRule[] rules = new XMLSyntaxRule[] {  
 			new XORRule(
 				new StringAttributeRule(
@@ -83,13 +61,9 @@ public class UserInput {
 				new ElementRule(Double.class))
 		};
 	};
-	
 	public static AbstractXMLObjectParser INTEGER_PARSER = new AbstractXMLObjectParser() {
-
 		public String getParserName() { return "integer"; }
-			
 		public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-			
 			if (xo.hasAttribute("prompt")) {
 				String prompt = xo.getStringAttribute("prompt");	
 				System.out.print(prompt+": ");
@@ -99,19 +73,14 @@ public class UserInput {
 				return xo.getChild(Integer.class);
 			}
 		}
-		
 		//************************************************************************
 		// AbstractXMLObjectParser implementation
 		//************************************************************************
-		
 		public String getParserDescription() {
 			return "returns an Integer. If a prompt attribute exists then the user is prompted for input, otherwise the character contents of the element are returned as an Integer.";
 		}
-		
 		public Class getReturnType() { return Integer.class; }
-		
 		public XMLSyntaxRule[] getSyntaxRules() { return rules; }
-		
 		private XMLSyntaxRule[] rules = new XMLSyntaxRule[] {  
 			new XORRule(
 				new StringAttributeRule(
@@ -121,15 +90,12 @@ public class UserInput {
 				new ElementRule(Integer.class))
 		};
 	};
-		
 	static KeyboardInput input = new KeyboardInput();
 }
-
 class KeyboardInput
 {
   private final BufferedReader in =
     new BufferedReader(new InputStreamReader(System.in));
-
   public final synchronized int readInteger()
   {
     String input = "";
@@ -151,7 +117,6 @@ class KeyboardInput
     }
     return value;
   }
-
   public final synchronized long readLong()
   {
     String input = "";
@@ -173,7 +138,6 @@ class KeyboardInput
     }
     return value;
   }
-
   public final synchronized double readDouble()
   {
     String input = "";
@@ -195,7 +159,6 @@ class KeyboardInput
     }
     return value;
   }
-
   public final synchronized float readFloat()
   {
     String input = "";
@@ -217,7 +180,6 @@ class KeyboardInput
     }
     return value;
   }
-
   public final synchronized char readCharacter()
   {
     char c = ' ';
@@ -229,7 +191,6 @@ class KeyboardInput
     {}
     return c;
   }
-
   public final synchronized String readString()
   {
     String s = "";
@@ -246,6 +207,3 @@ class KeyboardInput
     return s;
   }
 }
-
-
- 

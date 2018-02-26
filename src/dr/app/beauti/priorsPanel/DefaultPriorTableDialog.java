@@ -1,24 +1,16 @@
-
 package dr.app.beauti.priorsPanel;
-
 import dr.app.beauti.options.BeautiOptions;
 import dr.app.beauti.BeautiFrame;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-
-
 public class DefaultPriorTableDialog {
-
     private BeautiFrame frame;
     private PriorsPanel priorsPanel;
-
     public DefaultPriorTableDialog(BeautiFrame frame) {
         this.frame = frame;
         priorsPanel = new PriorsPanel(frame, true);
     }
-
     public JButton findButton(String label, Container container) {
         for (Component comp : container.getComponents()) {
             if (comp instanceof JButton) {
@@ -32,19 +24,14 @@ public class DefaultPriorTableDialog {
                     return button;
                 }
             }
-
         }
         return null;
     }
-
     public boolean showDialog(BeautiOptions options) {
         priorsPanel.setParametersList(options);
-
         Object[] buttons;
         JOptionPane optionPane;
-
         String title;
-
         if (priorsPanel.hasUndefinedPrior) {
             title = "Undefined Priors";
         } else {
@@ -57,12 +44,10 @@ public class DefaultPriorTableDialog {
                 null,
                 buttons,
                 buttons[0]);
-
         JButton button = findButton("Continue", optionPane);
         if (button != null) {
             priorsPanel.setContinueButton(button);
         }
-
 //       if (priorsPanel.hasUndefinedPrior) {
 //            buttons = new String[] {"OK"};
 //            title = "Undefined Priors";
@@ -82,15 +67,12 @@ public class DefaultPriorTableDialog {
 //                    buttons,
 //                    buttons[0]);
 //        }
-
         optionPane.setBorder(new EmptyBorder(12, 12, 12, 12));
         optionPane.setPreferredSize(new java.awt.Dimension(800, 600));
-
         final JDialog dialog = optionPane.createDialog(frame, title);
         dialog.pack();
         dialog.setResizable(true);
         dialog.setVisible(true);
-
         return optionPane.getValue() != null && optionPane.getValue().equals("Continue");
     }
 }

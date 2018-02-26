@@ -1,11 +1,8 @@
-
 package dr.math.matrixAlgebra;
-
 public class LUPDecomposition {
     private double[][] rows;
     private int[] permutation = null;
     private int parity = 1;
-
     public LUPDecomposition(double[][] components)
             throws IllegalDimension {
         int n = components.length;
@@ -15,18 +12,15 @@ public class LUPDecomposition {
         rows = components;
         initialize();
     }
-
     public LUPDecomposition(Matrix m) throws IllegalDimension {
         if (!m.isSquare())
             throw new IllegalDimension(
                     "Supplied matrix is not a square matrix");
         initialize(m.components);
     }
-
     public LUPDecomposition(SymmetricMatrix m) {
         initialize(m.components);
     }
-
     private double[] backwardSubstitution(double[] xTilde) {
         int n = rows.length;
         double[] answer = new double[n];
@@ -38,7 +32,6 @@ public class LUPDecomposition {
         }
         return answer;
     }
-
     private void decompose() {
         int n = rows.length;
         permutation = new int[n];
@@ -54,13 +47,11 @@ public class LUPDecomposition {
             parity = 0;
         }
     }
-
     private boolean decomposed() {
         if (parity == 1 && permutation == null)
             decompose();
         return parity != 0;
     }
-
     public double determinant() {
         if (!decomposed())
             return Double.NaN;
@@ -69,7 +60,6 @@ public class LUPDecomposition {
             determinant *= rows[i][i];
         return determinant;
     }
-
     public double logDeterminant() {
         if (!decomposed()) {
             return Double.NaN;
@@ -89,7 +79,6 @@ public class LUPDecomposition {
             return logDeterminant;
         }
     }
-
     public boolean isPD() { // TODO Fix; check sign and for 0 in rows[i][i]
         for (int i = 0; i < rows.length; i++) {
             if (rows[i][i] <= 0)
@@ -97,8 +86,6 @@ public class LUPDecomposition {
         }
         return true;
     }
-
-
     private double[] forwardSubstitution(double[] c) {
         int n = rows.length;
         double[] answer = new double[n];
@@ -109,12 +96,10 @@ public class LUPDecomposition {
         }
         return answer;
     }
-
     private void initialize() {
         permutation = null;
         parity = 1;
     }
-
     private void initialize(double[][] components) {
         int n = components.length;
         rows = new double[n][n];
@@ -124,7 +109,6 @@ public class LUPDecomposition {
         }
         initialize();
     }
-
     public double[][] inverseMatrixComponents() {
         if (!decomposed())
             return null;
@@ -141,7 +125,6 @@ public class LUPDecomposition {
         }
         return inverseRows;
     }
-
     private int largestPivot(int k) {
         double maximum = Math.abs(rows[k][k]);
         double abs;
@@ -155,7 +138,6 @@ public class LUPDecomposition {
         }
         return index;
     }
-
     private void pivot(int k) {
         double inversePivot = 1 / rows[k][k];
         int k1 = k + 1;
@@ -166,20 +148,17 @@ public class LUPDecomposition {
                 rows[i][j] -= rows[i][k] * rows[k][j];
         }
     }
-
     public double[] solve(double[] c) {
         return decomposed()
                 ? backwardSubstitution(forwardSubstitution(c))
                 : null;
     }
-
     public Vector solve(Vector c) {
         double[] components = solve(c.components);
         if (components == null)
             return null;
         return components == null ? null : new Vector(components);
     }
-
     private void swapRows(int i, int k) {
         if (i != k) {
             double temp;
@@ -195,7 +174,6 @@ public class LUPDecomposition {
             parity = -parity;
         }
     }
-
     public static void symmetrizeComponents(double[][] components) {
         for (int i = 0; i < components.length; i++) {
             for (int j = i + 1; j < components.length; j++) {
@@ -205,7 +183,6 @@ public class LUPDecomposition {
             }
         }
     }
-
     public String toString() {
         StringBuffer sb = new StringBuffer();
         char[] separator = {'[', ' '};

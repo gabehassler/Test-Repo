@@ -1,6 +1,4 @@
-
 package dr.evomodel.coalescent;
-
 //import dr.evolution.coalescent.IntervalType;
 import dr.evolution.coalescent.TreeIntervals;
 import dr.evolution.tree.Tree;
@@ -12,15 +10,10 @@ import dr.inference.model.Model;
 import dr.inference.model.Parameter;
 //import no.uib.cipr.matrix.DenseVector;
 //import no.uib.cipr.matrix.SymmTridiagMatrix;
-
 import java.util.ArrayList;
 //import java.util.Arrays;
 import java.util.List;
-
-
 public class GaussianProcessMultilocusSkytrackLikelihood extends GaussianProcessSkytrackLikelihood implements MultiLociTreeSet {
-
-
 //    private double cutOff;
 //    private int numGridPoints;
 //    protected int oldFieldLength;
@@ -33,11 +26,9 @@ public class GaussianProcessMultilocusSkytrackLikelihood extends GaussianProcess
     // sortedPoints[i][0] is the time of the i-th grid point or sampling or coalescent event
     // sortedPoints[i][1] is 0 if the i-th point is a grid point, 1 if it's a sampling point, and 2 if it's a coalescent point
     // sortedPoints[i][2] is the number of lineages present in the interval starting at time sortedPoints[i][0]
-
 //    protected Parameter phiParameter;
 //    protected SymmTridiagMatrix precMatrix;
 //    protected SymmTridiagMatrix storedPrecMatrix;
-
     public GaussianProcessMultilocusSkytrackLikelihood(List<Tree> treeList,
                                                        Parameter precParameter,
                                                        boolean rescalebyRootHeight,
@@ -53,10 +44,7 @@ public class GaussianProcessMultilocusSkytrackLikelihood extends GaussianProcess
                                                        Parameter CoalCounts,
                                                        Parameter numPoints,
                                                        Parameter Tmrca) {
-
         super(GaussianProcessSkytrackLikelihoodParser.SKYTRACK_LIKELIHOOD);
-
-
         this.popSizeParameter = popParameter;
         this.Tmrca = Tmrca;
         this.changePoints=change_points;
@@ -71,10 +59,8 @@ public class GaussianProcessMultilocusSkytrackLikelihood extends GaussianProcess
         this.GPtype=GPtype;
         this.coalfactor=coalfactor;
         this.CoalCounts=CoalCounts;
-
 //        System.out.println("numGridPoints: " + numGridPoints);
 //        setupGridPoints();
-
         addVariable(popSizeParameter);
         addVariable(precisionParameter);
         addVariable(changePoints);
@@ -84,17 +70,12 @@ public class GaussianProcessMultilocusSkytrackLikelihood extends GaussianProcess
         addVariable(coalfactor);
         addVariable(lambda_boundParameter);
         addVariable(CoalCounts);
-
-
         setTree(treeList);
-
         numintervals=getIntervalCount(); //Not sure, check. I want the number of intervals defined by either
 //        sampling times or coalescent times of all trees
         System.err.println("by getIntervalCount, I get:"+getIntervalCount());
-
         numcoalpoints = getCorrectFieldLength();
         System.err.println("by getCorrectField"+getCorrectFieldLength());
-
         GPcoalfactor = new double[numintervals];
         backupIntervals=new double[numintervals];
         GPCoalInterval=new double[numcoalpoints];
@@ -111,30 +92,18 @@ public class GaussianProcessMultilocusSkytrackLikelihood extends GaussianProcess
         popSizeParameter.setDimension(numcoalpoints);
         changePoints.setDimension(numcoalpoints);
         coalfactor.setDimension(numcoalpoints);
-
         initializationReport();
-
 //        wrapSetupIntervals();
-
 //        coalescentIntervals = new double[oldFieldLength];
 //        storedCoalescentIntervals = new double[oldFieldLength];
 //        sufficientStatistics = new double[fieldLength];
 //        storedSufficientStatistics = new double[fieldLength];
 //        numCoalEvents = new double[fieldLength];
 //        storedNumCoalEvents = new double[fieldLength];
-
 //        setupGMRFWeights();
         setupSufficientStatistics();
-
 //        addStatistic(new DeltaStatistic());
-
-
-
-
     }
-
-
-
 //                   OK
     protected void setTree(List<Tree> treeList) {
         treesSet = this;
@@ -157,9 +126,7 @@ public class GaussianProcessMultilocusSkytrackLikelihood extends GaussianProcess
             }
         }
     }
-
     protected int getCorrectFieldLength() {
-
         return numIntervals-treeList.size();
 //        TODO add correction when not all samples are gathered at the same time
     }
@@ -171,9 +138,7 @@ public class GaussianProcessMultilocusSkytrackLikelihood extends GaussianProcess
 //        }
 //        return tips - treeList.size();
 //    }
-
     protected void handleModelChangedEvent(Model model, Object object, int index) {
-
         if (model instanceof TreeModel) {
             TreeModel treeModel = (TreeModel) model;
             int tn = treeList.indexOf(treeModel);
@@ -189,7 +154,6 @@ public class GaussianProcessMultilocusSkytrackLikelihood extends GaussianProcess
             throw new RuntimeException("Unknown object modified in GMRFMultilocusSkyrideLikelihood");
         }
     }
-
     public void initializationReport() {
         System.out.println("Creating a GP based estimation of effective population size trajectories for multiple loci:");
         System.out.println("\tIf you publish results using this model, please reference: ");
@@ -199,10 +163,8 @@ public class GaussianProcessMultilocusSkytrackLikelihood extends GaussianProcess
 //    public void wrapSetupIntervals() {
 //        // Do nothing
 //    }
-
     int numTrees;
     int numIntervals;
-
 //
 //    protected void setupGridPoints() {
 //        if (gridPoints == null) {
@@ -215,9 +177,7 @@ public class GaussianProcessMultilocusSkytrackLikelihood extends GaussianProcess
 //            gridPoints[pt] = (pt + 1) * (cutOff / numGridPoints);
 //        }
 //    }
-
     protected void setupSufficientStatistics() {
-
 //        //numCoalEvents = new double[fieldLength];
 //        //sufficientStatistics = new double[fieldLength];
 //
@@ -413,44 +373,34 @@ public class GaussianProcessMultilocusSkytrackLikelihood extends GaussianProcess
 //
 //            }
 //        }
-
     }
 //
 //    public double[] getNumCoalEvents() {
 //        return numCoalEvents;
 //    }
-
     protected double calculateLogCoalescentLikelihood() {
-
 //        if (!intervalsKnown) {
 //            // intervalsKnown -> false when handleModelChanged event occurs in super.
 //            wrapSetupIntervals();
 //            setupSufficientStatistics();
 //            intervalsKnown = true;
 //        }
-
         // Matrix operations taken from block update sampler to calculate data likelihood and field prior
-
         double currentLike = 0;
 //        double[] currentGamma = popSizeParameter.getParameterValues();
 //
 //        for (int i = 0; i < fieldLength; i++) {
 //            currentLike += -numCoalEvents[i] * currentGamma[i] - sufficientStatistics[i] * Math.exp(-currentGamma[i]);
 //        }
-
         return currentLike;
     }
-
-
     protected double calculateLogFieldLikelihood() {
-
 //        if (!intervalsKnown) {
 //            //intervalsKnown -> false when handleModelChanged event occurs in super.
 //            wrapSetupIntervals();
 //            setupSufficientStatistics();
 //            intervalsKnown = true;
 //        }
-
         double currentLike = 0;
 //        DenseVector diagonal1 = new DenseVector(fieldLength);
 //        DenseVector currentGamma = new DenseVector(popSizeParameter.getParameterValues());
@@ -466,21 +416,17 @@ public class GaussianProcessMultilocusSkytrackLikelihood extends GaussianProcess
 //        } else {
 //            currentLike -= fieldLength / 2.0 * LOG_TWO_TIMES_PI;
 //        }
-
         return currentLike;
     }
-
     public double getLogLikelihood() {
         if (!likelihoodKnown) {
             logLikelihood = calculateLogCoalescentLikelihood();
 //            logFieldLikelihood = calculateLogFieldLikelihood();
             likelihoodKnown = true;
         }
-
         return logLikelihood;
 //        return logLikelihood + logFieldLikelihood;
     }
-
 //    protected void setupGMRFWeights() {
 //
 //        //setupSufficientStatistics();
@@ -511,51 +457,39 @@ public class GaussianProcessMultilocusSkytrackLikelihood extends GaussianProcess
 //        weightMatrix = new SymmTridiagMatrix(diag, offdiag);
 //
 //    }
-
     protected double getFieldScalar() {
         return 1.0;
     }
-
-
     private List<Tree> treeList;
     private List<TreeIntervals> intervalsList;
-
     public int nLoci() {
         return treeList.size();
     }
-
     public Tree getTree(int nt) {
         return treeList.get(nt);
     }
-
     public TreeIntervals getTreeIntervals(int nt) {
         return intervalsList.get(nt);
     }
-
     public double getPopulationFactor(int nt) {
         return 1.0;
     }
-
     public void storeTheState() {
         for (TreeIntervals intervals : intervalsList) {
             intervals.storeState();
         }
     }
-
     public void restoreTheState() {
         for (TreeIntervals intervals : intervalsList) {
             intervals.restoreState();
         }
     }
-
 //    protected void storeState() {
 //        // System.arraycopy(numCoalEvents, 0, storedNumCoalEvents, 0, numCoalEvents.length);
 //        super.storeState();
 //        System.arraycopy(numCoalEvents, 0, storedNumCoalEvents, 0, numCoalEvents.length);
 //        // storedPrecMatrix = precMatrix.copy();
 //    }
-
-
 //    protected void restoreState() {
 //        super.restoreState();
 //
@@ -564,7 +498,6 @@ public class GaussianProcessMultilocusSkytrackLikelihood extends GaussianProcess
 //        numCoalEvents = storedNumCoalEvents;
 //        storedNumCoalEvents = tmp;
 //    }
-
 //    public int getCoalescentIntervalLineageCount(int i) {
 //        return 0;  //To change body of implemented methods use File | Settings | File Templates.
 //    }
@@ -573,4 +506,3 @@ public class GaussianProcessMultilocusSkytrackLikelihood extends GaussianProcess
 //        return null;  //To change body of implemented methods use File | Settings | File Templates.
 //    }
 }
-

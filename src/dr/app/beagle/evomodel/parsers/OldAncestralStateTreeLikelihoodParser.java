@@ -1,6 +1,4 @@
-
 package dr.app.beagle.evomodel.parsers;
-
 import dr.app.beagle.evomodel.branchmodel.BranchModel;
 import dr.app.beagle.evomodel.sitemodel.BranchSubstitutionModel;
 import dr.app.beagle.evomodel.sitemodel.EpochBranchSubstitutionModel;
@@ -17,24 +15,18 @@ import dr.evomodel.treelikelihood.AncestralStateTreeLikelihood;
 import dr.evomodel.treelikelihood.TipStatesModel;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 import java.util.Map;
 import java.util.Set;
-
-
 @Deprecated // Switching to BranchModel
 public class OldAncestralStateTreeLikelihoodParser extends OldTreeLikelihoodParser {
-
     public static final String RECONSTRUCTING_TREE_LIKELIHOOD = "oldAncestralTreeLikelihood";
     public static final String RECONSTRUCTION_TAG = AncestralStateTreeLikelihood.STATES_KEY;
     public static final String RECONSTRUCTION_TAG_NAME = "stateTagName";
     public static final String MAP_RECONSTRUCTION = "useMAP";
     public static final String MARGINAL_LIKELIHOOD = "useMarginalLikelihood";
-
     public String getParserName() {
         return RECONSTRUCTING_TREE_LIKELIHOOD;
     }
-
 	protected OldBeagleTreeLikelihood createTreeLikelihood(
 			PatternList patternList, //
 			TreeModel treeModel, //
@@ -48,38 +40,24 @@ public class OldAncestralStateTreeLikelihoodParser extends OldTreeLikelihoodPars
 			Parameter> partialsRestrictions, //
 			XMLObject xo //
 	) throws XMLParseException {
-
-		
 //		System.err.println("XML object: " + xo.toString());
-	
 		DataType dataType = null;
 		SubstitutionModel substModel = (SubstitutionModel) xo.getChild(SubstitutionModel.class);
-
 		// TODO
 		// both BSM and FM have to be specified, handle the exception
 		if(branchSubstitutionModel instanceof EpochBranchSubstitutionModel) {
-
 			FrequencyModel freqModel = (FrequencyModel) xo.getChild(FrequencyModel.class);
 			dataType = freqModel.getDataType();
-
 		} else {
-
 			if (substModel == null) {
-
 				substModel = siteRateModel.getSubstitutionModel();
-
 			}
-
 			 dataType = substModel.getDataType();
-
 		}
-
         // default tag is RECONSTRUCTION_TAG
         String tag = xo.getAttribute(RECONSTRUCTION_TAG_NAME, RECONSTRUCTION_TAG);
-
         boolean useMAP = xo.getAttribute(MAP_RECONSTRUCTION, false);
         boolean useMarginalLogLikelihood = xo.getAttribute(MARGINAL_LIKELIHOOD, true);
-
         return new OldAncestralStateBeagleTreeLikelihood(  // Current just returns a OldBeagleTreeLikelihood
                 patternList,
                 treeModel,
@@ -97,7 +75,6 @@ public class OldAncestralStateTreeLikelihoodParser extends OldTreeLikelihoodPars
                 useMarginalLogLikelihood
         );
     }
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return new XMLSyntaxRule[] {
                 AttributeRule.newBooleanRule(OldTreeLikelihoodParser.USE_AMBIGUITIES, true),

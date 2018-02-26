@@ -1,6 +1,4 @@
-
 package dr.app.tools;
-
 import dr.inference.trace.LogFileTraces;
 import dr.inference.trace.TraceDistribution;
 import dr.inference.trace.TraceException;
@@ -13,47 +11,37 @@ import jebl.evolution.io.NewickImporter;
 import jebl.evolution.io.NexusImporter;
 import jebl.evolution.io.TreeImporter;
 import jebl.evolution.trees.RootedTree;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 public class SkylineReconstructor {
-
     private int binCount;
     private double minTime;
     private double maxTime;
     private double ageOfYoungest;
-
     private Variate xData = new Variate.D();
     private Variate yDataMean = new Variate.D();
     private Variate yDataMedian = new Variate.D();
     private Variate yDataUpper = new Variate.D();
     private Variate yDataLower = new Variate.D();
-
     public SkylineReconstructor(File logFile, File treeFile, int burnin,
                                 int binCount, double minTime, double maxTime, double ageOfYoungest)
             throws IOException, ImportException, TraceException {
-
         this.binCount = binCount;
         this.minTime = minTime;
         this.maxTime = maxTime;
         this.ageOfYoungest = ageOfYoungest;
-
         LogFileTraces traces = new LogFileTraces(logFile.getName(), logFile);
         traces.loadTraces();
         traces.setBurnIn(burnin);
-
         int stateCount = traces.getStateCount();
-
         int firstPopSize = findArgument(traces, "popSize");
         int popSizeCount = getTraceRange(traces, firstPopSize);
         int firstGroupSize = findArgument(traces, "groupSize");
         int groupSizeCount = getTraceRange(traces, firstGroupSize);
-
         boolean isLinear = (groupSizeCount == popSizeCount - 1);
         if (!isLinear && groupSizeCount != popSizeCount) {
             if (isLinear) {
@@ -63,26 +51,21 @@ public class SkylineReconstructor {
                 }
             }
         }
-
         ArrayList<ArrayList> popSizes = new ArrayList<ArrayList>();
         ArrayList<ArrayList> groupSizes = new ArrayList<ArrayList>();
-
         for (int i = 0; i < popSizeCount; i++) {
             popSizes.add(new ArrayList(traces.getValues(firstPopSize + i)));
         }
         for (int i = 0; i < groupSizeCount; i++) {
             groupSizes.add(new ArrayList(traces.getValues(firstGroupSize + i)));
         }
-
         List heights = traces.getValues(traces.getTraceIndex("treeModel.rootHeight"));
         TraceDistribution distribution = new TraceDistribution(heights,
                 traces.getTrace(traces.getTraceIndex("treeModel.rootHeight")).getTraceType(), traces.getStepSize());
-
         double timeMean = distribution.getMean();
         double timeMedian = distribution.getMedian();
         double timeUpper = distribution.getUpperHPD();
         double timeLower = distribution.getLowerHPD();
-
 //        double maxHeight = timeLower;
         double maxHeight = maxTime;
 //        switch () {
@@ -100,38 +83,30 @@ public class SkylineReconstructor {
 //                maxHeight = timeUpper;
 //                break;
 //        }
-
         BufferedReader reader = new BufferedReader(new FileReader(treeFile));
-
         String line = reader.readLine();
-
         TreeImporter importer;
         if (line.toUpperCase().startsWith("#NEXUS")) {
             importer = new NexusImporter(reader);
         } else {
             importer = new NewickImporter(reader, false);
         }
-
         double delta = maxHeight / (binCount - 1);
         int skip = burnin / traces.getStepSize();
         int state = 0;
-
         while (importer.hasTree() && state < skip) {
             importer.importNextTree();
             state += 1;
         }
-
         // the age of the end of this group
         double[][] groupTimes = new double[stateCount][];
         //int tips = 0;
         state = 0;
-
         while (importer.hasTree()) {
             RootedTree tree = (RootedTree) importer.importNextTree();
             IntervalList intervals = new Intervals(tree);
             int intervalCount = intervals.getIntervalCount();
             //tips = tree.getExternalNodes().size();
-
             // get the coalescent intervales only
             groupTimes[state] = new double[groupSizeCount];
             double totalTime = 0.0;
@@ -144,11 +119,8 @@ public class SkylineReconstructor {
                     throw new RuntimeException("Group size " + groupIndex + " should be integer but found:" + g);
                 } else groupSize = (int) Math.round(g);
             }
-
             for (int j = 0; j < intervalCount; j++) {
-
                 totalTime += intervals.getInterval(j);
-
                 if (intervals.getIntervalType(j) == IntervalList.IntervalType.COALESCENT) {
                     subIndex += 1;
                     if (subIndex == groupSize) {
@@ -163,35 +135,26 @@ public class SkylineReconstructor {
                         }
                     }
                 }
-
                 // insert zero-length coalescent intervals
                 int diff = intervals.getCoalescentEvents(j) - 1;
                 if (diff > 0)
                     throw new RuntimeException("Don't handle multifurcations!");
             }
-
             state += 1;
         }
-
-
         Variate[] bins = new Variate[binCount];
         double height = 0.0;
-
         for (int k = 0; k < binCount; k++) {
             bins[k] = new Variate.D();
-
             if (height >= 0.0 && height <= maxHeight) {
                 for (state = 0; state < stateCount; state++) {
-
                     if (isLinear) {
                         double lastGroupTime = 0.0;
-
                         int index = 0;
                         while (index < groupTimes[state].length && groupTimes[state][index] < height) {
                             lastGroupTime = groupTimes[state][index];
                             index += 1;
                         }
-
                         if (index < groupTimes[state].length - 1) {
                             double t = (height - lastGroupTime) / (groupTimes[state][index] - lastGroupTime);
                             double p1 = (Double) groupSizes.get(index).get(state);
@@ -204,13 +167,11 @@ public class SkylineReconstructor {
                         while (index < groupTimes[state].length && groupTimes[state][index] < height) {
                             index += 1;
                         }
-
                         if (index < groupTimes[state].length) {
                             double popSize = (Double) groupSizes.get(index).get(state);
                             if (popSize == 0.0) {
                                 throw new RuntimeException("Zero pop size");
                             }
-
                             bins[k].add(popSize);
                         } else {
                             // Do we really want to do this?
@@ -221,9 +182,7 @@ public class SkylineReconstructor {
             }
             height += delta;
         }
-
         double t = 0.0;
-
         for (Variate bin : bins) {
             xData.add(t);
             if (bin.getCount() > 0) {
@@ -240,27 +199,21 @@ public class SkylineReconstructor {
             t += delta;
         }
     }
-
     public Variate getXData() {
         return xData;
     }
-
     public Variate getYDataMean() {
         return yDataMean;
     }
-
     public Variate getYDataUpper() {
         return yDataUpper;
     }
-
     public Variate getYDataMedian() {
         return yDataMedian;
     }
-
     public Variate getYDataLower() {
         return yDataLower;
     }
-
     private int findArgument(TraceList traceList, String argument) {
         for (int j = 0; j < traceList.getTraceCount(); j++) {
             String statistic = traceList.getTraceName(j);
@@ -271,46 +224,33 @@ public class SkylineReconstructor {
         }
         return -1;
     }
-
     private String getNumericalSuffix(String argument) {
         int i = argument.length() - 1;
-
         if (i < 0) return "";
-
         char ch = argument.charAt(i);
-
         if (!Character.isDigit(ch)) return "";
-
         while (i > 0 && Character.isDigit(ch)) {
             i -= 1;
             ch = argument.charAt(i);
         }
-
         return argument.substring(i + 1, argument.length());
     }
-
     private int getTraceRange(TraceList traceList, int first) {
         int i = 1;
         int k = first;
-
         String name = traceList.getTraceName(first);
         String root = name.substring(0, name.length() - 1);
         while (k < traceList.getTraceCount() && traceList.getTraceName(k).equals(root + i)) {
             i++;
             k++;
         }
-
         return i - 1;
     }
-
     public static void main(String[] argv) {
-
         Variate x = null;
         List<Variate> plots = new ArrayList<Variate>();
-
         for (int i = 1; i <= 200; i++) {
             String stem = "sim" + (i < 10 ? "00" : (i < 100 ? "0" : "")) + i;
-
             try {
                 SkylineReconstructor skyline = new SkylineReconstructor(
                         new File(stem + ".log"),
@@ -325,7 +265,6 @@ public class SkylineReconstructor {
                     x = skyline.getXData();
                 }
                 plots.add(skyline.getYDataMean());
-
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (ImportException e) {
@@ -337,10 +276,8 @@ public class SkylineReconstructor {
                 System.err.println("Read " + i);
             }
         }
-
         for (int i = 0; i < x.getCount(); i++) {
             System.out.print(x.get(i));
-
             for (Variate y : plots) {
                 System.out.print("\t" + y.get(i));
             }

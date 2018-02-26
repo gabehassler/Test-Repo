@@ -1,136 +1,93 @@
-
 package dr.evomodel.substmodel;
-
 import dr.evolution.datatype.DataType;
 import dr.inference.model.AbstractModel;
 import dr.inference.model.Model;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import dr.math.MachineAccuracy;
-
 import java.util.LinkedList;
 import java.util.List;
-
-
 public abstract class AbstractCovarionModel extends AbstractModel implements SubstitutionModel {
-
     public static final String MODEL = "model";
-
     protected DataType dataType = null;
-
     protected double[][] unnormalizedQ;
     protected double[][] storedUnnormalizedQ;
-
     private FrequencyModel freqModel;
-
     protected int stateCount;
-
     private boolean eigenInitialised = false;
     protected boolean updateMatrix = true;
     private boolean storedUpdateMatrix = true;
-
     AbstractCovarionModel(String name, DataType dataType, Parameter frequencies, Parameter hiddenFrequencies) {
         super(name);
-
         this.dataType = dataType;
-
         setStateCount(dataType.getStateCount());
-
         updateMatrix = true;
-
         freqModel = new CovarionFrequencyModel(dataType, frequencies, hiddenFrequencies);
         addModel(freqModel);
     }
-
     private void setStateCount(int stateCount) {
         eigenInitialised = false;
-
         this.stateCount = stateCount;
-
         unnormalizedQ = new double[stateCount][stateCount];
         storedUnnormalizedQ = new double[stateCount][stateCount];
     }
-
     // *****************************************************************
     // Interface Model
     // *****************************************************************
-
     protected void handleModelChangedEvent(Model model, Object object, int index) {
         // frequencyModel changed!
         updateMatrix = true;
         frequenciesChanged();
     }
-
     protected final void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         // relativeRates changed
         updateMatrix = true;
         ratesChanged();
     }
-
     protected void storeState() {
-
         storedUpdateMatrix = updateMatrix;
-
         System.arraycopy(Eval, 0, storedEval, 0, stateCount);
         for (int i = 0; i < stateCount; i++) {
             System.arraycopy(unnormalizedQ[i], 0, storedUnnormalizedQ[i], 0, stateCount);
             System.arraycopy(Ievc[i], 0, storedIevc[i], 0, stateCount);
             System.arraycopy(Evec[i], 0, storedEvec[i], 0, stateCount);
         }
-
     }
-
     protected void restoreState() {
-
         updateMatrix = storedUpdateMatrix;
-
         double[][] tmp2 = storedIevc;
         storedIevc = Ievc;
         Ievc = tmp2;
-
         tmp2 = storedEvec;
         storedEvec = Evec;
         Evec = tmp2;
-
         tmp2 = storedUnnormalizedQ;
         storedUnnormalizedQ = unnormalizedQ;
         unnormalizedQ = tmp2;
     }
-
     protected void acceptState() {
     } // nothing to do
-
     abstract protected void frequenciesChanged();
-
     abstract protected void ratesChanged();
-
     abstract protected void setupUnnormalizedQMatrix();
-
     public double[][] getEigenVectors() {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
-
     public double[][] getInverseEigenVectors() {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
-
     public double[] getEigenValues() {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
-
     public FrequencyModel getFrequencyModel() {
-
         return freqModel;
     }
-
     public DataType getDataType() {
         return dataType;
     }
-
     public void getTransitionProbabilities(double distance, double[] matrix) {
         int i, j, k;
         double temp;
-
         // this must be synchronized to avoid being called simultaneously by
         // two different likelihood threads - AJD
         synchronized (this) {
@@ -138,7 +95,6 @@ public abstract class AbstractCovarionModel extends AbstractModel implements Sub
             setupMatrix();
             //}
         }
-
         // implemented a pool of iexp matrices to support multiple threads
         // without creating a new matrix each call. - AJD
         double[][] iexp = popiexp();
@@ -148,7 +104,6 @@ public abstract class AbstractCovarionModel extends AbstractModel implements Sub
                 iexp[i][j] = Ievc[i][j] * temp;
             }
         }
-
         int u = 0;
         for (i = 0; i < stateCount; i++) {
             for (j = 0; j < stateCount; j++) {
@@ -156,22 +111,17 @@ public abstract class AbstractCovarionModel extends AbstractModel implements Sub
                 for (k = 0; k < stateCount; k++) {
                     temp += Evec[i][k] * iexp[k][j];
                 }
-
                 matrix[u] = Math.abs(temp);
                 u++;
             }
         }
         pushiexp(iexp);
     }
-
     public void setupMatrix() {
         setupUnnormalizedQMatrix();
-
         if (!eigenInitialised)
             initialiseEigen();
-
         int i, j;
-
         // Set the instantaneous rate matrix
         for (i = 0; i < stateCount; i++) {
             for (j = 0; j < stateCount; j++) {
@@ -180,21 +130,17 @@ public abstract class AbstractCovarionModel extends AbstractModel implements Sub
         }
         makeValid(amat, stateCount);
         normalize(amat, freqModel.getFrequencies());
-
         // copy q matrix for unit testing
         for (i = 0; i < amat.length; i++) {
             System.arraycopy(amat[i], 0, q[i], 0, amat[i].length);
         }
-
         // compute eigenvalues and eigenvectors
         elmhes(amat, ordr, stateCount);
         eltran(amat, Evec, ordr, stateCount);
         hqr2(stateCount, 1, stateCount, amat, Evec, Eval, evali);
         luinverse(Evec, Ievc, stateCount);
-
         updateMatrix = false;
     }
-
     // Make it a valid rate matrix (make sum of rows = 0)
     void makeValid(double[][] matrix, int dimension) {
         for (int i = 0; i < dimension; i++) {
@@ -206,41 +152,31 @@ public abstract class AbstractCovarionModel extends AbstractModel implements Sub
             matrix[i][i] = -sum;
         }
     }
-
     void normalize(double[][] matrix, double[] pi) {
         double subst = 0.0;
         int dimension = pi.length;
-
         for (int i = 0; i < dimension; i++)
             subst += -matrix[i][i] * pi[i];
-
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
                 matrix[i][j] = matrix[i][j] / subst;
             }
         }
     }
-
     private void initialiseEigen() {
-
         Eval = new double[stateCount];
         Evec = new double[stateCount][stateCount];
         Ievc = new double[stateCount][stateCount];
-
         storedEval = new double[stateCount];
         storedEvec = new double[stateCount][stateCount];
         storedIevc = new double[stateCount][stateCount];
-
         amat = new double[stateCount][stateCount];
         q = new double[stateCount][stateCount];
-
         ordr = new int[stateCount];
         evali = new double[stateCount];
-
         eigenInitialised = true;
         updateMatrix = true;
     }
-
     // Eigenvalues, eigenvectors, and inverse eigenvectors
     private double[] Eval;
     private double[] storedEval;
@@ -248,34 +184,26 @@ public abstract class AbstractCovarionModel extends AbstractModel implements Sub
     private double[][] storedEvec;
     private double[][] Ievc;
     private double[][] storedIevc;
-
     List<double[][]> iexpPool = new LinkedList<double[][]>();
-
     private int[] ordr;
     private double[] evali;
     double amat[][];
     private double q[][];
-
     public double[][] getQ() {
 		return q;
 	}
-
 	private synchronized double[][] popiexp() {
-
         if (iexpPool.size() == 0) {
             iexpPool.add(new double[stateCount][stateCount]);
         }
         return iexpPool.remove(0);
     }
-
     private synchronized void pushiexp(double[][] iexp) {
         iexpPool.add(0, iexp);
     }
-
     private void elmhes(double[][] a, int[] ordr, int n) {
         int m, j, i;
         double y, x;
-
         for (i = 0; i < n; i++) {
             ordr[i] = 0;
         }
@@ -318,13 +246,10 @@ public abstract class AbstractCovarionModel extends AbstractModel implements Sub
             }
         }
     }
-
     // Helper variables for mcdiv
     private double cr, ci;
-
     private void mcdiv(double ar, double ai, double br, double bi) {
         double s, ars, ais, brs, bis;
-
         s = Math.abs(br) + Math.abs(bi);
         ars = ar / s;
         ais = ai / s;
@@ -334,14 +259,11 @@ public abstract class AbstractCovarionModel extends AbstractModel implements Sub
         cr = (ars * brs + ais * bis) / s;
         ci = (ais * brs - ars * bis) / s;
     }
-
     void hqr2(int n, int low, int hgh, double[][] h, double[][] zz,
               double[] wr, double[] wi) throws ArithmeticException {
         int i, j, k, l = 0, m, en, na, itn, its;
         double p = 0, q = 0, r = 0, s = 0, t, w, x = 0, y, ra, sa, vi, vr, z = 0, norm, tst1, tst2;
         boolean notLast;
-
-
         norm = 0.0;
         k = 1;
         for (i = 0; i < n; i++) {
@@ -377,7 +299,6 @@ public abstract class AbstractCovarionModel extends AbstractModel implements Sub
                 if (fullLoop) {
                     l = low;
                 }
-
                 x = h[en - 1][en - 1];    /* form shift */
                 if (l == en || l == na) {
                     break;
@@ -713,10 +634,8 @@ public abstract class AbstractCovarionModel extends AbstractModel implements Sub
             }
         }
     }
-
     private void eltran(double[][] a, double[][] zz, int[] ordr, int n) {
         int i, j, m;
-
         for (i = 0; i < n; i++) {
             for (j = i + 1; j < n; j++) {
                 zz[i][j] = 0.0;
@@ -741,24 +660,19 @@ public abstract class AbstractCovarionModel extends AbstractModel implements Sub
             }
         }
     }
-
     void luinverse(double[][] inmat, double[][] imtrx, int size) throws IllegalArgumentException {
         int i, j, k, l, maxi = 0, idx, ix, jx;
         double sum, tmp, maxb, aw;
         int[] index;
         double[] wk;
         double[][] omtrx;
-
-
         index = new int[size];
         omtrx = new double[size][size];
-
         for (i = 0; i < size; i++) {
             for (j = 0; j < size; j++) {
                 omtrx[i][j] = inmat[i][j];
             }
         }
-
         wk = new double[size];
         aw = 1.0;
         for (i = 0; i < size; i++) {

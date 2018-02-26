@@ -1,53 +1,36 @@
-
-
 package dr.evomodel.epidemiology;
-
 import dr.evomodel.coalescent.*;
 import dr.evolution.coalescent.DemographicFunction;
 import dr.inference.model.Parameter;
-
 public class SIRepidemicModel extends DemographicModel
 {
 	//
 	// Public stuff
 	//
-	
 	public SIRepidemicModel(Parameter N0Parameter, Parameter growthRateParameter, 
 								Parameter tpeakParameter, Parameter gammaParameter, Type units, boolean usingGrowthRate, double minPrevalence) {
 		this(SIRepidemicModelParser.SIREPI_MODEL, N0Parameter, growthRateParameter, tpeakParameter, gammaParameter, units, usingGrowthRate, minPrevalence);
 	}
-
 	public SIRepidemicModel(String name, Parameter N0Parameter, Parameter growthRateParameter, Parameter tpeakParameter, Parameter gammaParameter, Type units, boolean usingGrowthRate, double minPrevalence) {	
 		super(name);
-				
 		sirepi = new SIRepidemic(units);
-		
 		this.N0Parameter = N0Parameter;
 		addVariable(N0Parameter);
 		N0Parameter.addBounds(new Parameter.DefaultBounds(Double.POSITIVE_INFINITY, 0.0, 1));
-
 		this.growthRateParameter = growthRateParameter;
 		addVariable(growthRateParameter);
 		growthRateParameter.addBounds(new Parameter.DefaultBounds(Double.POSITIVE_INFINITY, 0.0, 1));
-
 		this.tpeakParameter = tpeakParameter;
 		addVariable(tpeakParameter);
 		tpeakParameter.addBounds(new Parameter.DefaultBounds(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 1));
-
 		this.gammaParameter = gammaParameter;
 		addVariable(gammaParameter);
 		gammaParameter.addBounds(new Parameter.DefaultBounds(Double.POSITIVE_INFINITY, 0.0, 1));
-		
 		this.usingGrowthRate = usingGrowthRate;
-
 		this.minPrevalence = minPrevalence;
-		
 		setUnits(units);
 	}
-
-
 	// general functions
-
 	public DemographicFunction getDemographicFunction() {
 		double r;
 		if (usingGrowthRate) {
@@ -88,11 +71,9 @@ public class SIRepidemicModel extends DemographicModel
 		sirepi.RKfail = RKfailed;
 		return sirepi;
 	}
-	
 	//
 	// protected stuff
 	//
-
 	Parameter N0Parameter = null;
 	Parameter growthRateParameter = null;
 	Parameter tpeakParameter = null;

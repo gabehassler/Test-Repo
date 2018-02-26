@@ -1,11 +1,8 @@
-
 package dr.evomodelxml.substmodel;
-
 import dr.xml.*;
 import dr.evomodel.substmodel.FrequencyModel;
 import dr.evomodel.substmodel.NtdBMA;
 import dr.inference.model.Variable;
-
 public class NtdBMAParser extends AbstractXMLObjectParser {
     public static final String NTD_BMA = "ntdBMA";
     public static final String KAPPA = "kappa";
@@ -15,17 +12,11 @@ public class NtdBMAParser extends AbstractXMLObjectParser {
     public static final String GC = "gc";
     public static final String GT = "gt";
     public static final String MODEL_CHOOSE = "modelChoose";
-
     public static final String FREQUENCIES = "frequencies";
-
     public String getParserName() {
         return NTD_BMA;
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
-
-
         Variable kappa = (Variable) xo.getElementFirstChild(KAPPA);
         Variable tn = (Variable) xo.getElementFirstChild(TN);
         Variable ac = (Variable) xo.getElementFirstChild(AC);
@@ -35,19 +26,14 @@ public class NtdBMAParser extends AbstractXMLObjectParser {
         Variable modelChoose  = (Variable) xo.getElementFirstChild(MODEL_CHOOSE);
         XMLObject cxo = xo.getChild(FREQUENCIES);
         FrequencyModel freqModel = (FrequencyModel) cxo.getChild(FrequencyModel.class);
-
-
         return new NtdBMA(kappa, tn, ac, at, gc, gt, modelChoose, freqModel);
     }
-
     public Class getReturnType() {
         return NtdBMA.class;
     }
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     private final XMLSyntaxRule[] rules = {
             new ElementRule(FREQUENCIES,
                     new XMLSyntaxRule[]{new ElementRule(FrequencyModel.class)}),

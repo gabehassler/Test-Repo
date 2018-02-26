@@ -1,13 +1,10 @@
-
 package dr.app.beauti;
-
 import dr.app.beast.BeastVersion;
 import dr.app.beauti.util.CommandLineBeauti;
 import dr.app.util.Arguments;
 import dr.app.util.OSType;
 import dr.util.Version;
 import jam.framework.*;
-
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -15,15 +12,12 @@ import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
-
 public class BeautiApp extends MultiDocApplication {
     private final static Version version = new BeastVersion();
-
     public BeautiApp(String nameString, String aboutString, Icon icon,
                      String websiteURLString, String helpURLString) {
         super(new BeautiMenuBarFactory(), nameString, aboutString, icon, websiteURLString, helpURLString);
     }
-
     public static void centreLine(String line, int pageWidth) {
         int n = pageWidth - line.length();
         int n1 = n / 2;
@@ -32,7 +26,6 @@ public class BeautiApp extends MultiDocApplication {
         }
         System.out.println(line);
     }
-
     public static void printTitle() {
         System.out.println();
         centreLine("BEAUti " + version.getVersionString() + ", " + version.getDateString(), 60);
@@ -42,17 +35,13 @@ public class BeautiApp extends MultiDocApplication {
         }
         System.out.println();
     }
-
     public static void printUsage(Arguments arguments) {
-
         arguments.printUsage("beauti", "[<input-file-name> ...]");
         System.out.println();
         System.out.println("  Example: beauti test.nex");
         System.out.println("  Example: beauti -help");
         System.out.println();
     }
-
-
 //    /**
 //     * In a departure from the standard UI, there is no "Open" command for this application
 //     * Instead, the user can create a New window, Import a NEXUS file and Apply a Template file.
@@ -65,25 +54,19 @@ public class BeautiApp extends MultiDocApplication {
 //    public Action getOpenAction() {
 //        throw new UnsupportedOperationException("getOpenAction is not supported");
 //    }
-
     private static boolean lafLoaded = false;
-
     // Main entry point
     static public void main(String[] args) {
-
         // There is a major issue with languages that use the comma as a decimal separator.
         // To ensure compatibility between programs in the package, enforce the US locale.
         Locale.setDefault(Locale.US);
-
         Arguments arguments = new Arguments(
                 new Arguments.Option[]{
                         new Arguments.Option("advanced", "Enable advanced & developer features"),
                         new Arguments.Option("version", "Print the version and credits and stop"),
                         new Arguments.Option("help", "Print this information and stop"),
                 });
-
         int argumentCount = 0;
-
         try {
             argumentCount = arguments.parseArguments(args);
         } catch (Arguments.ArgumentException ae) {
@@ -94,57 +77,44 @@ public class BeautiApp extends MultiDocApplication {
             printUsage(arguments);
             System.exit(1);
         }
-
         if (arguments.hasOption("help")) {
             printTitle();
             printUsage(arguments);
             System.exit(0);
         }
-
         if (arguments.hasOption("version")) {
             printTitle();
         }
-
         advanced = arguments.hasOption("advanced");
-
         String[] args2 = arguments.getLeftoverArguments();
-
         if (args2.length > 1) {
             System.err.println("Unknown option: " + args2[1]);
             System.err.println();
             printUsage(arguments);
             return;
         }
-
         if (args2.length > 1) {
-
             if (args.length != 3) {
                 printTitle();
                 printUsage(arguments);
                 System.exit(1);
             }
-
             String inputFileName = args[0];
             String templateFileName = args[1];
             String outputFileName = args[2];
-
             new CommandLineBeauti(inputFileName, templateFileName, outputFileName);
-
         } else {
             String inputFileName = null;
             if (args2.length == 1) {
                 inputFileName = args2[0];
             }
-
             if (OSType.isMac()) {
                 System.setProperty("apple.awt.graphics.UseQuartz", "true");
                 System.setProperty("apple.awt.antialiasing","true");
                 System.setProperty("apple.awt.rendering","VALUE_RENDER_QUALITY");
-
                 System.setProperty("apple.laf.useScreenMenuBar","true");
                 System.setProperty("apple.awt.draggableWindowBackground","true");
                 System.setProperty("apple.awt.showGrowBox","true");
-
                 try {
                     // set the Quaqua Look and Feel in the UIManager
                     javax.swing.SwingUtilities.invokeAndWait(new Runnable() {
@@ -156,16 +126,13 @@ public class BeautiApp extends MultiDocApplication {
                                     // it simply won't be used.
                                     Class<?> qm = Class.forName("ch.randelshofer.quaqua.QuaquaManager");
                                     Method method = qm.getMethod("setExcludedUIs", Set.class);
-
                                     Set<String> excludes = new HashSet<String>();
                                     excludes.add("Button");
                                     excludes.add("ToolBar");
                                     method.invoke(null, excludes);
-
                                 }
                                 catch (Throwable e) {
                                 }
-
                                 //set the Quaqua Look and Feel in the UIManager
                                 UIManager.setLookAndFeel(
                                         "ch.randelshofer.quaqua.QuaquaLookAndFeel"
@@ -177,13 +144,10 @@ public class BeautiApp extends MultiDocApplication {
                     });
                 } catch (Exception e) {
                 }
-
                 UIManager.put("SystemFont", new Font("Lucida Grande", Font.PLAIN, 13));
                 UIManager.put("SmallSystemFont", new Font("Lucida Grande", Font.PLAIN, 11));
             }
-
             try {
-
                 if (!lafLoaded) {
                     try {
                         // set the System Look and Feel in the UIManager
@@ -200,17 +164,13 @@ public class BeautiApp extends MultiDocApplication {
                         e.printStackTrace();
                     }
                 }
-
                 java.net.URL url = BeautiApp.class.getResource("images/beauti.png");
                 Icon icon = null;
-
                 if (url != null) {
                     icon = new ImageIcon(url);
                 }
-
                 final String nameString = "BEAUti";
                 final String versionString = version.getVersionString();
-
                 String aboutString = "<html>" +
                         "<div style=\"font-family:HelveticaNeue-Light, 'Helvetica Neue Light', Helvetica, Arial, 'Lucida Grande',sans-serif; font-weight: 100\">" +
                         "<center>" +
@@ -220,12 +180,9 @@ public class BeautiApp extends MultiDocApplication {
                         "<hr><div style=\"font-size:11;\">Part of the BEAST package:" +
                         version.getHTMLCredits() +
                         "</div></center></div></html>";
-
                 String websiteURLString = "http://beast.bio.ed.ac.uk/BEAUti";
                 String helpURLString = "http://beast.bio.ed.ac.uk/BEAUti";
-
                 System.setProperty("BEAST & BEAUTi Version", version.getVersion());
-
                 BeautiApp app = new BeautiApp(nameString, aboutString, icon,
                         websiteURLString, helpURLString);
                 app.setDocumentFrameFactory(new DocumentFrameFactory() {
@@ -234,7 +191,6 @@ public class BeautiApp extends MultiDocApplication {
                     }
                 });
                 app.initialize();
-
                 if (inputFileName != null) {
                     app.doOpen(inputFileName);
                 } else {
@@ -248,6 +204,5 @@ public class BeautiApp extends MultiDocApplication {
             }
         }
     }
-
     public static boolean advanced = false;
 }

@@ -1,6 +1,4 @@
-
 package dr.app.beauti;
-
 import dr.app.beauti.ancestralStatesPanel.AncestralStatesPanel;
 import dr.app.beauti.clockModelsPanel.OldClockModelsPanel;
 import dr.app.beauti.components.ComponentFactory;
@@ -41,7 +39,6 @@ import jam.framework.DocumentFrame;
 import jam.framework.Exportable;
 import jam.util.IconUtils;
 import org.jdom.JDOMException;
-
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
@@ -54,11 +51,8 @@ import java.awt.event.HierarchyEvent;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
-
 public class BeautiFrame extends DocumentFrame {
-
     private static final long serialVersionUID = 2114148696789612509L;
-
     public final static String DATA_PARTITIONS = "Partitions";
     public final static String TAXON_SETS = "Taxa";
     public final static String TIP_DATES = "Tips";
@@ -70,14 +64,11 @@ public class BeautiFrame extends DocumentFrame {
     public final static String PRIORS = "Priors";
     public final static String OPERATORS = "Operators";
     public final static String MCMC = "MCMC";
-
     private BeautiOptions options;
     private BeastGenerator generator;
     private final ComponentFactory[] components;
-
     public final JTabbedPane tabbedPane = new JTabbedPane();
     public final JLabel statusLabel = new JLabel();
-
     private DataPanel dataPanel;
     private TipDatesPanel tipDatesPanel;
     private TraitsPanel traitsPanel;
@@ -90,30 +81,20 @@ public class BeautiFrame extends DocumentFrame {
     private PriorsPanel priorsPanel;
     private OperatorsPanel operatorsPanel;
     private MCMCPanel mcmcPanel;
-
     private BeautiPanel currentPanel;
-
     private Map<String, FileDialog> fileDialogs = new HashMap<String, FileDialog>();
     private Map<String, JFileChooser> fileChoosers = new HashMap<String, JFileChooser>();
-
     final Icon gearIcon = IconUtils.getIcon(this.getClass(), "images/gear.png");
-
     public BeautiFrame(String title) {
         super();
-
         setTitle(title);
-
         // Prevent the application to close in requestClose()
         // after a user cancel or a failure in beast file generation
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-
 //        getOpenAction().setEnabled(false);
 //        getSaveAction().setEnabled(false);
-
         getFindAction().setEnabled(false);
-
         getZoomWindowAction().setEnabled(false);
-
         components = new ComponentFactory[] {
                 AncestralStatesComponentFactory.INSTANCE,
                 ContinuousComponentFactory.INSTANCE,
@@ -126,22 +107,17 @@ public class BeautiFrame extends DocumentFrame {
                 SequenceErrorModelComponentFactory.INSTANCE,
                 TipDateSamplingComponentFactory.INSTANCE
         };
-
         options = new BeautiOptions(components);
         generator = new BeastGenerator(options, components);
-
         this.getContentPane().addHierarchyBoundsListener(new HierarchyBoundsListener() {
             public void ancestorMoved(HierarchyEvent e) {
             }
-
             public void ancestorResized(HierarchyEvent e) {
                 setStatusMessage();
             }
         });
     }
-
     public void initializeComponents() {
-
         dataPanel = new DataPanel(this, getImportAction(), getDeleteAction()/*, getImportTraitsAction()*/);
         tipDatesPanel = new TipDatesPanel(this);
         traitsPanel = new TraitsPanel(this, dataPanel, getImportTraitsAction());
@@ -156,13 +132,11 @@ public class BeautiFrame extends DocumentFrame {
         priorsPanel = new PriorsPanel(this, false);
         operatorsPanel = new OperatorsPanel(this);
         mcmcPanel = new MCMCPanel(this);
-
         int index = 0;
         tabbedPane.addTab(DATA_PARTITIONS, dataPanel);
         tabbedPane.setToolTipTextAt(index++, "<html>" +
                 "Import sequence alignments, organize data partitions,<br>" +
                 "link models between partitions and select *BEAST</html>");
-
         tabbedPane.addTab(TAXON_SETS, taxonSetPanel);
         tabbedPane.setToolTipTextAt(index++, "<html>" +
                 "Create and edit sets of taxa which can be used to <br>" +
@@ -192,13 +166,11 @@ public class BeautiFrame extends DocumentFrame {
                 "Select the priors on trees including coalescent models<br>" +
                 "birth-death speciation models and the *BEAST gene tree,<br>" +
                 "species tree options.</html>");
-
         tabbedPane.addTab(ANCESTRAL_STATES, ancestralStatesPanel);
         tabbedPane.setToolTipTextAt(index++, "<html>" +
                 "Select options for sampling ancestral states at specific<br>" +
                 "or all common ancestors, models of counting state changes<br>" +
                 "and models of sequencing error for data partitions.</html>");
-
         tabbedPane.addTab(PRIORS, priorsPanel);
         tabbedPane.setToolTipTextAt(index++, "<html>" +
                 "Specify prior probability distributions on each and every<br>" +
@@ -212,13 +184,10 @@ public class BeautiFrame extends DocumentFrame {
         tabbedPane.setToolTipTextAt(index++, "<html>" +
                 "Specify the details of MCMC sampling. This includes chain<br>" +
                 "length, sampling frequencies, log file names and more.</html>");
-
         for (int i = 1; i < tabbedPane.getTabCount(); i++) {
             tabbedPane.setEnabledAt(i, false);
         }
-
         currentPanel = (BeautiPanel) tabbedPane.getSelectedComponent();
-
         tabbedPane.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
                 BeautiPanel selectedPanel = (BeautiPanel) tabbedPane.getSelectedComponent();
@@ -232,42 +201,32 @@ public class BeautiFrame extends DocumentFrame {
                 currentPanel = selectedPanel;
             }
         });
-
         JPanel basePanel = new JPanel(new BorderLayout(6, 6));
         basePanel.setBorder(new BorderUIResource.EmptyBorderUIResource(new java.awt.Insets(12, 12, 12, 12)));
 //        basePanel.setPreferredSize(new java.awt.Dimension(800, 600));
-
         getExportAction().setEnabled(false);
         JButton generateButton = new JButton(getExportAction());
         generateButton.putClientProperty("JButton.buttonType", "roundRect");
-
         JPanel panel2 = new JPanel(new BorderLayout(6, 6));
         panel2.add(statusLabel, BorderLayout.WEST);
         panel2.add(generateButton, BorderLayout.EAST);
         panel2.setMinimumSize(new java.awt.Dimension(10, 10));
-
         basePanel.add(tabbedPane, BorderLayout.CENTER);
         basePanel.add(panel2, BorderLayout.SOUTH);
-
         add(basePanel, BorderLayout.CENTER);
-
         Toolkit tk = Toolkit.getDefaultToolkit();
         Dimension d = tk.getScreenSize();
 //        System.out.println("Screen width = " + d.width);
 //        System.out.println("Screen height = " + d.height);
-
         if (d.width < 1000 || d.height < 700) {
             setSize(new java.awt.Dimension(700, 550));
         } else {
             setSize(new java.awt.Dimension(1024, 768));
         }
-
         if (OSType.isMac()) {
             setMinimumSize(new java.awt.Dimension(640, 480));
         }
-
         setAllOptions();
-
         Color focusColor = UIManager.getColor("Focus.color");
         Border focusBorder = BorderFactory.createMatteBorder(2, 2, 2, 2, focusColor);
         dataPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
@@ -276,10 +235,7 @@ public class BeautiFrame extends DocumentFrame {
                 importFiles(files);
             }   // end filesDropped
         }); // end FileDrop.Listener
-
-
     }
-
     public void setAllOptions() {
         try {
             dataPanel.setOptions(options);
@@ -297,14 +253,12 @@ public class BeautiFrame extends DocumentFrame {
             priorsPanel.setOptions(options);
             operatorsPanel.setOptions(options);
             mcmcPanel.setOptions(options);
-
             setStatusMessage();
         } catch (IllegalArgumentException iae) {
             iae.printStackTrace(System.err);
             JOptionPane.showMessageDialog(this, iae.getMessage(),
                     "Illegal Argument Exception", JOptionPane.ERROR_MESSAGE);
         }
-
         // enable/disable the other tabs and generate option depending on whether any
         // data has been loaded.
         boolean enabled = options.getDataPartitions().size() > 0;
@@ -313,7 +267,6 @@ public class BeautiFrame extends DocumentFrame {
         }
         getExportAction().setEnabled(enabled);
     }
-
     private void getAllOptions() {
         try {
             dataPanel.getOptions(options);
@@ -337,21 +290,17 @@ public class BeautiFrame extends DocumentFrame {
                     "Illegal Argument Exception", JOptionPane.ERROR_MESSAGE);
         }
     }
-
     public void doSelectAll() {
         if (currentPanel == dataPanel) {
             dataPanel.selectAll();
         }
     }
-
     public final void dataSelectionChanged(boolean isSelected) {
         getDeleteAction().setEnabled(isSelected);
     }
-
     public final void modelSelectionChanged(boolean isSelected) {
         getDeleteAction().setEnabled(isSelected);
     }
-
     public void doDelete() {
         if (tabbedPane.getSelectedComponent() == dataPanel) {
             dataPanel.removeSelection();
@@ -362,10 +311,8 @@ public class BeautiFrame extends DocumentFrame {
         } else {
             throw new RuntimeException("Delete should only be accessable from the Data and Models panels");
         }
-
         setStatusMessage();
     }
-
     public boolean requestClose() {
         if (isDirty() && options.hasData() && isVisible()) {
             int option = JOptionPane.showConfirmDialog(this,
@@ -375,7 +322,6 @@ public class BeautiFrame extends DocumentFrame {
                     "Unused changes",
                     JOptionPane.YES_NO_CANCEL_OPTION,
                     JOptionPane.WARNING_MESSAGE);
-
             if (option == JOptionPane.YES_OPTION) {
                 return doGenerate();
             } else if (option == JOptionPane.CANCEL_OPTION || option == JOptionPane.DEFAULT_OPTION) {
@@ -385,7 +331,6 @@ public class BeautiFrame extends DocumentFrame {
         }
         return true;
     }
-
     public void doApplyTemplate() {
         FileDialog dialog = new FileDialog(this,
                 "Apply Template",
@@ -406,7 +351,6 @@ public class BeautiFrame extends DocumentFrame {
             }
         }
     }
-
     protected boolean readFromFile(File file) throws IOException {
         FileInputStream fileIn =
                 new FileInputStream(file);
@@ -430,17 +374,13 @@ public class BeautiFrame extends DocumentFrame {
             return false;
         }
         fileIn.close();
-
         options.registerComponents(components);
         generator = new BeastGenerator(options, components);
-
         return true;
     }
-
     public String getDefaultFileName() {
         return options.fileNameStem + ".beauti";
     }
-
     protected boolean writeToFile(File file) throws IOException {
         OutputStream fileOut = new FileOutputStream(file);
         ObjectOutputStream out =
@@ -450,7 +390,6 @@ public class BeautiFrame extends DocumentFrame {
         fileOut.close();
         return true;
     }
-
     public final void doImport() {
         File[] files = selectImportFiles("Import Aligment...", true, new FileNameExtensionFilter[] {
                 new FileNameExtensionFilter( "Microsatellite (tab-delimited *.txt) Files", "txt"),
@@ -462,7 +401,6 @@ public class BeautiFrame extends DocumentFrame {
             tabbedPane.setSelectedComponent(dataPanel);
         }
     }
-
     private void importFiles(File[] files) {
         for (File file : files) {
             if (file == null || file.getName().equals("")) {
@@ -472,7 +410,6 @@ public class BeautiFrame extends DocumentFrame {
                 try {
                     BEAUTiImporter beautiImporter = new BEAUTiImporter(this, options);
                     beautiImporter.importFromFile(file);
-
                     setDirty();
 //                    } catch (FileNotFoundException fnfe) {
 //                        JOptionPane.showMessageDialog(this, "Unable to open file: File not found",
@@ -483,13 +420,11 @@ public class BeautiFrame extends DocumentFrame {
                     ioe.printStackTrace();
                     // there may be other files in the list so don't return
 //                    return;
-
                 } catch (MissingBlockException ex) {
                     JOptionPane.showMessageDialog(this, "TAXON, DATA or CHARACTERS block is missing in Nexus file: " + ex,
                             "Missing Block in Nexus File",
                             JOptionPane.ERROR_MESSAGE);
                     ex.printStackTrace();
-
                 } catch (ImportException ime) {
                     JOptionPane.showMessageDialog(this, "Error parsing imported file: " + ime,
                             "Error reading file",
@@ -503,22 +438,17 @@ public class BeautiFrame extends DocumentFrame {
                 }
             }
         }
-
         if (!options.hasIdenticalTaxa()) {
             setAllOptions(); // need this to refresh panels otherwise it will throw exception
             dataPanel.selectAll();
             dataPanel.unlinkTrees();
         }
-
         setAllOptions();
-
     }
-
     public final boolean doImportTraits() {
         if (options.taxonList != null) { // validation of check empty taxonList
             File[] files = selectImportFiles("Import Traits File...", false, new FileNameExtensionFilter[] {
                     new FileNameExtensionFilter("Tab-delimited text files", "txt", "tab", "dat") });
-
             if (files != null && files.length != 0) {
                 try {
                     BEAUTiImporter beautiImporter = new BEAUTiImporter(this, options);
@@ -544,27 +474,22 @@ public class BeautiFrame extends DocumentFrame {
             } else {
                 return false;
             }
-
             traitsPanel.fireTraitsChanged();
             setAllOptions();
-
             tabbedPane.setSelectedComponent(traitsPanel);
             return true;
-
         } else {
             JOptionPane.showMessageDialog(this, "No taxa loaded yet, please import Alignment file.",
                     "No taxa loaded", JOptionPane.ERROR_MESSAGE);
             return false;
         }
     }
-
     public boolean validateTraitName(String traitName) {
         // check that the name is valid
         if (traitName.trim().length() == 0) {
             Toolkit.getDefaultToolkit().beep();
             return false;
         }
-
         // disallow a trait called 'date'
         if (traitName.equalsIgnoreCase("date")) {
             JOptionPane.showMessageDialog(this,
@@ -572,20 +497,16 @@ public class BeautiFrame extends DocumentFrame {
                             " to set dates for taxa.",
                     "Reserved trait name",
                     JOptionPane.WARNING_MESSAGE);
-
             return false;
         }
-
         if (options.useStarBEAST && traitName.equalsIgnoreCase(TraitData.TRAIT_SPECIES)) {
             JOptionPane.showMessageDialog(this,
                     "This trait name is already in used to denote species\n" +
                             "for *BEAST. Please select a different name.",
                     "Reserved trait name",
                     JOptionPane.WARNING_MESSAGE);
-
             return false;
         }
-
         // check that the trait name doesn't exist
         if (options.traitExists(traitName)) {
             int option = JOptionPane.showConfirmDialog(this,
@@ -595,15 +516,12 @@ public class BeautiFrame extends DocumentFrame {
                     "Overwrite trait?",
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.WARNING_MESSAGE);
-
             if (option == JOptionPane.NO_OPTION) {
                 return false;
             }
         }
-
         return true;
     }
-
     public boolean setupStarBEAST(boolean useStarBEAST) {
         if (useStarBEAST) {
             if (!options.traitExists(TraitData.TRAIT_SPECIES)) {
@@ -627,51 +545,35 @@ public class BeautiFrame extends DocumentFrame {
                 if (option == JOptionPane.NO_OPTION) {
                     return false;
                 }
-
             }
-
             dataPanel.selectAll();
             dataPanel.unlinkAll();
-
             options.starBEASTOptions = new STARBEASTOptions(options);
             options.fileNameStem = "StarBEASTLog";
-
             tabbedPane.removeTabAt(1);
             tabbedPane.insertTab("Species Sets", null, speciesSetPanel, null, 1);
-
         } else { // remove species
             options.fileNameStem = MCMCPanel.DEFAULT_FILE_NAME_STEM;
-
             tabbedPane.removeTabAt(1);
             tabbedPane.insertTab("Taxon Sets", null, taxonSetPanel, null, 1);
         }
-
         options.useStarBEAST = useStarBEAST;
-
         treesPanel.updatePriorPanelForSpeciesAnalysis();
-
         setStatusMessage();
-
         return true;
     }
-
     public void updateDiscreteTraitAnalysis() {
         setStatusMessage();
     }
-
     public void setupEBSP() {
         dataPanel.selectAll();
-
         dataPanel.unlinkAll();
-
         setAllOptions();
     }
-
     public PartitionTreePrior getCurrentPartitionTreePrior() {
         treesPanel.setOptions(options); // need this to refresh the currentTreeModel
         return treesPanel.currentTreeModel.getPartitionTreePrior();
     }
-
     public void setStatusMessage() {
         int width = this.getWidth() - 260; // minus generate button size
         if (width < 100) width = 100; // prevent too narrow
@@ -679,9 +581,7 @@ public class BeautiFrame extends DocumentFrame {
 //        System.out.println(this.getWidth() + "   " + tw);
         statusLabel.setText(tw);
     }
-
     public final boolean doGenerate() {
-
         try {
             generator.checkOptions();
         } catch (Generator.GeneratorException ge) {
@@ -693,19 +593,15 @@ public class BeautiFrame extends DocumentFrame {
             }
             return false;
         }
-
         DefaultPriorTableDialog defaultPriorDialog = new DefaultPriorTableDialog(this);
         if (!defaultPriorDialog.showDialog(options)) {
             return false;
         }
-
         File file = selectExportFile("Generate BEAST XML File...", new FileNameExtensionFilter("BEAST XML File", "xml", "beast"));
-
         if (file != null) {
             try {
                 getAllOptions();
                 generator.generateXML(file);
-
             } catch (IOException ioe) {
                 ioe.printStackTrace(System.err);
                 JOptionPane.showMessageDialog(this, "Unable to generate file due to I/O issue: " + ioe.getMessage(),
@@ -722,14 +618,11 @@ public class BeautiFrame extends DocumentFrame {
                         "Unable to generate file", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
-
             clearDirty();
             return true;
         }
-
         return false;
     }
-
     private File[] selectImportFiles(final String title, boolean multipleSelection, FileNameExtensionFilter[] fileNameExtensionFilters) {
         if (Boolean.parseBoolean(System.getProperty("use.native.choosers", Boolean.toString(OSType.isMac())))) {
             FileDialog importDialog = fileDialogs.get(title);
@@ -737,7 +630,6 @@ public class BeautiFrame extends DocumentFrame {
                 importDialog = new FileDialog(this, title, FileDialog.LOAD);
                 fileDialogs.put(title, importDialog);
             }
-
             importDialog.setVisible(true);
             if (importDialog.getFile() != null) {
                 return new File[] { new File(importDialog.getDirectory(), importDialog.getFile()) };
@@ -746,16 +638,13 @@ public class BeautiFrame extends DocumentFrame {
             JFileChooser importChooser = fileChoosers.get(title);
             if (importChooser == null) {
                 importChooser = new JFileChooser(Utils.getCWD());
-
                 importChooser.setMultiSelectionEnabled(multipleSelection);
                 for (FileNameExtensionFilter fileNameExtensionFilter : fileNameExtensionFilters) {
                     importChooser.setFileFilter(fileNameExtensionFilter);
                 }
                 importChooser.setDialogTitle(title);
-
                 fileChoosers.put(title, importChooser);
             }
-
             int returnVal = importChooser.showOpenDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 if (importChooser.isMultiSelectionEnabled()) {
@@ -765,10 +654,8 @@ public class BeautiFrame extends DocumentFrame {
                 }
             }
         }
-
         return null;
     }
-
     private File selectExportFile(final String title, FileNameExtensionFilter fileNameExtensionFilter) {
         if (Boolean.parseBoolean(System.getProperty("use.native.choosers", Boolean.toString(OSType.isMac())))) {
             FileDialog exportDialog = fileDialogs.get(title);
@@ -776,11 +663,8 @@ public class BeautiFrame extends DocumentFrame {
                 exportDialog = new FileDialog(this, title, FileDialog.SAVE);
                 fileDialogs.put(title, exportDialog);
             }
-
             exportDialog.setFile(options.fileNameStem + ".xml");
-
             exportDialog.setVisible(true);
-
             // Mac dialog box will already have asked about overwriting file...
             if (exportDialog.getFile() != null) {
                 return new File(exportDialog.getDirectory(), exportDialog.getFile());
@@ -789,38 +673,29 @@ public class BeautiFrame extends DocumentFrame {
             JFileChooser exportChooser = fileChoosers.get(title);
             if (exportChooser == null) {
                 exportChooser = new JFileChooser(Utils.getCWD());
-
                 // make JFileChooser chooser remember previous path
                 exportChooser = new JFileChooser(Utils.getCWD());
                 exportChooser.setFileFilter(fileNameExtensionFilter);
                 exportChooser.setDialogTitle(title);
-
                 fileChoosers.put(title, exportChooser);
             }
-
             // offer stem as default
             exportChooser.setSelectedFile(new File(options.fileNameStem + ".xml"));
-
             final int returnVal = exportChooser.showSaveDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = exportChooser.getSelectedFile();
-
                 int n = JOptionPane.YES_OPTION;
-
                 if (file.exists()) {
                     n = JOptionPane.showConfirmDialog(this, file.getName(),
                             "Overwrite the existing file?", JOptionPane.YES_NO_OPTION);
                 }
-
                 if (n == JOptionPane.YES_OPTION) {
                     return file;
                 }
             }
         }
-
         return null;
     }
-
     public void switchToPanel(String panelName) {
         for (int i = 0; i < tabbedPane.getTabCount(); i++) {
             if (tabbedPane.getTitleAt(i).equals(panelName)) {
@@ -829,55 +704,41 @@ public class BeautiFrame extends DocumentFrame {
             }
         }
     }
-
     public JComponent getExportableComponent() {
-
         JComponent exportable = null;
         Component comp = tabbedPane.getSelectedComponent();
-
         if (comp instanceof Exportable) {
             exportable = ((Exportable) comp).getExportableComponent();
         } else if (comp instanceof JComponent) {
             exportable = (JComponent) comp;
         }
-
         return exportable;
     }
-
     public Action getImportAction() {
         return importAlignmentAction;
     }
-
     protected AbstractAction importAlignmentAction = new AbstractAction("Import Data...") {
         private static final long serialVersionUID = 3217702096314745005L;
-
         public void actionPerformed(java.awt.event.ActionEvent ae) {
             doImport();
         }
     };
-
     public Action getImportTraitsAction() {
         return importTraitsAction;
     }
-
     protected AbstractAction importTraitsAction = new AbstractAction("Import Traits") {
         private static final long serialVersionUID = 3217702096314745005L;
-
         public void actionPerformed(java.awt.event.ActionEvent ae) {
             doImportTraits();
         }
     };
-
     public Action getExportAction() {
         return generateAction;
     }
-
     protected AbstractAction generateAction = new AbstractAction("Generate BEAST File...", gearIcon) {
         private static final long serialVersionUID = -5329102618630268783L;
-
         public void actionPerformed(java.awt.event.ActionEvent ae) {
             doGenerate();
         }
     };
-
 }

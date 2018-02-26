@@ -1,9 +1,5 @@
-
 package dr.app.beauti.types;
-
-
 public enum PriorScaleType {
-
     NONE,
     TIME_SCALE,
     LOG_TIME_SCALE,
@@ -17,8 +13,6 @@ public enum PriorScaleType {
     LOG_VAR_SCALE,
     ORIGIN_SCALE,
     GAMMA_STAR_BEAST;
-
-
 //    PriorScaleType(String name) {
 //        this.name = name;
 //    }
@@ -28,5 +22,4 @@ public enum PriorScaleType {
 //    }
 //
 //    private final String name;
-
 }

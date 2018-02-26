@@ -1,6 +1,4 @@
-
 package dr.inference.operators;
-
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.linalg.SingularValueDecomposition;
 import dr.inference.model.MatrixParameter;
@@ -17,46 +15,35 @@ import dr.xml.XMLObject;
 import dr.xml.XMLObjectParser;
 import dr.xml.XMLParseException;
 import dr.xml.XMLSyntaxRule;
-
 public class NimbleAdaptableVarianceMultivariateNormalOperator extends AbstractCoercableOperator {
-
     public static final String NIMBLE_AVMVN_OPERATOR = "nimbleAdaptableVarianceMultivariateNormalOperator";
     public static final String SCALE_FACTOR = "scaleFactor";
     public static final String UPDATE_EVERY = "updateEvery";
     public static final String FORM_XTX = "formXtXInverse";
-
     public static final boolean DEBUG = false;
-
     private double scaleFactor;
     private int iterations, every;
     private final Parameter parameter;
     private final Transform[] transformations;
     private final int dim;
     private double acceptanceRate;
-
     private double[] statSums;
     private double[][] statProds;
     private int timesAdapted, timesRan;
-
     final double[][] originalProposalMatrix;
     private double[][] empirical;
     private double[][] cholesky;
-
     // temporary storage, allocated once.
     private double[] epsilon;
     private double[][] proposal;
-
     public NimbleAdaptableVarianceMultivariateNormalOperator(Parameter parameter, Transform[] transformations, double scaleFactor, double[][] inMatrix,
             double weight, int every, CoercionMode mode, boolean isVarianceMatrix) {
-
         super(mode);
         this.scaleFactor = scaleFactor;
         this.parameter = parameter;
         this.transformations = transformations;
         this.iterations = 0;
-
         setWeight(weight);
-
         this.dim = parameter.getDimension();
         if (this.dim ==1 ) {
             this.acceptanceRate = 0.44;
@@ -69,29 +56,23 @@ public class NimbleAdaptableVarianceMultivariateNormalOperator extends AbstractC
         } else {
             this.acceptanceRate = 0.234;
         }
-
         this.every = every;
-
         this.statSums = new double[dim];
         this.statProds = new double[dim][dim];
         this.timesAdapted = 0;
         this.timesRan = 0;
-
         this.epsilon = new double[dim];
         this.proposal = new double[dim][dim];
         this.empirical = new double[dim][dim];
-
         SingularValueDecomposition svd = new SingularValueDecomposition(new DenseDoubleMatrix2D(inMatrix));
         if (inMatrix[0].length != svd.rank()) {
             throw new RuntimeException("Variance matrix in AdaptableVarianceMultivariateNormalOperator is not of full rank");
         }
-
         if (isVarianceMatrix) {
             originalProposalMatrix = inMatrix;
         } else {
             originalProposalMatrix = formXtXInverse(inMatrix);
         }
-
         if (DEBUG) {
             System.err.println("matrix initialization: ");
             for (int i = 0; i < originalProposalMatrix.length; i++) {
@@ -101,36 +82,29 @@ public class NimbleAdaptableVarianceMultivariateNormalOperator extends AbstractC
                 System.err.println();
             }
         }
-
         try {
             cholesky = (new CholeskyDecomposition(originalProposalMatrix)).getL();
         } catch (IllegalDimension illegalDimension) {
             throw new RuntimeException("Unable to decompose matrix in NimbleAdaptableVarianceMultivariateNormalOperator");
         }
-
         for (int i = 0; i < dim; i++) {
             for (int j = 0; j < dim; j++) {
                 empirical[i][j] = 0.0;
             }
         } 
-
         for (int i = 0; i < dim; i++) {
             for (int j = 0; j < dim; j++) {
                 proposal[i][j] = originalProposalMatrix[i][j];
             }
         } 
-
     }
-
     public NimbleAdaptableVarianceMultivariateNormalOperator(Parameter parameter, Transform[] transformations, double scaleFactor,
             MatrixParameter varMatrix, double weight, int every, CoercionMode mode, boolean isVariance) {
         this(parameter, transformations, scaleFactor, varMatrix.getParameterAsMatrix(), weight, every, mode, isVariance);
     }
-
     private double[][] formXtXInverse(double[][] X) {
         int N = X.length;
         int P = X[0].length;
-
         double[][] matrix = new double[P][P];
         for (int i = 0; i < P; i++) {
             for (int j = 0; j < P; j++) {
@@ -141,49 +115,38 @@ public class NimbleAdaptableVarianceMultivariateNormalOperator extends AbstractC
                 matrix[i][j] = total;
             }
         }
-
         // Take inverse
         matrix = new SymmetricMatrix(matrix).inverse().toComponents();
         return matrix;
     }
-
     public double doOperation() throws OperatorFailedException {
-
         iterations++;
         timesRan++;
-
         if (DEBUG) {
             System.err.println("\nNAVMVN Iteration: " + iterations);
-
             System.err.println("Using NimbleAdaptableVarianceMultivariateNormalOperator: " + iterations + " for " + parameter.getParameterName());
             System.err.println("Old parameter values:");
             for (int i = 0; i < dim; i++) {
                 System.err.println(parameter.getParameterValue(i));
             }
         }
-
         double[] x = parameter.getParameterValues();
-
         //transform to the appropriate scale
         double[] transformedX = new double[dim];
         for (int i = 0; i < dim; i++) {
             transformedX[i] = transformations[i].transform(x[i]);
         }
-
         if (DEBUG) {
             System.err.println("Old transformed parameter values:");
             for (int i = 0; i < dim; i++) {
                 System.err.println(transformedX[i]);
             }
         }
-
         //store MH-ratio in logq
         double logJacobian = 0.0;
-
         for (int i = 0; i < dim; i++) {
             epsilon[i] = scaleFactor * MathUtils.nextGaussian();
         }
-
         for (int i = 0; i < dim; i++) {
             statSums[i] += transformedX[i];
             for (int j = i; j < dim; j++) {
@@ -191,7 +154,6 @@ public class NimbleAdaptableVarianceMultivariateNormalOperator extends AbstractC
                 statProds[j][i] = statProds[i][j];
             }
         }
-
         if (DEBUG) {
             System.err.println("Sliding window approach\nstatSums:");
             for (int i = 0; i < dim; i++) {
@@ -219,40 +181,32 @@ public class NimbleAdaptableVarianceMultivariateNormalOperator extends AbstractC
                 System.err.println();
             }
         }
-
         if (iterations % every == 0) {
-
             if (DEBUG) {
                 System.err.println("Adapting at iteration: " + iterations);
             }
-
             timesAdapted++;
-
             for (int i = 0; i < dim; i++) {
                 for (int j = i; j < dim; j++) {
                     empirical[i][j] = (statProds[i][j] - statSums[i]*statSums[j]/(double)timesRan)/((double)(timesRan-1.0));
                     empirical[j][i] = empirical[i][j];
                 }
             }
-
             if (DEBUG) {
                 System.err.println("gamma1: " + 1.0/Math.pow((timesAdapted + 3.0),0.8));
             }
-
             for (int i = 0; i < dim; i++) {
                 for (int j = i; j < dim; j++) { // symmetric matrix
                     proposal[i][j] = proposal[i][j] + (1.0/Math.pow((timesAdapted + 3.0),0.8)) * (empirical[i][j] - proposal[i][j]);
                     proposal[j][i] = proposal[i][j];
                 }
             }
-
             // not necessary for first test phase, but will need to be performed when covariance matrix is being updated
             try {
                 cholesky = (new CholeskyDecomposition(proposal)).getL();
             } catch (IllegalDimension illegalDimension) {
                 throw new RuntimeException("Unable to decompose matrix in AdaptableVarianceMultivariateNormalOperator");
             }
-
             //reset sliding window
             timesRan = 0;
             for (int i = 0; i < dim; i++) {
@@ -261,9 +215,7 @@ public class NimbleAdaptableVarianceMultivariateNormalOperator extends AbstractC
                     statProds[i][j] = 0.0;
                 }
             }
-
         }
-
         if (DEBUG) {
             System.err.println("Proposal matrix:");
             for (int i = 0; i < dim; i++) {
@@ -273,13 +225,10 @@ public class NimbleAdaptableVarianceMultivariateNormalOperator extends AbstractC
                 System.err.println();
             }
         }
-
         if (DEBUG) {
             System.err.println("  Drawing new values");
         }
-
         for (int i = 0; i < dim; i++) {
-
             for (int j = i; j < dim; j++) {
                 transformedX[i] += cholesky[j][i] * epsilon[j];
                 // caution: decomposition returns lower triangular
@@ -289,75 +238,55 @@ public class NimbleAdaptableVarianceMultivariateNormalOperator extends AbstractC
             } else {
                 parameter.setParameterValue(i, transformations[i].inverse(transformedX[i]));
             }
-
             logJacobian += transformations[i].getLogJacobian(x[i]) - transformations[i].getLogJacobian(parameter.getParameterValue(i));
-
         }
-
         if (DEBUG) {
             for (int i = 0; i < dim; i++) {
                 System.err.println(x[i] + " -> " + parameter.getValue(i));
             }
         }
-
         if (MULTI) {
             parameter.fireParameterChangedEvent(); // Signal once.
         }
-
         return logJacobian;
-
     }
-
     public String toString() {
         return NIMBLE_AVMVN_OPERATOR + "(" + parameter.getParameterName() + ")";
     }
-
     public static final boolean MULTI = true;
-
     //MCMCOperator INTERFACE
     public final String getOperatorName() {
         return "nimbleAdaptableVarianceMultivariateNormal(" + parameter.getParameterName() + ")";
     }
-
     public double getCoercableParameter() {
         return Math.log(scaleFactor);
     }
-
     public void setCoercableParameter(double value) {
         scaleFactor = Math.exp(value);
     }
-
     public double getRawParameter() {
         return scaleFactor;
     }
-
     public double getScaleFactor() {
         return scaleFactor;
     }
-
     public double getTargetAcceptanceProbability() {
         //make dependent upon dimension
         return this.acceptanceRate;
     }
-
     public double getMinimumAcceptanceLevel() {
         return 0.1;
     }
-
     public double getMaximumAcceptanceLevel() {
         return 0.4;
     }
-
     public double getMinimumGoodAcceptanceLevel() {
         return 0.20;
     }
-
     public double getMaximumGoodAcceptanceLevel() {
         return 0.30;
     }
-
     public final String getPerformanceSuggestion() {
-
         double prob = MCMCOperator.Utils.getAcceptanceProbability(this);
         double targetProb = getTargetAcceptanceProbability();
         dr.util.NumberFormatter formatter = new dr.util.NumberFormatter(5);
@@ -367,43 +296,30 @@ public class NimbleAdaptableVarianceMultivariateNormalOperator extends AbstractC
         } else if (prob > getMaximumGoodAcceptanceLevel()) {
             return "Try setting scaleFactor to about " + formatter.format(sf);
         } else return "";
-
     }
-
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-
         public String getParserName() {
             return NIMBLE_AVMVN_OPERATOR;
         }
-
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
             if (DEBUG) {
                 System.err.println("Parsing NimbleAdaptableVarianceMultivariateNormalOperator.");
             }
-
             CoercionMode mode = CoercionMode.parseMode(xo);
-
             double weight = xo.getDoubleAttribute(WEIGHT);
             double scaleFactor = xo.getDoubleAttribute(SCALE_FACTOR);
-
             int every = 200;
             if (xo.hasAttribute(UPDATE_EVERY)) {
                 every = xo.getIntegerAttribute(UPDATE_EVERY);
             }
-
             if (every <= 0) {
                 throw new XMLParseException("covariance matrix needs to be updated at least every single iteration");
             }
-
             if (scaleFactor <= 0.0) {
                 throw new XMLParseException("scaleFactor must be greater than 0.0");
             }
-
             Parameter parameter = (Parameter) xo.getChild(Parameter.class);
-
             boolean formXtXInverse = xo.getAttribute(FORM_XTX, false);
-
             //varMatrix needs to be initialized
             int dim = parameter.getDimension();
             Parameter[] init = new Parameter[dim];
@@ -414,17 +330,14 @@ public class NimbleAdaptableVarianceMultivariateNormalOperator extends AbstractC
                 init[i].setParameterValue(i, 1.0/((double)dim));
             }
             MatrixParameter varMatrix = new MatrixParameter(null, init);
-
             Transform[] transformations = new Transform[dim];
             for (int i = 0; i < dim; i++) {
                 transformations[i] = Transform.NONE;
             }
-
             for (int i = 0; i < xo.getChildCount(); i++) {
                 Object child = xo.getChild(i);
                 if (child instanceof Transform.ParsedTransform) {
                     Transform.ParsedTransform thisObject = (Transform.ParsedTransform) child;
-
                     if (DEBUG) {
                         System.err.println("Transformations:");
                     }
@@ -439,39 +352,30 @@ public class NimbleAdaptableVarianceMultivariateNormalOperator extends AbstractC
                     }
                 }
             }
-
             // Make sure varMatrix is square and dim(varMatrix) = dim(parameter)
             if (!formXtXInverse) {
                 if (varMatrix.getColumnDimension() != varMatrix.getRowDimension())
                     throw new XMLParseException("The variance matrix is not square");
             }
-
             if (varMatrix.getColumnDimension() != parameter.getDimension())
                 throw new XMLParseException("The parameter and variance matrix have differing dimensions");
-
 					"\n beta = " + beta + "\n initial = " + initial + "\n burnin = " + burnin + "\n every = " + every +
 					"\n If you use this operator, please cite: " + 
 			"   Guy Baele, Philippe Lemey, Marc A. Suchard. 2014. In preparation.");*/
-
             return new NimbleAdaptableVarianceMultivariateNormalOperator(parameter, transformations, scaleFactor, varMatrix, weight, every, mode, !formXtXInverse);
         }
-
         //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
-
         public String getParserDescription() {
             return "This element returns an adaptable variance multivariate normal operator on a given parameter.";
         }
-
         public Class getReturnType() {
             return MCMCOperator.class;
         }
-
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
-
         private final XMLSyntaxRule[] rules = {
                 AttributeRule.newDoubleRule(SCALE_FACTOR),
                 AttributeRule.newDoubleRule(WEIGHT),
@@ -481,6 +385,5 @@ public class NimbleAdaptableVarianceMultivariateNormalOperator extends AbstractC
                 new ElementRule(Parameter.class),
                 new ElementRule(Transform.ParsedTransform.class, 0, Integer.MAX_VALUE)
         };
-
     };
 }

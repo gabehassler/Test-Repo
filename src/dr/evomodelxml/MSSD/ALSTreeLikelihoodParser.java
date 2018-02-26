@@ -1,6 +1,4 @@
-
 package dr.evomodelxml.MSSD;
-
 import dr.evolution.alignment.PatternList;
 import dr.evolution.util.Taxon;
 import dr.evomodel.MSSD.ALSTreeLikelihood;
@@ -14,9 +12,7 @@ import dr.evomodel.tree.TreeModel;
 import dr.evomodelxml.treelikelihood.TreeLikelihoodParser;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 import java.util.logging.Logger;
-
 public class ALSTreeLikelihoodParser extends AbstractXMLObjectParser {
     public static final String LIKE_NAME = "alsTreeLikelihood";
     public static final String INTEGRATE_GAIN_RATE = "integrateGainRate";
@@ -26,13 +22,10 @@ public class ALSTreeLikelihoodParser extends AbstractXMLObjectParser {
     public static final String ANY_TIP = "anyTip";
     public final static String IMMIGRATION_RATE = "immigrationRate";
     public static final String FORCE_RESCALING = TreeLikelihoodParser.FORCE_RESCALING;
-
     public String getParserName() {
         return LIKE_NAME;
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         boolean useAmbiguities = false;
         boolean storePartials = true;
         if (xo.hasAttribute(TreeLikelihoodParser.USE_AMBIGUITIES)) {
@@ -41,12 +34,8 @@ public class ALSTreeLikelihoodParser extends AbstractXMLObjectParser {
         if (xo.hasAttribute(TreeLikelihoodParser.STORE_PARTIALS)) {
             storePartials = xo.getBooleanAttribute(TreeLikelihoodParser.STORE_PARTIALS);
         }
-
         boolean integrateGainRate = xo.getBooleanAttribute(INTEGRATE_GAIN_RATE);
-
         //AbstractObservationProcess observationProcess = (AbstractObservationProcess) xo.getChild(AbstractObservationProcess.class);
-
-
         PatternList patternList = (PatternList) xo.getChild(PatternList.class);
         TreeModel treeModel = (TreeModel) xo.getChild(TreeModel.class);
         SiteModel siteModel = (SiteModel) xo.getChild(SiteModel.class);
@@ -59,7 +48,6 @@ public class ALSTreeLikelihoodParser extends AbstractXMLObjectParser {
             lam = new Parameter.Default("gainRate", 1.0, 0.001, 1.999);
         }
         AbstractObservationProcess observationProcess = null;
-
         Logger.getLogger("dr.evolution").info("\n ---------------------------------\nCreating ALSTreeLikelihood model.");
         for (int i = 0; i < xo.getChildCount(); ++i) {
             Object cxo = xo.getChild(i);
@@ -75,36 +63,27 @@ public class ALSTreeLikelihoodParser extends AbstractXMLObjectParser {
                             siteModel, branchRateModel, mu, lam);
                     Logger.getLogger("dr.evolution").info("Observed traits are assumed to be extant in at least one tip node.");
                 }
-
                 observationProcess.setIntegrateGainRate(integrateGainRate);
             }
         }
         Logger.getLogger("dr.evolution").info("\tIf you publish results using Acquisition-Loss-Mutation (ALS) Model likelihood, please reference Alekseyenko, Lee and Suchard (2008) Syst. Biol 57: 772-784.\n---------------------------------\n");
-
         boolean forceRescaling = xo.getAttribute(FORCE_RESCALING, false);
-
 //        forceRescaling = true;
-
         return new ALSTreeLikelihood(observationProcess, patternList, treeModel, siteModel, branchRateModel,
                 useAmbiguities, storePartials, forceRescaling);
     }
-
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
-
     public String getParserDescription() {
         return "This element represents the likelihood of a patternlist on a tree given the site model.";
     }
-
     public Class getReturnType() {
         return ALSTreeLikelihood.class;
     }
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     private final XMLSyntaxRule[] rules = {
             AttributeRule.newBooleanRule(TreeLikelihoodParser.USE_AMBIGUITIES, true),
             AttributeRule.newBooleanRule(TreeLikelihoodParser.STORE_PARTIALS, true),
@@ -120,5 +99,4 @@ public class ALSTreeLikelihoodParser extends AbstractXMLObjectParser {
                             AttributeRule.newStringRule(OBSERVATION_TAXON, true)})
             //new ElementRule(AbstractObservationProcess.class)
     };
-
 }

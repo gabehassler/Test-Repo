@@ -1,6 +1,4 @@
-
 package dr.app.beagle.evomodel.parsers;
-
 import dr.app.beagle.evomodel.branchmodel.BranchModel;
 import dr.app.beagle.evomodel.sitemodel.GammaSiteRateModel;
 import dr.app.beagle.evomodel.substmodel.MutationDeathModel;
@@ -19,14 +17,10 @@ import dr.evomodel.tree.TreeModel;
 import dr.evomodel.treelikelihood.TipStatesModel;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
-
-
 public class ALSTreeLikelihoodParser extends BeagleTreeLikelihoodParser {
-
     public static final String RECONSTRUCTING_TREE_LIKELIHOOD = dr.evomodelxml.MSSD.ALSTreeLikelihoodParser.LIKE_NAME;
     public static final String RECONSTRUCTION_TAG_NAME = AncestralStateTreeLikelihoodParser.RECONSTRUCTION_TAG_NAME;
     public static final String INTEGRATE_GAIN_RATE = dr.evomodelxml.MSSD.ALSTreeLikelihoodParser.INTEGRATE_GAIN_RATE;
@@ -35,11 +29,9 @@ public class ALSTreeLikelihoodParser extends BeagleTreeLikelihoodParser {
     public static final String OBSERVATION_TAXON = dr.evomodelxml.MSSD.ALSTreeLikelihoodParser.OBSERVATION_TAXON;
     public static final String IMMIGRATION_RATE = dr.evomodelxml.MSSD.ALSTreeLikelihoodParser.IMMIGRATION_RATE;
     public static final String ANY_TIP = dr.evomodelxml.MSSD.ALSTreeLikelihoodParser.ANY_TIP;
-
     public String getParserName() {
         return RECONSTRUCTING_TREE_LIKELIHOOD;
     }
-
     protected BeagleTreeLikelihood createTreeLikelihood(
             PatternList patternList, //
             TreeModel treeModel, //
@@ -53,15 +45,11 @@ public class ALSTreeLikelihoodParser extends BeagleTreeLikelihoodParser {
                     Parameter> partialsRestrictions, //
             XMLObject xo //
     ) throws XMLParseException {
-
         boolean integrateGainRate = xo.getBooleanAttribute(INTEGRATE_GAIN_RATE);
-
         useAmbiguities = true; // TODO No effect
-
         if (scalingScheme != PartialsRescalingScheme.NONE) {
             throw new XMLParseException("No rescaling scheme is currently support by the mutation-death model " + xo.getId());
         }
-
         Parameter mu = ((MutationDeathModel) siteRateModel.getSubstitutionModel()).getDeathParameter();
         Parameter lam;
         if (!integrateGainRate) {
@@ -70,7 +58,6 @@ public class ALSTreeLikelihoodParser extends BeagleTreeLikelihoodParser {
             lam = new Parameter.Default("gainRate", 1.0, 0.001, 1.999);
         }
         AbstractObservationProcess observationProcess = null;
-
         Logger.getLogger("dr.evolution").info("\n ---------------------------------\nCreating a BEAGLE ALSTreeLikelihood model.");
         for (int i = 0; i < xo.getChildCount(); ++i) {
             Object cxo = xo.getChild(i);
@@ -86,12 +73,10 @@ public class ALSTreeLikelihoodParser extends BeagleTreeLikelihoodParser {
                             siteRateModel, branchRateModel, mu, lam);
                     Logger.getLogger("dr.evolution").info("Observed traits are assumed to be extant in at least one tip node.");
                 }
-
                 observationProcess.setIntegrateGainRate(integrateGainRate);
             }
         }
         Logger.getLogger("dr.evolution").info("\tIf you publish results using Acquisition-Loss-Mutation (ALS) Model likelihood, please reference Alekseyenko, Lee and Suchard (2008) Syst. Biol 57: 772-784.\n---------------------------------\n");
-
         return new ALSBeagleTreeLikelihood(
                 observationProcess,
                 patternList,
@@ -105,15 +90,12 @@ public class ALSTreeLikelihoodParser extends BeagleTreeLikelihoodParser {
                 partialsRestrictions
         );
     }
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return new XMLSyntaxRule[]{
                 AttributeRule.newBooleanRule(BeagleTreeLikelihoodParser.USE_AMBIGUITIES, true),
                 AttributeRule.newStringRule(RECONSTRUCTION_TAG_NAME, true),
-
                 AttributeRule.newBooleanRule(INTEGRATE_GAIN_RATE),
                 new ElementRule(IMMIGRATION_RATE, new XMLSyntaxRule[]{new ElementRule(Parameter.class)}, true),
-
                 new ElementRule(PatternList.class),
                 new ElementRule(TreeModel.class),
                 new ElementRule(GammaSiteRateModel.class),
@@ -126,11 +108,9 @@ public class ALSTreeLikelihoodParser extends BeagleTreeLikelihoodParser {
                         new ElementRule(TaxonList.class),
                         new ElementRule(Parameter.class),
                 }, true),
-
                 new ElementRule(OBSERVATION_PROCESS,
                         new XMLSyntaxRule[]{AttributeRule.newStringRule(OBSERVATION_TYPE, false),
                                 AttributeRule.newStringRule(OBSERVATION_TAXON, true)})
-
         };
     }
 }

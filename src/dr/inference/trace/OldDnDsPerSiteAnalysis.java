@@ -1,6 +1,4 @@
-
 package dr.inference.trace;
-
 import dr.inferencexml.trace.MarginalLikelihoodAnalysisParser;
 import dr.math.EmpiricalBayesPoissonSmoother;
 import dr.stats.DiscreteStatistics;
@@ -8,12 +6,10 @@ import dr.util.Attribute;
 import dr.util.FileHelpers;
 import dr.util.HeapSort;
 import dr.xml.*;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
-
 public class OldDnDsPerSiteAnalysis {
     public static final String DNDS_PERSITE_ANALYSIS = "olddNdSPerSiteAnalysis";
     public static final String COND_SPERSITE_COLUMNS = "conditionalSperSite";
@@ -21,37 +17,28 @@ public class OldDnDsPerSiteAnalysis {
     public static final String COND_NPERSITE_COLUMNS = "conditionalNperSite";
     public static final String UNCOND_NPERSITE_COLUMNS = "unconditionalNperSite";
     //public static final String ALIGNMENT = "alignment";
-
     OldDnDsPerSiteAnalysis(double[][] sampleSperSite, double[][] unconditionalS,
                         double[][] sampleNperSite, double[][] unconditionalN) {
-
         numSites = sampleNperSite.length;
         numSamples = sampleNperSite[0].length;
-
         allSamples = new double[NUM_VARIABLES][numSites][numSamples];
         allSamples[COND_S] = sampleSperSite;
         allSamples[UNCOND_S] = unconditionalS;
         allSamples[COND_N] = sampleNperSite;
         allSamples[UNCOND_N] = unconditionalN;
-
         if (DEBUG) {
             System.err.println("sumSites = " + numSites);
             System.err.println("numSamples = " + numSamples);
         }
-
         // TODO Assert that all arrays have the same dimensions, else throw exception
-
         smoothSamples = performSmoothing(allSamples);
         // collect 'dN'(=N/U_N)', 'dS', 'dN/dS'
         smoothDnDsSamples = getDnDsSamples(smoothSamples);
-
         rawMeanStats = computeMeanStats(allSamples);
         smoothMeanStats = computeMeanStats(smoothSamples);
         smoothMeanDnDsStats = computeMeanStats(smoothDnDsSamples);
         smoothHPDDnDsStats = computeHPDStats(smoothDnDsSamples);
-
     }
-
 //    public double[][] getdSPerSiteSample() {
 //        if (!dNAnddSPerSiteSampleCollected) {
 //            collectDnAndDsPerSite();
@@ -79,7 +66,6 @@ public class OldDnDsPerSiteAnalysis {
 //        }
 //        return EBdNdSratioPerSiteSample;
 //    }
-
     private double[][][] getDnDsSamples(double[][][] smoothedSamples) {
         double[][][] dNdSArray = new double[3][][];
         //get smooth(S)/smooth(u_S)
@@ -90,7 +76,6 @@ public class OldDnDsPerSiteAnalysis {
         dNdSArray[2] = get2DArrayRatio(dNdSArray[1],dNdSArray[0]);
         return dNdSArray;
     }
-
     private double[][] get2DArrayRatio (double[][] numerator, double[][] denominator) {
         double[][] returnArray = new double[numerator.length][numerator[0].length];
         for(int site = 0; site < numerator.length; site ++) {
@@ -98,7 +83,6 @@ public class OldDnDsPerSiteAnalysis {
         }
         return returnArray;
     }
-
     private double[] get1DArrayRatio (double[] numerator, double[] denominator) {
         double[] returnArray = new double[numerator.length];
         for(int sample = 0; sample < numerator.length; sample ++) {
@@ -106,7 +90,6 @@ public class OldDnDsPerSiteAnalysis {
         }
         return returnArray;
     }
-
     private double[][] transpose(double[][] in) {
         double[][] out = new double[in[0].length][in.length];
         for (int r = 0; r < in.length; r++) {
@@ -116,12 +99,10 @@ public class OldDnDsPerSiteAnalysis {
         }
         return out;
     }
-
     private double computeDnDs(double[][][] allSamples, int site, int sample) {
         return (allSamples[COND_N][site][sample] / allSamples[COND_S][site][sample]) /
                 (allSamples[UNCOND_N][site][sample] / allSamples[UNCOND_S][site][sample]);
     }
-
     private double[][][] performSmoothing(double[][][] allSamples) {
         double[][][] smoothedArray = new double[allSamples.length][][];
         double[][][] transpose = new double[allSamples.length][][];
@@ -133,13 +114,10 @@ public class OldDnDsPerSiteAnalysis {
             smoothedArray[i] = transpose(transpose[i]);
         }
         return smoothedArray;
-
     }
-
     private double computeRatio(double[][][] allSamples, int site, int sample, int numerator, int denominator) {
         return allSamples[numerator][site][sample] / allSamples[denominator][site][sample];
     }
-
     private double[][] computeMeanStats(double[][][] allSamples) {
         double[][] statistics = new double[allSamples.length][allSamples[0].length];
         for (int variable = 0; variable < allSamples.length; ++variable) {
@@ -147,7 +125,6 @@ public class OldDnDsPerSiteAnalysis {
         }
         return statistics;
     }
-
     private double[][][] computeHPDStats(double[][][] allSamples) {
         // we collect mean and 95% HPD boundaries
         double[][][] statistics = new double[allSamples.length][allSamples[0].length][2];
@@ -156,7 +133,6 @@ public class OldDnDsPerSiteAnalysis {
         }
         return statistics;
     }
-
 //    private void collectDnAndDsPerSite() {
 //
 //        // If output arrays not yet constructed, then allocate memory once
@@ -193,8 +169,6 @@ public class OldDnDsPerSiteAnalysis {
 //
 //        dNAnddSPerSiteSampleCollected = true;
 //    }
-
-
 //    public static double[] smooth(double[] in) {
 //        final int length = in.length;
 //        double[] out = new double[length];
@@ -230,7 +204,6 @@ public class OldDnDsPerSiteAnalysis {
         }
         return sb.toString();
     }
-
     private static double[][] getArrayHPDintervals(double[][] array) {
         double[][] returnArray = new double[array.length][2];
         for (int row = 0; row < array.length; row++) {
@@ -240,7 +213,6 @@ public class OldDnDsPerSiteAnalysis {
                     counter += 1;
                 }
             }
-
             if (counter > 0) {
                 double[] rowNoNaNArray = new double[counter];
                 int index = 0;
@@ -253,25 +225,19 @@ public class OldDnDsPerSiteAnalysis {
                 int[] indices = new int[counter];
                 HeapSort.sort(rowNoNaNArray, indices);
                 double hpdBinInterval[] = getHPDInterval(0.95, rowNoNaNArray, indices);
-
                 returnArray[row][0] = hpdBinInterval[0];
                 returnArray[row][1] = hpdBinInterval[1];
             } else {
                 returnArray[row][0] = Double.NaN;
                 returnArray[row][1] = Double.NaN;
             }
-
         }
-
         return returnArray;
     }
-
     private static double[] getHPDInterval(double proportion, double[] array, int[] indices) {
-
         double returnArray[] = new double[2];
         double minRange = Double.MAX_VALUE;
         int hpdIndex = 0;
-
         int diff = (int) Math.round(proportion * (double) array.length);
         for (int i = 0; i <= (array.length - diff); i++) {
             double minValue = array[indices[i]];
@@ -286,7 +252,6 @@ public class OldDnDsPerSiteAnalysis {
         returnArray[1] = array[indices[hpdIndex + diff - 1]];
         return returnArray;
     }
-
     private static double[] mean(double[][] x) {
         double[] returnArray = new double[x.length];
         //System.out.println("lala");
@@ -297,7 +262,6 @@ public class OldDnDsPerSiteAnalysis {
         }
         return returnArray;
     }
-
     //   private static void print2DArray(double[][] array, String name) {
     //       try {
     //           PrintWriter outFile = new PrintWriter(new FileWriter(name), true);
@@ -314,54 +278,39 @@ public class OldDnDsPerSiteAnalysis {
     //          System.err.print("Error writing to file: " + name);
     //       }
     //   }
-
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-
         public String getParserName() {
             return DNDS_PERSITE_ANALYSIS;
         }
-
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
             String fileName = xo.getStringAttribute(FileHelpers.FILE_NAME);
             try {
-
                 File file = new File(fileName);
                 String name = file.getName();
                 String parent = file.getParent();
-
                 if (!file.isAbsolute()) {
                     parent = System.getProperty("user.dir");
                 }
-
                 file = new File(parent, name);
-
                 fileName = file.getAbsolutePath();
-
                 LogFileTraces traces = new LogFileTraces(fileName, file);
                 traces.loadTraces();
                 long maxState = traces.getMaxState();
-
                 // leaving the burnin attribute off will result in 10% being used
                 long burnin = xo.getAttribute(MarginalLikelihoodAnalysisParser.BURN_IN, maxState / 10);
                 //TODO: implement custom burn-in
-
                 if (burnin < 0 || burnin >= maxState) {
                     burnin = maxState / 5;
                     System.out.println("WARNING: Burn-in larger than total number of states - using to 20%");
                 }
-
                 traces.setBurnIn(burnin);
-
                 double samples[][][] = new double[NUM_VARIABLES][][];
-
                 for (int variable = 0; variable < NUM_VARIABLES; ++variable) {
                     XMLObject cxo = xo.getChild(names[variable]);
                     String columnName = cxo.getStringAttribute(Attribute.NAME);
                     int traceStartIndex = -1;
                     int traceEndIndex = -1;
                     boolean traceIndexFound = false;
-
                     for (int i = 0; i < traces.getTraceCount(); i++) {
                         String traceName = traces.getTraceName(i);
                         if (traceName.trim().contains(columnName)) {
@@ -376,7 +325,6 @@ public class OldDnDsPerSiteAnalysis {
                         throw new XMLParseException(columnName + " columns can not be found for " + getParserName() + " element.");
                     }
                     int numberOfSites = 1 + (traceEndIndex - traceStartIndex);
-
                     double[][] countPerSite = new double[numberOfSites][];
                     for (int a = 0; a < numberOfSites; a++) {
                         List<Double> values = traces.getValues((a + traceStartIndex));
@@ -385,19 +333,13 @@ public class OldDnDsPerSiteAnalysis {
                             countPerSite[a][i] = values.get(i);
                         }
                     }
-
                     samples[variable] = countPerSite;
-
                 }
-
                 OldDnDsPerSiteAnalysis analysis = new OldDnDsPerSiteAnalysis(samples[COND_S], samples[UNCOND_S],
                         samples[COND_N], samples[UNCOND_N]);
-
                 System.out.println(analysis.output());
                 //TODO: save to file
-
                 return analysis;
-
             } catch (FileNotFoundException fnfe) {
                 throw new XMLParseException("File '" + fileName + "' can not be opened for " + getParserName() + " element.");
             } catch (IOException ioe) {
@@ -406,23 +348,18 @@ public class OldDnDsPerSiteAnalysis {
                 throw new XMLParseException(e.getMessage());
             }
         }
-
         //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
-
         public String getParserDescription() {
             return "Performs a trace dN dS analysis.";
         }
-
         public Class getReturnType() {
             return OldDnDsPerSiteAnalysis.class;
         }
-
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
-
         private final XMLSyntaxRule[] rules = {
                 new StringAttributeRule(FileHelpers.FILE_NAME,
                         "The traceName of a BEAST log file (can not include trees, which should be logged separately"),
@@ -432,10 +369,8 @@ public class OldDnDsPerSiteAnalysis {
 //                        new StringAttributeRule(Attribute.NAME, "The column name")}),
         };
     };
-
     final private int numSites;
     final private int numSamples;
-
     private double[][][] allSamples;
     final private static int NUM_VARIABLES = 4;
     final private static int COND_S = 0;
@@ -445,12 +380,9 @@ public class OldDnDsPerSiteAnalysis {
     final private static String[] names = {COND_SPERSITE_COLUMNS, UNCOND_SPERSITE_COLUMNS, COND_NPERSITE_COLUMNS, UNCOND_NPERSITE_COLUMNS};
     private double[][][] smoothSamples;
     private double[][][] smoothDnDsSamples;
-
     private static final boolean DEBUG = true;
-
     private double[][] rawMeanStats;
     private double[][] smoothMeanStats;
     private double[][] smoothMeanDnDsStats;
     private double[][][] smoothHPDDnDsStats;
-
 }

@@ -1,17 +1,11 @@
-
 package dr.math.functionEval;
-
 import dr.math.interfaces.OneVariableFunction;
 import dr.math.iterations.NewtonZeroFinder;
-
 import java.util.Enumeration;
 import java.util.Vector;
-
 public class PolynomialFunction implements OneVariableFunction
 {
 	private final double[] coefficients;
-
-
 public PolynomialFunction( double[] coeffs)
 {
 	coefficients = coeffs;

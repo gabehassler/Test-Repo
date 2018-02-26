@@ -1,6 +1,4 @@
-
 package dr.inference.markovjumps;
-
 import dr.app.beagle.evomodel.substmodel.DefaultEigenSystem;
 import dr.app.beagle.evomodel.substmodel.EigenDecomposition;
 import dr.app.beagle.evomodel.substmodel.EigenSystem;
@@ -8,41 +6,27 @@ import dr.math.Binomial;
 import dr.math.GammaFunction;
 import dr.math.distributions.GammaDistribution;
 import dr.math.matrixAlgebra.Vector;
-
-
-
 // This class only works for 2-state models with equal rates, starting and ending in state 0
-
 public class TwoStateOccupancyMarkovReward implements MarkovReward {
-
-
     private static final boolean DEBUG = true;
     private static final boolean DEBUG2 = false;
-
     public TwoStateOccupancyMarkovReward(double[] Q) {
         this(Q, 1E-10);
     }
-
     public TwoStateOccupancyMarkovReward(double[] Q, double epsilon) {
         this.Q = Q;
         this.maxTime = 0;
         this.epsilon = epsilon;
-
         this.maxK = 10;  // TODO How to determine?
-
         eigenSystem = new DefaultEigenSystem(2);
-
         if (Q[idx(0, 0)] != Q[idx(1, 1)]) {
             throw new IllegalArgumentException("Only currently implemented for equal rates models");
         }
     }
-
     private int idx(int i, int j) {
         return i * 2 + j; // row-major
     }
-
     private double[] jumpProbabilities = null;
-
     private double getAki(double lambda1, double lambda2, int k, int i) {
 //        double logA = Binomial.logChoose(k + i - 1, i) +
 //                k * Math.log(lambda1) + (k - 1) * Math.log(lambda2)
@@ -50,23 +34,17 @@ public class TwoStateOccupancyMarkovReward implements MarkovReward {
 //        return sign * Math.exp(logA);
         return Binomial.choose(k + i - 1, i) * Math.pow(-1, i) * Math.pow(lambda1, k)
     }
-
     private double getBki(double lambda1, double lambda2, int k, int i) {
         return Binomial.choose(k + i - 1, i) * Math.pow(-1, i) * Math.pow(lambda1, k)
     }
-
     private double getCki(double lambda1, double lambda2, int k, int i) {
         return Binomial.choose(k + i - 1, i) * Math.pow(-1, i) * Math.pow(lambda1, k)
     }
-
     private double getDki(double lambda1, double lambda2, int k, int i) {
         return Binomial.choose(k + i, i) * Math.pow(-1, i) * Math.pow(lambda1, k)
     }
-
-
     private void computeJumpProbabilities(double lambda1, double lambda2, double[] jumpProbabilities) {
         jumpProbabilities = new double[maxK];
-
 //        if (lambda1 == lambda2) { // Poisson process
 //
 //        } else {
@@ -80,27 +58,19 @@ public class TwoStateOccupancyMarkovReward implements MarkovReward {
 //            }
 //        }
     }
-
     public double computeCdf(double x, double time, int i, int j) {
         return 0.0;
     }
-
     public double computePdf(double x, double time, int i, int j) {
-
 //        if (jumpProbabilities == null) {
 //            computeJumpProbabilities(Q[idx(0,0)], Q[idx(1,1)], jumpProbabilities);
 //        }
-
         final double lambda = -Q[idx(0, 0)];
         final double rate = 1.0 / lambda;
         final double logLambdaTime = Math.log(lambda) + Math.log(time);
-
         final double time2 = time - x;
-
         final double multiplier = Math.exp(-lambda * time);
-
         double sum = 0.0;
-
         // if time - x > 0, then there must have been at least k = 2 jumps
         for (int m = 1; m <= maxK / 2; ++m) {
             final int k = 2 * m;
@@ -112,12 +82,10 @@ public class TwoStateOccupancyMarkovReward implements MarkovReward {
         }
         return multiplier * sum;
     }
-
     public double[] computePdf(double x, double time) {
 //        return computePdf(new double[]{x}, time)[0];
         return null;
     }
-
     private double[][] squareMatrix(final double[] mat) {
         final int dim = 2;
         double[][] rtn = new double[dim][dim];
@@ -128,11 +96,9 @@ public class TwoStateOccupancyMarkovReward implements MarkovReward {
         }
         return rtn;
     }
-
     private int determineNumberOfSteps(double time, double lambda) {
 //        final double tolerance = (1.0 - epsilon) / Math.exp(-lambda * time);
 //        final double logTolerance = Math.log(1.0 - epsilon);
-
         int i = -1;
 //        double sum = 0.0;
 //        int factorialI = 1;
@@ -163,14 +129,11 @@ public class TwoStateOccupancyMarkovReward implements MarkovReward {
 //            if (i > 500) System.exit(-1);
             }
         }
-
 //        System.err.println("First: " + firstN);
 //        System.err.println("Second:" + i);
 //        System.exit(-1);
-
         return i;
     }
-
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Q: " + new Vector(Q) + "\n");
@@ -181,34 +144,24 @@ public class TwoStateOccupancyMarkovReward implements MarkovReward {
 //        sb.append("cprob at maxTime: " + new Vector(computeConditionalProbabilities(maxTime)) + "\n");
         return sb.toString();
     }
-
     private EigenDecomposition getEigenDecomposition() {
         if (eigenDecomposition == null) {
             eigenDecomposition = eigenSystem.decomposeMatrix(squareMatrix(Q));
         }
         return eigenDecomposition;
     }
-
     private EigenDecomposition eigenDecomposition;
-
     public double[] computeConditionalProbabilities(double distance) {
-
         double[] matrix = new double[4];
         eigenSystem.computeExponential(getEigenDecomposition(), distance, matrix);
-
         return matrix;
     }
-
     public double computeConditionalProbability(double distance, int i, int j) {
         return eigenSystem.computeExponential(getEigenDecomposition(), distance, i, j);
     }
-
     private final double[] Q;
     private final int maxK;
-
     private final double epsilon;
-
     private final EigenSystem eigenSystem;
-
     private double maxTime;
 }

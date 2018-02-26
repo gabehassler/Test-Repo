@@ -1,38 +1,27 @@
-
 package dr.app.beagle.evomodel.substmodel;
-
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
 import cern.colt.matrix.linalg.Property;
 import dr.math.matrixAlgebra.RobustEigenDecomposition;
 import dr.math.matrixAlgebra.RobustSingularValueDecomposition;
-
 import java.util.Arrays;
-
 public class ColtEigenSystem implements EigenSystem {
-
     public ColtEigenSystem(int stateCount) {
         this(stateCount, defaultCheckConditioning, defaultMaxConditionNumber, defaultMaxIterations);
     }
-
     public ColtEigenSystem(int stateCount, boolean checkConditioning, int maxConditionNumber, int maxIterations) {
         this.stateCount = stateCount;
         this.checkConditioning = checkConditioning;
         this.maxConditionNumber = maxConditionNumber;
         this.maxIterations = maxIterations;
     }
-
     public EigenDecomposition decomposeMatrix(double[][] matrix) {
-
         final int stateCount = matrix.length;
-
         RobustEigenDecomposition eigenDecomp = new RobustEigenDecomposition(
                 new DenseDoubleMatrix2D(matrix), maxIterations);
-
         DoubleMatrix2D eigenV = eigenDecomp.getV();
         DoubleMatrix2D eigenVInv;
-
         if (checkConditioning) {
             RobustSingularValueDecomposition svd;
             try {
@@ -45,17 +34,14 @@ public class ColtEigenSystem implements EigenSystem {
                 return getEmptyDecomposition(stateCount);
             }
         }
-
         try {
             eigenVInv = alegbra.inverse(eigenV);
         } catch (IllegalArgumentException e) {
             return getEmptyDecomposition(stateCount);
         }
-
         double[][] Evec = eigenV.toArray();
         double[][] Ievc = eigenVInv.toArray();
         double[] Eval = getAllEigenValues(eigenDecomp);
-
         if (checkConditioning) {
             for (int i = 0; i < Eval.length; i++) {
                 if (Double.isNaN(Eval[i]) ||
@@ -66,49 +52,37 @@ public class ColtEigenSystem implements EigenSystem {
                 }
             }
         }
-
         double[] flatEvec = new double[stateCount * stateCount];
         double[] flatIevc = new double[stateCount * stateCount];
-
         for (int i = 0; i < Evec.length; i++) {
             System.arraycopy(Evec[i], 0, flatEvec, i * stateCount, stateCount);
             System.arraycopy(Ievc[i], 0, flatIevc, i * stateCount, stateCount);
         }
-
         return new EigenDecomposition(flatEvec, flatIevc, Eval);
     }
-
-
     public double computeExponential(EigenDecomposition eigen, double distance, int i, int j) {
         if (eigen == null) {
             return 0.0;
         }
-
         double[] Evec = eigen.getEigenVectors();
         double[] Eval = eigen.getEigenValues();
         double[] Ievc = eigen.getInverseEigenVectors();
-
         double temp = 0.0;
         for (int k = 0; k < stateCount; ++k) {
             temp += Evec[i * stateCount + k] * Math.exp(distance * Eval[k]) * Ievc[k * stateCount + j];
         }
         return Math.abs(temp);
     }
-
     public void computeExponential(EigenDecomposition eigen, double distance, double[] matrix) {
         double temp;
-
         if (eigen == null) {
             Arrays.fill(matrix, 0.0);
             return;
         }
-
         double[] Evec = eigen.getEigenVectors();
         double[] Eval = eigen.getEigenValues();
         double[] Ievc = eigen.getInverseEigenVectors();
-
         double[][] iexp = new double[stateCount][stateCount];
-
         // Eigenvalues and eigenvectors of a real matrix A.
         //
         // If A is symmetric, then A = V*D*V' where the eigenvalue matrix D is diagonal
@@ -121,9 +95,7 @@ public class ColtEigenSystem implements EigenSystem {
         // of V represent the eigenvectors in the sense that A*V = V*D. The matrix
         // V may be badly conditioned, or even singular, so the validity of the
         // equation A = V D V^{-1} depends on the conditioning of V.
-
         for (int i = 0; i < stateCount; i++) {
-
 //             if (EvalImag[i] == 0) {
             // 1x1 block
             temp = Math.exp(distance * Eval[i]);
@@ -149,7 +121,6 @@ public class ColtEigenSystem implements EigenSystem {
 //                 i++; // processed two conjugate rows
 //             }
         }
-
         int u = 0;
         for (int i = 0; i < stateCount; i++) {
             for (int j = 0; j < stateCount; j++) {
@@ -162,15 +133,12 @@ public class ColtEigenSystem implements EigenSystem {
             }
         }
     }
-
     protected double[] getAllEigenValues(RobustEigenDecomposition decomposition) {
         return decomposition.getRealEigenvalues().toArray();
     }
-
     protected double[] getEmptyAllEigenValues(int dim) {
         return new double[dim];
     }
-
     protected EigenDecomposition getEmptyDecomposition(int dim) {
         return new EigenDecomposition(
                 new double[dim * dim],
@@ -178,18 +146,13 @@ public class ColtEigenSystem implements EigenSystem {
                 getEmptyAllEigenValues(dim)
         );
     }
-
     private boolean checkConditioning;
     private int maxConditionNumber;
     private int maxIterations;
-
     protected final int stateCount;
-
     private static final double minProb = Property.DEFAULT.tolerance();
     private static final Algebra alegbra = new Algebra(minProb);
-
     public static final boolean defaultCheckConditioning = true;
     public static final int defaultMaxConditionNumber = 1000000;
     public static final int defaultMaxIterations = 1000000;
-
 }

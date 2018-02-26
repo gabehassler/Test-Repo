@@ -1,22 +1,16 @@
-
 package dr.inference.operators;
-
 import dr.inference.model.Parameter;
 import dr.math.MathUtils;
-
 public class BitSwapOperator extends SimpleMCMCOperator {
-
     private final Parameter data;
     private final Parameter indicators;
     private final boolean impliedOne;
     private final int radius;
-
     public BitSwapOperator(Parameter data, Parameter indicators, int radius, double weight) {
         this.data = data;
         this.indicators = indicators;
         this.radius = radius;
         setWeight(weight);
-
         final int iDim = indicators.getDimension();
         final int dDim = data.getDimension();
         if (iDim == dDim - 1) {
@@ -27,16 +21,12 @@ public class BitSwapOperator extends SimpleMCMCOperator {
             throw new IllegalArgumentException();
         }
     }
-
-
     public String getPerformanceSuggestion() {
         return "";
     }
-
     public String getOperatorName() {
         return "bitSwap(" + data.getParameterName() + ")";
     }
-
     public double doOperation() throws OperatorFailedException {
         final int dim = indicators.getDimension();
         if (dim < 2) {
@@ -47,7 +37,6 @@ public class BitSwapOperator extends SimpleMCMCOperator {
         double hastingsRatio;
         int pos;
         int direction;
-
         int nOnes = 0;
         if (radius > 0) {
             for (int i = 0; i < dim; i++) {
@@ -58,12 +47,10 @@ public class BitSwapOperator extends SimpleMCMCOperator {
                     ++nLoc;
                 }
             }
-
             if (nOnes == 0 || nOnes == dim) {
                 throw new OperatorFailedException("no swaps possible");  //??
                 //return 0;
             }
-
             hastingsRatio = 0.0;
             final int rand = MathUtils.nextInt(nLoc);
             pos = loc[rand];
@@ -91,45 +78,36 @@ public class BitSwapOperator extends SimpleMCMCOperator {
                 }
                 prev = value;
             }
-
             if (nOnes == 0 || nOnes == dim) {
                 return 0;
             }
-
             if (!(nLoc > 0)) {
                 // System.out.println(indicators);
                 assert false : indicators;
             }
-
             final int rand = MathUtils.nextInt(nLoc);
             pos = loc[rand];
             direction = pos < 0 ? -1 : 1;
             pos = (pos < 0 ? -pos : pos) - 1;
             final int maxOut = 2 * nOnes;
-
             hastingsRatio = (maxOut == nLoc) ? 0.0 : Math.log((double) nLoc / maxOut);
         }
-
 //            System.out.println("swap " + pos + "<->" + nto + "  " +
 //                              indicators.getParameterValue(pos) +  "<->" + indicators.getParameterValue(nto) +
 //                 "  " +  data.getParameterValue(pos) +  "<->" + data.getParameterValue(nto));
         final int nto = pos + direction;
         double vto = indicators.getStatisticValue(nto);
-
         indicators.setParameterValue(nto, indicators.getParameterValue(pos));
         indicators.setParameterValue(pos, vto);
-
         final int dataOffset = impliedOne ? 1 : 0;
         final int ntodata = nto + dataOffset;
         final int posdata = pos + dataOffset;
         vto = data.getStatisticValue(ntodata);
         data.setParameterValue(ntodata, data.getParameterValue(posdata));
         data.setParameterValue(posdata, vto);
-
 //            System.out.println("after " + pos + "<->" + nto + "  " +
 //                              indicators.getParameterValue(pos) +  "<->" + indicators.getParameterValue(nto) +
 //                 "  " +  data.getParameterValue(pos) +  "<->" + data.getParameterValue(nto));
-
         return hastingsRatio;
     }
 }

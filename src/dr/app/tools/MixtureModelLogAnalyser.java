@@ -1,6 +1,4 @@
-
 package dr.app.tools;
-
 import dr.app.beast.BeastVersion;
 import dr.app.util.Arguments;
 import dr.app.util.Utils;
@@ -17,24 +15,16 @@ import dr.xml.XMLObject;
 import dr.xml.XMLObjectParser;
 import dr.xml.XMLParseException;
 import dr.xml.XMLSyntaxRule;
-
 import java.io.*;
 import java.util.*;
-
-
 public class MixtureModelLogAnalyser {
-
     private final static Version version = new BeastVersion();
-    
     public static final String MIXTURE_MODEL_LOG_ANALYSER = "mixtureModelLogAnalyser";
     public static final String BURNIN = "burnin";
     public static final String DISCRETE_VARIABLE = "discreteVariable";
-
     public MixtureModelLogAnalyser(int burnin, String inputFileName, String outputFileName, String discreteVariableName
         ) throws IOException, TraceException {
-
         File parentFile = new File(inputFileName);
-
         if (parentFile.isDirectory()) {
             System.out.println("Analysing all log files below directory: " + inputFileName);
         } else if (parentFile.isFile()) {
@@ -43,24 +33,17 @@ public class MixtureModelLogAnalyser {
             System.err.println(inputFileName + " does not exist!");
             System.exit(0);
         }
-
         if (outputFileName != null) {
             FileOutputStream outputStream = new FileOutputStream(outputFileName);
             System.setOut(new PrintStream(outputStream));
         }
-
         analyze(parentFile, burnin, discreteVariableName);
     }
-
     private void analyze(File file, int burnin, String discreteVariableName) throws TraceException {
-
         if (file.isFile()) {
             try {
-
                 String name = file.getCanonicalPath();
-
                 report(name, burnin, discreteVariableName);
-
             } catch (IOException e) {
                 //e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
@@ -75,20 +58,15 @@ public class MixtureModelLogAnalyser {
             }
         }
     }
-
-
     private void report(String name, int burnin, String discreteVariableName) {
-
         try {
             FileReader fileReader = new FileReader(new File(name));
             BufferedReader br = new BufferedReader(fileReader);
-
             String line;
             String previousLine =null;
             int discreteVariableIndex = -1;
             Hashtable<String, Integer> hash = new Hashtable<String, Integer>();
             while((line=br.readLine()) != null) {
-
                 if(line.matches("\\d+\\t.+")) {
                     String[] split = line.split("\t");
                     if(split[0].equals("0")) {
@@ -100,7 +78,6 @@ public class MixtureModelLogAnalyser {
                             }
                         }
                     }
-
                     if(Integer.parseInt(split[0])>=burnin) {
                         if(hash.containsKey(split[discreteVariableIndex])) {
                             hash.put(split[discreteVariableIndex], new Integer(hash.get(split[discreteVariableIndex]) + 1));
@@ -110,23 +87,16 @@ public class MixtureModelLogAnalyser {
                         }
                     }
                 }
-
                 previousLine = line;
             }
-
             Vector<String> v = new Vector(hash.keySet());
             Collections.sort(v);
-
-
             System.out.print("name" + "\t");
             for(String s : v) {
-
                 double state = Double.parseDouble(s);
-
                 if(Math.floor(state)!=state) {
                     throw new RuntimeException("State is not a whole number: " + state);
                 }
-
                 System.out.print("state " + (int) state + "\t");
             }
             System.out.print("\n" + name + "\t");
@@ -140,53 +110,38 @@ public class MixtureModelLogAnalyser {
             System.err.println("Error Parsing Input log: " + e.getMessage());
         }
     }
-    
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-
         public String getParserName() {
             return MIXTURE_MODEL_LOG_ANALYSER;
         }
-        
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-        	
         	try {
-        		
         		String inputFileName = xo.getStringAttribute(FileHelpers.FILE_NAME);
         		String discreteVariableName = xo.getStringAttribute(DISCRETE_VARIABLE);
-        	
         		int burninLength = 0;
         		if (xo.hasAttribute(BURNIN)) {
         			burninLength = xo.getIntegerAttribute(BURNIN);
         		}
-            
         		MixtureModelLogAnalyser mixtureModel = new MixtureModelLogAnalyser(burninLength, inputFileName, null, discreteVariableName);
-            
         		return mixtureModel;
-            
         	} catch (IOException ioe) {
         		throw new XMLParseException(ioe.getMessage());
        		} catch (TraceException te) {
        			throw new XMLParseException(te.getMessage());
        		}
-
         }
-        
       //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
-
         public String getParserDescription() {
             return "Performs posterior probabilities calculations.";
         }
-
         public Class getReturnType() {
             return MixtureModelLogAnalyser.class;
         }
-
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
-
         private final XMLSyntaxRule[] rules = {
                 new StringAttributeRule(FileHelpers.FILE_NAME,
                         "The traceName of a BEAST log file (can not include trees, which should be logged separately"),
@@ -194,9 +149,7 @@ public class MixtureModelLogAnalyser {
                         "The tag name of the discrete variable"),       
                 AttributeRule.newIntegerRule(BURNIN, true),
         };
-        
     };
-
     public static void printTitle() {
         System.out.println();
         centreLine("MixtureModelLogAnalyser " + version.getVersionString() + ", " + version.getDateString(), 60);
@@ -214,7 +167,6 @@ public class MixtureModelLogAnalyser {
         System.out.println();
         System.out.println();
     }
-
     public static void centreLine(String line, int pageWidth) {
         int n = pageWidth - line.length();
         int n1 = n / 2;
@@ -223,30 +175,22 @@ public class MixtureModelLogAnalyser {
         }
         System.out.println(line);
     }
-
-
     public static void printUsage(Arguments arguments) {
-
         arguments.printUsage("mixturemodelloganalyser", "[-burnin <burnin>][<input-file-name> [<output-file-name>]]");
         System.out.println();
         System.out.println("  Example: treelengthfinder test.log");
         System.out.println("  Example: treelengthfinder -burnin 10000 -discreteVariable branchRates.distributionIndex trees.log out.txt");
         System.out.println();
-
     }
-
     //Main method
     public static void main(String[] args) throws IOException, TraceException {
-
         printTitle();
-
         Arguments arguments = new Arguments(
                 new Arguments.Option[]{
                         new Arguments.IntegerOption("burnin", "the number of states to be considered as 'burn-in'"),
                         new Arguments.StringOption("discreteVariable", "variable_name", "indicates the name of a variable that is actually discrete in nature"),
                         new Arguments.Option("help", "option to print this message")
                 });
-
         try {
             arguments.parseArguments(args);
         } catch (Arguments.ArgumentException ae) {
@@ -254,46 +198,37 @@ public class MixtureModelLogAnalyser {
             printUsage(arguments);
             System.exit(1);
         }
-
         if (arguments.hasOption("help")) {
             printUsage(arguments);
             System.exit(0);
         }
-
         int burnin = -1;
         if (arguments.hasOption("burnin")) {
             burnin = arguments.getIntegerOption("burnin");
         }
-
         String discreteVariableName = null; 
         if (arguments.hasOption("discreteVariable")) {
             discreteVariableName = arguments.getStringOption("discreteVariable");
         }
-
         String inputFileName = null;
         String outputFileName = null;
-
         String[] args2 = arguments.getLeftoverArguments();
-
         if (args2.length > 2) {
             System.err.println("Unknown option: " + args2[2]);
             System.err.println();
             printUsage(arguments);
             System.exit(1);
         }
-
         if (args2.length > 0) {
             inputFileName = args2[0];
         }
         if (args2.length > 1) {
             outputFileName = args2[1];
         }
-
         if (inputFileName == null) {
             // No input file name was given so throw up a dialog box...
             inputFileName = Utils.getLoadFileName("MixtureModelLogAnalyser " + version.getVersionString() + " - Select log file to analyse");
         }
-
         if(burnin==-1) {
             System.out.println("Enter number of trees to burn-in (integer): ");
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -304,9 +239,7 @@ public class MixtureModelLogAnalyser {
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             discreteVariableName = br.readLine();
         }
-
         new MixtureModelLogAnalyser(burnin, inputFileName, outputFileName, discreteVariableName/*, !shortReport, hpds, ess, stdErr, marginalLikelihood*/);
-
         System.exit(0);
     }
 }

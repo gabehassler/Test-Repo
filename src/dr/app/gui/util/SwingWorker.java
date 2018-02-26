@@ -1,47 +1,33 @@
-
 package dr.app.gui.util;
-
 import javax.swing.*;
-
 public abstract class SwingWorker {
     private Object value;  // see getValue(), setValue()
     private Thread thread;
-
     private static class ThreadVar {
         private Thread thread;
-
         ThreadVar(Thread t) {
             thread = t;
         }
-
         synchronized Thread get() {
             return thread;
         }
-
         synchronized void clear() {
             thread = null;
         }
     }
-
     private ThreadVar threadVar;
-
     protected synchronized Object getValue() {
         return value;
     }
-
     private synchronized void setValue(Object x) {
         value = x;
     }
-
     public void setPriority(int priority) {
         threadVar.get().setPriority(priority);
     }
-
     public abstract Object construct();
-
     public void finished() {
     }
-
     public void interrupt() {
         Thread t = threadVar.get();
         if (t != null) {
@@ -49,7 +35,6 @@ public abstract class SwingWorker {
         }
         threadVar.clear();
     }
-
     public Object get() {
         while (true) {
             Thread t = threadVar.get();
@@ -64,15 +49,12 @@ public abstract class SwingWorker {
             }
         }
     }
-
-
     public SwingWorker() {
         final Runnable doFinished = new Runnable() {
             public void run() {
                 finished();
             }
         };
-
         Runnable doConstruct = new Runnable() {
             public void run() {
                 try {
@@ -80,15 +62,12 @@ public abstract class SwingWorker {
                 } finally {
                     threadVar.clear();
                 }
-
                 SwingUtilities.invokeLater(doFinished);
             }
         };
-
         Thread t = new Thread(doConstruct);
         threadVar = new ThreadVar(t);
     }
-
     public void start() {
         Thread t = threadVar.get();
         if (t != null) {

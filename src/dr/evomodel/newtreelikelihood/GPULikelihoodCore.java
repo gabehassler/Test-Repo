@@ -1,15 +1,8 @@
-
 package dr.evomodel.newtreelikelihood;
-
 import dr.app.beagle.evomodel.treelikelihood.AbstractTreeLikelihood;
-
 import java.util.logging.Logger;
-
-
 public class GPULikelihoodCore extends NativeLikelihoodCore {
-
     public GPULikelihoodCore(int deviceNumber, int stateCount, AbstractTreeLikelihood treeLikelihood, GPUInfo gpuInfo) {
-
 		StringBuffer sb = new StringBuffer();
 		sb.append("Constructing GPU likelihood core:\n");
 		sb.append("\tGPU Name: "+gpuInfo.getName(deviceNumber)+"\n");
@@ -19,68 +12,39 @@ public class GPULikelihoodCore extends NativeLikelihoodCore {
 		this.treeLikelihood = treeLikelihood;
 		this.stateCount = stateCount;
 	}
-
     private int stateCount;
-
     private AbstractTreeLikelihood treeLikelihood;   // TODO Not needed if everything runs in one thread or I get GPU contexts working
-
-
 	protected static String GPU_LIBRARY_NAME = "GPULikelihoodCore";
-
 	protected static boolean isCompatible(GPUInfo gpuInfo, int[] configuration) {
 		return true;
 	}
-
-
-
 	private static native GPUInfo getGPUInfo();
-
     public boolean canHandleTipPartials() {
         return true;
     }
-
     public boolean canHandleTipStates() {
         return false;
     }
-
-
 	public void initialize(int nodeCount, int stateTipCount, int patternCount, int matrixCount) {
 //		System.err.println("stateCOunt = "+stateCount+" in java");
 		initialize(nodeCount, stateTipCount, patternCount, matrixCount, stateCount);
 	}
-
     public native void initialize(int nodeCount, int stateTipCount, int patternCount, int matrixCount, int stateCount);
-
     private native void freeNativeMemory();
-
     public native void setTipPartials(int tipIndex, double[] partials);
-
     public native void setTipStates(int tipIndex, int[] states);
-
 	protected native void updateRootFrequencies(double[] frequencies);
-
 	protected native void updateEigenDecomposition(double[][] eigenVectors, double[][] inverseEigenValues, double[] eigenValues);
-
 	protected native void updateCategoryRates(double[] rates);
-
     protected native void updateCategoryProportions(double[] proportions);
-
     public native void updateMatrices(int[] branchUpdateIndices, double[] branchLengths, int branchUpdateCount);
-
     public native void updatePartials(int[] operations, int[] dependencies, int operationCount);
-
     public native void calculateLogLikelihoods(int rootNodeIndex, double[] outLogLikelihoods);
-
     public native void storeState();
-
     public native void restoreState();
-
     private static GPUInfo gpuInfo = null;
-
 	public static class LikelihoodCoreLoader implements LikelihoodCoreFactory.LikelihoodCoreLoader {
-
 		public String getLibraryName() { return GPU_LIBRARY_NAME; }
-
 		public LikelihoodCore createLikelihoodCore(int[] configuration, AbstractTreeLikelihood treeLikelihood) {
 			int stateCount = configuration[0];
 			int paddedStateCount = stateCount;

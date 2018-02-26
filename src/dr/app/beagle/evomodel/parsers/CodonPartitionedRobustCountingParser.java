@@ -1,6 +1,4 @@
-
 package dr.app.beagle.evomodel.parsers;
-
 import dr.app.beagle.evomodel.substmodel.CodonLabeling;
 import dr.app.beagle.evomodel.substmodel.CodonPartitionedRobustCounting;
 import dr.app.beagle.evomodel.substmodel.StratifiedTraitOutputFormat;
@@ -10,9 +8,7 @@ import dr.evolution.datatype.GeneticCode;
 import dr.evomodel.branchratemodel.BranchRateModel;
 import dr.evomodel.tree.TreeModel;
 import dr.xml.*;
-
 public class CodonPartitionedRobustCountingParser extends AbstractXMLObjectParser {
-
     public static final String PARSER_NAME = "codonPartitionedRobustCounting";
     public static final String FIRST = "firstPosition";
     public static final String SECOND = "secondPosition";
@@ -28,19 +24,14 @@ public class CodonPartitionedRobustCountingParser extends AbstractXMLObjectParse
     public static final String AVERAGE_RATES = "averageRates";
     public static final String USE_NEW_NEUTRAL_MODEL = "useNewNeutralModel";
     public static final String PREFIX = "prefix";
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         AncestralStateBeagleTreeLikelihood[] partition = new AncestralStateBeagleTreeLikelihood[3];
         String[] labels = new String[]{FIRST, SECOND, THIRD};
-
         int patternCount = -1;
-
         BranchRateModel testBranchRateModel = null;
         for (int i = 0; i < 3; i++) {
             partition[i] = (AncestralStateBeagleTreeLikelihood)
                     xo.getChild(labels[i]).getChild(AncestralStateBeagleTreeLikelihood.class);
-
             if (i == 0) {
                 patternCount = partition[i].getPatternCount();
             } else {
@@ -53,7 +44,6 @@ public class CodonPartitionedRobustCountingParser extends AbstractXMLObjectParse
             if (partition[i].getSiteRateModel().getCategoryCount() > 1) {
                 throw new XMLParseException("Robust counting currently only implemented for single category models");
             }
-
             // Ensure that branchRateModel is the same across all partitions
             if (testBranchRateModel == null) {
                 testBranchRateModel = partition[i].getBranchRateModel();
@@ -62,35 +52,29 @@ public class CodonPartitionedRobustCountingParser extends AbstractXMLObjectParse
                         "Robust counting currently requires the same branch rate model for all partitions");
             }
         }
-
         TreeModel tree = (TreeModel) xo.getChild(TreeModel.class);
-
         Codons codons = Codons.UNIVERSAL;
         if (xo.hasAttribute(GeneticCode.GENETIC_CODE)) {
             String codeStr = xo.getStringAttribute(GeneticCode.GENETIC_CODE);
             codons = Codons.findByName(codeStr);
         }
-
         String labelingString = (String) xo.getAttribute(LABELING);
         CodonLabeling codonLabeling = CodonLabeling.parseFromString(labelingString);
         if (codonLabeling == null) {
             throw new XMLParseException("Unrecognized codon labeling '" + labelingString + "'");
         }
-
         String branchFormatString = xo.getAttribute(BRANCH_FORMAT,
                 StratifiedTraitOutputFormat.SUM_OVER_SITES.getText());
         StratifiedTraitOutputFormat branchFormat = StratifiedTraitOutputFormat.parseFromString(branchFormatString);
         if (branchFormat == null) {
             throw new XMLParseException("Unrecognized branch output format '" + branchFormat + "'");
         }
-
         String logFormatString = xo.getAttribute(LOG_FORMAT,
                 StratifiedTraitOutputFormat.SUM_OVER_SITES.getText());
         StratifiedTraitOutputFormat logFormat = StratifiedTraitOutputFormat.parseFromString(logFormatString);
         if (logFormat == null) {
             throw new XMLParseException("Unrecognized log output format '" + branchFormat + "'");
         }
-
         boolean useUniformization = xo.getAttribute(USE_UNIFORMIZATION, false);
         boolean includeExternalBranches = xo.getAttribute(INCLUDE_EXTERNAL, true);
         boolean includeInternalBranches = xo.getAttribute(INCLUDE_INTERNAL, true);
@@ -98,9 +82,7 @@ public class CodonPartitionedRobustCountingParser extends AbstractXMLObjectParse
         boolean averageRates = xo.getAttribute(AVERAGE_RATES, true);
         boolean saveCompleteHistory = xo.getAttribute(SAVE_HISTORY, false);
         boolean useNewNeutralModel = xo.getAttribute(USE_NEW_NEUTRAL_MODEL, false);
-
         String prefix = xo.hasAttribute(PREFIX) ? xo.getStringAttribute(PREFIX) : null;
-
         return new CodonPartitionedRobustCounting(
                 xo.getId(),
                 tree,
@@ -118,7 +100,6 @@ public class CodonPartitionedRobustCountingParser extends AbstractXMLObjectParse
                 logFormat,
                 prefix);
     }
-
     private static final XMLSyntaxRule[] rules = new XMLSyntaxRule[]{
             new ElementRule(FIRST,
                     new XMLSyntaxRule[]{
@@ -145,19 +126,15 @@ public class CodonPartitionedRobustCountingParser extends AbstractXMLObjectParse
             AttributeRule.newBooleanRule(SAVE_HISTORY, true),
             AttributeRule.newBooleanRule(USE_NEW_NEUTRAL_MODEL, true),
     };
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     public String getParserDescription() {
         return "A parser to specify robust counting procedures on codon partitioned models";
     }
-
     public Class getReturnType() {
         return CodonPartitionedRobustCounting.class;
     }
-
     public String getParserName() {
         return PARSER_NAME;
     }

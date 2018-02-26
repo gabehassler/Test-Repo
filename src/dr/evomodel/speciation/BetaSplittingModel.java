@@ -1,19 +1,13 @@
-
 package dr.evomodel.speciation;
-
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
 import dr.evomodelxml.speciation.BetaSplittingModelParser;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import dr.math.GammaFunction;
-
 public class BetaSplittingModel extends BranchingModel {
-
     public BetaSplittingModel(Parameter phiParameter, Tree tree) {
-
         super(BetaSplittingModelParser.BETA_SPLITTING_MODEL);
-
         this.phiParameter = phiParameter;
         addVariable(phiParameter);
         phiParameter.addBounds(new Parameter.DefaultBounds(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 1));
@@ -22,66 +16,48 @@ public class BetaSplittingModel extends BranchingModel {
         storedLogProbs = new double[N + 1][N + 1];
         makeSplitProbs(logProbs);
     }
-
     public double getPhi() {
         return phiParameter.getParameterValue(0);
     }
-
     public void setPhi(double phi) {
-
         phiParameter.setParameterValue(0, phi);
     }
-
     public double getBeta() {
         return (Math.exp(getPhi()) - 1) * 2.0;
     }
-
     public void setBeta(double beta) {
         if (beta < -2.0) throw new IllegalArgumentException();
         setPhi(Math.log(beta / 2.0 + 1));
     }
-
     public double logNodeProbability(Tree tree, NodeRef node) {
-
         if (tree.isExternal(node)) return 0.0;
-
         int leftChildren = Tree.Utils.getLeafCount(tree, tree.getChild(node, 0));
         int rightChildren = Tree.Utils.getLeafCount(tree, tree.getChild(node, 1));
-
         // calculate the probability of this pair..
-
         return logProbs[leftChildren + rightChildren][leftChildren] +
                 logProbs[leftChildren + rightChildren][rightChildren];
     }
-
     // **************************************************************
     // XMLElement IMPLEMENTATION
     // **************************************************************
-
     protected final void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         //System.out.println("parameter changed:" + parameter.getParameterName());
         makeSplitProbs(logProbs);
     }
-
     protected void storeState() {
         //copy the current logProbs into the storedLogProbs
         for (int i = 0; i < logProbs.length; i++) {
             System.arraycopy(logProbs[i], 0, storedLogProbs[i], 0, logProbs[i].length);
         }
     }
-
     protected void restoreState() {
-
         // swap the logProbs arrays
         double[][] tmp = logProbs;
         logProbs = storedLogProbs;
         storedLogProbs = tmp;
     }
-
     private void makeSplitProbs(double[][] logProbs) {
-
         // code modified from original code by Marc Suchard
-
         double beta = getBeta();
         //double[][] prob = new double[bigN+1][bigN+1];
         logProbs[2][1] = 0;
@@ -98,7 +74,6 @@ public class BetaSplittingModel extends BranchingModel {
             for (int i = 1; i <= end; i++)
                 logProbs[n][i] = logProbs[n][n - i] =
                         logGammaBeta[i] + logGammaBeta[n - i] - logGammaNone[i] - logGammaNone[n - i];
-
             // Normalize
             double sum = 0;
             for (int i = 1; i < n; i++) {
@@ -139,12 +114,9 @@ public class BetaSplittingModel extends BranchingModel {
           }      */
         //return prob;
     }
-
     //Protected stuff
     final Parameter phiParameter;
-
     double[][] logProbs;
     double[][] storedLogProbs;
-
     final int N;
 }

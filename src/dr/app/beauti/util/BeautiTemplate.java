@@ -1,5 +1,4 @@
 package dr.app.beauti.util;
-
 import dr.app.beast.BeastVersion;
 import dr.app.beauti.types.PriorType;
 import dr.app.beauti.options.BeautiOptions;
@@ -14,34 +13,22 @@ import dr.evoxml.TaxonParser;
 import dr.xml.XMLParser;
 import org.jdom.Document;
 import org.jdom.Element;
-
-
 public class BeautiTemplate extends ModelOptions {
-
 	private final BeautiOptions options;
-
     public BeautiTemplate(BeautiOptions options) {
     	this.options = options;
-
     }
-
-
     public Document create(boolean guessDates) {
-
         final BeastVersion version = new BeastVersion();
         Element root = new Element("beauti");
         root.setAttribute("version", version.getVersion());
-
         Element dataElement = new Element("data");
-
 //        dataElement.addContent(createChild("fileNameStem", fileNameStem));
-
 //        dataElement.addContent(createChild("datesUnits", options.datesUnits));
 //        dataElement.addContent(createChild("datesDirection", options.datesDirection));
         dataElement.addContent(createChild("translation", options.translation));
         //TODO:
 //        dataElement.addContent(createChild("startingTreeType", startingTreeType.name()));
-
         dataElement.addContent(createChild("guessDates", guessDates));
         dataElement.addContent(createChild("guessType", options.dateGuesser.guessType.name()));
         dataElement.addContent(createChild("fromLast", options.dateGuesser.fromLast));
@@ -50,11 +37,8 @@ public class BeautiTemplate extends ModelOptions {
         dataElement.addContent(createChild("offset", options.dateGuesser.offset));
         dataElement.addContent(createChild("unlessLessThan", options.dateGuesser.unlessLessThan));
         dataElement.addContent(createChild("offset2", options.dateGuesser.offset2));
-
         root.addContent(dataElement);
-
         Element taxaElement = new Element(TaxaParser.TAXA);
-
         for (Taxa taxonSet : options.taxonSets) {
             Element taxonSetElement = new Element("taxonSet");
             taxonSetElement.addContent(createChild(XMLParser.ID, taxonSet.getId()));
@@ -67,9 +51,7 @@ public class BeautiTemplate extends ModelOptions {
             }
             taxaElement.addContent(taxonSetElement);
         }
-
         root.addContent(taxaElement);
-
 //        for (PartitionSubstitutionModel model : partitionModels) {
 //
 //            Element modelElement = new Element("model");
@@ -98,9 +80,7 @@ public class BeautiTemplate extends ModelOptions {
 //
 //            root.addContent(modelElement);
 //        }
-
         Element priorsElement = new Element("priors");
-
         for (String name : getParameters().keySet()) {
             Parameter parameter = getParameters().get(name);
             Element e = new Element(name);
@@ -121,7 +101,6 @@ public class BeautiTemplate extends ModelOptions {
 //            e.addContent(createChild("gammaOffset", parameter.gammaOffset));
             priorsElement.addContent(e);
         }
-
         for (Taxa taxonSet : options.taxonSets) {
             Parameter statistic = getStatistics().get(taxonSet);
             Element e = new Element(statistic.getXMLName());
@@ -142,11 +121,8 @@ public class BeautiTemplate extends ModelOptions {
 //            e.addContent(createChild("gammaOffset", statistic.gammaOffset));
             priorsElement.addContent(e);
         }
-
         root.addContent(priorsElement);
-
         Element operatorsElement = new Element("operators");
-
         operatorsElement.addContent(createChild("autoOptimize", options.autoOptimize));
         for (String name : getOperators().keySet()) {
             Operator operator = getOperators().get(name);
@@ -157,11 +133,8 @@ public class BeautiTemplate extends ModelOptions {
             e.addContent(createChild("inUse", operator.inUse));
             operatorsElement.addContent(e);
         }
-
         root.addContent(operatorsElement);
-
         Element mcmcElement = new Element("mcmc");
-
         mcmcElement.addContent(createChild("chainLength", options.chainLength));
         mcmcElement.addContent(createChild("logEvery", options.logEvery));
         mcmcElement.addContent(createChild("echoEvery", options.echoEvery));
@@ -171,12 +144,9 @@ public class BeautiTemplate extends ModelOptions {
         //if (mapTreeFileName != null) mcmcElement.addContent(createChild("mapTreeFileName", mapTreeFileName));
         mcmcElement.addContent(createChild("substTreeLog", options.substTreeLog));
         //if (substTreeFileName != null) mcmcElement.addContent(createChild("substTreeFileName", substTreeFileName));
-
         root.addContent(mcmcElement);
-
         return new Document(root);
     }
-
     private Element createChild(String name, String value) {
         Element e = new Element(name);
         if (value != null) {
@@ -184,38 +154,31 @@ public class BeautiTemplate extends ModelOptions {
         }
         return e;
     }
-
     private Element createChild(String name, int value) {
         Element e = new Element(name);
         e.setText(Integer.toString(value));
         return e;
     }
-
     private Element createChild(String name, PriorType value) {
         Element e = new Element(name);
         e.setText(value.name());
         return e;
     }
-
     private Element createChild(String name, double value) {
         Element e = new Element(name);
         e.setText(Double.toString(value));
         return e;
     }
-
     private Element createChild(String name, boolean value) {
         Element e = new Element(name);
         e.setText(value ? "true" : "false");
         return e;
     }
-
     public void parse(Document document) throws dr.xml.XMLParseException {
-
         Element root = document.getRootElement();
         if (!root.getName().equals("beauti")) {
             throw new dr.xml.XMLParseException("This document does not appear to be a BEAUti file");
         }
-
         Element taxaElement = root.getChild(TaxaParser.TAXA);
         Element modelElement = root.getChild("model");
         Element priorsElement = root.getChild("priors");
@@ -224,10 +187,8 @@ public class BeautiTemplate extends ModelOptions {
                   if (taxaElement != null) {
                       for (Object ts : taxaElement.getChildren("taxonSet")) {
                           Element taxonSetElement = (Element) ts;
-
                           String id = getStringChild(taxonSetElement, XMLParser.ID, "");
                           final Taxa taxonSet = new Taxa(id);
-
                           Boolean enforceMonophyly = Boolean.valueOf(getStringChild(taxonSetElement, "enforceMonophyly", "false"));
                           for (Object o : taxonSetElement.getChildren("taxon")) {
                               Element taxonElement = (Element) o;
@@ -241,7 +202,6 @@ public class BeautiTemplate extends ModelOptions {
                           taxonSetsMono.put(taxonSet, enforceMonophyly);
                       }
                   }
-
                   if (modelElement != null) {
                       nucSubstitutionModel = getIntegerChild(modelElement, "nucSubstitutionModel", HKY);
                       aaSubstitutionModel = getIntegerChild(modelElement, "aaSubstitutionModel", BLOSUM_62);
@@ -259,21 +219,17 @@ public class BeautiTemplate extends ModelOptions {
                       unlinkedSubstitutionModel = getBooleanChild(modelElement, "unlinkedSubstitutionModel", false);
                       unlinkedHeterogeneityModel = getBooleanChild(modelElement, "unlinkedHeterogeneityModel", false);
                       unlinkedFrequencyModel = getBooleanChild(modelElement, "unlinkedFrequencyModel", false);
-
                       clockModel = getIntegerChild(modelElement, "clockModel", clockModel);
-
                       // the old name was "coalescentModel" so try to read this first
                       nodeHeightPrior = getIntegerChild(modelElement, "coalescentModel", CONSTANT);
                       nodeHeightPrior = getIntegerChild(modelElement, "nodeHeightPrior", nodeHeightPrior);
                       // we don't allow no nodeHeightPrior in BEAUti so switch it to Yule:
                       if (nodeHeightPrior == NONE_TREE_PRIOR) nodeHeightPrior = YULE;
-
                       parameterization = getIntegerChild(modelElement, "parameterization", GROWTH_RATE);
                       skylineGroupCount = getIntegerChild(modelElement, "skylineGroupCount", 10);
                       skylineModel = getIntegerChild(modelElement, "skylineModel", CONSTANT_SKYLINE);
                       fixedTree = getBooleanChild(modelElement, "fixedTree", false);
                   }
-
                   if (operatorsElement != null) {
                       autoOptimize = getBooleanChild(operatorsElement, "autoOptimize", true);
                       for (String name : operators.keySet()) {
@@ -282,14 +238,12 @@ public class BeautiTemplate extends ModelOptions {
                           if (e == null) {
                               throw new XMLParseException("Operators element, " + name + " missing");
                           }
-
                           operator.tuning = getDoubleChild(e, "tuning", 1.0);
                           operator.tuningEdited = getBooleanChild(e, "tuningEdited", false);
                           operator.weight = getDoubleChild(e, "weight", 1);
                           operator.inUse = getBooleanChild(e, "inUse", true);
                       }
                   }
-
                   if (priorsElement != null) {
                       for (String name : parameters.keySet()) {
                           Parameter parameter = parameters.get(name);
@@ -297,7 +251,6 @@ public class BeautiTemplate extends ModelOptions {
                           if (e == null) {
                               throw new XMLParseException("Priors element, " + name + " missing");
                           }
-
                           parameter.initial = getDoubleChild(e, "initial", 1.0);
                           parameter.priorType = PriorType.valueOf(getStringChild(e, "priorType", PriorType.UNIFORM_PRIOR.name()));
                           parameter.priorEdited = getBooleanChild(e, "priorEdited", false);
@@ -314,7 +267,6 @@ public class BeautiTemplate extends ModelOptions {
                           parameter.gammaBeta = getDoubleChild(e, "gammaBeta", parameter.gammaBeta);
                           parameter.gammaOffset = getDoubleChild(e, "gammaOffset", parameter.gammaOffset);
                       }
-
                       for (Taxa taxonSet : taxonSets) {
                           Parameter statistic = statistics.get(taxonSet);
                           if (statistic == null) {
@@ -338,10 +290,7 @@ public class BeautiTemplate extends ModelOptions {
                           statistic.gammaBeta = getDoubleChild(e, "gammaBeta", statistic.gammaBeta);
                           statistic.gammaOffset = getDoubleChild(e, "gammaOffset", statistic.gammaOffset);
                       }
-
                   }
-
-
                   if (mcmcElement != null) {
                       upgmaStartingTree = getBooleanChild(mcmcElement, "upgmaStartingTree", true);
                       chainLength = getIntegerChild(mcmcElement, "chainLength", 100000000);
@@ -355,31 +304,26 @@ public class BeautiTemplate extends ModelOptions {
                       substTreeFileName = getStringChild(mcmcElement, "substTreeFileName", null);
                   }      */
     }
-
     private String getStringChild(Element element, String childName, String defaultValue) {
         String value = element.getChildTextTrim(childName);
         if (value == null || value.length() == 0) return defaultValue;
         return value;
     }
-
     private int getIntegerChild(Element element, String childName, int defaultValue) {
         String value = element.getChildTextTrim(childName);
         if (value == null) return defaultValue;
         return Integer.parseInt(value);
     }
-
     private double getDoubleChild(Element element, String childName, double defaultValue) {
         String value = element.getChildTextTrim(childName);
         if (value == null) return defaultValue;
         return Double.parseDouble(value);
     }
-
     private boolean getBooleanChild(Element element, String childName, boolean defaultValue) {
         String value = element.getChildTextTrim(childName);
         if (value == null) return defaultValue;
         return value.equals("true");
     }
-
     private Date createDate(double timeValue, Units.Type units, boolean backwards, double origin) {
         if (backwards) {
             return Date.createTimeAgoFromOrigin(timeValue, units, origin);
@@ -387,5 +331,4 @@ public class BeautiTemplate extends ModelOptions {
             return Date.createTimeSinceOrigin(timeValue, units, origin);
         }
     }
-
 }

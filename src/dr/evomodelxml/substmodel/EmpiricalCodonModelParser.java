@@ -1,15 +1,11 @@
-
 package dr.evomodelxml.substmodel;
-
 import java.util.logging.Logger;
-
 import dr.evolution.datatype.Codons;
 import dr.evolution.datatype.DataType;
 import dr.evolution.datatype.GeneticCode;
 import dr.evomodel.substmodel.*;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 public class EmpiricalCodonModelParser extends AbstractXMLObjectParser {
     public static final String EMPIRICAL_CODON_MODEL = "empiricalCodonModel";
     public static final String EMPIRICAL_RATE_MATRIX = "empiricalRateMatrix";
@@ -20,9 +16,7 @@ public class EmpiricalCodonModelParser extends AbstractXMLObjectParser {
     public static final String KAPPATSTV = "kappaTsTv";
     public static final String MULTI_NT_CHANGE = "multiNtChange";
     public String getParserName() { return EMPIRICAL_CODON_MODEL; }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         Codons codons = Codons.UNIVERSAL;
         if (xo.hasAttribute(GeneticCode.GENETIC_CODE)) {
             String codeStr = xo.getStringAttribute(GeneticCode.GENETIC_CODE);
@@ -56,7 +50,6 @@ public class EmpiricalCodonModelParser extends AbstractXMLObjectParser {
                 codons = Codons.NO_STOPS;
             }
         }
-        
         Parameter omegaParam = (Parameter)xo.getElementFirstChild(OMEGA);
         Parameter kappaParam = null;
         Parameter mntParam = null;
@@ -70,14 +63,11 @@ public class EmpiricalCodonModelParser extends AbstractXMLObjectParser {
     	} else {
     		mntParam = (Parameter)xo.getElementFirstChild(MULTI_NT_CHANGE);
     	}
-        
         String dirString = xo.getStringAttribute(ECM_DATA_DIR);
         String freqString = xo.getStringAttribute(ECM_FREQ_MATRIX);
         String matString = xo.getStringAttribute(ECM_DATA_MATRIX);
-        
         EmpiricalCodonRateMatrix rateMat = new EmpiricalCodonRateMatrix(EMPIRICAL_RATE_MATRIX, codons, 
         													dirString, freqString, matString);
-
         // get frequencies from XML, from frequency csv file or estimate from data
         FrequencyModel freqModel = null;
         if (xo.getChild(FrequencyModel.class) != null) {
@@ -85,10 +75,8 @@ public class EmpiricalCodonModelParser extends AbstractXMLObjectParser {
         } else {
         	freqModel = createNewFreqModel(codons, rateMat);
         }
-
         return new EmpiricalCodonModel(codons, omegaParam, kappaParam, mntParam, rateMat, freqModel);
     }
-    
     // creates new FrequencyModel from XML frequencies
     private FrequencyModel createNewFreqModel(DataType codons, EmpiricalCodonRateMatrix type) throws XMLParseException {
     	double[] freqs = type.getFrequencies();
@@ -96,30 +84,21 @@ public class EmpiricalCodonModelParser extends AbstractXMLObjectParser {
         for (int j = 0; j < freqs.length; j++) {
             sum += freqs[j];
         }
-
         if (Math.abs(sum - 1.0) > 1e-8) {
             throw new XMLParseException("Frequencies do not sum to 1 (they sum to " + sum + ")");
         }
-        
     	FrequencyModel fm = new FrequencyModel(codons, freqs);
-    	
     	Logger.getLogger("dr.evomodel").info("Using frequencies from data file");
-    	
     	return fm;
     }
-
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
-
     public String getParserDescription() {
         return "This element represents the empirical model of codon evolution.";
     }
-
     public Class getReturnType() { return EmpiricalCodonModel.class; }
-
     public XMLSyntaxRule[] getSyntaxRules() { return rules; }
-
     private XMLSyntaxRule[] rules = new XMLSyntaxRule[] {
         new StringAttributeRule(GeneticCode.GENETIC_CODE,
             "The genetic code to use",
@@ -157,4 +136,3 @@ public class EmpiricalCodonModelParser extends AbstractXMLObjectParser {
         new ElementRule(FrequencyModel.class, true)
     };
 }
-

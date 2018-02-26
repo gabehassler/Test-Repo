@@ -1,6 +1,4 @@
-
 package dr.app.beagle.evomodel.branchmodel;
-
 import dr.app.beagle.evomodel.substmodel.FrequencyModel;
 import dr.app.beagle.evomodel.substmodel.SubstitutionModel;
 import dr.evolution.tree.NodeRef;
@@ -11,35 +9,28 @@ import dr.inference.model.Variable;
 import dr.util.Author;
 import dr.util.Citable;
 import dr.util.Citation;
-
 import java.util.ArrayList;
 import java.util.List;
-
 public class ExternalInternalBranchModel extends AbstractModel implements BranchModel, Citable {
     public ExternalInternalBranchModel(TreeModel tree, SubstitutionModel externalSubstModel, SubstitutionModel internalSubstModel) {
         super("ExternalInternalBranchModel");
-
         this.tree = tree;
         this.externalSubstModel = externalSubstModel;
         this.internalSubstModel = internalSubstModel;
-
         addModel(tree);
         addModel(externalSubstModel);
         addModel(internalSubstModel);
     }
-
     public Mapping getBranchModelMapping(final NodeRef node) {
         return new Mapping() {
             public int[] getOrder() {
                 return new int[] { tree.isExternal(node) ? 0 : 1 };
             }
-
             public double[] getWeights() {
                 return new double[] { 1.0 };
             }
         };
     }
-
 //    @Override // use java 1.5
     public List<SubstitutionModel> getSubstitutionModels() {
         List<SubstitutionModel> substitutionModels = new ArrayList<SubstitutionModel>();
@@ -47,42 +38,33 @@ public class ExternalInternalBranchModel extends AbstractModel implements Branch
         substitutionModels.add(internalSubstModel);
         return substitutionModels;
     }
-
 //    @Override
     public SubstitutionModel getRootSubstitutionModel() {
         return internalSubstModel;
     }
-
     public FrequencyModel getRootFrequencyModel() {
         return getRootSubstitutionModel().getFrequencyModel();
     }
-
 //    @Override
     public boolean requiresMatrixConvolution() {
         return false;
     }
-
     @Override
     protected void handleModelChangedEvent(Model model, Object object, int index) {
         fireModelChanged();
     }
-
     @Override
     protected void handleVariableChangedEvent(Variable variable, int index, Variable.ChangeType type) {
     }
-
     @Override
     protected void storeState() {
     }
-
     @Override
     protected void restoreState() {
     }
-
     @Override
     protected void acceptState() {
     }
-
     public List<Citation> getCitations() {
         List<Citation> citations = new ArrayList<Citation>();
         citations.add(
@@ -98,7 +80,6 @@ public class ExternalInternalBranchModel extends AbstractModel implements Branch
         );
         return citations;
     }
-
     private final TreeModel tree;
     private final SubstitutionModel externalSubstModel;
     private final SubstitutionModel internalSubstModel;

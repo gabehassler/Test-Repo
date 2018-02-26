@@ -1,6 +1,4 @@
-
 package dr.evomodel.speciation;
-
 import dr.evolution.tree.NodeRef;
 import dr.evolution.util.Taxon;
 import dr.evomodel.tree.TreeModel;
@@ -8,43 +6,30 @@ import dr.evomodelxml.speciation.PopsIOSpeciesBindingsParser;
 import dr.inference.model.*;
 import dr.util.AlloppMisc;
 import jebl.util.FixedBitSet;
-
 import java.util.*;
-
-
-
-
 public class PopsIOSpeciesBindings extends AbstractModel   {
     private final GeneTreeInfo[] geneTreeInfos;
     private final SpInfo[] spInfos;
     private final Taxon [] taxa;
     private final Map<Taxon, Integer> taxon2index = new HashMap<Taxon, Integer>();
     private final double initialmingenenodeheight; // for starting network
-
-
-
     public static class SpInfo {
         final public String name;
         private final Taxon[] taxa;
-
         public SpInfo(String name, Taxon[] taxa) {
             this.name = name;
             this.taxa = taxa;
         }
     }
-
-
     public class GeneTreeInfo {
         public final TreeModel tree;
         private final int[] lineagesCount;
         private final double popFactor;
-
         private class GeneUnionNode {
             private GeneUnionNode child[];
             private double height;
             private final FixedBitSet union;
             private String name; // for debugging
-
             // Constructor makes a half-formed tip node. Tips need unions
             // and internal nodes need all fields filling in.
             public GeneUnionNode() {
@@ -53,9 +38,6 @@ public class PopsIOSpeciesBindings extends AbstractModel   {
                 union = new FixedBitSet(getSpecies().length);
                 name = "";
             }
-
-
-
             public String asText(int indentlen) {
                 StringBuilder s = new StringBuilder();
                 Formatter formatter = new Formatter(s, Locale.US);
@@ -69,17 +51,12 @@ public class PopsIOSpeciesBindings extends AbstractModel   {
                 }
                 formatter.format("%s ", AlloppMisc.nonnegIn8Chars(height));
                 formatter.format("%20s ", AlloppMisc.FixedBitSetasText(union));
-
                 return s.toString();
             }
-
         }
-
         private class GeneUnionTree {
             private final GeneUnionNode[] nodes;
             private int nextn;
-
-
             public GeneUnionTree() {
                 nodes = new GeneUnionNode[tree.getNodeCount()];
                 for (int i = 0; i < nodes.length; i++) {
@@ -87,14 +64,9 @@ public class PopsIOSpeciesBindings extends AbstractModel   {
                 }
                 genetree2geneuniontree(tree.getRoot());
             }
-
-
             public GeneUnionNode getRoot() {
                 return nodes[nodes.length-1];
             }
-
-
-
             private boolean subtreeFitsInNetwork(GeneUnionNode node,
                                                  final PopsIOSpeciesTreeModel piostm) {
                 for (int i = 0; i < node.child.length; i++) {
@@ -104,8 +76,6 @@ public class PopsIOSpeciesBindings extends AbstractModel   {
                 }
                 return piostm.coalescenceIsCompatible(node.height, node.union);
             }
-
-
             private void subtreeRecordCoalescences(GeneUnionNode node,
                                                    final PopsIOSpeciesTreeModel piostm) {
                 for (int i = 0; i < node.child.length; i++) {
@@ -115,8 +85,6 @@ public class PopsIOSpeciesBindings extends AbstractModel   {
                     piostm.recordCoalescence(node.height, node.union);
                 }
             }
-
-
             private void genetree2geneuniontree(NodeRef gnode) {
                 if (tree.isExternal(gnode)) {
                     nodes[nextn].child = new GeneUnionNode[0];
@@ -137,18 +105,11 @@ public class PopsIOSpeciesBindings extends AbstractModel   {
                 nodes[nextn].height = tree.getNodeHeight(gnode);
                 nextn++;
             }
-
-
-
-
-
             public String asText() {
                 String s = "";
                 Stack<Integer> x = new Stack<Integer>();
                 return subtreeAsText(getRoot(), s, x, 0, "");
             }
-
-
             private String subtreeAsText(GeneUnionNode node, String s, Stack<Integer> x, int depth, String b) {
                 Integer[] y = x.toArray(new Integer[x.size()]);
                 StringBuffer indent = new StringBuffer();
@@ -173,39 +134,27 @@ public class PopsIOSpeciesBindings extends AbstractModel   {
                 }
                 return s + subs;
             }
-
         } // end GeneTreeInfo.GeneUnionTree
-
-
         GeneTreeInfo(TreeModel tree, double popFactor) {
             this.tree = tree;
             this.popFactor = popFactor;
-
             lineagesCount = new int[spInfos.length];
             Arrays.fill(lineagesCount, 0);
-
             for (int nl = 0; nl < lineagesCount.length; ++nl) {
                 for (Taxon tx : spInfos[nl].taxa) {
                         ++lineagesCount[nl];
                     }
                 }
             }
-
-
-
         public String genetreeAsText() {
             GeneUnionTree gutree = new GeneUnionTree();
             return gutree.asText();
         }
-
-
         public boolean fitsInNetwork(final PopsIOSpeciesTreeModel piostm) {
             GeneUnionTree gutree = new GeneUnionTree();
             boolean fits = gutree.subtreeFitsInNetwork(gutree.getRoot(), piostm);
             return fits;
         }
-
-
         public void fillSpeciesTreeWithGeneCoalescentInfo(final PopsIOSpeciesTreeModel piostm) {
             GeneUnionTree gutree = new GeneUnionTree();
             piostm.clearCoalescences();
@@ -214,14 +163,10 @@ public class PopsIOSpeciesBindings extends AbstractModel   {
             piostm.recordLineageCounts();
             piostm.accumCoalCountsIntensities();
         }
-
-
         public double coalescenceUpperBoundBetween(FixedBitSet spp0, FixedBitSet spp1) {
             GeneUnionTree gutree = new GeneUnionTree();
             return subtreeUpperBoundBetween(gutree.getRoot(), spp0, spp1, Double.MAX_VALUE);
         }
-
-
         // start at root of gutree and recurse.
         // A node which has one child which contains some of species spp0
         // and where the other contains some of species spp1, imposes a limit
@@ -245,16 +190,12 @@ public class PopsIOSpeciesBindings extends AbstractModel   {
             }
             return bound;
         }
-
-
     }
-
     public PopsIOSpeciesBindings(SpInfo[] spInfos, TreeModel[] geneTrees,
                                  double minheight, double[] popFactors) {
         super(PopsIOSpeciesBindingsParser.PIO_SPECIES_BINDINGS);
         this.spInfos = spInfos;
         initialmingenenodeheight = minheight;
-
         int t = 0;
         for (SpInfo spi : spInfos) {
             t += spi.taxa.length;
@@ -270,12 +211,10 @@ public class PopsIOSpeciesBindings extends AbstractModel   {
         for (int i = 0; i < taxa.length; i++) {
             taxon2index.put(taxa[i], i);
         }
-
         geneTreeInfos = new GeneTreeInfo[geneTrees.length];
         for (int i = 0; i < geneTrees.length; i++) {
             geneTreeInfos[i] = new GeneTreeInfo(geneTrees[i], popFactors[i]);
         }
-
         for (GeneTreeInfo gti : geneTreeInfos) {
             NodeRef[] nodes = gti.tree.getNodes();
             for (NodeRef node : nodes) {
@@ -285,15 +224,10 @@ public class PopsIOSpeciesBindings extends AbstractModel   {
                 }
             }
         }
-
     }
-
-
     public int numberOfGeneTrees() {
         return geneTreeInfos.length;
     }
-
-
     public double maxGeneTreeHeight() {
         double maxheight = 0.0;
         for (GeneTreeInfo gti : geneTreeInfos) {
@@ -304,14 +238,9 @@ public class PopsIOSpeciesBindings extends AbstractModel   {
         }
         return maxheight;
     }
-
-
-
     public SpInfo [] getSpecies() {
         return spInfos;
     }
-
-
     public int speciesId2index(String spId) {
         int index = -1;
         for (int i = 0; i < spInfos.length; i++) {
@@ -326,40 +255,27 @@ public class PopsIOSpeciesBindings extends AbstractModel   {
         assert index != -1;
         return index;
     }
-
     public double initialMinGeneNodeHeight() {
        return initialmingenenodeheight;
     }
-
-
-
     public boolean geneTreeFitsInNetwork(int i, PopsIOSpeciesTreeModel piostm) {
         return geneTreeInfos[i].fitsInNetwork(piostm);
     }
-
-
-
     public void fillSpeciesTreeWithCoalescentInfo(PopsIOSpeciesTreeModel piostm) {
         piostm.zeroCoalCountsIntensities();
         for (int j = 0; j < geneTreeInfos.length; j++ ) {
             geneTreeInfos[j].fillSpeciesTreeWithGeneCoalescentInfo(piostm);
         }
     }
-
-
     public FixedBitSet emptyUnion() {
         return new FixedBitSet(taxa.length);
     }
-
-
     public FixedBitSet tipUnionFromTaxon(Taxon tx) {
         int spi = speciesId2index(tx.getId());
         FixedBitSet x = new FixedBitSet(taxa.length);
         x.set(spi);
         return x;
     }
-
-
     public double coalescenceUpperBoundBetween(FixedBitSet left, FixedBitSet right) {
         double bound = Double.MAX_VALUE;
         for (GeneTreeInfo g : geneTreeInfos) {
@@ -367,7 +283,6 @@ public class PopsIOSpeciesBindings extends AbstractModel   {
         }
         return bound;
     }
-
     int nLineages(int speciesIndex) {
         int n = geneTreeInfos[0].lineagesCount[speciesIndex];
         for (GeneTreeInfo gti : geneTreeInfos) {
@@ -375,34 +290,27 @@ public class PopsIOSpeciesBindings extends AbstractModel   {
         }
         return n;
     }
-
     public GeneTreeInfo[] getGeneTrees() {
         return geneTreeInfos;
     }
-
     public String genetreeAsText(int g) {
         return geneTreeInfos[g].genetreeAsText();
     }
-
     @Override
     protected void handleModelChangedEvent(Model model, Object object, int index) {
         fireModelChanged(object, index);
         // grjtodo-oneday copied from elsewhere; not understood.
     }
-
     @Override
     protected void handleVariableChangedEvent(Variable variable, int index, Variable.ChangeType type) {
         assert false;
     }
-
     @Override
     protected void storeState() {
      }
-
     @Override
     protected void restoreState() {
     }
-
     @Override
     protected void acceptState() {
    }

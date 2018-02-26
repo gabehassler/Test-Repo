@@ -1,62 +1,43 @@
-
 package dr.inference.model;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-
 import dr.app.beagle.evomodel.treelikelihood.BeagleTreeLikelihood;
 import dr.util.NumberFormatter;
-
 public class ThreadedCompoundLikelihood implements Likelihood {
-
 	public static final boolean DEBUG = false;
-
 	public ThreadedCompoundLikelihood() {
 	}
-
 	public ThreadedCompoundLikelihood(List<Likelihood> likelihoods) {
 		for (Likelihood likelihood : likelihoods) {
 			addLikelihood(likelihood);
 		}
 	}
-
 	public void addLikelihood(Likelihood likelihood) {
-
 		if (!likelihoods.contains(likelihood)) {
-
 			likelihoods.add(likelihood);
 			if (likelihood.getModel() != null) {
 				compoundModel.addModel(likelihood.getModel());
 			}
-
 			likelihoodCallers.add(new LikelihoodCaller(likelihood));
-
 			//System.err.println("LikelihoodCallers size: " + likelihoodCallers.size());
 		}
 	}
-
 	public int getLikelihoodCount() {
 		return likelihoods.size();
 	}
-
 	public final Likelihood getLikelihood(int i) {
 		return likelihoods.get(i);
 	}
-
 	// **************************************************************
 	// Likelihood IMPLEMENTATION
 	// **************************************************************
-
 	public Model getModel() {
 		return compoundModel;
 	}
-
 	public double getLogLikelihood() {
-
 		double logLikelihood = 0.0;
-
 		boolean knownLikelihoods = true;
 		for (Likelihood likelihood : likelihoods) {
 			if (!((BeagleTreeLikelihood)likelihood).isLikelihoodKnown()) {
@@ -66,15 +47,12 @@ public class ThreadedCompoundLikelihood implements Likelihood {
 				logLikelihood += likelihood.getLogLikelihood();
 			}
 		}
-		
 		if (knownLikelihoods) {
-
 			if (DEBUG) {
 				//System.err.println("BTLs are known; total logLikelihood = " + logLikelihood);
 				//double check if the total loglikelihood will be identical by recalculating
 				double backupLikelihood = logLikelihood;
 				logLikelihood = 0.0;
-
 				if (threads == null) {
 					// first call so setup a thread for each likelihood...
 					threads = new LikelihoodThread[likelihoodCallers.size()];
@@ -84,12 +62,10 @@ public class ThreadedCompoundLikelihood implements Likelihood {
 						threads[i].start();
 					}
 				}
-
 				for (int i = 0; i < threads.length; i++) {
 					// set the caller which will be called in each thread
 					threads[i].setCaller(likelihoodCallers.get(i));
 				}
-
 				for (LikelihoodThread thread : threads) {
 					// now wait for the results to be set...
 					Double result = thread.getResult();
@@ -98,7 +74,6 @@ public class ThreadedCompoundLikelihood implements Likelihood {
 					}
 					logLikelihood += result;
 				}
-
 				if (backupLikelihood != logLikelihood) {
 					//System.err.println("Likelihood recalculation does not return stored likelihood");
 					throw new RuntimeException("Likelihood recalculation does not return stored likelihood");
@@ -106,12 +81,9 @@ public class ThreadedCompoundLikelihood implements Likelihood {
 			}
 		} else {
 			//System.err.println("BTLs are not known: recalculate");
-
 			logLikelihood = 0.0;
-
 			//double start = System.nanoTime();
 			//System.err.println("TCL getLogLikelihood()");
-
 			if (threads == null) {
 				//System.err.println("threads == null");
 				// first call so setup a thread for each likelihood...
@@ -123,7 +95,6 @@ public class ThreadedCompoundLikelihood implements Likelihood {
 					threads[i].start();
 				}
 			}
-
 			//double setStart = System.nanoTime();
 			for (int i = 0; i < threads.length; i++) {
 				// set the caller which will be called in each thread
@@ -131,7 +102,6 @@ public class ThreadedCompoundLikelihood implements Likelihood {
 			}
 			//double setEnd = System.nanoTime();
 			//System.err.println("setting callers: " + (setEnd - setStart));
-
 			//start = System.nanoTime();
 			for (LikelihoodThread thread : threads) {
 				//double testone = System.nanoTime();
@@ -149,52 +119,39 @@ public class ThreadedCompoundLikelihood implements Likelihood {
 			//System.err.println("TCL total time: " + (end - start));
 		}
 		return logLikelihood; // * weightFactor;
-
 	}
-
 	public boolean evaluateEarly() {
 		return false;
 	}
-
 	public void makeDirty() {
-
 		for (Likelihood likelihood : likelihoods) {
 			likelihood.makeDirty();
 		}
 	}
-
 	public String prettyName() {
 		return Abstract.getPrettyName(this);
 	}
-
 	public String getDiagnosis() {
 		String message = "";
 		boolean first = true;
-
 		for (Likelihood lik : likelihoods) {
-
 			if (!first) {
 				message += ", ";
 			} else {
 				first = false;
 			}
-
 			String id = lik.getId();
 			if (id == null || id.trim().length() == 0) {
 				String[] parts = lik.getClass().getName().split("\\.");
 				id = parts[parts.length - 1];
 			}
-
 			message += id + "=";
-
-
 			if (lik instanceof ThreadedCompoundLikelihood) {
 				String d = ((ThreadedCompoundLikelihood) lik).getDiagnosis();
 				if (d != null && d.length() > 0) {
 					message += "(" + d + ")";
 				}
 			} else {
-
 				if (lik.getLogLikelihood() == Double.NEGATIVE_INFINITY) {
 					message += "-Inf";
 				} else if (Double.isNaN(lik.getLogLikelihood())) {
@@ -205,81 +162,56 @@ public class ThreadedCompoundLikelihood implements Likelihood {
 				}
 			}
 		}
-
 		return message;
 	}
-
 	public String toString() {
-
 		return Double.toString(getLogLikelihood());
-
 	}
-
 	public void setWeightFactor(double w) { weightFactor = w; }
-
 	public double getWeightFactor() { return weightFactor; }
-
 	// **************************************************************
 	// Loggable IMPLEMENTATION
 	// **************************************************************
-
 	public dr.inference.loggers.LogColumn[] getColumns() {
 		return new dr.inference.loggers.LogColumn[]{
 				new LikelihoodColumn(getId())
 		};
 	}
-
 	private class LikelihoodColumn extends dr.inference.loggers.NumberColumn {
 		public LikelihoodColumn(String label) {
 			super(label);
 		}
-
 		public double getDoubleValue() {
 			return getLogLikelihood();
 		}
 	}
-
 	// **************************************************************
 	// Identifiable IMPLEMENTATION
 	// **************************************************************
-
 	private String id = null;
-
 	public void setId(String id) {
 		this.id = id;
 	}
-
 	public String getId() {
 		return id;
 	}
-
 	private LikelihoodThread[] threads;
-
 	private final ArrayList<Likelihood> likelihoods = new ArrayList<Likelihood>();
 	private final CompoundModel compoundModel = new CompoundModel("compoundModel");
-
 	private final List<LikelihoodCaller> likelihoodCallers = new ArrayList<LikelihoodCaller>();
-
 	private double weightFactor = 1.0;
-
 	class LikelihoodCaller {
-
 		public LikelihoodCaller(Likelihood likelihood) {
 			this.likelihood = likelihood;
 		}
-
 		public double call() {
 			return likelihood.getLogLikelihood();
 		}
-
 		private final Likelihood likelihood;
 	}
-
 	class LikelihoodThread extends Thread {
-
 		public LikelihoodThread() {
 		}
-
 		public void setCaller(LikelihoodCaller caller) {
 			lock.lock();
 			resultAvailable = false;
@@ -290,7 +222,6 @@ public class ThreadedCompoundLikelihood implements Likelihood {
 				lock.unlock();
 			}
 		}
-
 		 public void run() {
 			while (true) {
 				lock.lock();
@@ -301,13 +232,11 @@ public class ThreadedCompoundLikelihood implements Likelihood {
 					resultAvailable = true;
 					caller = null;
 				} catch (InterruptedException e){
-
 				} finally {
 					lock.unlock();
 				}
 			}
 		 }
-
 		 public Double getResult() {
 			 Double returnValue = null;
 			 if (!lock.isLocked() && resultAvailable)  { // thread is not busy and completed
@@ -316,26 +245,20 @@ public class ThreadedCompoundLikelihood implements Likelihood {
 			 }
 			 return returnValue;
 		 }
-
 		 private LikelihoodCaller caller = null;
 		 private Double result = Double.NaN;
 		 private boolean resultAvailable = false;
 		 private final ReentrantLock lock = new ReentrantLock();
 		 private final Condition condition = lock.newCondition();
 	}
-
 	public boolean isUsed() {
 		return isUsed;
 	}
-
 	public void setUsed() {
 		isUsed = true;
-
 		for (Likelihood l : likelihoods) {
 			l.setUsed();
 		}
 	}
-
 	private boolean isUsed = false;
-
 }

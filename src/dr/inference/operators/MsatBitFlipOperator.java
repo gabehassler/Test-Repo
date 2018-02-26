@@ -1,10 +1,7 @@
-
 package dr.inference.operators;
-
 import dr.inference.model.Parameter;
 import dr.xml.*;
 import dr.math.MathUtils;
-
 public class MsatBitFlipOperator extends SimpleMCMCOperator{
     private Parameter parameter;
     private Parameter dependencies;
@@ -15,8 +12,6 @@ public class MsatBitFlipOperator extends SimpleMCMCOperator{
     public static final String MODEL_CHOOSE = "modelChoose";
     public static final String DEPENDENCIES = "dependencies";
     public static final String VARIABLE_INDICES = "variableIndices";
-
-
     public MsatBitFlipOperator(Parameter parameter, Parameter dependencies, double weight, int[] variableIndices){
         this.parameter = parameter;
         this.dependencies = dependencies;
@@ -26,13 +21,10 @@ public class MsatBitFlipOperator extends SimpleMCMCOperator{
                     ") does not equal to the dimension of the dependencies parameter("+dependencies.getDimension()+").");
         setWeight(weight);
     }
-
     public String getOperatorName(){
         return "msatModelSwitch(" + parameter.getParameterName() + ")";
     }
-
     public double doOperation() throws OperatorFailedException{
-
         double logq = 0.0;
         double[] bitVec = new double[parameter.getDimension()];
         for(int i = 0; i < bitVec.length; i++){
@@ -59,68 +51,50 @@ public class MsatBitFlipOperator extends SimpleMCMCOperator{
                     //newVal = oldVal;
                 }
             }
-
         }
         parameter.setParameterValue(index, newVal);
-
         return logq;
     }
-
     public final String getPerformanceSuggestion() {
         return "no suggestions available";
     }
-
     public static dr.xml.XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-
         public String getParserName() {
             return "msatModelSwitchOperator";
         }
-
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
             double weight = xo.getDoubleAttribute(WEIGHT);
             Parameter modelChoose = (Parameter) xo.getElementFirstChild(MODEL_CHOOSE);
             Parameter dependencies = (Parameter)xo.getElementFirstChild(DEPENDENCIES);
             int[] variableIndices;
             if(xo.hasChildNamed(VARIABLE_INDICES)){
-
                 double[] temp = ((Parameter)xo.getElementFirstChild(VARIABLE_INDICES)).getParameterValues();
                 variableIndices = new int[temp.length];
                 for(int i = 0; i < temp.length;i++){
                     variableIndices[i] = (int)temp[i];
                 }
-
             }else{
                 variableIndices = new int[]{0, 1, 2, 3, 4, 5};
             }
-
             return new MsatBitFlipOperator(modelChoose, dependencies, weight, variableIndices);
         }
-
         //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
-
         public String getParserDescription() {
             return "This element returns a microsatellite averaging operator on a given parameter.";
         }
-
         public Class getReturnType() {
             return MCMCOperator.class;
         }
-
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
-
         private XMLSyntaxRule[] rules = new XMLSyntaxRule[]{
                 AttributeRule.newDoubleRule(WEIGHT),
                 new ElementRule(MODEL_CHOOSE, new XMLSyntaxRule[]{new ElementRule(Parameter.class)}),
                 new ElementRule(DEPENDENCIES, new XMLSyntaxRule[]{new ElementRule(Parameter.class)}),
                 new ElementRule(VARIABLE_INDICES, new XMLSyntaxRule[]{new ElementRule(Parameter.class)},true)
-
         };
-
     };
-
 }

@@ -1,8 +1,5 @@
-
 package dr.math.matrixAlgebra;
-
 import dr.math.iterations.IterativeProcess;
-
 public class JacobiTransformation extends IterativeProcess 
 {
 	double[][] rows;

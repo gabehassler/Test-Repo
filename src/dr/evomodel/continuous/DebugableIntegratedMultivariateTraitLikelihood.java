@@ -1,6 +1,4 @@
-
 package dr.evomodel.continuous;
-
 import dr.evolution.tree.MultivariateTraitTree;
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
@@ -13,13 +11,10 @@ import dr.math.distributions.MultivariateNormalDistribution;
 import dr.math.matrixAlgebra.Matrix;
 import dr.math.matrixAlgebra.SymmetricMatrix;
 import dr.math.matrixAlgebra.Vector;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 public class DebugableIntegratedMultivariateTraitLikelihood extends SemiConjugateMultivariateTraitLikelihood {
-
     public DebugableIntegratedMultivariateTraitLikelihood(String traitName,
                                                           MultivariateTraitTree treeModel,
                                                           MultivariateDiffusionModel diffusionModel,
@@ -33,22 +28,16 @@ public class DebugableIntegratedMultivariateTraitLikelihood extends SemiConjugat
                                                           boolean reportAsMultivariate,
                                                           MultivariateNormalDistribution rootPrior,
                                                           boolean reciprocalRates) {
-
         super(traitName, treeModel, diffusionModel, traitParameter, missingIndices, cacheBranches,
                 scaleByTime, useTreeLength, rateModel, samplingDensity, reportAsMultivariate,
                 rootPrior, reciprocalRates);
     }
-
     protected double[] fillLeafTraits(int datum) {
-
         final int tipCount = treeModel.getExternalNodeCount();
-
         final int nonMissingTipCount = countNonMissingTips();
-
         double[] traits = new double[dimTrait * nonMissingTipCount];
         int index = 0;
         for (int i = 0; i < tipCount; i++) {
-
             if (!missingTraits.isCompletelyMissing(i)) {
                 for (int k = 0; k < dimTrait; k++) {
                     traits[index++] = meanCache[dim * i + datum * dimTrait + k];
@@ -57,28 +46,20 @@ public class DebugableIntegratedMultivariateTraitLikelihood extends SemiConjugat
         }
         return traits;
     }
-
     protected double[][] removeMissingTipsInTreeVariance(double[][] variance) {
-
         final int tipCount = treeModel.getExternalNodeCount();
         final int nonMissing = countNonMissingTips();
-
         if (nonMissing == tipCount) { // Do nothing
             return variance;
         }
-
         double[][] outVariance = new double[nonMissing][nonMissing];
-
         int iReal = 0;
         for (int i = 0; i < tipCount; i++) {
             if (!missingTraits.isCompletelyMissing(i)) {
-
                 int jReal = 0;
                 for (int j = 0; j < tipCount; j++) {
                     if (!missingTraits.isCompletelyMissing(i)) {
-
                         outVariance[iReal][jReal] = variance[i][j];
-
                         jReal++;
                     }
                 }
@@ -87,7 +68,6 @@ public class DebugableIntegratedMultivariateTraitLikelihood extends SemiConjugat
         }
         return outVariance;
     }
-
     protected double[][] computeTreeTraitPrecision(double[][] traitPrecision) {
         double[][] treePrecision = computeTreePrecision();
         if (dimTrait > 1) {
@@ -102,28 +82,22 @@ public class DebugableIntegratedMultivariateTraitLikelihood extends SemiConjugat
         }
         return treePrecision;
     }
-
     public double[][] computeTreePrecision() {
         return new SymmetricMatrix(computeTreeVariance()).inverse().toComponents();
     }
-
     private NodeRef findMRCA(int iTip, int jTip) {
         Set<String> leafNames = new HashSet<String>();
         leafNames.add(treeModel.getTaxonId(iTip));
         leafNames.add(treeModel.getTaxonId(jTip));
         return Tree.Utils.getCommonAncestorNode(treeModel, leafNames);
     }
-
     public int getNumberOfDatum() {
         return numData * countNonMissingTips();
     }
-
     protected double integrateLogLikelihoodAtRootFromFullTreeMatrix(double[][] treeTraitPrecisionMatrix,
                                                                     double[] tipTraits) {
-
         double logLikelihood = 0;
         final int tipCount = countNonMissingTips();
-
         // 1^t\Sigma^{-1} y + Pz
         double[] mean = Ay;
         for (int i = 0; i < dimTrait; i++) {
@@ -131,7 +105,6 @@ public class DebugableIntegratedMultivariateTraitLikelihood extends SemiConjugat
             for (int j = 0; j < dimTrait; j++) {
                 mean[i] += rootPriorPrecision[i][j] * rootPriorMean[j];
             }
-
             for (int j = 0; j < tipCount; j++) {
                 final int rowOffset = j * dimTrait + i;
                 for (int k = 0; k < tipCount * dimTrait; k++) {
@@ -139,7 +112,6 @@ public class DebugableIntegratedMultivariateTraitLikelihood extends SemiConjugat
                 }
             }
         }
-
         // 1^t \Sigma^{-1} 1 + P
         double[][] precision = tmpM;
         for (int i = 0; i < dimTrait; i++) {
@@ -161,21 +133,17 @@ public class DebugableIntegratedMultivariateTraitLikelihood extends SemiConjugat
             }
         }
         mean = normalizedMean;
-
         // We know:  y ~ MVN(x, A) and x ~ N(m, B)
         // Therefore p(x | y) = N( (A+B)^{-1}(Ay + Bm), A + B)
         // We want: p( y ) = p( y | x ) p( x ) / p( x | y ) for any value x, say x = 0
-
         logLikelihood += MultivariateNormalDistribution.logPdf(
                 rootPriorMean, new double[rootPriorMean.length], rootPriorPrecision,
                 logRootPriorPrecisionDeterminant, 1.0
         );
-
         logLikelihood -= MultivariateNormalDistribution.logPdf(
                 mean, new double[mean.length], precision,
                 Math.log(MultivariateNormalDistribution.calculatePrecisionMatrixDeterminate(precision)), 1.0
         );
-
         if (DEBUG) {
             System.err.println("Mean = " + new Vector(mean));
             System.err.println("Prec = " + new Matrix(precision));
@@ -183,47 +151,36 @@ public class DebugableIntegratedMultivariateTraitLikelihood extends SemiConjugat
         }
         return logLikelihood;
     }
-
     public double[][] computeTreeVariance() {
         final int tipCount = treeModel.getExternalNodeCount();
         double[][] variance = new double[tipCount][tipCount];
-
         for (int i = 0; i < tipCount; i++) {
-
             // Fill in diagonal
             double marginalTime = getRescaledLengthToRoot(treeModel.getExternalNode(i));
             variance[i][i] = marginalTime;
-
             // Fill in upper right triangle,
-
             for (int j = i + 1; j < tipCount; j++) {
                 NodeRef mrca = findMRCA(i, j);
                 variance[i][j] = getRescaledLengthToRoot(mrca);
             }
         }
-
         // Make symmetric
         for (int i = 0; i < tipCount; i++) {
             for (int j = i + 1; j < tipCount; j++) {
                 variance[j][i] = variance[i][j];
             }
         }
-
         if (DEBUG) {
             System.err.println("");
             System.err.println("New tree conditional variance:\n" + new Matrix(variance));
         }
-
         variance = removeMissingTipsInTreeVariance(variance); // Automatically prune missing tips
-
         if (DEBUG) {
             System.err.println("");
             System.err.println("New tree (trimmed) conditional variance:\n" + new Matrix(variance));
         }
-
         return variance;
     }
-
     protected int countNonMissingTips() {
         int tipCount = treeModel.getExternalNodeCount();
         for (int i = 0; i < tipCount; i++) {
@@ -233,31 +190,20 @@ public class DebugableIntegratedMultivariateTraitLikelihood extends SemiConjugat
         }
         return tipCount;
     }
-
     public void checkViaLargeMatrixInversion() {
-
         // Perform a check based on filling in the (dimTrait * tipCount) * (dimTrait * tipCount) precision matrix
         // And then integrating out the root trait value
-
         // Form \Sigma^{-1} (precision) = (tree precision) %x% (trait precision)
-
         double[][] treeTraitPrecisionMatrix = computeTreeTraitPrecision(diffusionModel.getPrecisionmatrix());
-
         double totalLogDensity = 0;
-
         for (int datum = 0; datum < numData; datum++) {
-
             double[] tipTraits = fillLeafTraits(datum);
-
             System.err.println("Datum #" + datum);
             System.err.println("tipTraits = " + new Vector(tipTraits));
             System.err.println("tipPrecision = \n" + new Matrix(treeTraitPrecisionMatrix));
-
             double checkLogLikelihood = MultivariateNormalDistribution.logPdf(tipTraits, new double[tipTraits.length], treeTraitPrecisionMatrix,
                     Math.log(MultivariateNormalDistribution.calculatePrecisionMatrixDeterminate(treeTraitPrecisionMatrix)), 1.0);
-
             System.err.println("tipDensity = " + checkLogLikelihood + " (should match final likelihood when root not integrated out and no missing data)");
-
             // Convolve root prior
             if (integrateRoot) {
                 checkLogLikelihood += integrateLogLikelihoodAtRootFromFullTreeMatrix(treeTraitPrecisionMatrix, tipTraits);
@@ -266,13 +212,10 @@ public class DebugableIntegratedMultivariateTraitLikelihood extends SemiConjugat
         }
         System.err.println("Total logLikelihood (via tree) = " + totalLogDensity);
     }
-
     private double[][] computeTipTraitOuterProduct(int tip0, int tip1) {
         double[][] outerProduct = new double[dimTrait][dimTrait];
-
         final int offset0 = dim * tip0;
         final int offset1 = dim * tip1;
-
         for (int i = 0; i < dimTrait; i++) {
             for (int j = 0; j < dimTrait; j++) {
                 for (int k = 0; k < numData; k++) {
@@ -282,14 +225,11 @@ public class DebugableIntegratedMultivariateTraitLikelihood extends SemiConjugat
         }
         return outerProduct;
     }
-
     private void computeAllTipTraitOuterProducts() {
         final int nTips = treeModel.getExternalNodeCount();
-
         if (tipTraitOuterProducts == null) {
             tipTraitOuterProducts = new double[nTips][nTips][][];
         }
-
         for (int i = 0; i < nTips; i++) {
             if (!missingTraits.isCompletelyMissing(i)) {
                 tipTraitOuterProducts[i][i] = computeTipTraitOuterProduct(i, i);
@@ -307,10 +247,8 @@ public class DebugableIntegratedMultivariateTraitLikelihood extends SemiConjugat
             }
         }
     }
-
     // Returns the outer product of the tip traits for taxon 0 and taxon 1,
     // or null if either taxon 0 or taxon 1 is missing
-
     public double[][] getTipTraitOuterProduct(int tip0, int tip1) {
         if (updateOuterProducts) {
             computeAllTipTraitOuterProducts();
@@ -318,7 +256,6 @@ public class DebugableIntegratedMultivariateTraitLikelihood extends SemiConjugat
         }
         return tipTraitOuterProducts[tip0][tip1];
     }
-
     protected boolean updateOuterProducts = true;
     protected double[][][][] tipTraitOuterProducts = null;
 }

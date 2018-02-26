@@ -1,6 +1,4 @@
-
 package dr.inference.prior;
-
 //public abstract class AbstractParameterPrior implements ParameterPrior {
 //
 //	//************************************************************************

@@ -1,16 +1,11 @@
-
 package dr.app.beagle.evomodel.parsers;
-
 import dr.app.beagle.evomodel.substmodel.*;
 import dr.evolution.datatype.DataType;
 import dr.inference.model.BayesianStochasticSearchVariableSelection;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 import java.util.logging.Logger;
-
 public class ComplexSubstitutionModelParser extends AbstractXMLObjectParser {
-
     public static final String COMPLEX_SUBSTITUTION_MODEL = "complexSubstitutionModel";
     public static final String SVS_COMPLEX_SUBSTITUTION_MODEL = "svsComplexSubstitutionModel";
     public static final String DATA_TYPE = "dataType";
@@ -23,22 +18,15 @@ public class ComplexSubstitutionModelParser extends AbstractXMLObjectParser {
     public static final String BSSVS_SCALAR = "bssvsScalar";
     public static final String CHECK_CONDITIONING = "checkConditioning";
     public static final String NORMALIZED = "normalized";
-
     public static final int maxRandomizationTries = 100;
-
     public String getParserName() {
         return COMPLEX_SUBSTITUTION_MODEL;
     }
-
     public String[] getParserNames() {
         return new String[]{COMPLEX_SUBSTITUTION_MODEL, SVS_COMPLEX_SUBSTITUTION_MODEL};
     }
-
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         Parameter ratesParameter;
-
         XMLObject cxo;
         if (xo.hasChildNamed(FREQUENCIES)) {
             cxo = xo.getChild(FREQUENCIES);
@@ -46,21 +34,13 @@ public class ComplexSubstitutionModelParser extends AbstractXMLObjectParser {
             cxo = xo.getChild(ROOT_FREQUENCIES);
         }
         FrequencyModel freqModel = (FrequencyModel) cxo.getChild(FrequencyModel.class);
-
         DataType dataType = freqModel.getDataType();
-
         cxo = xo.getChild(RATES);
-
         int states = dataType.getStateCount();
-
         Logger.getLogger("dr.app.beagle.evomodel").info("  Complex Substitution Model (stateCount=" + states + ")");
-
         ratesParameter = (Parameter) cxo.getChild(Parameter.class);
-
         int rateCount = (dataType.getStateCount() - 1) * dataType.getStateCount();
-
         if (ratesParameter == null) {
-
             if (rateCount == 1) {
                 // simplest model for binary traits...
             } else {
@@ -69,9 +49,7 @@ public class ComplexSubstitutionModelParser extends AbstractXMLObjectParser {
         } else if (ratesParameter.getDimension() != rateCount) {
             throw new XMLParseException("Rates parameter in " + getParserName() + " element should have " + rateCount + " dimensions.");
         }
-
         boolean checkConditioning = xo.getAttribute(CHECK_CONDITIONING, true);
-
         if (!xo.hasChildNamed(INDICATOR)) {
             if (!checkConditioning) {
                 return new ComplexSubstitutionModel(COMPLEX_SUBSTITUTION_MODEL, dataType, freqModel, ratesParameter) {
@@ -83,13 +61,10 @@ public class ComplexSubstitutionModelParser extends AbstractXMLObjectParser {
                 return new ComplexSubstitutionModel(COMPLEX_SUBSTITUTION_MODEL, dataType, freqModel, ratesParameter);
             }
         }
-
         cxo = xo.getChild(INDICATOR);
-
         Parameter indicatorParameter = (Parameter) cxo.getChild(Parameter.class);
         if (indicatorParameter == null || ratesParameter == null || indicatorParameter.getDimension() != ratesParameter.getDimension())
             throw new XMLParseException("Rates and indicator parameters in " + getParserName() + " element must be the same dimension.");
-
         if (xo.hasAttribute(BSSVS_TOLERANCE)) {
             double tolerance = xo.getAttribute(BSSVS_TOLERANCE,
                     BayesianStochasticSearchVariableSelection.Utils.getTolerance());
@@ -99,7 +74,6 @@ public class ComplexSubstitutionModelParser extends AbstractXMLObjectParser {
                 Logger.getLogger("dr.app.beagle.evomodel").info("\tIncreasing BSSVS tolerance to " + tolerance);
             }
         }
-
         if (xo.hasAttribute(BSSVS_SCALAR)) {
             double scalar = xo.getAttribute(BSSVS_SCALAR,
                     BayesianStochasticSearchVariableSelection.Utils.getScalar());
@@ -108,7 +82,6 @@ public class ComplexSubstitutionModelParser extends AbstractXMLObjectParser {
                 Logger.getLogger("dr.app.beagle.evomodel").info("\tDecreasing BSSVS scalar to " + scalar);
             }
         }
-
         SVSComplexSubstitutionModel model;
         if (!checkConditioning) {
             model = new SVSComplexSubstitutionModel(SVS_COMPLEX_SUBSTITUTION_MODEL, dataType, freqModel, ratesParameter, indicatorParameter) {
@@ -124,7 +97,6 @@ public class ComplexSubstitutionModelParser extends AbstractXMLObjectParser {
             // Randomization may need multiple tries
             int tries = 0;
             boolean valid = false;
-
             while (!valid && tries < maxRandomizationTries) {
                 BayesianStochasticSearchVariableSelection.Utils.randomize(indicatorParameter,
                         dataType.getStateCount(), false);
@@ -140,23 +112,18 @@ public class ComplexSubstitutionModelParser extends AbstractXMLObjectParser {
         Logger.getLogger("dr.app.beagle.evomodel").info("\t\tPlease cite: Edwards, Suchard et al. (2011)\n");
         return model;
     }
-
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
-
     public String getParserDescription() {
         return "A general irreversible model of sequence substitution for any data type.";
     }
-
     public Class getReturnType() {
         return SubstitutionModel.class;
     }
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     private final XMLSyntaxRule[] rules = {
             new XORRule(
                     new StringAttributeRule(DataType.DATA_TYPE, "The type of sequence data",

@@ -1,8 +1,5 @@
-
 package dr.evomodel.substmodel;
-
 import dr.evolution.datatype.AminoAcids;
-
 public abstract class AbstractAminoAcidModel extends AbstractSubstitutionModel
 {
 	// Constructor

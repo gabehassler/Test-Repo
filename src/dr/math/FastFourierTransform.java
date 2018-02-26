@@ -1,20 +1,15 @@
-
 package dr.math;
-
 public class FastFourierTransform {
-
     public static void fft(double[] data, int nn, boolean inverse) {
         int n, mmax, m, j, istep, i;
         double wtemp, wr, wpr, wpi, wi, theta;
         double tempr, tempi;
-
         final double radians;
         if (inverse) {
             radians = 2.0 * Math.PI;
         } else {
             radians = -2.0 * Math.PI;
         }
-
         // reverse-binary reindexing
         n = nn << 1;
         j = 1;
@@ -30,7 +25,6 @@ public class FastFourierTransform {
             }
             j += m;
         }
-
         // here begins the Danielson-Lanczos section
         mmax = 2;
         while (n > mmax) {
@@ -46,7 +40,6 @@ public class FastFourierTransform {
                     j = i + mmax;
                     tempr = wr * data[j - 1] - wi * data[j];
                     tempi = wr * data[j] + wi * data[j - 1];
-
                     data[j - 1] = data[i - 1] - tempr;
                     data[j] = data[i] - tempi;
                     data[i - 1] += tempr;
@@ -59,24 +52,18 @@ public class FastFourierTransform {
             mmax = istep;
         }
     }
-
-
     public static void fft(ComplexArray ca, boolean inverse) {
-
         final double[] real = ca.real;
         final double[] complex = ca.complex;
-
         int n, mmax, m, j, istep, i;
         double wtemp, wr, wpr, wpi, wi, theta;
         double tempr, tempi;
-
         final double radians;
         if (inverse) {
             radians = 2.0 * Math.PI;
         } else {
             radians = -2.0 * Math.PI;
         }
-
         // reverse-binary reindexing
         n = ca.length << 1;
         j = 1;
@@ -94,7 +81,6 @@ public class FastFourierTransform {
             }
             j += m;
         }
-
         // here begins the Danielson-Lanczos section
         mmax = 2;
         while (n > mmax) {
@@ -112,7 +98,6 @@ public class FastFourierTransform {
                     final int halfJ = j >> 1;
                     tempr = wr * real[halfJ] - wi * complex[halfJ];
                     tempi = wr * complex[halfJ] + wi * real[halfJ];
-
                     real[halfJ] = real[halfI] - tempr;
                     complex[halfJ] = complex[halfI] - tempi;
                     real[halfI] += tempr;
@@ -125,7 +110,6 @@ public class FastFourierTransform {
             mmax = istep;
         }
     }
-
     private static void swap(double[] x, int i, int j) {
         double tmp = x[i];
         x[i] = x[j];

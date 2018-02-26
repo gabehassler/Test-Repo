@@ -1,6 +1,4 @@
-
 package dr.app.beagle.evomodel.parsers;
-
 import dr.app.beagle.evomodel.branchmodel.BranchModel;
 import dr.app.beagle.evomodel.sitemodel.GammaSiteRateModel;
 import dr.app.beagle.evomodel.substmodel.FrequencyModel;
@@ -18,13 +16,9 @@ import dr.inference.markovjumps.MarkovJumpsRegisterAcceptor;
 import dr.inference.markovjumps.MarkovJumpsType;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 import java.util.Map;
 import java.util.Set;
-
-
 public class MarkovJumpsTreeLikelihoodParser extends AncestralStateTreeLikelihoodParser {
-
     public static final String MARKOV_JUMP_TREE_LIKELIHOOD = "markovJumpsTreeLikelihood";
     public static final String JUMP_TAG = "jumps";
     public static final String JUMP_TAG_NAME = "jumpTagName";
@@ -37,12 +31,9 @@ public class MarkovJumpsTreeLikelihoodParser extends AncestralStateTreeLikelihoo
     public static final String COMPACT_HISTORY = "compactHistory";
     public static final String NUMBER_OF_SIMULANTS = "numberOfSimulants";
     public static final String REPORT_UNCONDITIONED_COLUMNS = "reportUnconditionedValues";
-
-
     public String getParserName() {
         return MARKOV_JUMP_TREE_LIKELIHOOD;
     }
-
     protected BeagleTreeLikelihood createTreeLikelihood(PatternList patternList, TreeModel treeModel,
                                                         BranchModel branchModel,
                                                         GammaSiteRateModel siteRateModel,
@@ -51,21 +42,15 @@ public class MarkovJumpsTreeLikelihoodParser extends AncestralStateTreeLikelihoo
                                                         boolean useAmbiguities, PartialsRescalingScheme scalingScheme,
                                                         Map<Set<String>, Parameter> partialsRestrictions,
                                                         XMLObject xo) throws XMLParseException {
-
         DataType dataType = branchModel.getRootSubstitutionModel().getDataType();
-
         String stateTag = xo.getAttribute(RECONSTRUCTION_TAG_NAME,RECONSTRUCTION_TAG);
         String jumpTag = xo.getAttribute(JUMP_TAG_NAME, JUMP_TAG);
-
         boolean scaleRewards = xo.getAttribute(SCALE_REWARDS,true);
-
         boolean useMAP = xo.getAttribute(MAP_RECONSTRUCTION, false);
         boolean useMarginalLogLikelihood = xo.getAttribute(MARGINAL_LIKELIHOOD, true);
-
         boolean useUniformization = xo.getAttribute(USE_UNIFORMIZATION, false);
         boolean reportUnconditionedColumns = xo.getAttribute(REPORT_UNCONDITIONED_COLUMNS, false);
         int nSimulants = xo.getAttribute(NUMBER_OF_SIMULANTS, 1);
-
         MarkovJumpsBeagleTreeLikelihood treeLikelihood = new MarkovJumpsBeagleTreeLikelihood(
                 patternList,
                 treeModel,
@@ -84,22 +69,18 @@ public class MarkovJumpsTreeLikelihoodParser extends AncestralStateTreeLikelihoo
                 reportUnconditionedColumns,
                 nSimulants
         );
-
         int registersFound = parseAllChildren(xo, treeLikelihood, dataType.getStateCount(), jumpTag,
                 MarkovJumpsType.COUNTS, false); // For backwards compatibility
-
         XMLObject cxo = xo.getChild(COUNTS);
         if (cxo != null) {
             registersFound += parseAllChildren(cxo, treeLikelihood, dataType.getStateCount(), jumpTag,
                     MarkovJumpsType.COUNTS, false);
         }
-
         cxo = xo.getChild(REWARDS);
         if (cxo != null) {
             registersFound += parseAllChildren(cxo, treeLikelihood, dataType.getStateCount(), jumpTag,
                     MarkovJumpsType.REWARDS, scaleRewards);
         }
-
         if (registersFound == 0) { // Some default values for testing
 //            double[] registration = new double[dataType.getStateCount()*dataType.getStateCount()];
 //            MarkovJumpsCore.fillRegistrationMatrix(registration,dataType.getStateCount()); // Count all transitions
@@ -110,7 +91,6 @@ public class MarkovJumpsTreeLikelihoodParser extends AncestralStateTreeLikelihoo
 //                                       false);
             // Do nothing, should run the same as AncestralStateBeagleTreeLikelihood
         }
-
         boolean saveCompleteHistory = xo.getAttribute(SAVE_HISTORY, false);
         if (saveCompleteHistory) {
             Parameter allCounts = new Parameter.Default(dataType.getStateCount() * dataType.getStateCount());
@@ -128,10 +108,8 @@ public class MarkovJumpsTreeLikelihoodParser extends AncestralStateTreeLikelihoo
             treeLikelihood.setUseCompactHistory(xo.getAttribute(COMPACT_HISTORY, false));
             treeLikelihood.addRegister(allCounts, MarkovJumpsType.HISTORY, false);
         }
-
         return treeLikelihood;
     }
-
     public static int parseAllChildren(XMLObject xo,
                                        MarkovJumpsRegisterAcceptor acceptor,
                                        int stateCount,
@@ -169,7 +147,6 @@ public class MarkovJumpsTreeLikelihoodParser extends AncestralStateTreeLikelihoo
                         throw new XMLParseException("Markov Rewards register parameter " + registerParameter.getId() + " is of the wrong dimension");
                     }
                 }
-
                 if (registerParameter.getId() == null) {
                     registerParameter.setId(jumpTag+(registersFound+1));
                 }
@@ -179,7 +156,6 @@ public class MarkovJumpsTreeLikelihoodParser extends AncestralStateTreeLikelihoo
         }
         return registersFound;
     }
-
     public static XMLSyntaxRule[]  rules =
             new XMLSyntaxRule[] {
                     AttributeRule.newBooleanRule(OldTreeLikelihoodParser.USE_AMBIGUITIES, true),
@@ -214,7 +190,6 @@ public class MarkovJumpsTreeLikelihoodParser extends AncestralStateTreeLikelihoo
                             },true),
                     new ElementRule(FrequencyModel.class, true),
             };
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }

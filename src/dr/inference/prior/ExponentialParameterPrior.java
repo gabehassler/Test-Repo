@@ -1,10 +1,8 @@
-
 //package dr.inference.prior;
 //
 //import dr.inference.model.Parameter;
 //import org.w3c.dom.Document;
 //import org.w3c.dom.Element;
-
 //public class ExponentialParameterPrior extends AbstractParameterPrior {
 //
 //	/**

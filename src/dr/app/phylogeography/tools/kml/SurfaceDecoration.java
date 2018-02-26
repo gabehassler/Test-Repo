@@ -1,12 +1,8 @@
-
 package dr.app.phylogeography.tools.kml;
-
 import java.awt.*;
-
 public class SurfaceDecoration {
     public SurfaceDecoration() {
     }
-
     public SurfaceDecoration(String colorProperty, boolean visible, Color startColor, Color endColor, double opacity) {
         this.colorProperty = colorProperty;
         isVisible = visible;
@@ -14,51 +10,39 @@ public class SurfaceDecoration {
         this.endColor = endColor;
         this.opacity = opacity;
     }
-
     public String getColorProperty() {
         return colorProperty;
     }
-
     public void setColorProperty(String colorProperty) {
         this.colorProperty = colorProperty;
     }
-
     public boolean isVisible() {
         return isVisible;
     }
-
     public void setVisible(boolean visible) {
         isVisible = visible;
     }
-
     public Color getStartColor() {
         return startColor;
     }
-
     public void setStartColor(Color startColor) {
         this.startColor = startColor;
     }
-
     public Color getEndColor() {
         return endColor;
     }
-
     public void setEndColor(Color endColor) {
         this.endColor = endColor;
     }
-
     public double getOpacity() {
         return opacity;
     }
-
     public void setOpacity(double opacity) {
         this.opacity = opacity;
     }
-
     private String colorProperty = "";
     private boolean isVisible = true;
     private Color startColor = Color.green;
     private Color endColor = Color.yellow;
     private double opacity = 0.5;
-
 }

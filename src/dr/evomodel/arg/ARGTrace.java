@@ -1,22 +1,15 @@
-
 package dr.evomodel.arg;
-
 import dr.evolution.io.Importer;
 import dr.evolution.util.TaxonList;
 import dr.util.Identifiable;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
-
-
 public class ARGTrace implements Identifiable {
-
 	public ARGTrace() {
 	}
-
 	public int getTreeCount(int burnin) {
 		int startIndex = (burnin - minState) / stepSize;
 		if (startIndex < 0) {
@@ -24,7 +17,6 @@ public class ARGTrace implements Identifiable {
 		}
 		return args.size() - startIndex;
 	}
-
 	public ARGModel getARG(int index, int burnin) {
 		int startIndex = (burnin - minState) / stepSize;
 		if (startIndex < 0) {
@@ -32,85 +24,59 @@ public class ARGTrace implements Identifiable {
 		}
 		return (ARGModel) args.get(index + startIndex);
 	}
-
 	public void add(ARGModel arg) {
 		args.add(arg);
 	}
-
 	public void setMinimumState(int minState) {
 		this.minState = minState;
 	}
-
 	public int getMinimumState() {
 		return minState;
 	}
-
 	public void setStepSize(int stepSize) {
 		this.stepSize = stepSize;
 	}
-
 	public int getStepSize() {
 		return stepSize;
 	}
-
 	public int getMaximumState() {
 		return (args.size() - 1) * stepSize + minState;
 	}
-
 	public String getId() {
 		return id;
 	}
-
 	public void setId(String id) {
 		this.id = id;
 	}
-
 	private ArrayList<ARGModel> args = new ArrayList<ARGModel>();
-
 	private int minState;
 	private int stepSize;
 	private String id;
-
 	public static ARGTrace loadARGTrace(Reader r) throws IOException, Importer.ImportException {
-
 		BufferedReader reader = new BufferedReader(r);
-
 		ARGTrace trace = new ARGTrace();
-
 		dr.evolution.util.TaxonList taxonList = null;
-
 		int minState = -1;
 		int stepSize = 0;
-
 		String line;
 		ARGModel nullARG = new ARGModel(null, null, 0, 0);
 		ArrayList<String> nameList = new ArrayList<String>();
-
 		taxonList = (TaxonList) nullARG;
-
 		while ((line = reader.readLine()) != null) {
-
 //		String line = reader.readLine();
-
 			line.trim();
-
 			if (line.toUpperCase().startsWith("ARG")) {
 				StringTokenizer st = new StringTokenizer(line, "=");
 				nameList.add(st.nextToken());
 				ARGModel arg = nullARG.fromGraphStringCompressed(st.nextToken().trim());
 				trace.add(arg);
-
 			}
-
 		}
-
 		if (nameList.size() < 2) {
 			throw new Importer.ImportException("Less than two ARGs in the trace file");
 		}
-
 		minState = getStateNumber(nameList.get(0));
 		stepSize = getStateNumber(nameList.get(1)) - minState;
-
 //		if (line.toUpperCase().startsWith("#NEXUS")) {
 //			NexusImporter importer = new NexusImporter(reader);
 //			Tree [] trees = importer.importTrees(null);
@@ -163,13 +129,10 @@ public class ARGTrace implements Identifiable {
 //				trace.add(tree);
 //			}
 //		}
-
 		trace.setMinimumState(minState);
 		trace.setStepSize(stepSize);
-
 		return trace;
 	}
-
 	private final static int getStateNumber(String id) throws Importer.ImportException {
 		try {
 			return Integer.parseInt(id.substring(id.indexOf('_') + 1).trim());

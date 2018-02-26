@@ -1,18 +1,11 @@
-
 package dr.inference.markovjumps;
-
 import dr.math.GammaFunction;
 import dr.math.MathUtils;
 import dr.math.matrixAlgebra.Vector;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-
-
 public class SubordinatedProcess {
-
     public SubordinatedProcess(double[] Q, int stateCount) {
         this.stateCount = stateCount;
         poissonRate = getMaxRate(Q, stateCount);
@@ -22,11 +15,9 @@ public class SubordinatedProcess {
         tmp = new double[stateCount];
         this.Q = Q;
     }
-
     public double getPoissonRate() {
         return poissonRate;
     }
-
     private double getCachedExp(double x) {
         if (x != cachedXForExp) {
             cachedXForExp = x;
@@ -34,8 +25,6 @@ public class SubordinatedProcess {
         }
         return cachedExpValue;
     }
-
-
     public double[] getDtmcProbabilities(int nSteps) {
         if (nSteps > dtmcCache.size() - 1) {
             double[] dtmcOneStep = dtmcCache.get(1);
@@ -48,8 +37,6 @@ public class SubordinatedProcess {
         }
         return dtmcCache.get(nSteps);
     }
-
-
     private double getMaxRate(double[] Q, int stateCount) {
         double max = -Q[0];
         for (int i = 1; i < stateCount; i++) {
@@ -60,8 +47,6 @@ public class SubordinatedProcess {
         }
         return max;
     }
-
-
     private double[] constructDtmcMatrix(double[] lambda, int stateCount) {
         double[] R = new double[stateCount * stateCount];
         double maxRate = getMaxRate(lambda, stateCount);
@@ -69,7 +54,6 @@ public class SubordinatedProcess {
         for (int i = 0; i < stateCount; i++) {
             for (int j = 0; j < stateCount; j++) {
                 R[index] = lambda[index] / maxRate;
-
                 if (i == j) {
                     R[index] += 1;
                 }
@@ -78,7 +62,6 @@ public class SubordinatedProcess {
         }
         return R;
     }
-
     public double[] drawTransitionTimes(double timeDuration, int totalNumberOfChanges) {
         double[] times = new double[totalNumberOfChanges];
         for (int i = 0; i < totalNumberOfChanges; i++) {
@@ -89,50 +72,40 @@ public class SubordinatedProcess {
         }
         return times;
     }
-
     public int drawNextChainState(int currentState, int endingState, int totalNumberOfChanges, int thisChangeNumber) {
         computePdfNextChainState(currentState, endingState, totalNumberOfChanges, thisChangeNumber, tmp);
         return MathUtils.randomChoicePDF(tmp);
     }
-
     public void computePdfNextChainState(int currentState, int endingState, int totalNumberOfChanges, int thisChangeNumber,
                                          double[] pdf) {
         double[] R = getDtmcProbabilities(1);
         double[] RnMinusI = getDtmcProbabilities(totalNumberOfChanges - thisChangeNumber);
-
         for (int i = 0; i < stateCount; i++) {
             pdf[i] = R[currentState * stateCount + i] * RnMinusI[i * stateCount + endingState];
 //                     / RnMinusIPlus1[currentState * stateCount + endingState] // No need to normalize
         }
     }
-
     public class Exception extends java.lang.Exception {
         // Nothing special
     }
-
     public int drawNumberOfChanges(int startingState, int endingState, double time, double ctmcProbability) throws SubordinatedProcess.Exception {
         return drawNumberOfChanges(startingState, endingState, time, ctmcProbability, MathUtils.nextDouble());
     }
-
     public int drawNumberOfChanges(int startingState, int endingState, double time, double ctmcProbability,
                                    double cutoff) throws SubordinatedProcess.Exception {
         int drawnNumber = -1;
         double cdf = 0;
-
         double effectiveRate = getPoissonRate() * time;
         double preFactor = getCachedExp(-effectiveRate);
         double scale = 1.0;
         int index = startingState * stateCount + endingState;
-
         double[] check;
         int maxTries = 1000;
         if (DEBUG) {
             check = new double[maxTries+1];
         }
-
         while (cutoff >= cdf) {
             drawnNumber++;
-
             double[] Rn = getDtmcProbabilities(drawnNumber);
             if (drawnNumber > 0) {
                 scale *= effectiveRate;
@@ -140,15 +113,12 @@ public class SubordinatedProcess {
             if (drawnNumber > 1) {
                 scale /= (double) drawnNumber;
             }
-
             cdf += preFactor * scale * Rn[index] / ctmcProbability;
-
             if (THROW_EXCEPTION) {
                 if (drawnNumber == maxTries) {
                     throw new SubordinatedProcess.Exception();
                 }
             }
-
             if (DEBUG) {
                 check[drawnNumber] = cdf;
                 if (drawnNumber == maxTries) {
@@ -159,7 +129,6 @@ public class SubordinatedProcess {
                     System.err.println("Cutoff      = " + cutoff);
                     System.err.println("CTMC prob   = " + ctmcProbability);
                     System.err.println("PoissonRate = " + getPoissonRate());
-
                     double[] distr = computePDFDirectly(startingState, endingState, time, ctmcProbability, drawnNumber);
                     double[] checkCDF = new double[distr.length];
                     double total = 0;
@@ -172,33 +141,27 @@ public class SubordinatedProcess {
                     System.err.println("Check distr    = " + new Vector(check));
                     System.err.println("Q              = " + new Vector(Q));
                     System.err.println("R              = " + new Vector(getDtmcProbabilities(1)));
-
                     throw new RuntimeException("Likely numerical instability in computing end-conditioned CTMC simulant.");
                 }
             }
         }
         return drawnNumber;
     }
-
     public double[] computePDFDirectly(int startingState, int endingState, double time, double ctmcProbability,
                                        int maxTerm) {
         double[] pdf = new double[maxTerm];
-
         final double logRateTime = Math.log(getPoissonRate())+ Math.log(time);
         final double logCtmcProbability = Math.log(ctmcProbability);
-
         for (int n = 0; n < maxTerm; n++) {
             double[] Rn = getDtmcProbabilities(n);
 //            pdf[n] = Math.exp(-getPoissonRate() * time) * Math.pow(getPoissonRate() * time, n) /
 //                    Math.exp(GammaFunction.lnGamma(n + 1)) * Rn[startingState * stateCount + endingState] /
 //                    ctmcProbability;
-
             pdf[n] = Math.exp(-getPoissonRate() * time + n * logRateTime - GammaFunction.lnGamma(n + 1) +
                     Math.log(Rn[startingState * stateCount + endingState]) - logCtmcProbability);
         }
         return pdf;
     }
-
     private double[] makeIndentityMatrx(int stateCount) {
         double[] I = new double[stateCount * stateCount];
         for (int i = 0; i < stateCount; i++) {
@@ -206,17 +169,13 @@ public class SubordinatedProcess {
         }
         return I;
     }
-
     private final List<double[]> dtmcCache;
     private final double poissonRate;
     private final int stateCount;
     private final double[] tmp;
-
     private double cachedXForExp = Double.NaN;
     private double cachedExpValue;
-
     private static final boolean DEBUG = false;
     private static final boolean THROW_EXCEPTION = true;
-
     private double[] Q;
 }

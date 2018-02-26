@@ -1,36 +1,26 @@
 package test.dr.evomodel.substmodel;
-
 import dr.evolution.datatype.Nucleotides;
 import dr.evomodel.substmodel.FrequencyModel;
 import dr.evomodel.substmodel.HKY;
 import dr.inference.model.Parameter;
 import junit.framework.TestCase;
-
 public class HKYTest extends TestCase {
-
     interface Instance {
         double[] getPi();
-
         double getKappa();
-
         double getDistance();
-
         double[] getExpectedResult();
     }
-
     Instance test0 = new Instance() {
         public double[] getPi() {
             return new double[]{0.25, 0.25, 0.25, 0.25};
         }
-
         public double getKappa() {
             return 2;
         }
-
         public double getDistance() {
             return 0.1;
         }
-
         public double[] getExpectedResult() {
             return new double[]{
                     0.906563342722, 0.023790645491, 0.045855366296, 0.023790645491,
@@ -40,20 +30,16 @@ public class HKYTest extends TestCase {
             };
         }
     };
-
     Instance test1 = new Instance() {
         public double[] getPi() {
             return new double[]{0.50, 0.20, 0.2, 0.1};
         }
-
         public double getKappa() {
             return 2;
         }
-
         public double getDistance() {
             return 0.1;
         }
-
         public double[] getExpectedResult() {
             return new double[]{
                     0.928287993055, 0.021032136637, 0.040163801989, 0.010516068319,
@@ -63,20 +49,16 @@ public class HKYTest extends TestCase {
             };
         }
     };
-
     Instance test2 = new Instance() {
         public double[] getPi() {
             return new double[]{0.20, 0.30, 0.25, 0.25};
         }
-
         public double getKappa() {
             return 5;
         }
-
         public double getDistance() {
             return 0.1;
         }
-
         public double[] getExpectedResult() {
             return new double[]{
                     0.904026219693, 0.016708646875, 0.065341261036, 0.013923872396,
@@ -86,24 +68,18 @@ public class HKYTest extends TestCase {
             };
         }
     };
-
     Instance[] all = {test2, test1, test0};
-
     public void testHKY() {
         for (Instance test : all) {
             Parameter kappa = new Parameter.Default(1, test.getKappa());
             double[] pi = test.getPi();
-
             Parameter freqs = new Parameter.Default(pi);
             FrequencyModel f = new FrequencyModel(Nucleotides.INSTANCE, freqs);
             HKY hky = new HKY(kappa, f);
-
             double distance = test.getDistance();
-
             double[] mat = new double[4 * 4];
             hky.getTransitionProbabilities(distance, mat);
             final double[] result = test.getExpectedResult();
-
             for (int k = 0; k < mat.length; ++k) {
                 assertEquals(mat[k], result[k], 1e-10);
                 // System.out.print(" " + (mat[k] - result[k]));

@@ -1,10 +1,7 @@
-
 package dr.math.matrixAlgebra;
-
 public class LinearEquations {
 	private double[][] rows;
 	private Vector[] solutions;
-
 	public LinearEquations(double[][] m, double[][] c)
 			throws IllegalDimension {
 		int n = m.length;
@@ -23,7 +20,6 @@ public class LinearEquations {
 				rows[i][n + j] = c[j][i];
 		}
 	}
-
 	public LinearEquations(double[][] m, double[] c)
 			throws IllegalDimension {
 		int n = m.length;
@@ -41,12 +37,10 @@ public class LinearEquations {
 			rows[i][n] = c[i];
 		}
 	}
-
 	public LinearEquations(Matrix a, Vector y)
 			throws IllegalDimension {
 		this(a.components, y.components);
 	}
-
 	private void backSubstitution(int p) throws ArithmeticException {
 		int n = rows.length;
 		double[] answer = new double[n];
@@ -60,7 +54,6 @@ public class LinearEquations {
 		solutions[p] = new Vector(answer);
 		return;
 	}
-
 	private int largestPivot(int p) {
 		double pivot = Math.abs(rows[p][p]);
 		int answer = p;
@@ -74,7 +67,6 @@ public class LinearEquations {
 		}
 		return answer;
 	}
-
 	private void pivot(int p) throws ArithmeticException {
 		double inversePivot = 1 / rows[p][p];
 		double r;
@@ -87,17 +79,14 @@ public class LinearEquations {
 		}
 		return;
 	}
-
 	private void pivotingStep(int p) {
 		swapRows(p, largestPivot(p));
 		pivot(p);
 		return;
 	}
-
 	public Vector solution() throws ArithmeticException {
 		return solution(0);
 	}
-
 	public Vector solution(int p) throws ArithmeticException {
 		if (solutions == null)
 			solve();
@@ -105,14 +94,12 @@ public class LinearEquations {
 			backSubstitution(p);
 		return solutions[p];
 	}
-
 	private void solve() throws ArithmeticException {
 		int n = rows.length;
 		for (int i = 0; i < n; i++)
 			pivotingStep(i);
 		solutions = new Vector[rows[0].length - n];
 	}
-
 	private void swapRows(int p, int q) {
 		if (p != q) {
 			double temp;
@@ -125,7 +112,6 @@ public class LinearEquations {
 		}
 		return;
 	}
-
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		char[] separator = {'[', ' '};

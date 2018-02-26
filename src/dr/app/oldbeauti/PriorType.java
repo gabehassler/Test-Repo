@@ -1,10 +1,6 @@
-
 package dr.app.oldbeauti;
-
 import java.text.NumberFormat;
-
 public enum PriorType {
-
     NONE,
     UNIFORM_PRIOR,
     EXPONENTIAL_PRIOR,
@@ -14,9 +10,7 @@ public enum PriorType {
     JEFFREYS_PRIOR,
     POISSON_PRIOR,
     TRUNC_NORMAL_PRIOR;
-
     public String toString() {
-
         switch (this) {
             case NONE: return "none";
             case UNIFORM_PRIOR: return "Uniform";
@@ -30,12 +24,9 @@ public enum PriorType {
             default: return "";
         }
     }
-
     public String getPriorString(BeastGenerator.Parameter param) {
-
         NumberFormat formatter = NumberFormat.getNumberInstance();
         StringBuffer buffer = new StringBuffer();
-
         if (!param.priorEdited) {
             buffer.append("* ");
         }
@@ -99,7 +90,6 @@ public enum PriorType {
                 buffer.append(", ");
                 buffer.append(formatter.format(param.uniformUpper));
                 buffer.append("]");
-
                 break;
             default:
                 throw new IllegalArgumentException("Unknown prior type");
@@ -107,7 +97,6 @@ public enum PriorType {
         if (param.priorType != PriorType.NONE && !param.isStatistic) {
             buffer.append(", initial=").append(param.initial);
         }
-
         return buffer.toString();
     }
 }

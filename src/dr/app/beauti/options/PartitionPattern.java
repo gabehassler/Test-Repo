@@ -1,36 +1,25 @@
-
 package dr.app.beauti.options;
-
 import dr.evolution.alignment.Patterns;
 import dr.evolution.datatype.DataType;
 import dr.evolution.util.TaxonList;
-
 public class PartitionPattern extends AbstractPartitionData {
     private static final long serialVersionUID = 6631884346312113086L; // microsatellite
-
     private final Patterns patterns;
-
     public PartitionPattern(BeautiOptions options, String name, String fileName, Patterns patterns) {
         super(options, name, fileName);
         this.patterns = patterns;
-
         this.traits = null;
-
         calculateMeanDistance(patterns);
     }
-
     public Patterns getPatterns() {
         return patterns;
     }
-
     public TaxonList getTaxonList() {
         return getPatterns();
     }
-
     public int getSiteCount() {
         return 1;
     }
-
     public DataType getDataType() {
         if (patterns != null) {
             return patterns.getDataType();
@@ -38,7 +27,6 @@ public class PartitionPattern extends AbstractPartitionData {
             throw new RuntimeException("patterns should not be null");
         }
     }
-
     public String getDataDescription() {
         if (patterns != null) {
             return patterns.getDataType().getDescription();
@@ -46,7 +34,6 @@ public class PartitionPattern extends AbstractPartitionData {
             throw new RuntimeException("patterns should not be null");
         }
     }
-
     public String getPrefix() {
         String prefix = "";
         if (options.getPartitionPattern().size() > 1) { // getPartitionPattern() already excludes traits and PartitionData
@@ -54,7 +41,6 @@ public class PartitionPattern extends AbstractPartitionData {
         }
         return prefix;
     }
-
     public void setName(String name) {
         this.name = name;
         options.microsatelliteOptions.initParametersAndOperators();

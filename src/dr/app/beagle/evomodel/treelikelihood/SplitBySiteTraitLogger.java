@@ -1,6 +1,4 @@
-
 package dr.app.beagle.evomodel.treelikelihood;
-
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
 import dr.evolution.tree.TreeTrait;
@@ -11,30 +9,23 @@ import dr.util.Citable;
 import dr.util.Citation;
 import dr.util.CommonCitations;
 import dr.xml.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-
 public class SplitBySiteTraitLogger extends TreeTraitProvider.Helper implements Citable {
-
     public static final String TRAIT_LOGGER = "splitTraitBySite";
     public static final String TRAIT_NAME = "traitName";
     public static final String SCALE = "scaleByBranchLength";
-
     public SplitBySiteTraitLogger(final AncestralStateTraitProvider treeLikelihood, String traitName, boolean scale) throws XMLParseException {
         TreeTrait trait = treeLikelihood.getTreeTrait(traitName);
         if (trait == null) {
             throw new XMLParseException("TreeTraitProvider does not provide trait named '" + traitName + ".");
         }
-
         TreeModel tree = treeLikelihood.getTreeModel();
         int length;
         Object obj = trait.getTrait(tree, tree.getNode(0));
-
         boolean isDoubleArray = false;
         boolean isIntegerArray = false;
-
         if (obj instanceof double[]) {
             length = ((double[]) obj).length;
             isDoubleArray = true;
@@ -44,7 +35,6 @@ public class SplitBySiteTraitLogger extends TreeTraitProvider.Helper implements 
         } else {
             throw new XMLParseException("Unknown trait type to split");
         }
-
         TreeTrait[] partitionedTraits = new TreeTrait[length];
         if (isDoubleArray) {
             for (int i = 0; i < length; i++) {
@@ -70,54 +60,40 @@ public class SplitBySiteTraitLogger extends TreeTraitProvider.Helper implements 
             }
         }
         addTraits(partitionedTraits);
-
         Logger.getLogger("dr.app.beagle").info("\tConstructing a split logger with " + length + " partitions;  please cite:\n"
                 + Citable.Utils.getCitationString(this));
-
     }
-
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-
         public String getParserName() {
             return TRAIT_LOGGER;
         }
-
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
             String traitName = xo.getStringAttribute(TRAIT_NAME);
             AncestralStateTraitProvider tree = (AncestralStateTraitProvider) xo.getChild(AncestralStateTraitProvider.class);
             boolean scale = xo.getAttribute(SCALE, false);
-
             return new SplitBySiteTraitLogger(tree, traitName, scale);
         }
-
         //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
-
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
-
         private final XMLSyntaxRule[] rules = {
                 new ElementRule(AncestralStateTraitProvider.class, "The tree which is to be logged"),
                 AttributeRule.newStringRule(TRAIT_NAME),
                 AttributeRule.newBooleanRule(SCALE, true),
         };
-
         public String getParserDescription() {
             return null;
         }
-
         public String getExample() {
             return null;
         }
-
         public Class getReturnType() {
             return TreeTraitProvider.class;
         }
     };
-
     public List<Citation> getCitations() {
         List<Citation> citations = new ArrayList<Citation>();
         citations.add(

@@ -1,5 +1,4 @@
 package test.dr.inference.trace;
-
 import dr.evolution.alignment.SimpleAlignment;
 import dr.evolution.coalescent.CoalescentSimulator;
 import dr.evolution.coalescent.ConstantPopulation;
@@ -18,138 +17,99 @@ import dr.evomodelxml.tree.TreeModelParser;
 import dr.inference.model.Parameter;
 import dr.inference.trace.TraceCorrelation;
 import test.dr.math.MathTestCase;
-
 public class TraceCorrelationAssert extends MathTestCase {
-
     protected static final String TREE_HEIGHT = TreeModel.TREE_MODEL + "." + TreeModelParser.ROOT_HEIGHT;
-
     protected TreeModel treeModel;
     protected SimpleAlignment alignment;
     protected Taxon[] taxa;
-
-
     public TraceCorrelationAssert(String name) {
         super(name);
     }
-       
-
     protected void createAlignment(Object[][] taxa_sequence, DataType dataType) {
-
         alignment = new SimpleAlignment();
         alignment.setDataType(dataType);
 //        alignment.setDataType(Nucleotides.INSTANCE);
-
         taxa = new Taxon[taxa_sequence[0].length]; // 6, 17
         System.out.println("Taxon len = " + taxa_sequence[0].length);
         System.out.println("Alignment len = " + taxa_sequence[1].length);
         if (taxa_sequence.length > 2) System.out.println("Date len = " + taxa_sequence[2].length);                          
-
         for (int i=0; i < taxa_sequence[0].length; i++) {
             taxa[i] = new Taxon(taxa_sequence[0][i].toString());
-
             if (taxa_sequence.length > 2) {
                 Date date = new Date((Double) taxa_sequence[2][i], Units.Type.YEARS, (Boolean) taxa_sequence[3][0]);
                 taxa[i].setDate(date);
             }
-
             //taxonList.addTaxon(taxon);
             Sequence sequence = new Sequence(taxa_sequence[1][i].toString());
             sequence.setTaxon(taxa[i]);
             sequence.setDataType(dataType);
-
             alignment.addSequence(sequence);
         }
     }
-
     protected void createRandomInitialTree(double popSize) throws Exception {
         ConstantPopulation constant = new ConstantPopulation(Units.Type.YEARS);
         constant.setN0(popSize); // popSize
-
         createTreeModel(constant);
     }
-
     protected ConstantPopulationModel createRandomInitialTree(Parameter popSize) {        
         ConstantPopulationModel startingTree = new ConstantPopulationModel(popSize, Units.Type.YEARS);
         ConstantPopulation constant = (ConstantPopulation) startingTree.getDemographicFunction();
-
         createTreeModel(constant);
-
         return startingTree;
     }
-
     private void createTreeModel (ConstantPopulation constant) {
         CoalescentSimulator simulator = new CoalescentSimulator();
         Tree tree = simulator.simulateTree(alignment, constant);
         treeModel = new TreeModel(tree);//treeModel
     }
-
     protected void createSpecifiedTree(String t) throws Exception {
 //        Tree.Utils.newick(tree)
         //create tree
         NewickImporter importer = new NewickImporter(t);
         Tree tree = importer.importTree(null);          
-
         treeModel = new TreeModel(tree);//treeModel
     }
-
     protected void assertExpectation(String name, TraceCorrelation stats, double v) {
         double mean = stats.getMean();
         double stderr = stats.getStdErrorOfMean();
         double upper = mean + 2 * stderr;
         double lower = mean - 2 * stderr;
-
         assertTrue("Expected " + name + " is " + v + " but got " + mean + " +/- " + stderr,
                 upper > v && lower < v);
     }
-
     //************************** data ****************************
     protected TreeModel createPrimateTreeModel () {
-
         SimpleNode[] nodes = new SimpleNode[10];
         for (int n=0; n < 10; n++) {
             nodes[n] = new SimpleNode();
         }
-
 //        nodes[0].setHeight(0);
         nodes[0].setTaxon(taxa[0]); // human
-
         nodes[1].setTaxon(taxa[1]); // chimp
-
         nodes[2].setTaxon(taxa[2]); // bonobo
-
         nodes[3].setHeight(0.010772);
         nodes[3].addChild(nodes[1]);
         nodes[3].addChild(nodes[2]);
-
         nodes[4].setHeight(0.024003);
         nodes[4].addChild(nodes[0]);
         nodes[4].addChild(nodes[3]);
-
         nodes[5].setTaxon(taxa[3]); // gorilla
-
         nodes[6].setHeight(0.036038);
         nodes[6].addChild(nodes[4]);
         nodes[6].addChild(nodes[5]);
-
         nodes[7].setTaxon(taxa[4]); // orangutan
-
         nodes[8].setHeight(0.069125);
         nodes[8].addChild(nodes[6]);
         nodes[8].addChild(nodes[7]);
-
         nodes[9].setTaxon(taxa[5]); // siamang
-
         SimpleNode root = new SimpleNode();
         root.setHeight(0.099582);
         root.addChild(nodes[8]);
         root.addChild(nodes[9]);
-
         Tree tree = new SimpleTree(root);
         tree.setUnits(Units.Type.YEARS);
-
         return new TreeModel(tree); //treeModel
     }
-
     protected static final String[][] PRIMATES_TAXON_SEQUENCE = {{"human", "chimp", "bonobo", "gorilla", "orangutan", "siamang"},
           {"AGAAATATGTCTGATAAAAGAGTTACTTTGATAGAGTAAATAATAGGAGCTTAAACCCCCTTATTTCTACTAGGACTATGAGAATCGAACCCATCCCTGAGAATCCAAAATTCTCCGTGCCACCTATCACACCCCATCCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTTATACCCTTCCCGTACTAAGAAATTTAGGTTAAATACAGACCAAGAGCCTTCAAAGCCCTCAGTAAGTTG-CAATACTTAATTTCTGTAAGGACTGCAAAACCCCACTCTGCATCAACTGAACGCAAATCAGCCACTTTAATTAAGCTAAGCCCTTCTAGACCAATGGGACTTAAACCCACAAACACTTAGTTAACAGCTAAGCACCCTAATCAAC-TGGCTTCAATCTAAAGCCCCGGCAGG-TTTGAAGCTGCTTCTTCGAATTTGCAATTCAATATGAAAA-TCACCTCGGAGCTTGGTAAAAAGAGGCCTAACCCCTGTCTTTAGATTTACAGTCCAATGCTTCA-CTCAGCCATTTTACCACAAAAAAGGAAGGAATCGAACCCCCCAAAGCTGGTTTCAAGCCAACCCCATGGCCTCCATGACTTTTTCAAAAGGTATTAGAAAAACCATTTCATAACTTTGTCAAAGTTAAATTATAGGCT-AAATCCTATATATCTTA-CACTGTAAAGCTAACTTAGCATTAACCTTTTAAGTTAAAGATTAAGAGAACCAACACCTCTTTACAGTGA",
            "AGAAATATGTCTGATAAAAGAATTACTTTGATAGAGTAAATAATAGGAGTTCAAATCCCCTTATTTCTACTAGGACTATAAGAATCGAACTCATCCCTGAGAATCCAAAATTCTCCGTGCCACCTATCACACCCCATCCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTTACACCCTTCCCGTACTAAGAAATTTAGGTTAAGCACAGACCAAGAGCCTTCAAAGCCCTCAGCAAGTTA-CAATACTTAATTTCTGTAAGGACTGCAAAACCCCACTCTGCATCAACTGAACGCAAATCAGCCACTTTAATTAAGCTAAGCCCTTCTAGATTAATGGGACTTAAACCCACAAACATTTAGTTAACAGCTAAACACCCTAATCAAC-TGGCTTCAATCTAAAGCCCCGGCAGG-TTTGAAGCTGCTTCTTCGAATTTGCAATTCAATATGAAAA-TCACCTCAGAGCTTGGTAAAAAGAGGCTTAACCCCTGTCTTTAGATTTACAGTCCAATGCTTCA-CTCAGCCATTTTACCACAAAAAAGGAAGGAATCGAACCCCCTAAAGCTGGTTTCAAGCCAACCCCATGACCTCCATGACTTTTTCAAAAGATATTAGAAAAACTATTTCATAACTTTGTCAAAGTTAAATTACAGGTT-AACCCCCGTATATCTTA-CACTGTAAAGCTAACCTAGCATTAACCTTTTAAGTTAAAGATTAAGAGGACCGACACCTCTTTACAGTGA",
@@ -157,7 +117,6 @@ public class TraceCorrelationAssert extends MathTestCase {
            "AGAAATATGTCTGATAAAAGAGTTACTTTGATAGAGTAAATAATAGAGGTTTAAACCCCCTTATTTCTACTAGGACTATGAGAATTGAACCCATCCCTGAGAATCCAAAATTCTCCGTGCCACCTGTCACACCCCATCCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTCACATCCTTCCCGTACTAAGAAATTTAGGTTAAACATAGACCAAGAGCCTTCAAAGCCCTTAGTAAGTTA-CAACACTTAATTTCTGTAAGGACTGCAAAACCCTACTCTGCATCAACTGAACGCAAATCAGCCACTTTAATTAAGCTAAGCCCTTCTAGATCAATGGGACTCAAACCCACAAACATTTAGTTAACAGCTAAACACCCTAGTCAAC-TGGCTTCAATCTAAAGCCCCGGCAGG-TTTGAAGCTGCTTCTTCGAATTTGCAATTCAATATGAAAT-TCACCTCGGAGCTTGGTAAAAAGAGGCCCAGCCTCTGTCTTTAGATTTACAGTCCAATGCCTTA-CTCAGCCATTTTACCACAAAAAAGGAAGGAATCGAACCCCCCAAAGCTGGTTTCAAGCCAACCCCATGACCTTCATGACTTTTTCAAAAGATATTAGAAAAACTATTTCATAACTTTGTCAAGGTTAAATTACGGGTT-AAACCCCGTATATCTTA-CACTGTAAAGCTAACCTAGCGTTAACCTTTTAAGTTAAAGATTAAGAGTATCGGCACCTCTTTGCAGTGA",
            "AGAAATATGTCTGACAAAAGAGTTACTTTGATAGAGTAAAAAATAGAGGTCTAAATCCCCTTATTTCTACTAGGACTATGGGAATTGAACCCACCCCTGAGAATCCAAAATTCTCCGTGCCACCCATCACACCCCATCCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTTACACCCTTCCCGTACTAAGAAATTTAGGTTA--CACAGACCAAGAGCCTTCAAAGCCCTCAGCAAGTCA-CAGCACTTAATTTCTGTAAGGACTGCAAAACCCCACTTTGCATCAACTGAGCGCAAATCAGCCACTTTAATTAAGCTAAGCCCTCCTAGACCGATGGGACTTAAACCCACAAACATTTAGTTAACAGCTAAACACCCTAGTCAAT-TGGCTTCAGTCCAAAGCCCCGGCAGGCCTTAAAGCTGCTCCTTCGAATTTGCAATTCAACATGACAA-TCACCTCAGGGCTTGGTAAAAAGAGGTCTGACCCCTGTTCTTAGATTTACAGCCTAATGCCTTAACTCGGCCATTTTACCGCAAAAAAGGAAGGAATCGAACCTCCTAAAGCTGGTTTCAAGCCAACCCCATAACCCCCATGACTTTTTCAAAAGGTACTAGAAAAACCATTTCGTAACTTTGTCAAAGTTAAATTACAGGTC-AGACCCTGTGTATCTTA-CATTGCAAAGCTAACCTAGCATTAACCTTTTAAGTTAAAGACTAAGAGAACCAGCCTCTCTTTGCAATGA",
            "AGAAATACGTCTGACGAAAGAGTTACTTTGATAGAGTAAATAACAGGGGTTTAAATCCCCTTATTTCTACTAGAACCATAGGAGTCGAACCCATCCTTGAGAATCCAAAACTCTCCGTGCCACCCGTCGCACCCTGTTCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTTATACCCTTCCCATACTAAGAAATTTAGGTTAAACACAGACCAAGAGCCTTCAAAGCCCTCAGTAAGTTAACAAAACTTAATTTCTGCAAGGGCTGCAAAACCCTACTTTGCATCAACCGAACGCAAATCAGCCACTTTAATTAAGCTAAGCCCTTCTAGATCGATGGGACTTAAACCCATAAAAATTTAGTTAACAGCTAAACACCCTAAACAACCTGGCTTCAATCTAAAGCCCCGGCAGA-GTTGAAGCTGCTTCTTTGAACTTGCAATTCAACGTGAAAAATCACTTCGGAGCTTGGCAAAAAGAGGTTTCACCTCTGTCCTTAGATTTACAGTCTAATGCTTTA-CTCAGCCACTTTACCACAAAAAAGGAAGGAATCGAACCCTCTAAAACCGGTTTCAAGCCAGCCCCATAACCTTTATGACTTTTTCAAAAGATATTAGAAAAACTATTTCATAACTTTGTCAAAGTTAAATCACAGGTCCAAACCCCGTATATCTTATCACTGTAGAGCTAGACCAGCATTAACCTTTTAAGTTAAAGACTAAGAGAACTACCGCCTCTTTACAGTGA"}};
-
     protected static final Object[][] DENGUE4_TAXON_SEQUENCE = {{"D4Brazi82", "D4ElSal83", "D4ElSal94", "D4Indon76",
             "D4Indon77", "D4Mexico84", "D4NewCal81", "D4Philip64", "D4Philip56", "D4Philip84", "D4PRico86", "D4SLanka78",
             "D4Tahiti79", "D4Tahiti85", "D4Thai63", "D4Thai78", "D4Thai84"}, // 17
@@ -181,7 +140,6 @@ public class TraceCorrelationAssert extends MathTestCase {
           {1982.0, 1983.0, 1994.0, 1976.0, 1977.0, 1984.0, 1981.0, 1964.0, 1956.0, 1984.0, 1986.0, 1978.0, 1979.0, 1985.0, 1963.0, 1978.0, 1984.0},
           {false}//forwards
           };
-
     protected static final Object[][] NUMBER_TAXON_SEQUENCE = {{"119_27629.7737681096", "103_23193.258377165", "125_29554.4074069898",
             "174_44884.4881635122", "49_10373.6477823059", "127_30942.0757935152", "28_3361.21216092344", "74_15748.6180439834",
             "177_45915.951076986", "191_49643.2699171139", "178_46029.1511374065", "56_11331.1641925041", "168_43292.0579663998",
@@ -438,5 +396,4 @@ public class TraceCorrelationAssert extends MathTestCase {
                   24250.081674673, 41827.381497564},
           {true}//backwords
           };
-
 }

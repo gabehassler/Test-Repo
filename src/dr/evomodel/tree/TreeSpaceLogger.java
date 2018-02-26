@@ -1,16 +1,11 @@
-
 package dr.evomodel.tree;
-
 import dr.evolution.io.Importer.ImportException;
 import dr.evolution.io.NewickImporter;
 import dr.evolution.tree.Tree;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-
 public class TreeSpaceLogger {
-
     private String[] trees;
     private int[] islands;
     private int[][] transitions;
@@ -20,12 +15,10 @@ public class TreeSpaceLogger {
     private String lastKnownTree;
     private List<String> currentPath;
 //	private HashMap<String, Integer>[][] pathes;
-
     public TreeSpaceLogger(String filename) {
         readTrees(filename);
         currentPath = new ArrayList<String>();
     }
-
     private void readTrees(String filename) {
         try {
             FileReader fr = new FileReader(new File(filename));
@@ -33,20 +26,16 @@ public class TreeSpaceLogger {
             String line;
             List<Tree> trees = new ArrayList<Tree>();
             List<Integer> islands = new ArrayList<Integer>();
-
             while ((line = br.readLine()) != null) {
                 // read trees
                 String[] tokens = line.split("\\s++");
-
                 NewickImporter importer = new NewickImporter(line);
                 Tree t = importer.importNextTree();
                 trees.add(t);
                 islands.add(Integer.parseInt(tokens[0]));
             }
-
             br.close();
             fr.close();
-
             this.trees = new String[trees.size()];
             this.islands = new int[trees.size()];
             int maxIsland = 0;
@@ -59,19 +48,16 @@ public class TreeSpaceLogger {
                     maxIsland = islands.get(i);
                 }
             }
-
             transitions = new int[trees.size()][trees.size()];
             steps = new int[trees.size()][trees.size()];
             islandTransitions = new int[maxIsland][maxIsland];
             islandDwellTimes = new int[maxIsland];
-
 //			pathes = new HashMap[trees.size()][trees.size()];
 //			for (int i = 0; i < trees.size(); i++) {
 //				for (int j = 0; j < trees.size(); j++) {
 //					pathes[i][j] = new HashMap<String, Integer>();
 //				}
 //			}
-
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -83,10 +69,8 @@ public class TreeSpaceLogger {
             e.printStackTrace();
         }
     }
-
     public void log(Tree tree) {
         String currentTree = Tree.Utils.uniqueNewick(tree, tree.getRoot());
-
         if (lastKnownTree == null || lastKnownTree.equals("")) {
             // check if we ended up at another known tree
             int index = findTree(currentTree);
@@ -117,7 +101,6 @@ public class TreeSpaceLogger {
                     steps[startIndex][index] += currentPath.size() - 1;
                     islandDwellTimes[islands[index]] += currentPath.size() - 1;
                     islandTransitions[islands[startIndex]][islands[index]]++;
-
 //					if (pathes[startIndex][index].containsKey(currentPath
 //							.toString())) {
 //						int trans = pathes[startIndex][index].get(currentPath
@@ -128,14 +111,12 @@ public class TreeSpaceLogger {
 //						pathes[startIndex][index]
 //								.put(currentPath.toString(), 1);
 //					}
-
                     currentPath.clear();
                     lastKnownTree = currentTree;
                 }
             }
         }
     }
-
     private int findTree(String tree) {
         for (int i = 0; i < trees.length; i++) {
             if (trees[i].equals(tree)) {
@@ -144,10 +125,8 @@ public class TreeSpaceLogger {
         }
         return -1;
     }
-
     public void printTransitionMatrix() {
         System.out.println("\n\nPrint transition matrix:\n");
-
         for (int i = 0; i < trees.length; i++) {
             for (int j = 0; j < trees.length; j++) {
                 System.out.print(transitions[i][j] + "\t");
@@ -155,7 +134,6 @@ public class TreeSpaceLogger {
             System.out.println();
         }
     }
-
 //	public void printPathesMatrix() {
 //		System.out.println("\n\nPrint # of pathes matrix:\n");
 //
@@ -166,10 +144,8 @@ public class TreeSpaceLogger {
 //			System.out.println();
 //		}
 //	}
-
     public void printIslandTransitionMatrix() {
         System.out.println("\n\nPrint island transition matrix:\n");
-
         for (int i = 0; i < islandTransitions.length; i++) {
             for (int j = 0; j < islandTransitions.length; j++) {
                 System.out.print(islandTransitions[i][j] + "\t");
@@ -177,10 +153,8 @@ public class TreeSpaceLogger {
             System.out.println();
         }
     }
-
     public void printMeanTopologyMatrix() {
         System.out.println("\n\nPrint mean # of topologies on path matrix:\n");
-
         for (int i = 0; i < trees.length; i++) {
             for (int j = 0; j < trees.length; j++) {
                 int trans = transitions[i][j];
@@ -192,10 +166,8 @@ public class TreeSpaceLogger {
             System.out.println();
         }
     }
-
     public void printIslandDwellMatrix() {
         System.out.println("\n\nPrint mean dwell time matrix:\n");
-
         for (int i = 0; i < islandDwellTimes.length; i++) {
             int transitions = 0;
             for (int j = 0; j < islandDwellTimes.length; j++) {
@@ -210,7 +182,6 @@ public class TreeSpaceLogger {
             System.out.println();
         }
     }
-
     public void finishLogging() {
         printTransitionMatrix();
 //		printPathesMatrix();
@@ -218,10 +189,8 @@ public class TreeSpaceLogger {
         printMeanTopologyMatrix();
         printIslandDwellMatrix();
     }
-
     public static void main(String[] args) {
         TreeSpaceLogger logger = new TreeSpaceLogger("DS1_Treespace.trees");
         logger.finishLogging();
     }
-
 }

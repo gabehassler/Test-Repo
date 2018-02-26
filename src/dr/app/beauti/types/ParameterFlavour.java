@@ -1,6 +1,4 @@
-
 package dr.app.beauti.types;
-
 public enum ParameterFlavour {
     COUNTING,
     CONTINUOUS,

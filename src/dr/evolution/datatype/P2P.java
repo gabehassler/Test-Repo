@@ -1,22 +1,15 @@
-
 package dr.evolution.datatype;
-
 public class P2P extends DataType {
-
 	public static final String DESCRIPTION = "P2P";
 	public static final int TYPE = 42;
 	public static final P2P INSTANCE = new P2P();
-
 //  public static final int ZERO_STATE = 0;
 //	public static final int ONE_STATE = 1;
-
 //	public static final int UNKNOWN_STATE = 2;
 //	public static final int GAP_STATE = 3;
-
 //	public static final char[] P2P_CHARS =
 //		{ 'A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R',
 //		'S','T','V','W','Y','B','Z','X'};
-
 	public static final String[] P2P_AMBIGUITIES = {
 "AA","AR","AN","AD","AC","AQ","AE","AG","AH","AI","AL","AK","AM","AF","AP","AS","AT","AW","AY","AV",
 "RA","RR","RN","RD","RC","RQ","RE","RG","RH","RI","RL","RK","RM","RF","RP","RS","RT","RW","RY","RV",
@@ -39,26 +32,20 @@ public class P2P extends DataType {
 "YA","YR","YN","YD","YC","YQ","YE","YG","YH","YI","YL","YK","YM","YF","YP","YS","YT","YW","YY","YV",
 "VA","VR","VN","VD","VC","VQ","VE","VG","VH","VI","VL","VK","VM","VF","VP","VS","VT","VW","VY","VV"
 	};
-
 	private P2P() {
 		stateCount = 400;
 //		ambiguousStateCount = 4;
 	}
-
-
     @Override
     public char[] getValidChars() {
         return null;
     }
-
     public char getChar(int state) {
         throw new IllegalArgumentException("P2P datatype cannot be expressed as char");
     }
-    
 	public String getCode(int state) {
       return P2P_AMBIGUITIES[state];
 	}
-
 //	public int[] getStates(int state) {
 //		String stateString = P2P_AMBIGUITIES[state];
 //        int[] states = new int[stateString.length()];
@@ -67,23 +54,17 @@ public class P2P extends DataType {
 //        }
 //        return states;
 //	}
-
 	public boolean[] getStateSet(int state) {
-
 		boolean[] stateSet = new boolean[stateCount];
 		for(int i=0;i<stateCount;i++){
 			stateSet[i] = true;
 		}
-
 		return stateSet;
 	}
-
 	public String getDescription() {
 		return DESCRIPTION;
 	}
-
 	public int getType() {
 		return TYPE;
 	}
-
 }

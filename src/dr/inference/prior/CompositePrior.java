@@ -1,6 +1,4 @@
-
 package dr.inference.prior;
-
 //public class CompositePrior implements Prior {
 //
 //	Vector priors = null;

@@ -1,24 +1,15 @@
-
 package dr.math.matrixAlgebra;
-
 public class CholeskyDecomposition {
-
 	private int n;
-
 	public boolean isSPD() {
 		return isspd;
 	}
-
 	private boolean isspd;
-
 	public double[][] getL() {
 		return L;
 	}
-
 	private double[][] L;
-
 	public CholeskyDecomposition(double[][] A) throws IllegalDimension {
-
 		n = A.length;
 		L = new double[n][n];
 		isspd = (A[0].length == n);
@@ -44,7 +35,5 @@ public class CholeskyDecomposition {
 						L[j][k] = 0.0;
 					 }*/
 		}
-
 	}
-
 }

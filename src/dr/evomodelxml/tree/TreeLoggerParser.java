@@ -1,6 +1,4 @@
-
 package dr.evomodelxml.tree;
-
 import dr.evolution.colouring.TreeColouringProvider;
 import dr.evolution.tree.*;
 import dr.evomodel.tree.TreeLogger;
@@ -13,15 +11,12 @@ import dr.inference.model.Parameter;
 import dr.inferencexml.loggers.LoggerParser;
 import dr.util.Identifiable;
 import dr.xml.*;
-
 import java.io.PrintWriter;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
 public class TreeLoggerParser extends LoggerParser {
-
     public static final String LOG_TREE = "logTree";
     public static final String NEXUS_FORMAT = "nexusFormat";
     //    public static final String USING_RATES = "usingRates";
@@ -32,42 +27,30 @@ public class TreeLoggerParser extends LoggerParser {
     public static final String MAP_NAMES = "mapNamesToNumbers";
     public static final String DECIMAL_PLACES = "dp";
     //    public static final String NORMALISE_MEAN_RATE_TO = "normaliseMeanRateTo";
-
     public static final String FILTER_TRAITS = "traitFilter";
     public static final String TREE_TRAIT = "trait";
     public static final String NAME = "name";
     public static final String TAG = "tag";
-
     public String getParserName() {
         return LOG_TREE;
     }
-
     protected void parseXMLParameters(XMLObject xo) throws XMLParseException
     {
         // reset this every time...
         branchRates = null;
-
         tree = (Tree) xo.getChild(Tree.class);
-
         title = xo.getAttribute(TITLE, "");
-
         nexusFormat = xo.getAttribute(NEXUS_FORMAT, false);
-
         sortTranslationTable = xo.getAttribute(SORT_TRANSLATION_TABLE, true);
-
         boolean substitutions = xo.getAttribute(BRANCH_LENGTHS, "").equals(SUBSTITUTIONS);
-
         List<TreeAttributeProvider> taps = new ArrayList<TreeAttributeProvider>();
         List<TreeTraitProvider> ttps = new ArrayList<TreeTraitProvider>();
-
         // ttps2 are for TTPs that are not specified within a Trait element. These are only
         // included if not already added through a trait element to avoid duplication of
         // (in particular) the BranchRates which is required for substitution trees.
         List<TreeTraitProvider> ttps2 = new ArrayList<TreeTraitProvider>();
-
         for (int i = 0; i < xo.getChildCount(); i++) {
             Object cxo = xo.getChild(i);
-
             // This needs to be refactored into using a TreeTrait if Colouring is resurrected...
 //            if (cxo instanceof TreeColouringProvider) {
 //                final TreeColouringProvider colouringProvider = (TreeColouringProvider) cxo;
@@ -97,21 +80,17 @@ public class TreeLoggerParser extends LoggerParser {
 //                });
 //
 //            } else
-
             if (cxo instanceof Likelihood) {
                 final Likelihood likelihood = (Likelihood) cxo;
                 taps.add(new TreeAttributeProvider() {
-
                     public String[] getTreeAttributeLabel() {
                         return new String[] {"lnP"};
                     }
-
                     public String[] getAttributeForTree(Tree tree) {
                         return new String[] {Double.toString(likelihood.getLogLikelihood())};
                     }
                 });
             }
-
             if (cxo instanceof TreeAttributeProvider) {
                 taps.add((TreeAttributeProvider) cxo);
             }
@@ -131,7 +110,6 @@ public class TreeLoggerParser extends LoggerParser {
                     if (filteredTraits.size() > 0) {
                         ttps2.add(new TreeTraitProvider.Helper(filteredTraits));
                     }
-
                 } else {
                     // Add all of them
                     ttps2.add((TreeTraitProvider) cxo);
@@ -140,56 +118,42 @@ public class TreeLoggerParser extends LoggerParser {
             if (cxo instanceof XMLObject) {
                 XMLObject xco = (XMLObject)cxo;
                 if (xco.getName().equals(TREE_TRAIT)) {
-
                     TreeTraitProvider ttp = (TreeTraitProvider)xco.getChild(TreeTraitProvider.class);
-
                     if (xco.hasAttribute(NAME)) {
                         // a specific named trait is required (optionally with a tag to name it in the tree file)
-
                         String name = xco.getStringAttribute(NAME);
                         final TreeTrait trait = ttp.getTreeTrait(name);
-
                         if (trait == null) {
                             String childName = "TreeTraitProvider";
-
                             if (ttp instanceof Likelihood) {
                                 childName = ((Likelihood)ttp).prettyName();
                             } else  if (ttp instanceof Model) {
                                 childName = ((Model)ttp).getModelName();
                             }
-
                             throw new XMLParseException("Trait named, " + name + ", not found for " + childName);
                         }
-
                         final String tag;
                         if (xco.hasAttribute(TAG)) {
                             tag = xco.getStringAttribute(TAG);
                         } else {
                             tag = name;
                         }
-
                         ttps.add(new TreeTraitProvider.Helper(tag, new TreeTrait() {
-
                             public String getTraitName() {
                                 return tag;
                             }
-
                             public Intent getIntent() {
                                 return trait.getIntent();
                             }
-
                             public Class getTraitClass() {
                                 return trait.getTraitClass();
                             }
-
                             public Object getTrait(Tree tree, NodeRef node) {
                                 return trait.getTrait(tree, node);
                             }
-
                             public String getTraitString(Tree tree, NodeRef node) {
                                 return trait.getTraitString(tree, node);
                             }
-
                             public boolean getLoggable() {
                                 return trait.getLoggable();
                             }
@@ -197,7 +161,6 @@ public class TreeLoggerParser extends LoggerParser {
                     } else if (xo.hasAttribute(FILTER_TRAITS)) {
                         // else a filter attribute is given to ask for all traits that starts with a specific
                         // string
-
                         String[] matches = ((String) xo.getAttribute(FILTER_TRAITS)).split("[\\s,]+");
                         TreeTrait[] traits = ttp.getTreeTraits();
                         List<TreeTrait> filteredTraits = new ArrayList<TreeTrait>();
@@ -211,7 +174,6 @@ public class TreeLoggerParser extends LoggerParser {
                         if (filteredTraits.size() > 0) {
                             ttps.add(new TreeTraitProvider.Helper(filteredTraits));
                         }
-
                     } else {
                         // neither named or filtered traits so just add them all
                         ttps.add(ttp);
@@ -237,12 +199,10 @@ public class TreeLoggerParser extends LoggerParser {
 //                ttps.add(ttp);
 //            }
             //}
-
             // be able to put arbitrary statistics in as tree attributes
             if (cxo instanceof Loggable) {
                 final Loggable loggable = (Loggable) cxo;
                 taps.add(new TreeAttributeProvider() {
-
                     public String[] getTreeAttributeLabel() {
                         String[] labels = new String[loggable.getColumns().length];
                         for (int i = 0; i < loggable.getColumns().length; i++) {
@@ -250,7 +210,6 @@ public class TreeLoggerParser extends LoggerParser {
                         }
                         return labels;
                     }
-
                     public String[] getAttributeForTree(Tree tree) {
                         String[] values = new String[loggable.getColumns().length];
                         for (int i = 0; i < loggable.getColumns().length; i++) {
@@ -260,73 +219,56 @@ public class TreeLoggerParser extends LoggerParser {
                     }
                 });
             }
-
         }
-
         // if we don't have any of the newer trait elements but we do have some tree trait providers
         // included directly then assume the user wanted to log these as tree traits (it may be an older
         // form XML).
 //        if (ttps.size() == 0 && ttps2.size() > 0) {
 //            ttps.addAll(ttps2);
 //        }
-
         // The above code destroyed the logging of complete histories - which need to be logged by direct
         // inclusion of the codon partitioned robust counting TTP...
         if (ttps2.size() > 0) {
             ttps.addAll(ttps2);
         }
-
         if (substitutions) {
             branchRates = (BranchRates) xo.getChild(BranchRates.class);
         }
         if (substitutions && branchRates == null) {
             throw new XMLParseException("To log trees in units of substitutions a BranchRateModel must be provided");
         }
-
         // logEvery of zero only displays at the end
         logEvery = xo.getAttribute(LOG_EVERY, 0);
-
 //        double normaliseMeanRateTo = xo.getAttribute(NORMALISE_MEAN_RATE_TO, Double.NaN);
-
         // decimal places
         final int dp = xo.getAttribute(DECIMAL_PLACES, -1);
         if (dp != -1) {
             format = NumberFormat.getNumberInstance(Locale.ENGLISH);
             format.setMaximumFractionDigits(dp);
         }
-
         final PrintWriter pw = getLogFile(xo, getParserName());
-
         formatter = new TabDelimitedFormatter(pw);
-
         treeAttributeProviders = new TreeAttributeProvider[taps.size()];
         taps.toArray(treeAttributeProviders);
         treeTraitProviders = new TreeTraitProvider[ttps.size()];
         ttps.toArray(treeTraitProviders);
-
         // I think the default should be to have names rather than numbers, thus the false default - AJD
         // I think the default should be numbers - using names results in larger files and end user never
         // sees the numbers anyway as any software loading the nexus files does the translation - JH
         mapNames = xo.getAttribute(MAP_NAMES, true);
-
         condition = logEvery == 0 ? (TreeLogger.LogUpon) xo.getChild(TreeLogger.LogUpon.class) : null;
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
         parseXMLParameters(xo);
-
         TreeLogger logger = new TreeLogger(tree, branchRates,
                 treeAttributeProviders, treeTraitProviders,
                 formatter, logEvery, nexusFormat, sortTranslationTable, mapNames, format, condition/*,
                 normaliseMeanRateTo*/);
-
         if (title != null) {
             logger.setTitle(title);
         }
-
         return logger;
     }
-
     protected Tree tree;
     protected String title;
     protected boolean nexusFormat;
@@ -339,14 +281,12 @@ public class TreeLoggerParser extends LoggerParser {
     protected TreeAttributeProvider[] treeAttributeProviders;
     protected TreeTraitProvider[] treeTraitProviders;
     protected int logEvery;
-
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     private final XMLSyntaxRule[] rules = {
             AttributeRule.newIntegerRule(LOG_EVERY, true),
             AttributeRule.newBooleanRule(ALLOW_OVERWRITE_LOG, true),
@@ -364,7 +304,6 @@ public class TreeLoggerParser extends LoggerParser {
             AttributeRule.newStringRule(FILTER_TRAITS, true),
             AttributeRule.newBooleanRule(MAP_NAMES, true),
             AttributeRule.newIntegerRule(DECIMAL_PLACES, true),
-
             new ElementRule(Tree.class, "The tree which is to be logged"),
 //            new ElementRule(BranchRates.class, true),
 //            new ElementRule(TreeColouringProvider.class, true),
@@ -380,11 +319,9 @@ public class TreeLoggerParser extends LoggerParser {
             new ElementRule(TreeTraitProvider.class, 0, Integer.MAX_VALUE),
             new ElementRule(TreeLogger.LogUpon.class, true)
     };
-
     public String getParserDescription() {
         return "Logs a tree to a file";
     }
-
     public String getExample() {
         final String name = getParserName();
         return
@@ -394,7 +331,6 @@ public class TreeLoggerParser extends LoggerParser {
                         "	<treeModel idref=\"treeModel1\"/>\n" +
                         "</" + name + ">\n";
     }
-
     public Class getReturnType() {
         return TreeLogger.class;
     }

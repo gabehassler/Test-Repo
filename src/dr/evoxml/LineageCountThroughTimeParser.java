@@ -1,38 +1,27 @@
-
 package dr.evoxml;
-
 import dr.evolution.tree.LineageCountThroughTime;
 import dr.stats.Variate;
 import dr.xml.*;
-
 public class LineageCountThroughTimeParser extends AbstractXMLObjectParser {
-
     public static final String TREE_FILE = "treeFile";
     public static final String MIN_TIME = "minTime";
     public static final String MAX_TIME = "maxTime";
     public static final String BIN_COUNT = "binCount";
     public static final String SKIP = "skip";
-
     public String getParserName() {
         return "lineageCountThroughTime";
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         if (xo.getChildCount() > 0) {
             throw new XMLParseException("No child elements allowed in location element.");
         }
-
         int binCount = xo.getAttribute(BIN_COUNT, 100);
         int skip = xo.getAttribute(SKIP, 0);
         double minTime = xo.getAttribute(MIN_TIME, 0.0);
         double maxTime = xo.getAttribute(MAX_TIME, 1.0);
-
         String treeFile = xo.getAttribute(TREE_FILE, "");
-
         try {
             Variate[] ltt = LineageCountThroughTime.getLTT(treeFile, minTime, maxTime, binCount, skip);
-
             StringBuilder builder = new StringBuilder();
             builder.append("Time\tLineage_Count\n");
             for (int i = 0; i < ltt[0].getCount(); i++) {
@@ -42,26 +31,19 @@ public class LineageCountThroughTimeParser extends AbstractXMLObjectParser {
                 builder.append("\n");
             }
             String lttString = builder.toString();
-
             System.out.println();
             System.out.println(lttString);
             return lttString;
-
         } catch (Exception e) {
-
             return e.getMessage();
         }
     }
-
-
     public String getParserDescription() {
         return "Specifies a location with an optional longitude and latitude";
     }
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     private XMLSyntaxRule[] rules = new XMLSyntaxRule[]{
             AttributeRule.newStringRule(TREE_FILE, false,
                     "A tree file to calculate the average lineage count through time plot."),
@@ -74,7 +56,6 @@ public class LineageCountThroughTimeParser extends AbstractXMLObjectParser {
             AttributeRule.newDoubleRule(MAX_TIME, false,
                     "The max time to compute lineage count to."),
     };
-
     public Class getReturnType() {
         return String.class;
     }

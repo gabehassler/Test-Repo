@@ -1,6 +1,4 @@
-
 package dr.inference.operators;
-
 import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.model.LatentFactorModel;
 import dr.inference.model.MatrixParameter;
@@ -11,10 +9,8 @@ import dr.math.distributions.NormalDistribution;
 import dr.math.matrixAlgebra.CholeskyDecomposition;
 import dr.math.matrixAlgebra.IllegalDimension;
 import dr.math.matrixAlgebra.SymmetricMatrix;
-
 import java.util.ArrayList;
 import java.util.ListIterator;
-
 public class LoadingsIndependenceOperator extends AbstractCoercableOperator {
     NormalDistribution prior;
     LatentFactorModel LFM;
@@ -23,23 +19,17 @@ public class LoadingsIndependenceOperator extends AbstractCoercableOperator {
     ArrayList<double[]> meanArray;
     boolean randomScan;
     double scaleFactor;
-
-
     double priorPrecision;
     double priorMeanPrecision;
-
     public LoadingsIndependenceOperator(LatentFactorModel LFM, DistributionLikelihood prior, double weight, boolean randomScan, double scaleFactor, CoercionMode mode) {
         super(mode);
         setWeight(weight);
-
         this.scaleFactor = scaleFactor;
         this.prior = (NormalDistribution) prior.getDistribution();
         this.LFM = LFM;
         precisionArray = new ArrayList<double[][]>();
         double[][] temp;
         this.randomScan = randomScan;
-
-
         meanArray = new ArrayList<double[]>();
         meanMidArray = new ArrayList<double[]>();
         double[] tempMean;
@@ -52,7 +42,6 @@ public class LoadingsIndependenceOperator extends AbstractCoercableOperator {
                 tempMean = new double[i + 1];
                 meanArray.add(tempMean);
             }
-
             for (int i = 0; i < LFM.getFactorDimension(); i++) {
                 tempMean = new double[i + 1];
                 meanMidArray.add(tempMean);
@@ -66,19 +55,16 @@ public class LoadingsIndependenceOperator extends AbstractCoercableOperator {
                 tempMean = new double[LFM.getFactorDimension() - i];
                 meanArray.add(tempMean);
             }
-
             for (int i = 0; i < LFM.getFactorDimension(); i++) {
                 tempMean = new double[LFM.getFactorDimension() - i];
                 meanMidArray.add(tempMean);
             }
         }
-
 //            vectorProductAnswer=new MatrixParameter[LFM.getLoadings().getRowDimension()];
 //            for (int i = 0; i <vectorProductAnswer.length ; i++) {
 //                vectorProductAnswer[i]=new MatrixParameter(null);
 //                vectorProductAnswer[i].setDimensions(i+1, 1);
 //            }
-
 //        priorMeanVector=new MatrixParameter[LFM.getLoadings().getRowDimension()];
 //            for (int i = 0; i <priorMeanVector.length ; i++) {
 //                priorMeanVector[i]=new MatrixParameter(null, i+1, 1, this.prior.getMean()/(this.prior.getSD()*this.prior.getSD()));
@@ -88,14 +74,11 @@ public class LoadingsIndependenceOperator extends AbstractCoercableOperator {
         priorPrecision = 1 / (this.prior.getSD() * this.prior.getSD());
         priorMeanPrecision = this.prior.getMean() * priorPrecision;
     }
-
     private void getPrecisionOfTruncated(MatrixParameter full, int newRowDimension, int row, double[][] answer) {
-
 //        MatrixParameter answer=new MatrixParameter(null);
 //        answer.setDimensions(this.getRowDimension(), Right.getRowDimension());
 //        System.out.println(answer.getRowDimension());
 //        System.out.println(answer.getColumnDimension());
-
         int p = full.getColumnDimension();
         for (int i = 0; i < newRowDimension; i++) {
             for (int j = i; j < newRowDimension; j++) {
@@ -111,10 +94,7 @@ public class LoadingsIndependenceOperator extends AbstractCoercableOperator {
             }
         }
     }
-
-
     private void getTruncatedMean(int newRowDimension, int dataColumn, double[][] variance, double[] midMean, double[] mean) {
-
 //        MatrixParameter answer=new MatrixParameter(null);
 //        answer.setDimensions(this.getRowDimension(), Right.getRowDimension());
 //        System.out.println(answer.getRowDimension());
@@ -136,9 +116,7 @@ public class LoadingsIndependenceOperator extends AbstractCoercableOperator {
                 sum += variance[i][k] * midMean[k];
             mean[i] = sum;
         }
-
     }
-
     private void getPrecision(int i, double[][] answer) {
         int size = LFM.getFactorDimension();
         if (i < size) {
@@ -147,7 +125,6 @@ public class LoadingsIndependenceOperator extends AbstractCoercableOperator {
             getPrecisionOfTruncated(LFM.getFactors(), size, i, answer);
         }
     }
-
     private void getMean(int i, double[][] variance, double[] midMean, double[] mean) {
 //        Matrix factors=null;
         int size = LFM.getFactorDimension();
@@ -173,16 +150,13 @@ public class LoadingsIndependenceOperator extends AbstractCoercableOperator {
 //                illegalDimension.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
 //            }
         }
-
     }
-
     private void copy(int i, double[] random) {
         Parameter changing = LFM.getLoadings().getParameter(i);
         for (int j = 0; j < random.length; j++) {
             changing.setParameterValueQuietly(j, random[j]);
         }
     }
-
     private void drawI(int i, ListIterator<double[][]> currentPrecision, ListIterator<double[]> currentMidMean, ListIterator<double[]> currentMean) {
         double[] draws = null;
         double[][] precision = null;
@@ -193,7 +167,6 @@ public class LoadingsIndependenceOperator extends AbstractCoercableOperator {
         if (currentPrecision.hasNext()) {
             precision = currentPrecision.next();
         }
-
         if (currentMidMean.hasNext()) {
             midMean = currentMidMean.next();
         }
@@ -202,15 +175,12 @@ public class LoadingsIndependenceOperator extends AbstractCoercableOperator {
         }
         getPrecision(i, precision);
         variance = (new SymmetricMatrix(precision)).inverse().toComponents();
-
         try {
             cholesky = new CholeskyDecomposition(variance).getL();
         } catch (IllegalDimension illegalDimension) {
             illegalDimension.printStackTrace();
         }
-
         getMean(i, variance, midMean, mean);
-
         draws = MultivariateNormalDistribution.nextMultivariateNormalCholesky(mean, cholesky, scaleFactor);
 //    if(i<draws.length)
 //
@@ -228,29 +198,22 @@ public class LoadingsIndependenceOperator extends AbstractCoercableOperator {
             copy(i, draws);
 //            LFM.computeResiduals();
         }
-
 //       copy(i, draws);
-
     }
-
 //    @Override
 //    public int getStepCount() {
 //        return 0;  //To change body of implemented methods use File | Settings | File Templates.
 //    }
-
     @Override
     public String getPerformanceSuggestion() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
-
     @Override
     public String getOperatorName() {
         return "loadingsGibbsOperator";  //To change body of implemented methods use File | Settings | File Templates.
     }
-
     @Override
     public double doOperation() throws OperatorFailedException {
-
         int size = LFM.getLoadings().getColumnDimension();
         if (!randomScan) {
             ListIterator<double[][]> currentPrecision = precisionArray.listIterator();
@@ -279,16 +242,13 @@ public class LoadingsIndependenceOperator extends AbstractCoercableOperator {
         }
         return 0;
     }
-
     public double getCoercableParameter() {
         return Math.log(scaleFactor);
     }
-
     @Override
     public void setCoercableParameter(double value) {
         scaleFactor = Math.exp(value);
     }
-
     @Override
     public double getRawParameter() {
         return scaleFactor;

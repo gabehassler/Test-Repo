@@ -1,17 +1,12 @@
-
 package dr.evomodel.treelikelihood;
-
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
 import dr.inference.model.AbstractModel;
 import dr.inference.model.Model;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
-
 import java.util.Arrays;
-
 public class ScaleFactorsHelper extends AbstractModel {
-
     public ScaleFactorsHelper(LikelihoodScalingProvider scalingProvider,
                               Model treeLikelihood,
                               Tree treeModel,
@@ -25,43 +20,34 @@ public class ScaleFactorsHelper extends AbstractModel {
         this.stateCount = stateCount;
         this.patternCount = patternCount;
         this.categoryCount = categoryCount;
-
         addModel(treeLikelihood);
     }
-
     private double[][] scaleFactors = null;
     private double[][] storedScaleFactors = null;
     private boolean scaleFactorsKnown = false;
     private boolean storedScaleFactorsKnown = false;
     private double[] buffer = null;
-
     final private LikelihoodScalingProvider scalingProvider;
     final private Model treeLikelihood;
     final private Tree treeModel;
     final private int stateCount;
     final private int patternCount;
     final private int categoryCount;
-
     private void addScaleFactors(final double[] in0, final double[] in1, final double[] in2,
                                  double[] out, final int length) {
         for (int i = 0; i < length; ++i) {
             out[i] = in0[i] + in1[i] + in2[i];
         }
     }
-
     private void traverseComputeScaleFactors(final Tree tree, final NodeRef node) {
-
         final int nodeNumber = node.getNumber();
-
         if (tree.isExternal(node)) {
             Arrays.fill(scaleFactors[nodeNumber], 0.0);
         } else {
             final NodeRef child0 = tree.getChild(node, 0);
             final NodeRef child1 = tree.getChild(node, 1);
-
             traverseComputeScaleFactors(tree, child0);
             traverseComputeScaleFactors(tree, child1);
-
             if (!tree.isExternal(child0) || !tree.isExternal(child1)) {
                 scalingProvider.getLogScalingFactors(nodeNumber, buffer);
                 addScaleFactors(scaleFactors[child0.getNumber()], scaleFactors[child1.getNumber()],
@@ -71,7 +57,6 @@ public class ScaleFactorsHelper extends AbstractModel {
             }
         }
     }
-
     private void computeScaleFactors() {
         if (scaleFactors == null) {
             scaleFactors = new double[treeModel.getNodeCount()][patternCount];
@@ -82,19 +67,15 @@ public class ScaleFactorsHelper extends AbstractModel {
         }
         traverseComputeScaleFactors(treeModel, treeModel.getRoot());
     }
-
     public void resetScaleFactors() {
         scaleFactorsKnown = false;
     }
-
     public void rescalePartials(final int nodeNumber, double[] partials) {
         if (scalingProvider.arePartialsRescaled() && nodeNumber >= treeModel.getExternalNodeCount()) {
-
             if (!scaleFactorsKnown) {
                 computeScaleFactors();
                 scaleFactorsKnown = true;
             }
-
             int index = 0;
             for (int category = 0; category < categoryCount; ++category) {
                 for (int pattern = 0; pattern < patternCount; ++pattern) {
@@ -107,7 +88,6 @@ public class ScaleFactorsHelper extends AbstractModel {
             }
         }
     }
-
     protected void handleModelChangedEvent(Model model, Object object, int index) {
 //        if (model == treeLikelihood) {
 //            scaleFactorsKnown = false; // TODO Not all tree likelihood changes affect scale factors
@@ -115,18 +95,15 @@ public class ScaleFactorsHelper extends AbstractModel {
 //            throw new IllegalArgumentException("Illegal model argument");
 //        }
     }
-
     protected void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         // Do nothing
     }
-
     protected void storeState() {
 //        for (int i = 0; i < scaleFactors.length; ++i) {
 //            System.arraycopy(scaleFactors[i], 0, storedScaleFactors[i], 0, scaleFactors[i].length);
 //        }
 //        storedScaleFactorsKnown = scaleFactorsKnown;
     }
-
     protected void restoreState() {
 //        double[][] tmp = storedScaleFactors;
 //        storedScaleFactors = scaleFactors;
@@ -134,9 +111,7 @@ public class ScaleFactorsHelper extends AbstractModel {
 //
 //        scaleFactorsKnown = storedScaleFactorsKnown;
     }
-
     protected void acceptState() {
         // Do nothing
     }
 }
-

@@ -1,25 +1,17 @@
-
 package dr.evolution.datatype;
-
 public class HiddenNucleotides extends DataType {
-
     public static final String DESCRIPTION = "hiddenNucleotide";
     public static final HiddenNucleotides INSTANCE = new HiddenNucleotides(2);
-
     public HiddenNucleotides(int numHiddenStates) {
         hiddenClassCount = numHiddenStates;
-
         stateCount = 4 * hiddenClassCount;
         ambiguousStateCount = stateCount + 6;
     }
-
     @Override
     public char[] getValidChars() {
         return null;
     }
-
     public int getState(char c) {
-
         switch (c) {
             case'A':
             case'a':
@@ -54,11 +46,8 @@ public class HiddenNucleotides extends DataType {
                 return state;
             }
         }
-
     }
-
     public char getChar(int state) {
-
         if (state >= stateCount) {
             switch (state - stateCount) {
                 case 0:
@@ -88,9 +77,7 @@ public class HiddenNucleotides extends DataType {
             return c;
         }
     }
-
     public int[] getStates(int state) {
-
         if (state >= stateCount && state <= stateCount + 3) {
             int[] states = new int[hiddenClassCount];
             for (int i = 0; i < hiddenClassCount; i++) {
@@ -99,9 +86,7 @@ public class HiddenNucleotides extends DataType {
             return states;
         } else throw new IllegalArgumentException();
     }
-
     public boolean[] getStateSet(int state) {
-
         boolean[] stateSet = new boolean[stateCount];
         for (int i = 0; i < stateCount; i++) {
             stateSet[i] = false;
@@ -113,59 +98,45 @@ public class HiddenNucleotides extends DataType {
                 if ((i % 4) == (state % 4)) {
                     stateSet[i] = true;
                 }
-
             }
         } else {
             for (int i = 0; i < stateCount; i++) {
                 stateSet[i] = true;
             }
         }
-
         return stateSet;
     }
-
     public int getUnknownState() {
         return stateCount + 4;
     }
-
     public int getGapState() {
         return stateCount + 5;
     }
-
     public boolean isAmbiguousChar(char c) {
         return isAmbiguousState(getState(c));
     }
-
     public boolean isUnknownChar(char c) {
         return isUnknownState(getState(c));
     }
-
     public boolean isGapChar(char c) {
         return isGapState(getState(c));
     }
-
     public boolean isAmbiguousState(int state) {
         return (state >= stateCount);
     }
-
     public boolean isUnknownState(int state) {
         return (state == getUnknownState());
     }
-
     public boolean isGapState(int state) {
         return (state == getGapState());
     }
-
     public int getType() {
         return 999;
     }
-
     public String getDescription() {
         return "Hidden-state Nucleotides";
     }
-
     private int hiddenClassCount;
-
     public int getHiddenClassCount() {
         return hiddenClassCount;
     }

@@ -1,24 +1,15 @@
-
 package dr.inference.model;
-
 import dr.util.Transform;
-
 public class MarkovRandomFieldMatrix extends MatrixParameter {
-
     private Parameter diagonalParameter;
     private Parameter offDiagonalParameter;
-
     private final Transform diagonalTransform;
     private final Transform offDiagonalTransform;
-
     private boolean asCorrelation = false;
-
     private int dim;
-
     public MarkovRandomFieldMatrix(Parameter diagonals, Parameter offDiagonal, boolean asCorrelation) {
         this(diagonals, offDiagonal, asCorrelation, null, null);
     }
-
     public MarkovRandomFieldMatrix(Parameter diagonals, Parameter offDiagonal, boolean asCorrelation,
                                    Transform diagonalTransform, Transform offDiagonalTransform) {
         super(MATRIX_PARAMETER);
@@ -28,11 +19,9 @@ public class MarkovRandomFieldMatrix extends MatrixParameter {
         addParameter(offDiagonalParameter);
         dim = diagonalParameter.getDimension();
         this.asCorrelation = asCorrelation;
-
         this.diagonalTransform = (diagonalTransform != null) ? diagonalTransform : Transform.NONE;
         this.offDiagonalTransform = (offDiagonalTransform != null) ? offDiagonalTransform : Transform.NONE;
     }
-
 //    public double[] getAttributeValue() {
 //        double[] stats = new double[dim * dim];
 //        int index = 0;
@@ -48,21 +37,17 @@ public class MarkovRandomFieldMatrix extends MatrixParameter {
 //    public int getDimension() {
 //        return dim * dim;
 //    }
-
     private double getDiagonalParameterValue(int i) {
         return diagonalTransform.inverse(diagonalParameter.getParameterValue(i));
     }
-
     private double getOffDiagonalParameterValue(int i) {
         return offDiagonalTransform.inverse(offDiagonalParameter.getParameterValue(i));
     }
-
     public double getParameterValue(int i) {
         int row = i / dim;
         int col = i % dim;
         return getParameterValue(row, col);
     }
-
     public double getParameterValue(int row, int col) {
         if (row == col) {
             return getDiagonalParameterValue(row);
@@ -75,7 +60,6 @@ public class MarkovRandomFieldMatrix extends MatrixParameter {
         }
         return 0.0;
     }
-
 //    public double[][] getParameterAsMatrix() {
 //        final int I = dim;
 //        double[][] parameterAsMatrix = new double[I][I];
@@ -87,11 +71,9 @@ public class MarkovRandomFieldMatrix extends MatrixParameter {
 //        }
 //        return parameterAsMatrix;
 //    }
-
     public int getColumnDimension() {
         return diagonalParameter.getDimension();
     }
-
     public int getRowDimension() {
         return diagonalParameter.getDimension();
     }

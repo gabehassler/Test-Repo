@@ -1,38 +1,28 @@
-
 package dr.app.gui.chart;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-
 public class ChartSelector implements MouseListener, MouseMotionListener {
-
     public ChartSelector(JChart chart) {
         this.chart = chart;
         chart.addMouseListener(this);
         chart.addMouseMotionListener(this);
-
     }
-
     public boolean isCrossHairCursor() {
         return crossHairCursor;
     }
-
     public void setCrossHairCursor(boolean crossHairCursor) {
         this.crossHairCursor = crossHairCursor;
     }
-
     private void setupCursor() {
         if (crossHairCursor) {
             chart.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
         } else {
             chart.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
-
         chart.repaint();
     }
-
     public void mouseClicked(MouseEvent mouseEvent) {
 //        Node selectedNode = treePane.getNodeAt((Graphics2D) treePane.getGraphics(), mouseEvent.getPoint());
 //        if (!mouseEvent.isShiftDown()) {
@@ -49,9 +39,7 @@ public class ChartSelector implements MouseListener, MouseMotionListener {
 //        }
 //
 //        treePane.addSelectedNode(selectedNode);
-
     }
-
     public void mousePressed(MouseEvent mouseEvent) {
         // This is used for dragging in combination with mouseDragged
         // in the MouseMotionListener, below.
@@ -59,38 +47,28 @@ public class ChartSelector implements MouseListener, MouseMotionListener {
         if (!mouseEvent.isShiftDown()) {
             chart.clearSelection();
         }
-
     }
-
     public void mouseReleased(MouseEvent mouseEvent) {
         if (chart == null) {
             return;
         }
-
         double x1 = Math.min(dragPoint.getX(), mouseEvent.getPoint().getX());
         double y1 = Math.min(dragPoint.getY(), mouseEvent.getPoint().getY());
         double x2 = Math.max(dragPoint.getX(), mouseEvent.getPoint().getX());
         double y2 = Math.max(dragPoint.getY(), mouseEvent.getPoint().getY());
         chart.selectPoints(new Rectangle2D.Double(x1, y1, x2 - x1, y2 - y1), mouseEvent.isShiftDown());
-
         chart.setDragRectangle(null);
     }
-
     public void mouseEntered(MouseEvent mouseEvent) {
     }
-
     public void mouseExited(MouseEvent mouseEvent) {
     }
-
     public void mouseMoved(MouseEvent mouseEvent) {
     }
-
     public void mouseDragged(MouseEvent mouseEvent) {
-
         if (dragPoint == null) {
             return;
         }
-
         double x1 = Math.min(dragPoint.getX(), mouseEvent.getPoint().getX());
         double y1 = Math.min(dragPoint.getY(), mouseEvent.getPoint().getY());
         double x2 = Math.max(dragPoint.getX(), mouseEvent.getPoint().getX());
@@ -98,9 +76,7 @@ public class ChartSelector implements MouseListener, MouseMotionListener {
         chart.setDragRectangle(new Rectangle2D.Double(x1, y1, x2 - x1, y2 - y1));
 //        chart.scrollPointToVisible(mouseEvent.getPoint());
     }
-
     private JChart chart;
     private Point2D dragPoint = null;
-
     private boolean crossHairCursor = false;
 }

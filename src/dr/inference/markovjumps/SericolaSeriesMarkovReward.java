@@ -1,6 +1,4 @@
-
 package dr.inference.markovjumps;
-
 import dr.app.beagle.evomodel.substmodel.DefaultEigenSystem;
 import dr.app.beagle.evomodel.substmodel.EigenDecomposition;
 import dr.app.beagle.evomodel.substmodel.EigenSystem;
@@ -8,42 +6,31 @@ import dr.math.Binomial;
 import dr.math.GammaFunction;
 import dr.math.matrixAlgebra.Matrix;
 import dr.math.matrixAlgebra.Vector;
-
 public class SericolaSeriesMarkovReward implements MarkovReward {
-
     // Following Bladt, Meini, Neuts and Sericola (2002).
     // Assuming each state has a distinct reward, i.e. \phi + 1 = stateCount,
     // and states are sorted in increasing reward order
-
     private static final boolean DEBUG = false;
-
     public SericolaSeriesMarkovReward(double[] Q, double[] r, int dim) {
         this(Q, r, dim, 1E-10);
     }
-
     public SericolaSeriesMarkovReward(double[] Q, double[] r, int dim, double epsilon) {
         this.Q = Q;
         this.r = r;
         this.maxTime = 0;
         this.epsilon = epsilon;
-
         this.dim = dim;
         lambda = determineLambda();
-
         phi = dim - 1;
-
         if (DEBUG) {
             System.err.println("lambda = " + lambda);
         }
-
         P = initializeP(Q, lambda);
         eigenSystem = new DefaultEigenSystem(dim);
     }
-
     private double[][] initializeW(int times, int dim) {
         return new double[times][dim * dim];
     }
-
     private int getHfromX(double x, double time) {
         // TODO assert x > h[0] * time;
         int h = 1;
@@ -52,14 +39,12 @@ public class SericolaSeriesMarkovReward implements MarkovReward {
         }
         return h;
     }
-
     private void growC(double time, int extraN) {
         int newN = getNfromC();
         if (time > maxTime) {
             newN = determineNumberOfSteps(time, lambda) + extraN;
             maxTime = time;
         }
-
         // Grow C if necessary
         if (newN > getNfromC()) {
             if (DEBUG) {
@@ -72,30 +57,22 @@ public class SericolaSeriesMarkovReward implements MarkovReward {
             computeChnk();
         }
     }
-
     // START: internal structure of C
-
     private double[][][][] internalC; // TODO Linearize for store/restore; TODO reduce to minimal storage
-
     private void initializeSpace(int phi, int N) {
         internalC = new double[phi + 1][N + 1][N + 1][dim * dim];
         // indices [h][n][k][B_u][B_v]
     }
-
     private double[] C(int h, int n, int k) {
         return internalC[h][n][k];
     }
-
     private int getNfromC() {
         return (internalC == null) ? -1 : internalC[0].length - 1;
     }
-
     private int idx(int i, int j) {
         return i * dim + j; // row-major
     }
-
     // END: internal structure of C, TODO Change to expandable list
-
     private int[] getHfromX(double[] X, double time) {
         int[] H = new int[X.length];
         for (int i = 0; i < X.length; ++i) {
@@ -104,69 +81,51 @@ public class SericolaSeriesMarkovReward implements MarkovReward {
         return H;
 //        return new int[] { 1 };      // AR nasty hack - revert shortly
     }
-
     public double computePdf(double x, double time, int i, int j) {
         if (x == time) return 0.0;
         else return computePdf(x, time)[i * dim + j];
     }
-
     public double[] computePdf(double x, double time) {
         return computePdf(new double[]{x}, time)[0];
     }
-
     public double[][] computePdf(double[] X, double time) {
         int[] H = getHfromX(X, time);
-
         growC(time, 1);
-
         double[][] W = initializeW(X.length, dim); // initialize with zeros
-
         final int N = getNfromC() - 1; // TODO N should be branch-length-specific to save computation
         for (int n = 0; n <= N; ++n) {
             accumulatePdf(W, X, H, n, time); // TODO This can be sped up when only a single entry is wanted
         }
-
         if (DEBUG) {
             for (int i = 0; i < W.length; ++i) {
                 System.err.println("W'[" + i + "]:\n" + new Matrix(squareMatrix(W[i])));
             }
             System.err.println("");
         }
-
         return W;
     }
-
     public double computeCdf(double x, double time, int i, int j) {
         return computeCdf(x, time)[i * dim + j];
     }
-
     public double[] computeCdf(double x, double time) {
         return computeCdf(new double[]{x}, time)[0];
     }
-
     public double[][] computeCdf(double[] X, double time) {
-
         int[] H = getHfromX(X, time);
-
         growC(time, 0);
-
         double[][] W = initializeW(X.length, dim); // initialize with zeros
-
         final int N = getNfromC();
         for (int n = 0; n <= N; ++n) {
             accumulateCdf(W, X, H, n, time);
         }
-
         if (DEBUG) {
             for (int i = 0; i < W.length; ++i) {
                 System.err.println("W[" + i + "]:\n" + new Matrix(squareMatrix(W[i])));
             }
             System.err.println("");
         }
-
         return W;
     }
-
     private double[] initializeP(double[] Q, double lambda) {
         double[] P = new double[dim * dim];
         for (int i = 0; i < dim; ++i) {
@@ -177,21 +136,15 @@ public class SericolaSeriesMarkovReward implements MarkovReward {
         }
         return P;
     }
-
     private void accumulateCdf(double[][] W, double[] X, int[] H, int n, double time) {
-
         final double premult = Math.exp(
                 -lambda * time + n * (Math.log(lambda) + Math.log(time)) - GammaFunction.lnGamma(n + 1.0)
         );
-
         // TODO Make factorial/choose static look-up tables
-
         for (int t = 0; t < X.length; ++t) { // For each time point
             double x = X[t];
             int h = H[t];
-
             double xh = (x - r[h - 1] * time) / ((r[h] - r[h - 1]) * time);
-
             final int dim2 = dim * dim;
             double[] inc = new double[dim2]; // W^{\epsilon}(x(i),t,n)
             for (int k = 0; k <= n; k++) {
@@ -200,31 +153,22 @@ public class SericolaSeriesMarkovReward implements MarkovReward {
                     inc[uv] += binomialCoef * C(h, n, k)[uv];
                 }
             }
-
             for (int uv = 0; uv < dim2; ++uv) {
                 W[t][uv] += premult * inc[uv];
             }
         }
     }
-
     private void accumulatePdf(double[][] W, double[] X, int[] H, int n, double time) {
-
         final double premult = Math.exp(
                 -lambda * time + n * (Math.log(lambda) + Math.log(time)) - GammaFunction.lnGamma(n + 1.0)
         );
-
         // TODO Make factorial/choose static look-up tables
         // AR - Binomial has a look-up-table built in for k=2.
-
-
         for (int t = 0; t < X.length; ++t) { // For each time point
             double x = X[t];
             int h = H[t];
-
             final double factor = lambda / (r[h] - r[h - 1]);
-
             double xh = (x - r[h - 1] * time) / ((r[h] - r[h - 1]) * time);
-
             final int dim2 = dim * dim;
             double[] inc = new double[dim2]; // W^{\epsilon}(x(i),t,n)
             for (int k = 0; k <= n; k++) {
@@ -233,39 +177,31 @@ public class SericolaSeriesMarkovReward implements MarkovReward {
                     inc[uv] += binomialCoef * (C(h, n + 1, k + 1)[uv] - C(h, n + 1, k)[uv]);
                 }
             }
-
             for (int uv = 0; uv < dim2; ++uv) {
                 W[t][uv] += factor * premult * inc[uv];
             }
         }
     }
-
     private double relationTwelve(int h, int n, int k, int u, int v) {
         // TODO ratios are independent of u,v,w
         double c = (r[u] - r[h]) / (r[u] - r[h - 1]) * C(h, n, k - 1)[idx(u, v)];
-
         double d = 0;
         for (int w = 0; w <= phi; ++w) {
             d += P[idx(u, w)] * C(h, n - 1, k - 1)[idx(w, v)];
         }
         d *= (r[h] - r[h - 1]) / (r[u] - r[h - 1]);
-
         return c + d;
     }
-
     private double relationThirteen(int h, int n, int k, int u, int v) {
         // TODO ratios of are independent of u,v,w
         double c = (r[h - 1] - r[u]) / (r[h] - r[u]) * C(h, n, k + 1)[idx(u, v)];
-
         double d = 0;
         for (int w = 0; w <= phi; ++w) {
             d += P[idx(u, w)] * C(h, n - 1, k)[idx(w, v)];
         }
         d *= (r[h] - r[h - 1]) / (r[h] - r[u]);
-
         return c + d;
     }
-
     private double[] product(double[] a, double[] b) {
         double[] c = new double[dim * dim];
         for (int i = 0; i < dim; ++i) {
@@ -278,34 +214,28 @@ public class SericolaSeriesMarkovReward implements MarkovReward {
         }
         return c;
     }
-
     private void computeChnk() {
-
         double[] Pn = new double[dim * dim];
         for (int u = 0; u < dim; ++u) {
             Pn[idx(u, u)] = 1.0;
         }
-
         for (int h = 1; h <= phi; ++h) {
             // zero corner cases automatically
             for (int u = 0; u <= h - 1; ++u) {
                 C(h, 0, 0)[idx(u, u)] = 1.0;
             }
         }
-
 //        accumulate(0);
         final int N = getNfromC();
         for (int n = 1; n <= N; ++n) {
             // zero corner cases automatically
             for (int h = 1; h <= phi; ++h) {
                 for (int k = 1; k <= n; ++k) {
-
                     for (int u = h; u <= phi; ++u) {
                         for (int v = 0; v <= phi; ++v) {
                             C(h, n, k)[idx(u, v)] = relationTwelve(h, n, k, u, v);
                         }
                     }
-
                 }
                 for (int u = h + 1; u <= phi; ++u) {
                     for (int v = 0; v <= phi; ++v) {
@@ -313,23 +243,19 @@ public class SericolaSeriesMarkovReward implements MarkovReward {
                     }
                 }
             }
-
             Pn = product(Pn, P);
             for (int u = 0; u <= phi - 1; ++u) {
                 for (int v = 0; v <= phi; ++v) {
                     C(phi, n, n)[idx(u, v)] = Pn[idx(u, v)];
                 }
             }
-
             for (int h = phi; h >= 1; --h) {
                 for (int k = n - 1; k >= 0; --k) {
-
                     for (int u = 0; u <= h - 1; u++) {
                         for (int v = 0; v <= phi; ++v) {
                             C(h, n, k)[idx(u, v)] = relationThirteen(h, n, k, u, v);
                         }
                     }
-
                     for (int u = 0; u <= h - 2; ++u) {
                         for (int v = 0; v <= phi; ++v) {
                             C(h - 1, n, n)[idx(u, v)] = C(h, n, 0)[idx(u, v)];
@@ -337,11 +263,9 @@ public class SericolaSeriesMarkovReward implements MarkovReward {
                     }
                 }
             }
-
 //            accumulate(n);
         }
     }
-
     private double determineLambda() {
         double lambda = Q[0]; // Q[idx(0,0)]
         for (int i = 1; i < dim; ++i) {
@@ -352,7 +276,6 @@ public class SericolaSeriesMarkovReward implements MarkovReward {
         }
         return -lambda;
     }
-
     private double[][] squareMatrix(final double[] mat) {
         double[][] rtn = new double[dim][dim];
         for (int i = 0; i < dim; ++i) {
@@ -362,11 +285,9 @@ public class SericolaSeriesMarkovReward implements MarkovReward {
         }
         return rtn;
     }
-
     private int determineNumberOfSteps(double time, double lambda) {
 //        final double tolerance = (1.0 - epsilon) / Math.exp(-lambda * time);
 //        final double logTolerance = Math.log(1.0 - epsilon);
-
         int i = -1;
 //        double sum = 0.0;
 //        int factorialI = 1;
@@ -397,14 +318,11 @@ public class SericolaSeriesMarkovReward implements MarkovReward {
 //            if (i > 500) System.exit(-1);
             }
         }
-
 //        System.err.println("First: " + firstN);
 //        System.err.println("Second:" + i);
 //        System.exit(-1);
-
         return i;
     }
-
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Q: " + new Vector(Q) + "\n");
@@ -415,38 +333,28 @@ public class SericolaSeriesMarkovReward implements MarkovReward {
         sb.append("cprob at maxTime: " + new Vector(computeConditionalProbabilities(maxTime)) + "\n");
         return sb.toString();
     }
-
     private EigenDecomposition getEigenDecomposition() {
         if (eigenDecomposition == null) {
             eigenDecomposition = eigenSystem.decomposeMatrix(squareMatrix(Q));
         }
         return eigenDecomposition;
     }
-
     private EigenDecomposition eigenDecomposition;
-
     public double[] computeConditionalProbabilities(double distance) {
-
         double[] matrix = new double[dim * dim];
         eigenSystem.computeExponential(getEigenDecomposition(), distance, matrix);
-
         return matrix;
     }
-
     public double computeConditionalProbability(double distance, int i, int j) {
         return eigenSystem.computeExponential(getEigenDecomposition(), distance, i, j);
     }
-
     private final double[] Q;
     private final double[] r;
-
     private final double lambda;
     private final double[] P;
     private final int phi;
     private final int dim;
     private final double epsilon;
-
     private final EigenSystem eigenSystem;
-
     private double maxTime;
 }

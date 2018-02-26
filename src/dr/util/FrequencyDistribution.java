@@ -1,49 +1,34 @@
-
 package dr.util;
-
 public class FrequencyDistribution {
-
 	private double binSize;
-	
 	private double start = 0.0;
-	
 	private double smaller;
-
 	private double larger;
-
 	private int[] bins;
-
 	public FrequencyDistribution(double start, int numBins, double binSize) {
 		init(start, numBins, binSize);
 	}
-
 	public FrequencyDistribution(int numBins, double binSize) {
 		init(0.0, numBins, binSize);
 	}
-
 	public FrequencyDistribution(double[] stats, int numBins, double binSize) {
 		init(0.0, numBins, binSize);
         for (double stat : stats) {
             addValue(stat);
         }
     }
-
 	public int getBinCount() {
 		return bins.length;
 	}
-
 	public double getBinSize() {
 		return binSize;
 	}
-
 	public double getLowerBound() {
 		return start;
 	}
-
 	public int getFrequency(int bin) {
 		return bins[bin];
 	}
-
     public double getProb(int bin) {
         int total = 0;
         for (int b : bins) {
@@ -55,11 +40,8 @@ public class FrequencyDistribution {
 		    return (double) bins[bin] / (double) total;
         }
 	}
-
 	public void addValue(double value) {
-	
 		double diff = value - start;
-
 		int index = (int)(diff / binSize);
 		if (index < 0) {
 			smaller += 1;
@@ -67,7 +49,6 @@ public class FrequencyDistribution {
 			larger += 1;
 		} else bins[index] += 1;
 	}
-
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
         buffer.append("< ").append(start).append("\t").append(smaller).append("\n");
@@ -80,7 +61,6 @@ public class FrequencyDistribution {
         buffer.append(">= ").append(end).append("\t").append(larger).append("\n");
 		return new String(buffer);
 	}
-
 	private void init(double start, int numBins, double binSize) {
 		bins = new int[numBins];
 		this.binSize = binSize; 

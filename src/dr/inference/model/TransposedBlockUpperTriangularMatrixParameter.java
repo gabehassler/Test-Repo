@@ -1,18 +1,11 @@
-
 package dr.inference.model;
-
 import java.util.ArrayList;
 import java.util.List;
-
 public class TransposedBlockUpperTriangularMatrixParameter extends BlockUpperTriangularMatrixParameter{
     public TransposedBlockUpperTriangularMatrixParameter(String name, Parameter[] params) {
         super(name, params, false);
-
-
-
         int colDim=params[params.length-1].getSize();
 //        int rowDim=params.length;
-
 //        for(int i=0; i<colDim; i++){
 //            if(i<rowDim)
 //            {params[i].setDimension(i+1);
@@ -26,8 +19,6 @@ public class TransposedBlockUpperTriangularMatrixParameter extends BlockUpperTri
 //        }
         this.colDim=colDim;
     }
-
-
     public static TransposedBlockUpperTriangularMatrixParameter recast(String name, CompoundParameter compoundParameter) {
         final int count = compoundParameter.getParameterCount();
         Parameter[] parameters = new Parameter[count];
@@ -36,7 +27,6 @@ public class TransposedBlockUpperTriangularMatrixParameter extends BlockUpperTri
         }
         return new TransposedBlockUpperTriangularMatrixParameter(name, parameters);
     }
-
 //    public double getParameterValue(int row, int col){
 //        if(col>row){
 //            return 0;
@@ -45,27 +35,22 @@ public class TransposedBlockUpperTriangularMatrixParameter extends BlockUpperTri
 //            return getParameter(col).getParameterValue(row-col);
 //        }
 //    }
-
     protected int getRow(int PID){
         return  PID%getRowDimension();
     }
-
     protected int getColumn(int PID){
         return PID/getRowDimension();
     }
-
     @Override
     boolean matrixCondition(int row, int col) {
         return row>=col;
     }
-
     public void setParameterValue(int row, int col, double value){
         if(matrixCondition(row, col)){
             getParameter(col).setParameterValueQuietly(row - col, value);
             fireParameterChangedEvent(col*getRowDimension()+row, ChangeType.VALUE_CHANGED);
         }
     }
-
     public Parameter getParameter(int index) {
         if (slices == null) {
             // construct vector_slices
@@ -80,19 +65,15 @@ public class TransposedBlockUpperTriangularMatrixParameter extends BlockUpperTri
         }
         return slices.get(index);
     }
-
     protected int getInnerDimension(int row, int col){
         return row-col;
     }
-
     public int getRowDimension(){
         return getParameterCount();
     }
-
     public int getColumnDimension(){
         return colDim;
     }
-
     int colDim;
     private List<Parameter> slices = null;
 }

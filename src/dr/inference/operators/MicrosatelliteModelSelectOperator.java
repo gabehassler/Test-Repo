@@ -1,9 +1,6 @@
-
 package dr.inference.operators;
-
 import dr.inference.model.Parameter;
 import dr.math.MathUtils;
-
 public class MicrosatelliteModelSelectOperator extends SimpleMCMCOperator{
     private Parameter parameter;
     private Parameter[] indicators;
@@ -12,15 +9,12 @@ public class MicrosatelliteModelSelectOperator extends SimpleMCMCOperator{
         this.indicators = indicators;
         setWeight(weight);
     }
-
     public String getOperatorName(){
         return "msatModelSelectOperator("+parameter.getParameterName()+")";
     }
-
     public final String getPerformanceSuggestion() {
         return "no suggestions available";
     }
-
     public double doOperation(){
         int index = MathUtils.nextInt(indicators.length);
         //System.out.println(index);
@@ -35,7 +29,4 @@ public class MicrosatelliteModelSelectOperator extends SimpleMCMCOperator{
         //System.out.println(parameter+"; "+indicators[index]);
         return 0.0;
     }
-
-
-
 }

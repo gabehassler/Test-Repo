@@ -1,8 +1,5 @@
-
 package dr.app.beauti.generator;
-
 import dr.app.beauti.util.XMLWriter;
-
 public interface ComponentGenerator {
     enum InsertionPoint {
         BEFORE_TAXA,                // at the beginning of the document
@@ -32,11 +29,7 @@ public interface ComponentGenerator {
         AFTER_TREES_LOG,            // after the trees log
         AFTER_MCMC                 // after the mcmc element
     }
-
     boolean usesInsertionPoint(InsertionPoint point);
-
     void generateAtInsertionPoint(Generator generator, InsertionPoint point, Object item, XMLWriter writer);
-
     void generateAtInsertionPoint(Generator generator, InsertionPoint point, Object item, String prefix, XMLWriter writer);
-
 }

@@ -1,13 +1,10 @@
-
 package dr.app.beauti.tipdatepanel;
-
 import dr.app.beauti.options.DateGuesser;
 import dr.app.beauti.options.STARBEASTOptions;
 import dr.app.beauti.util.TextUtil;
 import dr.app.gui.components.RealNumberField;
 import jam.mac.Utils;
 import jam.panels.OptionsPanel;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -15,9 +12,7 @@ import java.awt.event.*;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.prefs.Preferences;
-
 public class GuessDatesDialog {
-
     public static Preferences PREFS = Preferences.userNodeForPackage(GuessDatesDialog.class);
     public static final String DELIMIT_RADIO_KEY = "delimitRadio";
     public static final String ORDER_COMBO_KEY = "orderCombo";
@@ -30,40 +25,28 @@ public class GuessDatesDialog {
     public static final String UNLESS_TEXT_KEY = "unlessText";
     public static final String OFFSET2_TEXT_KEY = "offset2Text";
     public static final String DATE_FORMAT_TEXT_KEY = "dateFormatText";
-
     private JFrame frame;
-
     private final OptionsPanel optionPanel;
-
     private final JRadioButton orderRadio = new JRadioButton("Defined just by its order", true);
     private final JComboBox orderCombo = new JComboBox(new String[]{"first", "second", "third",
             "fourth", "fourth from last",
             "third from last", "second from last", "last"});
-
     private final JRadioButton prefixRadio = new JRadioButton("Defined by a prefix and its order", false);
     private final JTextField prefixText = new JTextField(16);
-
     private final JRadioButton regexRadio = new JRadioButton("Defined by regular expression (REGEX)", false);
     private final JTextField regexText = new JTextField(16);
-
     private final JRadioButton numericalRadio = new JRadioButton("Parse as a number", true);
     private final JRadioButton calendarRadio = new JRadioButton("Parse as a calendar date", true);
     private final JRadioButton calendar2Radio = new JRadioButton("Parse calendar dates with variable precision", true);
-
     private final JCheckBox offsetCheck = new JCheckBox("Add the following value to each: ", false);
     private final RealNumberField offsetText = new RealNumberField();
-
     private final JCheckBox unlessCheck = new JCheckBox("...unless less than:", false);
     private final RealNumberField unlessText = new RealNumberField();
-
     private final RealNumberField offset2Text = new RealNumberField();
-
     private final JTextField dateFormatText = new JTextField(16);
     private String description = "Guess Dates for Taxa";
-
     public GuessDatesDialog(final JFrame frame) {
         this.frame = frame;
-
         final int defaultDelimitRadioOption = PREFS.getInt(DELIMIT_RADIO_KEY, 0);
         final int defaultOrderCombo = PREFS.getInt(ORDER_COMBO_KEY, 0);
         final String defaultPrefixText = PREFS.get(PREFIX_TEXT_KEY, "");
@@ -75,49 +58,36 @@ public class GuessDatesDialog {
         final String defaultUnlessText = PREFS.get(UNLESS_TEXT_KEY, "16");
         final String defaultOffset2Text = PREFS.get(OFFSET2_TEXT_KEY, "2000");
         final String defaultDateFormatText = PREFS.get(DATE_FORMAT_TEXT_KEY, "yyyy-MM-dd");
-
         optionPanel = new OptionsPanel(12, 12);
-
         optionPanel.addLabel("The date is given by a numerical field in the taxon label that is:");
-
         optionPanel.addSpanningComponent(orderRadio);
 //        optionPanel.addSeparator();
-
         optionPanel.addSpanningComponent(prefixRadio);
-
         final JLabel orderLabel = new JLabel("Order:");
         optionPanel.addComponents(orderLabel, orderCombo);
         final JLabel prefixLabel = new JLabel("Prefix:");
         optionPanel.addComponents(prefixLabel, prefixText);
-
         prefixLabel.setEnabled(false);
         prefixText.setEnabled(false);
         regexText.setEnabled(false);
-
         optionPanel.addComponents(regexRadio, regexText);
         optionPanel.addSeparator();
-
         optionPanel.addSpanningComponent(numericalRadio);
-
         offsetText.setValue(1900);
         offsetText.setColumns(16);
         offsetText.setEnabled(false);
         optionPanel.addComponents(offsetCheck, offsetText);
-
         Calendar calendar = GregorianCalendar.getInstance();
-
         int year = calendar.get(Calendar.YEAR) - 1999;
         unlessText.setValue(year);
         unlessText.setColumns(16);
         unlessText.setEnabled(false);
         optionPanel.addComponents(unlessCheck, unlessText);
-
         offset2Text.setValue(2000);
         offset2Text.setColumns(16);
         offset2Text.setEnabled(false);
         final JLabel offset2Label = new JLabel("...in which case add:");
         optionPanel.addComponents(offset2Label, offset2Text);
-
         optionPanel.addSpanningComponent(calendarRadio);
         final JLabel dateFormatLabel = new JLabel("Date format:");
         final JButton helpButton = new JButton(Utils.isMacOSX() ? "" : "?");
@@ -128,16 +98,12 @@ public class GuessDatesDialog {
         panel.setOpaque(false);
         optionPanel.addComponents(dateFormatLabel, panel);
         dateFormatText.setText("yyyy-MM-dd");
-
         optionPanel.addSpanningComponent(calendar2Radio);
-
         dateFormatLabel.setEnabled(false);
         dateFormatText.setEnabled(false);
-
         numericalRadio.setToolTipText("Parse the date field as a decimal number");
         calendarRadio.setToolTipText("Parse the date field using a standard date format specification");
         calendar2Radio.setToolTipText("Parse the date field yyyy[-mm[-dd]] with possibly missing month or day");
-
         helpButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent actionEvent) {
                 JScrollPane scrollPane = TextUtil.createHTMLScrollPane(
@@ -147,7 +113,6 @@ public class GuessDatesDialog {
                         JOptionPane.PLAIN_MESSAGE);
             }
         });
-
         offsetCheck.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 offsetText.setEnabled(offsetCheck.isSelected());
@@ -157,7 +122,6 @@ public class GuessDatesDialog {
                 offset2Text.setEnabled(offsetCheck.isSelected() && unlessCheck.isSelected());
             }
         });
-
         unlessCheck.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 unlessText.setEnabled(unlessCheck.isSelected());
@@ -165,7 +129,6 @@ public class GuessDatesDialog {
                 offset2Text.setEnabled(unlessCheck.isSelected());
             }
         });
-
         ButtonGroup group = new ButtonGroup();
         group.add(orderRadio);
         group.add(prefixRadio);
@@ -182,7 +145,6 @@ public class GuessDatesDialog {
         orderRadio.addItemListener(listener);
         prefixRadio.addItemListener(listener);
         regexRadio.addItemListener(listener);
-
         group = new ButtonGroup();
         group.add(numericalRadio);
         group.add(calendarRadio);
@@ -197,13 +159,11 @@ public class GuessDatesDialog {
                 offset2Text.setEnabled(numericalRadio.isSelected() && offsetCheck.isSelected() && unlessCheck.isSelected());
                 dateFormatLabel.setEnabled(calendarRadio.isSelected());
                 dateFormatText.setEnabled(calendarRadio.isSelected());
-
             }
         };
         numericalRadio.addItemListener(listener);
         calendarRadio.addItemListener(listener);
         calendar2Radio.addItemListener(listener);
-
         // set from preferences defaults...
         switch (defaultDelimitRadioOption) {
             case 0: orderRadio.setSelected(true); break;
@@ -211,29 +171,23 @@ public class GuessDatesDialog {
             case 2: regexRadio.setSelected(true); break;
             default: throw new IllegalArgumentException("unknown radio option");
         }
-
         orderCombo.setSelectedIndex(defaultOrderCombo);
         prefixText.setText(defaultPrefixText);
         regexText.setText(defaultRegexText);
-
         switch (defaultParseRadioOption) {
             case 0: numericalRadio.setSelected(true); break;
             case 1: calendarRadio.setSelected(true); break;
             case 2: calendar2Radio.setSelected(true); break;
             default: throw new IllegalArgumentException("unknown radio option");
         }
-
         offsetCheck.setSelected(defaultOffsetCheckOption);
         offsetText.setText(defaultOffsetText);
         unlessCheck.setSelected(defaultUnlessCheckOption);
         unlessText.setText(defaultUnlessText);
         offset2Text.setText(defaultOffset2Text);
-
         dateFormatText.setText(defaultDateFormatText);
     }
-
     public int showDialog() {
-
         JOptionPane optionPane = new JOptionPane(optionPanel,
                 JOptionPane.QUESTION_MESSAGE,
                 JOptionPane.OK_CANCEL_OPTION,
@@ -241,46 +195,36 @@ public class GuessDatesDialog {
                 null,
                 null);
         optionPane.setBorder(new EmptyBorder(12, 12, 12, 12));
-
         final JDialog dialog = optionPane.createDialog(frame, description);
         dialog.pack();
-
         dialog.setVisible(true);
-
         int result = JOptionPane.CANCEL_OPTION;
         Integer value = (Integer) optionPane.getValue();
         if (value != null && value != -1) {
             result = value;
             setPreferencesFromDialog();
         }
-
         return result;
     }
-
     private void setPreferencesFromDialog() {
         PREFS.putInt(DELIMIT_RADIO_KEY,
                 (orderRadio.isSelected() ? 0 :
                         (prefixRadio.isSelected() ? 1 :
                                 (regexRadio.isSelected() ? 2 : -1))));
-
         PREFS.putInt(ORDER_COMBO_KEY, orderCombo.getSelectedIndex());
         PREFS.put(PREFIX_TEXT_KEY, prefixText.getText());
         PREFS.put(REGEX_TEXT_KEY, regexText.getText());
-
         PREFS.putInt(PARSE_RADIO_KEY,
                 (numericalRadio.isSelected() ? 0 :
                         (calendarRadio.isSelected() ? 1 :
                                 (calendar2Radio.isSelected() ? 2 : -1))));
-
         PREFS.putBoolean(OFFSET_CHECK_KEY, offsetCheck.isSelected());
         PREFS.put(OFFSET_TEXT_KEY, offsetText.getText());
         PREFS.putBoolean(UNLESS_CHECK_KEY, unlessCheck.isSelected());
         PREFS.put(UNLESS_TEXT_KEY, unlessText.getText());
         PREFS.put(OFFSET2_TEXT_KEY, offset2Text.getText());
-
         PREFS.put(DATE_FORMAT_TEXT_KEY, dateFormatText.getText());
     }
-
     public void setupGuesser(DateGuesser guesser) {
         guesser.order = orderCombo.getSelectedIndex();
         guesser.fromLast = false;
@@ -288,7 +232,6 @@ public class GuessDatesDialog {
             guesser.fromLast = true;
             guesser.order = 8 - guesser.order - 1;
         }
-
         if (orderRadio.isSelected()) {
             guesser.guessType = DateGuesser.GuessType.ORDER;
         } else if (prefixRadio.isSelected()) {
@@ -300,11 +243,9 @@ public class GuessDatesDialog {
         } else {
             throw new IllegalArgumentException("unknown radio button selected");
         }
-
         guesser.parseCalendarDatesAndPrecision = calendar2Radio.isSelected();
         guesser.parseCalendarDates = calendarRadio.isSelected();
         guesser.calendarDateFormat = dateFormatText.getText();
-
         guesser.offset = 0.0;
         guesser.unlessLessThan = 0.0;
         if (offsetCheck.isSelected()) {
@@ -312,16 +253,12 @@ public class GuessDatesDialog {
             if (unlessCheck.isSelected()) {
                 guesser.unlessLessThan = unlessText.getValue();
                 guesser.offset2 = offset2Text.getValue();
-
             }
         }
-
     }
-
     public void setDescription(String description) {
         this.description = description;
     }
-
     private static final String DATE_FORMAT_HELP =
             "<h4>Date and Time Patterns</h4>\n" +
                     " <p>\n" +
@@ -495,5 +432,4 @@ public class GuessDatesDialog {
                     "     interpreted as <a href=\"#text\">text</a>; otherwise,\n" +
                     "     it is interpreted as a <a href=\"#number\">number</a>.\n" +
                     " </ul>";
-
 }

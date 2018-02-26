@@ -1,8 +1,4 @@
-
 package dr.util;
-
-
-
 //public class Assert {
 //
 //	/* not sure about exactly what this function should display */

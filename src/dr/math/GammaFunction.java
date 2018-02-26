@@ -1,20 +1,13 @@
-
 package dr.math;
-
-
 public class GammaFunction {
     //
     // Public stuff
     //
-
     // Gamma function
-
     public static double lnGamma(double alpha) {
         // Pike MC & Hill ID (1966) Algorithm 291: Logarithm of the gamma function.
         // Communications of the Association for Computing Machinery, 9:684
-
         double x = alpha, f = 0.0, z;
-
         if (x < 7) {
             f = 1;
             z = x - 1;
@@ -25,46 +18,36 @@ public class GammaFunction {
             f = -Math.log(f);
         }
         z = 1 / (x * x);
-
         return
                 f + (x - 0.5) * Math.log(x) - x + 0.918938533204673 +
                         (((-0.000595238095238 * z + 0.000793650793651) *
                                 z - 0.002777777777778) * z + 0.083333333333333) / x;
     }
-
     public static double incompleteGammaQ(double a, double x) {
         return 1.0 - incompleteGamma(x, a, lnGamma(a));
     }
-
     public static double incompleteGammaP(double a, double x) {
         return incompleteGamma(x, a, lnGamma(a));
     }
-
     public static double incompleteGammaP(double a, double x, double lnGammaA) {
         return incompleteGamma(x, a, lnGammaA);
     }
-
-
     private static double incompleteGamma(double x, double alpha, double ln_gamma_alpha) {
         // (1) series expansion     if (alpha>x || x<=1)
         // (2) continued fraction   otherwise
         // RATNEST FORTRAN by
         // Bhattacharjee GP (1970) The incomplete gamma integral.  Applied Statistics,
         // 19: 285-287 (AS32)
-
         double accurate = 1e-8, overflow = 1e30;
         double factor, gin, rn, a, b, an, dif, term;
         double pn0, pn1, pn2, pn3, pn4, pn5;
-
         if (x == 0.0) {
             return 0.0;
         }
         if (x < 0.0 || alpha <= 0.0) {
             throw new IllegalArgumentException("Arguments out of bounds");
         }
-
         factor = Math.exp(alpha * Math.log(x) - x - ln_gamma_alpha);
-
         if (x > 1 && x >= alpha) {
             // continued fraction
             a = 1 - alpha;
@@ -75,7 +58,6 @@ public class GammaFunction {
             pn2 = x + 1;
             pn3 = x * b;
             gin = pn2 / pn3;
-
             do {
                 a++;
                 b += 2;
@@ -83,7 +65,6 @@ public class GammaFunction {
                 an = a * term;
                 pn4 = b * pn2 - an * pn0;
                 pn5 = b * pn3 - an * pn1;
-
                 if (pn5 != 0) {
                     rn = pn4 / pn5;
                     dif = Math.abs(gin - rn);
@@ -92,7 +73,6 @@ public class GammaFunction {
                             break;
                         }
                     }
-
                     gin = rn;
                 }
                 pn0 = pn2;
@@ -122,5 +102,4 @@ public class GammaFunction {
         }
         return gin;
     }
-
 }

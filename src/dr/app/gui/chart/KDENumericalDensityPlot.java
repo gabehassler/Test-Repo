@@ -1,6 +1,4 @@
-
 package dr.app.gui.chart;
-
 import dr.inference.trace.TraceDistribution;
 import dr.math.distributions.GammaKDEDistribution;
 import dr.math.distributions.KernelDensityEstimatorDistribution;
@@ -8,15 +6,11 @@ import dr.math.distributions.LogTransformedNormalKDEDistribution;
 import dr.math.distributions.NormalKDEDistribution;
 import dr.stats.Variate;
 import dr.util.FrequencyDistribution;
-
 import java.util.List;
-
 public class KDENumericalDensityPlot extends NumericalDensityPlot { //Plot.AbstractPlot {
     private final static boolean DEBUG = false;
-
     public KDENumericalDensityPlot(List<Double> data, int minimumBinCount, TraceDistribution traceD) {
         super(data, minimumBinCount, traceD); // TODO Remove when all linked together
-
 //        kde = new GammaKDEDistribution(data);
 //
 //        System.err.println("Making KDE with " + minimumBinCount + " points");
@@ -25,7 +19,6 @@ public class KDENumericalDensityPlot extends NumericalDensityPlot { //Plot.Abstr
 //        Variate yData = getYCoordinates(xData);
 //        setData(xData, yData);
     }
-
     private KernelDensityEstimatorDistribution getKDE(Double[] samples) {
 //        System.err.println("samples is null? " + (samples == null ? "yes" : "no"));
 //        System.err.println("type is null? " + (type == null ? "yes" : "no"));
@@ -38,21 +31,16 @@ public class KDENumericalDensityPlot extends NumericalDensityPlot { //Plot.Abstr
                 throw new RuntimeException("Unknown type");
         }
     }
-
     public void setData(Variate.D data, int minimumBinCount) {
-
         setRawData(data);
         Double[] samples = new Double[data.getCount()];
         for (int i = 0; i < data.getCount(); i++) {
             samples[i] = data.get(i);
         }
         kde = getKDE(samples);
-
         FrequencyDistribution frequency = getFrequencyDistribution(data, minimumBinCount);
-
         Variate.D xData = new Variate.D();
         Variate.D yData = new Variate.D();
-
 //        double x = frequency.getLowerBound() - frequency.getBinSize();
 //        double maxDensity = 0.0;
 //        // TODO Compute KDE once
@@ -110,9 +98,6 @@ public class KDENumericalDensityPlot extends NumericalDensityPlot { //Plot.Abstr
         }
         xData.add(x);
         yData.add(0.0);
-
-
-
 //
 //
 //        int extraBinsOnEdges = 5;
@@ -123,10 +108,8 @@ public class KDENumericalDensityPlot extends NumericalDensityPlot { //Plot.Abstr
 //            yData.add(kde.pdf(xMidPoint));
 //            x += frequency.getBinSize();
 //        }
-
         setData(xData, yData);
     }
-
     protected Variate getXCoordinates(int numPoints) {
         Double[] points = new Double[numPoints];
         for (int i = 0; i < numPoints; i++) {
@@ -134,7 +117,6 @@ public class KDENumericalDensityPlot extends NumericalDensityPlot { //Plot.Abstr
         }
         return new Variate.D(points);
     }
-
     protected Variate getYCoordinates(Variate.D xData) {
         final int length = xData.getCount();
         Double[] points = new Double[length];
@@ -143,16 +125,12 @@ public class KDENumericalDensityPlot extends NumericalDensityPlot { //Plot.Abstr
         }
         return new Variate.D(points);
     }
-
     private KernelDensityEstimatorDistribution kde;
     private NumericalDensityPlot densityPlot;
-
     private KernelDensityEstimatorDistribution.Type type;
-
     private double lowerBoundary = 0;
     private double upperBoundary = Double.POSITIVE_INFINITY;
     private static final double minDensity = 10E-6;
-
 //    @Override
 //
 //    protected void paintData(Graphics2D g2, Variate xData, Variate yData) {

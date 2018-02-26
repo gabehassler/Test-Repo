@@ -1,29 +1,21 @@
-
 package dr.app.oldbeauti;
-
 import dr.evolution.io.NexusImporter;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-
 public class NexusApplicationImporter extends NexusImporter { 
-
 	public static final NexusBlock PAUP_BLOCK = new NexusBlock("PAUP");
 	public static final NexusBlock MRBAYES_BLOCK = new NexusBlock("MRBAYES");
 	public static final NexusBlock RHINO_BLOCK = new NexusBlock("RHINO");
 	public static final NexusBlock BEAST_BLOCK = new NexusBlock("BEAST");
-
 	public NexusApplicationImporter(Reader reader) {
 		super(reader);
 		setCommentDelimiters('[', ']', '\0');
 	}
-	
 	public NexusApplicationImporter(Reader reader, Writer commentWriter) {
 		super(reader, commentWriter);
 		setCommentDelimiters('[', ']', '\0');
 	}
-	
 	public NexusBlock findBlockName(String blockName)
 	{
 		if (blockName.equalsIgnoreCase(PAUP_BLOCK.toString())) {
@@ -38,33 +30,27 @@ public class NexusApplicationImporter extends NexusImporter {
 			return super.findBlockName(blockName);
 		}
 	}
-
 	public void parsePAUPBlock(BeastGenerator options) throws ImportException, IOException
 	{
 		// PAUP is largely a subset of BEAST block
 		readBEASTBlock(options);
 	}
-
 	public void parseMrBayesBlock(BeastGenerator options) throws ImportException, IOException
 	{
 		// MRBAYES is largely a subset of BEAST block
 		readBEASTBlock(options);
 	}
-
 	public void parseBEASTBlock(BeastGenerator options) throws ImportException, IOException
 	{
 		readBEASTBlock(options);
 	}
-
 	public void parseRhinoBlock(BeastGenerator options) throws ImportException, IOException
 	{
 		readRhinoBlock(options);
 	}
-
 	private void readBEASTBlock(BeastGenerator options) throws ImportException, IOException
 	{
 		boolean done = false;
-				
 		while (!done) {
 			String command = readToken(";");
 			if (match("HSEARCH", command, 2)) {
@@ -85,16 +71,13 @@ public class NexusApplicationImporter extends NexusImporter {
 			} else if (command.equalsIgnoreCase("ENDBLOCK") || command.equalsIgnoreCase("END")) {
 				done = true;
 			} else {
-						
 				System.err.println("The command, '" + command + "', is not used by BEAST and has been ignored");
 			}
 		}
 	}
-
 	private void readLSETCommand(BeautiOptions options) throws ImportException, IOException
 	{
 		boolean done = false;
-				
 		while (!done) {
 			String subcommand = readToken("=;");
 			if (match("NST", subcommand, 2)) {
@@ -110,7 +93,6 @@ public class NexusApplicationImporter extends NexusImporter {
 				}
 			} else if (match("RATES", subcommand, 2)) {
 				String token = readToken( ";" );
-				
 				if (match("EQUAL", token, 1)) {
 					options.gammaHetero = false;
 					options.invarHetero = false;
@@ -131,23 +113,18 @@ public class NexusApplicationImporter extends NexusImporter {
 					throw new BadFormatException("Unknown value, '" + token + "'");
 				}
 			} else if (match("NGAMMACAT", subcommand, 2)) {
-			
 				options.gammaCategories = readInteger( ";" );
 			} else {
-						
 				System.err.println("The option, '" + subcommand + "', in the LSET command is not used by BEAST and has been ignored");
 			}
-			
 			if (getLastDelimiter() == ';') {
 				done = true;
 			}
 		}
 	}
-
 	private void readMCMCCommand(BeautiOptions options) throws ImportException, IOException
 	{
 		boolean done = false;
-				
 		while (!done) {
 			String subcommand = readToken("=;");
 			if (match("NGEN", subcommand, 2)) {
@@ -170,20 +147,16 @@ public class NexusApplicationImporter extends NexusImporter {
 					throw new BadFormatException("Unknown value, '" + token + "'");
 				}
 			} else {
-						
 				System.err.println("The option, '" + subcommand + "', in the MCMC command is not used by BEAST and has been ignored");
 			}
-			
 			if (getLastDelimiter() == ';') {
 				done = true;
 			}
 		}
 	}
-
 	private void readRhinoBlock(BeastGenerator options) throws ImportException, IOException
 	{
 		boolean done = false;
-				
 		while (!done) {
 			String command = readToken(";");
 			if (match("NUCMODEL", command, 2)) {
@@ -207,16 +180,13 @@ public class NexusApplicationImporter extends NexusImporter {
 			} else if (command.equalsIgnoreCase("ENDBLOCK") || command.equalsIgnoreCase("END")) {
 				done = true;
 			} else {
-						
 				System.err.println("The command, '" + command + "', is not used by BEAST and has been ignored");
 			}
 		}
 	}
-
 	private void readNUCMODELCommand(BeautiOptions options) throws ImportException, IOException
 	{
 		boolean done = false;
-				
 		while (!done) {
 			String subcommand = readToken("=;");
 			if (match("TYPE", subcommand, 1)) {
@@ -231,20 +201,16 @@ public class NexusApplicationImporter extends NexusImporter {
 					throw new BadFormatException("Unknown value, '" + token + "'");
 				}
 			} else {
-						
 				System.err.println("The option, '" + subcommand + "', in the NUCMODEL command is not used by BEAST and has been ignored");
 			}
-			
 			if (getLastDelimiter() == ';') {
 				done = true;
 			}
 		}
 	}
-
 	private void readSITEMODELCommand(BeautiOptions options) throws ImportException, IOException
 	{
 		boolean done = false;
-				
 		while (!done) {
 			String subcommand = readToken("=;");
 			if (match("TYPE", subcommand, 1)) {
@@ -267,20 +233,16 @@ public class NexusApplicationImporter extends NexusImporter {
 			} else if (match("NUMCAT", subcommand, 1)) {
 				options.gammaCategories = readInteger( ";" );
 			} else {
-						
 				System.err.println("The option, '" + subcommand + "', in the SITEMODEL command is not used by BEAST and has been ignored");
 			}
-			
 			if (getLastDelimiter() == ';') {
 				done = true;
 			}
 		}
 	}
-
 	private void readTREEMODELCommand(BeautiOptions options) throws ImportException, IOException
 	{
 		boolean done = false;
-				
 		while (!done) {
 			String subcommand = readToken("=;");
 			if (match("TYPE", subcommand, 1)) {
@@ -297,22 +259,17 @@ public class NexusApplicationImporter extends NexusImporter {
 					throw new BadFormatException("Unknown value, '" + token + "'");
 				}
 			} else {
-						
 				System.err.println("The option, '" + subcommand + "', in the TREEMODEL command is not used by BEAST and has been ignored");
 			}
-			
 			if (getLastDelimiter() == ';') {
 				done = true;
 			}
 		}
 	}
-
 	private void readCPPARTITIONMODELCommand(BeautiOptions options) throws ImportException, IOException
 	{
 		boolean done = false;
-		
 		options.codonHeteroPattern = null;
-
 		while (!done) {
 			String subcommand = readToken("=;");
 			if (match("ON", subcommand, 1)) {
@@ -345,22 +302,18 @@ public class NexusApplicationImporter extends NexusImporter {
 					throw new BadFormatException("Unknown value, '" + token + "'");
 				}
 			} else {
-						
 				System.err.println("The option, '" + subcommand + "', in the CPPARTITIONMODEL command is not used by BEAST and has been ignored");
 			}
-			
 			if (getLastDelimiter() == ';') {
 				done = true;
 			}
 		}
 	}
-
 	private boolean match(String reference, String target, int min) throws ImportException
 	{
 		if (target.length() < min) {
 			throw new BadFormatException("Ambiguous command or subcommand, '" + target + "'");
 		}
-		
 		return reference.startsWith(target.toUpperCase());
 	}
 }

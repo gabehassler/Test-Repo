@@ -1,6 +1,4 @@
-
 package dr.evomodel.treelikelihood;
-
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
 import dr.evomodel.branchratemodel.BranchRateModel;
@@ -9,27 +7,19 @@ import dr.evomodel.substmodel.SubstitutionModel;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import dr.math.matrixAlgebra.Vector;
-
 import java.util.List;
-
 public class EpochTreeBranchSubstitutionModel extends TreeBranchSubstitutionModel {
-
     public static final boolean DEBUG = false;
-
     public EpochTreeBranchSubstitutionModel(String name,
                                             SiteModel siteModel, List<SubstitutionModel> substModelList, BranchRateModel branchModel,
                                             Parameter transitionTimes) {
         super(name, siteModel, null, branchModel);
         this.modelList = substModelList;
-
         this.transitionTimesParameter = transitionTimes;
         this.transitionTimes = transitionTimesParameter.getParameterValues();
-
         addVariable(transitionTimes);
-
         for (SubstitutionModel model : modelList)
             addModel(model);
-
         numberModels = modelList.size();
         weight = new double[numberModels];
         stateCount = modelList.get(0).getDataType().getStateCount();
@@ -37,24 +27,17 @@ public class EpochTreeBranchSubstitutionModel extends TreeBranchSubstitutionMode
         productMatrix = new double[stateCount * stateCount];
         resultMatrix = new double[stateCount * stateCount];
     }
-
     public void getTransitionProbabilities(Tree tree, NodeRef node, int rateCategory, double[] matrix) {
-
         NodeRef parent = tree.getParent(node);
-
         final double branchRate = branchModel.getBranchRate(tree, node);
-
         // Get the operational time of the branch
         final double startTime = tree.getNodeHeight(parent);
         final double endTime = tree.getNodeHeight(node);
         final double branchTime = branchRate * (startTime - endTime);
-
         if (branchTime < 0.0) {
             throw new RuntimeException("Negative branch length: " + branchTime);
         }
-
         double distance = siteModel.getRateForCategory(rateCategory) * branchTime;
-
         int matrixCount = 0;
         boolean oneMatrix = (getEpochWeights(startTime, endTime, weight) == 1);
         for (int m = 0; m < numberModels; m++) {
@@ -90,17 +73,13 @@ public class EpochTreeBranchSubstitutionModel extends TreeBranchSubstitutionMode
         if (!oneMatrix)
             System.arraycopy(resultMatrix, 0, matrix, 0, stateCount * stateCount);
     }
-
     private int getEpochWeights(double startTime, double endTime, double[] weights) {
-
         int matrixCount = 0;
         final double lengthTime = endTime - startTime;
         final int lastTime = numberModels - 2;
-
         // model 0, 1, 2, ..., K-2, K-1
         // times   0, 1,  ...,   K-2,
         // where K = numberModels
-
         // First epoch: 0 -> transitionTimes[0];
         if (startTime <= transitionTimes[0]) {
             if (endTime <= transitionTimes[0])
@@ -110,7 +89,6 @@ public class EpochTreeBranchSubstitutionModel extends TreeBranchSubstitutionMode
             matrixCount++;
         } else
             weights[0] = 0;
-
         // Middle epoches:
         for (int i = 1; i <= lastTime; i++) {
             if (startTime <= transitionTimes[i]) {
@@ -121,7 +99,6 @@ public class EpochTreeBranchSubstitutionModel extends TreeBranchSubstitutionMode
             } else
                 weights[i] = 0;
         }
-
         // Last epoch: transitionTimes[K-2] -> Infinity
         if (lastTime >= 0) {
             if (endTime > transitionTimes[lastTime]) {
@@ -131,7 +108,6 @@ public class EpochTreeBranchSubstitutionModel extends TreeBranchSubstitutionMode
             } else
                 weights[lastTime + 1] = 0;
         }
-
         if (DEBUG) {
             double totalWeight = 0;
             for (int i = 0; i < numberModels; i++)
@@ -140,19 +116,15 @@ public class EpochTreeBranchSubstitutionModel extends TreeBranchSubstitutionMode
             if (totalWeight > 1.001) System.exit(-1);
             if (totalWeight < 0.999) System.exit(-1);
         }
-
         return matrixCount;
     }
-
     protected final void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         super.handleVariableChangedEvent(variable, index, type);
-
         if (variable == transitionTimesParameter) {
             transitionTimes = transitionTimesParameter.getParameterValues();
             fireModelChanged(variable, index);
         }
     }
-
     private List<SubstitutionModel> modelList;
     private Parameter transitionTimesParameter;
     private double[] transitionTimes;
@@ -162,6 +134,4 @@ public class EpochTreeBranchSubstitutionModel extends TreeBranchSubstitutionMode
     private double[] resultMatrix;
     private int numberModels;
     private int stateCount;
-
 }
-

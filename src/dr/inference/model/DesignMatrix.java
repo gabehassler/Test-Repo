@@ -1,11 +1,8 @@
-
 package dr.inference.model;
-
 import dr.stats.DiscreteStatistics;
 import dr.xml.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
 public class DesignMatrix extends MatrixParameter {
     public static final String DESIGN_MATRIX = "designMatrix";
     public static final String ADD_INTERCEPT = "addIntercept";
@@ -15,20 +12,16 @@ public class DesignMatrix extends MatrixParameter {
     public static final String CHECK_IDENTIFABILITY = "checkIdentifiability";
     public static final String STANDARDIZE = "standardize";
     public static final String DYNAMIC_STANDARDIZATION = "dynamicStandardization";
-
     public static final String INTERCEPT = "intercept";
-
     public DesignMatrix(String name, boolean dynamicStandardization) {
         super(name);
         this.dynamicStandardization = dynamicStandardization;
         init();
     }
-
     public void variableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         super.variableChangedEvent(variable, index, type);
         standardizationKnown = false;
     }
-
     public double getParameterValue(int row, int col) {
         double value = super.getParameterValue(row, col);
         if (dynamicStandardization) {
@@ -40,29 +33,23 @@ public class DesignMatrix extends MatrixParameter {
         }
         return value;
     }
-
     public double getParameterValue(int index) {
         throw new RuntimeException("Univariate value from a design matrix");
     }
-
     public void addParameter(Parameter param) {
         super.addParameter(param);
         clearCache();     // Changed size
     }
-
     public void removeParameter(Parameter param) {
         super.removeParameter(param);
         clearCache();     // Changed size
     }
-
     private void clearCache() {
         standardizationMean = null;
         standardizationStDev = null;
-
         storedStandardizationMean = null;
         storedStandardizationStDev = null;
     }
-
     private void computeStandarization() {
         if (standardizationMean == null) {
             standardizationMean = new double[getColumnDimension()];
@@ -81,55 +68,44 @@ public class DesignMatrix extends MatrixParameter {
             }
         }
     }
-
     protected void storeValues() {
         super.storeValues();
-
         if (dynamicStandardization) {
             if (storedStandardizationMean == null) {
                 storedStandardizationMean = new double[standardizationMean.length];
             }
             System.arraycopy(standardizationMean, 0, storedStandardizationMean, 0, standardizationMean.length);
-
             if (storedStandardizationStDev == null) {
                 storedStandardizationStDev = new double[standardizationStDev.length];
             }
             System.arraycopy(standardizationStDev, 0, storedStandardizationStDev, 0, standardizationStDev.length);
         }
     }
-
     protected void restoreValues() {
         super.restoreValues();
-
         if (dynamicStandardization) {
             double[] tmp = standardizationMean;
             standardizationMean = storedStandardizationMean;
             storedStandardizationMean = tmp;
-
             tmp = standardizationStDev;
             standardizationStDev = storedStandardizationStDev;
             storedStandardizationStDev = tmp;
         }
     }
-
     public DesignMatrix(String name, Parameter[] parameters, boolean dynamicStandardization) {
         super(name, parameters);
         this.dynamicStandardization = dynamicStandardization;
         init();
     }
-
     private void init() {
         standardizationKnown = false;
     }
-
     // **************************************************************
     // XMLElement IMPLEMENTATION
     // **************************************************************
-
     public Element createElement(Document d) {
         throw new RuntimeException("Not implemented yet!");
     }
-
     public static void standardize(double[] vector) {
         double mean = DiscreteStatistics.mean(vector);
         double stDev = Math.sqrt(DiscreteStatistics.variance(vector, mean));
@@ -137,25 +113,17 @@ public class DesignMatrix extends MatrixParameter {
             vector[i] = (vector[i] - mean) / stDev;
         }
     }
-
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-
-
         public String getParserName() {
             return DESIGN_MATRIX;
         }
-
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
             boolean dynamicStandardization = xo.getAttribute(DYNAMIC_STANDARDIZATION, false);
             String name = (xo.hasId() ? xo.getId() : DESIGN_MATRIX);
-
             DesignMatrix designMatrix = new DesignMatrix(name, dynamicStandardization);
             boolean addIntercept = xo.getAttribute(ADD_INTERCEPT, false);
             boolean standardize = xo.getAttribute(STANDARDIZE, false);
-
             int dim = 0;
-
             if (xo.hasAttribute(FORM)) {
                 String type = xo.getStringAttribute(FORM);
                 if (type.compareTo("J") == 0) {
@@ -168,7 +136,6 @@ public class DesignMatrix extends MatrixParameter {
                 } else
                     throw new XMLParseException("Unknown designMatrix form.");
             } else {
-
                 for (int i = 0; i < xo.getChildCount(); i++) {
                     Parameter parameter = (Parameter) xo.getChild(i);
                     designMatrix.addParameter(parameter);
@@ -178,7 +145,6 @@ public class DesignMatrix extends MatrixParameter {
                         throw new XMLParseException("All parameters must have the same dimension to construct a rectangular design matrix");
                 }
             }
-
             if (standardize) {
                 // Standardize all covariates except intercept
                 for (int j = 0; j < designMatrix.getColumnDimension(); ++j) {
@@ -191,28 +157,22 @@ public class DesignMatrix extends MatrixParameter {
                     columnParameter.setParameterValueNotifyChangedAll(0, columnParameter.getParameterValue(0));
                 }
             }
-
             if (addIntercept) {
                 Parameter intercept = new Parameter.Default(dim);
                 intercept.setId(INTERCEPT);
                 designMatrix.addParameter(intercept);
             }
-
             return designMatrix;
         }
-
         //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
-
         public String getParserDescription() {
             return "A matrix parameter constructed from its component parameters.";
         }
-
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
-
         private final XMLSyntaxRule[] rules = {
                 AttributeRule.newBooleanRule(ADD_INTERCEPT, true),
                 AttributeRule.newBooleanRule(CHECK_IDENTIFABILITY, true),
@@ -222,15 +182,12 @@ public class DesignMatrix extends MatrixParameter {
                 AttributeRule.newIntegerRule(ROW_DIMENSION, true),
                 AttributeRule.newBooleanRule(STANDARDIZE, true),
         };
-
         public Class getReturnType() {
             return DesignMatrix.class;
         }
     };
-
     private final boolean dynamicStandardization;
     private boolean standardizationKnown = false;
-
     private double[] standardizationMean = null;
     private double[] standardizationStDev = null;
     private double[] storedStandardizationMean = null;

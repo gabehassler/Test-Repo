@@ -1,6 +1,4 @@
-
 package dr.inferencexml.loggers;
-
 import dr.app.beast.BeastVersion;
 import dr.inference.loggers.*;
 import dr.math.MathUtils;
@@ -8,13 +6,10 @@ import dr.util.FileHelpers;
 import dr.util.Identifiable;
 import dr.util.Property;
 import dr.xml.*;
-
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.Date;
-
 public class LoggerParser extends AbstractXMLObjectParser {
-
     public static final String LOG = "log";
     public static final String ECHO = "echo";
     public static final String ECHO_EVERY = "echoEvery";
@@ -27,51 +22,39 @@ public class LoggerParser extends AbstractXMLObjectParser {
     public static final String PRETTY = "pretty";
     public static final String LOG_EVERY = "logEvery";
     public static final String ALLOW_OVERWRITE_LOG = "overwrite";
-
     public static final String COLUMNS = "columns";
     public static final String COLUMN = "column";
     public static final String LABEL = "label";
     public static final String SIGNIFICANT_FIGURES = "sf";
     public static final String DECIMAL_PLACES = "dp";
     public static final String WIDTH = "width";
-
     public String getParserName() {
         return LOG;
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         // You must say how often you want to log
         final int logEvery = xo.getIntegerAttribute(LOG_EVERY);
-
         final PrintWriter pw = getLogFile(xo, getParserName());
-
         final LogFormatter formatter = new TabDelimitedFormatter(pw);
-
         boolean performanceReport = false;
-
         if (!xo.hasAttribute(FILE_NAME)) {
             // is a screen log
             performanceReport = true;
         }
-
         // added a performance measurement delay to avoid the full evaluation period.
         final MCLogger logger = new MCLogger(formatter, logEvery, performanceReport, 10000);
-
         String title = null;
         if (xo.hasAttribute(TITLE)) {
             title = xo.getStringAttribute(TITLE);
         }
-
         String header = null;
         if (xo.hasAttribute(HEADER)) {
             header = xo.getStringAttribute(HEADER);
         }
-
         if (title == null) {
             final BeastVersion version = new BeastVersion();
-
-            title = "BEAST " + version.getVersionString() + "\n" +
+            title = "BEAST " + version.getVersionString() +
+                    ", " + version.getBuildString() + "\n" +
                     (header != null ? header + "\n" : "") +
                     "Generated " + (new Date()).toString() + " [seed=" + MathUtils.getSeed() + "]";
         } else {
@@ -79,48 +62,32 @@ public class LoggerParser extends AbstractXMLObjectParser {
                 title += "\n" + header;
             }
         }
-
         logger.setTitle(title);
-
         for (int i = 0; i < xo.getChildCount(); i++) {
-
             final Object child = xo.getChild(i);
-
             if (child instanceof Columns) {
-
                 logger.addColumns(((Columns) child).getColumns());
-
             } else if (child instanceof Loggable) {
-
                 logger.add((Loggable) child);
-
             } else if (child instanceof Identifiable) {
-
                 logger.addColumn(new LogColumn.Default(((Identifiable) child).getId(), child));
-
             } else if (child instanceof Property) {
                 logger.addColumn(new LogColumn.Default(((Property) child).getAttributeName(), child));
             } else {
-
                 logger.addColumn(new LogColumn.Default(child.getClass().toString(), child));
             }
         }
-
         return logger;
     }
-
     public static PrintWriter getLogFile(XMLObject xo, String parserName) throws XMLParseException {
         return XMLParser.getFilePrintWriter(xo, parserName);
     }
-
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     private final XMLSyntaxRule[] rules = {
             AttributeRule.newIntegerRule(LOG_EVERY),
             AttributeRule.newBooleanRule(ALLOW_OVERWRITE_LOG, true),
@@ -139,13 +106,10 @@ public class LoggerParser extends AbstractXMLObjectParser {
                     }
             )
     };
-
     public String getParserDescription() {
         return "Logs one or more items at a given frequency to the screen or to a file";
     }
-
     public Class getReturnType() {
         return MLLogger.class;
     }
 }
-

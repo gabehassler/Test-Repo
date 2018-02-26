@@ -1,16 +1,11 @@
-
 package dr.math.iterations;
-
 import dr.math.functionEval.DrMath;
-
 public abstract class IterativeProcess
 {
 	private int iterations;
 	private int maximumIterations = 50;
 	private double desiredPrecision = DrMath.defaultNumericalPrecision();
 	private double precision;
-
-
 public IterativeProcess() {
 }
 public void evaluate()

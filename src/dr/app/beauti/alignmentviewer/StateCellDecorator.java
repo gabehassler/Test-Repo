@@ -1,10 +1,6 @@
-
 package dr.app.beauti.alignmentviewer;
-
 import java.awt.*;
-
 public class StateCellDecorator implements CellDecorator {
-
     public StateCellDecorator(StateDecorator stateDecorator, boolean inverted) {
         if (inverted) {
             foregroundDecorator = new StateDecorator() {
@@ -16,19 +12,14 @@ public class StateCellDecorator implements CellDecorator {
             backgroundDecorator = new StateDecorator() {
                 public Paint getStatePaint(int stateIndex) { return Color.WHITE; }
             };
-
         }
     }
-
     public Paint getCellForeground(int row, int column, int state) {
         return foregroundDecorator.getStatePaint(state);
     }
-
     public Paint getCellBackground(int row, int column, int state) {
         return backgroundDecorator.getStatePaint(state);
     }
-
     private final StateDecorator foregroundDecorator;
     private final StateDecorator backgroundDecorator;
-
 }

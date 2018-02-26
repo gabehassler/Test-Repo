@@ -1,74 +1,53 @@
-
 package dr.app.beagle.evomodel.substmodel;
-
 import dr.math.MachineAccuracy;
-
 import java.util.Arrays;
-
 public class DefaultEigenSystem implements EigenSystem {
-
     private final int stateCount;
-
     public DefaultEigenSystem(int stateCount) {
-
         this.stateCount = stateCount;
-
         // some temporary values...
         ordr = new int[stateCount];
         evali = new double[stateCount];
     }
-
     public EigenDecomposition decomposeMatrix(double[][] qMatrix) {
-
         Eval = new double[stateCount];
         Evec = new double[stateCount][stateCount];
         Ievc = new double[stateCount][stateCount];
-
         // compute eigenvalues and eigenvectors
         elmhes(qMatrix, ordr, stateCount);
         eltran(qMatrix, Evec, ordr, stateCount);
         hqr2(stateCount, 1, stateCount, qMatrix, Evec, Eval, evali);
         luinverse(Evec, Ievc, stateCount);
-
         double[] flatEvec = new double[stateCount * stateCount];
         double[] flatIevc = new double[stateCount * stateCount];
-
         for (int i = 0; i < stateCount; i++) {
             System.arraycopy(Evec[i], 0, flatEvec, i * stateCount, stateCount);
             System.arraycopy(Ievc[i], 0, flatIevc, i * stateCount, stateCount);
         }
-
         return new EigenDecomposition(flatEvec, flatIevc, Eval);
     }
-
     public double computeExponential(EigenDecomposition eigen, double distance, int i, int j) {
         if (eigen == null) {
             return 0.0;
         }
-
         double[] Evec = eigen.getEigenVectors();
         double[] Eval = eigen.getEigenValues();
         double[] Ievc = eigen.getInverseEigenVectors();
-
         double temp = 0.0;
         for (int k = 0; k < stateCount; ++k) {
             temp += Evec[i * stateCount + k] * Math.exp(distance * Eval[k]) * Ievc[k * stateCount + j];
         }
         return Math.abs(temp);
     }
-
     public void computeExponential(EigenDecomposition eigen, double distance, double[] matrix) {
         double temp;
-
         if (eigen == null) {
             Arrays.fill(matrix, 0.0);
             return;
         }
-
         double[] Evec = eigen.getEigenVectors();
         double[] Ievc = eigen.getInverseEigenVectors();
         double[] Eval = eigen.getEigenValues();
-
         // implemented a pool of iexp matrices to support multiple threads
         // without creating a new matrix each call. - AJD
         double[][] iexp = new double[stateCount][stateCount];
@@ -78,7 +57,6 @@ public class DefaultEigenSystem implements EigenSystem {
                 iexp[i][j] = Ievc[i * stateCount + j] * temp;
             }
         }
-
         int u = 0;
         for (int i = 0; i < stateCount; i++) {
             for (int j = 0; j < stateCount; j++) {
@@ -86,26 +64,20 @@ public class DefaultEigenSystem implements EigenSystem {
                 for (int k = 0; k < stateCount; k++) {
                     temp += Evec[i * stateCount + k] * iexp[k][j];
                 }
-
                 matrix[u] = Math.abs(temp);
                 u++;
             }
         }
     }
-
-
     // Eigenvalues, eigenvectors, and inverse eigenvectors
     private double[] Eval;
     private double[][] Evec;
     private double[][] Ievc;
-
     private int[] ordr;
     private double[] evali;
-
     private void elmhes(double[][] a, int[] ordr, int n) {
         int m, j, i;
         double y, x;
-
         for (i = 0; i < n; i++) {
             ordr[i] = 0;
         }
@@ -148,13 +120,10 @@ public class DefaultEigenSystem implements EigenSystem {
             }
         }
     }
-
     // Helper variables for mcdiv
     private double cr, ci;
-
     private void mcdiv(double ar, double ai, double br, double bi) {
         double s, ars, ais, brs, bis;
-
         s = Math.abs(br) + Math.abs(bi);
         ars = ar / s;
         ais = ai / s;
@@ -164,14 +133,11 @@ public class DefaultEigenSystem implements EigenSystem {
         cr = (ars * brs + ais * bis) / s;
         ci = (ais * brs - ars * bis) / s;
     }
-
     private void hqr2(int n, int low, int hgh, double[][] h, double[][] zz,
                       double[] wr, double[] wi) throws ArithmeticException {
         int i, j, k, l = 0, m, en, na, itn, its;
         double p = 0, q = 0, r = 0, s = 0, t, w, x = 0, y, ra, sa, vi, vr, z = 0, norm, tst1, tst2;
         boolean notLast;
-
-
         norm = 0.0;
         k = 1;
         for (i = 0; i < n; i++) {
@@ -207,7 +173,6 @@ public class DefaultEigenSystem implements EigenSystem {
                 if (fullLoop) {
                     l = low;
                 }
-
                 x = h[en - 1][en - 1];    /* form shift */
                 if (l == en || l == na) {
                     break;
@@ -543,10 +508,8 @@ public class DefaultEigenSystem implements EigenSystem {
             }
         }
     }
-
     private void eltran(double[][] a, double[][] zz, int[] ordr, int n) {
         int i, j, m;
-
         for (i = 0; i < n; i++) {
             for (j = i + 1; j < n; j++) {
                 zz[i][j] = 0.0;
@@ -571,24 +534,19 @@ public class DefaultEigenSystem implements EigenSystem {
             }
         }
     }
-
     private void luinverse(double[][] inmat, double[][] imtrx, int size) throws IllegalArgumentException {
         int i, j, k, l, maxi = 0, idx, ix, jx;
         double sum, tmp, maxb, aw;
         int[] index;
         double[] wk;
         double[][] omtrx;
-
-
         index = new int[size];
         omtrx = new double[size][size];
-
         for (i = 0; i < size; i++) {
             for (j = 0; j < size; j++) {
                 omtrx[i][j] = inmat[i][j];
             }
         }
-
         wk = new double[size];
         aw = 1.0;
         for (i = 0; i < size; i++) {

@@ -1,6 +1,4 @@
-
 package dr.inference.prior;
-
 //public class UniformParameterPrior extends AbstractParameterPrior {
 //
 //	private double lower;

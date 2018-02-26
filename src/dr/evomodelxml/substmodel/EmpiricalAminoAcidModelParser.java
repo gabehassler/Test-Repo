@@ -1,33 +1,21 @@
-
 package dr.evomodelxml.substmodel;
-
 import dr.evomodel.substmodel.*;
 import dr.xml.*;
-
 public class EmpiricalAminoAcidModelParser extends AbstractXMLObjectParser {
-
     public static final String EMPIRICAL_AMINO_ACID_MODEL = "aminoAcidModel";
     public static final String FREQUENCIES = "frequencies";
     public static final String TYPE = "type";
-
-
     public String getParserName() {
         return EMPIRICAL_AMINO_ACID_MODEL;
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         FrequencyModel freqModel = null;
-
         if (xo.hasAttribute(FREQUENCIES)) {
             XMLObject cxo = xo.getChild(FREQUENCIES);
             freqModel = (FrequencyModel) cxo.getChild(FrequencyModel.class);
         }
-
         EmpiricalRateMatrix rateMatrix = null;
-
         String type = xo.getStringAttribute(TYPE);
-
         if (type.equals(AminoAcidModelType.BLOSUM_62.getXMLName())) {
             rateMatrix = Blosum62.INSTANCE;
         } else if (type.equals(AminoAcidModelType.DAYHOFF.getXMLName())) {
@@ -45,30 +33,22 @@ public class EmpiricalAminoAcidModelParser extends AbstractXMLObjectParser {
         } else if (type.equals(AminoAcidModelType.LG.getXMLName())) {
         	rateMatrix = dr.evomodel.substmodel.LG.INSTANCE;
         }
-
         return new EmpiricalAminoAcidModel(rateMatrix, freqModel);
     }
-
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     private XMLSyntaxRule[] rules = new XMLSyntaxRule[]{
             new StringAttributeRule(TYPE, "The type of empirical amino-acid rate matrix", AminoAcidModelType.xmlNames(), false),
             new ElementRule(FREQUENCIES, FrequencyModel.class, "If the frequencies are omitted than the empirical frequencies associated with the selected model are used.", true)
     };
-
     public String getParserDescription() {
         return "An empirical amino acid substitution model.";
     }
-
     public Class getReturnType() {
         return EmpiricalAminoAcidModel.class;
     }
-
-
 }

@@ -1,39 +1,28 @@
-
 package dr.evomodelxml.substmodel;
-
 import dr.evolution.alignment.PatternList;
 import dr.evolution.datatype.DataType;
 import dr.evomodel.substmodel.FrequencyModel;
 import dr.evoxml.util.DataTypeUtils;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 import java.text.NumberFormat;
 import java.util.logging.Logger;
-
 public class FrequencyModelParser extends AbstractXMLObjectParser {
     public static final String FREQUENCIES = "frequencies";
     public static final String FREQUENCY_MODEL = "frequencyModel";
     public static final String NORMALIZE = "normalize";
-
-
     public String[] getParserNames() {
         return new String[]{
                 getParserName(), "beast_" + getParserName()
         };
     }
-
     public String getParserName() {
         return FREQUENCY_MODEL;
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         DataType dataType = DataTypeUtils.getDataType(xo);
-
         Parameter freqsParam = (Parameter) xo.getElementFirstChild(FREQUENCIES);
         double[] frequencies = null;
-
         for (int i = 0; i < xo.getChildCount(); i++) {
             Object obj = xo.getChild(i);
             if (obj instanceof PatternList) {
@@ -41,7 +30,6 @@ public class FrequencyModelParser extends AbstractXMLObjectParser {
                 break;
             }
         }
-
         StringBuilder sb = new StringBuilder("Creating state frequencies model '" + freqsParam.getParameterName() + "': ");
         if (frequencies != null) {
             if (freqsParam.getDimension() != frequencies.length) {
@@ -55,12 +43,10 @@ public class FrequencyModelParser extends AbstractXMLObjectParser {
             sb.append("Initial frequencies ");
         }
         sb.append("= {");
-
         double sum = 0;
         for (int j = 0; j < freqsParam.getDimension(); j++) {
             sum += freqsParam.getParameterValue(j);
         }
-
         if (xo.getAttribute(NORMALIZE, false)) {
             for (int j = 0; j < freqsParam.getDimension(); j++) {
                 if (sum != 0)
@@ -70,15 +56,11 @@ public class FrequencyModelParser extends AbstractXMLObjectParser {
             }
             sum = 1.0;
         }
-
         if (Math.abs(sum - 1.0) > 1e-8) {
             throw new XMLParseException("Frequencies do not sum to 1 (they sum to " + sum + ")");
         }
-
-
         NumberFormat format = NumberFormat.getNumberInstance();
         format.setMaximumFractionDigits(5);
-
         sb.append(format.format(freqsParam.getParameterValue(0)));
         for (int j = 1; j < freqsParam.getDimension(); j++) {
             sb.append(", ");
@@ -86,37 +68,26 @@ public class FrequencyModelParser extends AbstractXMLObjectParser {
         }
         sb.append("}");
         Logger.getLogger("dr.evomodel").info(sb.toString());
-
         return new FrequencyModel(dataType, freqsParam);
     }
-
     public String getParserDescription() {
         return "A model of equilibrium base frequencies.";
     }
-
     public Class getReturnType() {
         return FrequencyModel.class;
     }
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     private final XMLSyntaxRule[] rules = {
             AttributeRule.newBooleanRule(NORMALIZE, true),
-
             new ElementRule(PatternList.class, "Initial value", 0, 1),
-
             new XORRule(
                     new StringAttributeRule(DataType.DATA_TYPE, "The type of sequence data",
                             DataType.getRegisteredDataTypeNames(), false),
                     new ElementRule(DataType.class)
             ),
-
             new ElementRule(FREQUENCIES,
                     new XMLSyntaxRule[]{new ElementRule(Parameter.class)}),
-
     };
-
-
 }

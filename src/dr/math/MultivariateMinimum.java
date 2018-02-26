@@ -1,24 +1,15 @@
-
 package dr.math;
-
-
 public abstract class MultivariateMinimum
 {
 	//
 	// Public stuff
 	//
-
 	public int numFun;
-
 	public int maxFun = 0;
-
 	public int numFuncStops = 4;
-
-
 	public double findMinimum(MultivariateFunction f, double[] xvec)
 	{
 		optimize(f, xvec, MachineAccuracy.EPSILON, MachineAccuracy.EPSILON);
-
 		return f.evaluate(xvec);
 	}
 	public double findMinimum(MultivariateFunction f, double[] xvec,
@@ -31,9 +22,7 @@ public abstract class MultivariateMinimum
 	{
 		double tolfx = Math.pow(10, -1-fxFracDigits);
 		double tolx = Math.pow(10, -1-xFracDigits);
-
 		optimize(f, xvec, tolfx, tolx,monitor);
-
 		// trim x
 		double m = Math.pow(10, xFracDigits);
 		for (int i = 0;  i < xvec.length; i++)
@@ -43,10 +32,7 @@ public abstract class MultivariateMinimum
 		// trim fx
 		return Math.round(f.evaluate(xvec)*m)/m;
 	}
-
 	public abstract void optimize(MultivariateFunction f, double[] xvec, double tolfx, double tolx);
-
-
 	public void optimize(MultivariateFunction f, double[] xvec, double tolfx, double tolx, MinimiserMonitor monitor) {
 		optimize(f,xvec,tolfx,tolx);
 	}
@@ -54,7 +40,6 @@ public abstract class MultivariateMinimum
 		double tolx, boolean firstCall)
 	{
 		boolean stop = false;
-
 		if (firstCall)
 		{
 			countFuncStops = 0;
@@ -78,24 +63,19 @@ public abstract class MultivariateMinimum
 				{
 					countFuncStops = 0;
 				}
-
 				if (countFuncStops >= numFuncStops)
 				{
 					stop = true;
 				}
 			}
 		}
-
 		if (!stop)
 		{
 			fxold = fx;
 			copy(xold, x);
 		}
-
 		return stop;
 	}
-
-
 	public void copy(double[] target, double[] source)
 	{
 		for (int i = 0; i < source.length; i++)
@@ -103,22 +83,17 @@ public abstract class MultivariateMinimum
 			target[i] = source[i];
 		}
 	}
-
 	//
 	// Private stuff
 	//
-
 	// number of fStops
 	private int countFuncStops;
-
 	// old function and parameter values
 	private double fxold;
 	private double[] xold;
-
 	private boolean xStop(double[] x, double[] xold, double tolx)
 	{
 		boolean stop = true;
-
 		for (int i = 0; i < x.length && stop == true; i++)
 		{
 			if (Math.abs(x[i]-xold[i]) > tolx)
@@ -126,10 +101,8 @@ public abstract class MultivariateMinimum
 				stop = false;
 			}
 		}
-
 		return stop;
 	}
-
 	private boolean fxStop(double fx, double fxold, double tolfx)
 	{
 		if (Math.abs(fx-fxold) > tolfx)

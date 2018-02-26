@@ -1,6 +1,4 @@
-
 package dr.math.distributions;
-
 import cern.jet.random.Gamma;
 import cern.jet.random.engine.MersenneTwister;
 import cern.jet.random.engine.RandomEngine;
@@ -9,44 +7,35 @@ import dr.math.MathUtils;
 import dr.math.UnivariateFunction;
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.distribution.GammaDistributionImpl;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 public class GammaDistribution implements Distribution {
     //
     // Public stuff
     //
-
     public GammaDistribution(double shape, double scale) {
         this.shape = shape;
         this.scale = scale;
         this.samples = 0;
-
         if (TRY_COLT) {
             randomEngine = new MersenneTwister(MathUtils.nextInt());
             System.out.println("Colt Gamma(" + shape + "," + scale + ")");
             coltGamma = new Gamma(shape, 1.0/scale, randomEngine);
         }
     }
-
     public double getShape() {
         return shape;
     }
-
     public void setShape(double value) {
         shape = value;
     }
-
     public double getScale() {
         return scale;
     }
-
     public void setScale(double value) {
         scale = value;
     }
-
     public double pdf(double x) {
         if (TRY_COLT) {
             return coltGamma.pdf(x);
@@ -54,7 +43,6 @@ public class GammaDistribution implements Distribution {
             return pdf(x, shape, scale);
         }
     }
-
     public double logPdf(double x) {
         if (TRY_COLT) {
             return Math.log(coltGamma.pdf(x));
@@ -62,7 +50,6 @@ public class GammaDistribution implements Distribution {
             return logPdf(x, shape, scale);
         }
     }
-
     public double cdf(double x) {
         if (TRY_COLT) {
             return coltGamma.cdf(x);
@@ -70,41 +57,32 @@ public class GammaDistribution implements Distribution {
             return cdf(x, shape, scale);
         }
     }
-
     public double quantile(double y) {
         return quantile(y, shape, scale);
     }
-
     public double mean() {
         return mean(shape, scale);
     }
-
     public double variance() {
         return variance(shape, scale);
     }
-
     public double nextGamma() {
         return nextGamma(shape, scale);
     }
-
     public final UnivariateFunction getProbabilityDensityFunction() {
         return pdfFunction;
     }
-
     private final UnivariateFunction pdfFunction = new UnivariateFunction() {
         public final double evaluate(double x) {
             return pdf(x);
         }
-
         public final double getLowerBound() {
             return 0.0;
         }
-
         public final double getUpperBound() {
             return Double.POSITIVE_INFINITY;
         }
     };
-
     public static double pdf(double x, double shape, double scale) {
         // return Math.pow(scale,-shape)*Math.pow(x, shape-1.0)/
         // Math.exp(x/scale + GammaFunction.lnGamma(shape));
@@ -116,31 +94,24 @@ public class GammaDistribution implements Distribution {
             else
                 return 0.0;
         }
-
         final double xs = x / scale;
-
         if (shape == 1.0) {
             return Math.exp(-xs) / scale;
         }
-
         final double a = Math.exp((shape - 1.0) * Math.log(xs) - xs
                 - GammaFunction.lnGamma(shape));
-
         return a / scale;
     }
-
     public static double logPdf(double x, double shape, double scale) {
         // double a = Math.pow(scale,-shape) * Math.pow(x, shape-1.0);
         // double b = x/scale + GammaFunction.lnGamma(shape);
         // return Math.log(a) - b;
-
         // AR - changed this to return -ve inf instead of throwing an
         // exception... This makes things
         // much easier when using this to calculate log likelihoods.
         // if (x < 0) throw new IllegalArgumentException();
         if (x < 0)
             return Double.NEGATIVE_INFINITY;
-
         if (x == 0) {
             if (shape == 1.0)
                 return Math.log(1.0 / scale);
@@ -152,53 +123,40 @@ public class GammaDistribution implements Distribution {
         }
         if (shape == 0.0)  // uninformative
             return -Math.log(x);
-        
                 .lnGamma(shape))
                 - Math.log(scale);*/
-        
         return ((shape - 1.0) * (Math.log(x) - Math.log(scale)) - x / scale - GammaFunction
                 .lnGamma(shape))
                 - Math.log(scale);
     }
-
     public static double cdf(double x, double shape, double scale) {
         if (x < 0.0 || shape <= 0.0) {
             return 0;
         }
         return GammaFunction.incompleteGammaP(shape, x / scale);
     }
-
     public static double quantile(double y, double shape, double scale) {
         return 0.5 * scale * pointChi2(y, 2.0 * shape);
     }
-
     public static double mean(double shape, double scale) {
         return scale * shape;
     }
-
     public static double variance(double shape, double scale) {
         return scale * scale * shape;
     }
-
     public static double nextGamma(double shape, double scale) {
         if (TRY_COLT) {
             return coltGamma.nextDouble(shape, 1.0/scale);
         }
         return nextGamma(shape, scale, false);
     }
-
     public static double nextGamma(double shape, double scale, boolean slowCode) {
-
         double sample = 0.0;
-
         if (shape < 0.00001) {
-
             if (shape < 0) {
                 System.out.println("Negative shape parameter");
                 throw new IllegalArgumentException("Negative shape parameter");
             }
-
-
             double minimum = 1.0e-20;
             double maximum = 50;
             double normalizingConstant = Math.log(maximum) - Math.log(minimum);
@@ -210,13 +168,11 @@ public class GammaDistribution implements Distribution {
             // 'scale' is not necessary
             return sample;
         }
-
         if (slowCode && Math.floor(shape) == shape && shape > 4.0) {
             for (int i = 0; i < shape; i++)
                 sample += -Math.log(MathUtils.nextDouble());
             return sample * scale;
         } else {
-
             // Fast special cases
             if (shape == 1.0) {
                 return -Math.log(MathUtils.nextDouble()) * scale;
@@ -231,7 +187,6 @@ public class GammaDistribution implements Distribution {
                 return -Math.log(MathUtils.nextDouble()
             }
         }
-
         // general case
         do {
             try {
@@ -244,40 +199,28 @@ public class GammaDistribution implements Distribution {
         } while (sample == 0.0);
         return sample;
     }
-
     public static double nextExpGamma(double shape, double scale, double bias) {
         return nextExpGamma(shape, scale, bias, false);
     }
-
     public static double nextExpGamma(double shape, double scale, double bias,
                                       boolean slowCode) {
-
         double sample;
         double accept;
         int iters = 0;
-
         if (slowCode) {
-
             // for testing purposes -- this can get stuck completely for small bias parameters
             do {
                 sample = nextGamma(shape, scale);
                 accept = Math.exp(-1.0 / (bias * sample));
             } while (MathUtils.nextDouble() > accept);
-
         } else {
-
             if (shape < 0) {
-
                 //return scale / (nextExpGamma(-shape, scale, bias) * bias);
                 return 1.0 / nextExpGamma(-shape, bias, scale);
-
             }
-
             if (shape == 0) {
-
                 // sample from the restriction to x >= median, and sample the other half by using
                 // the self-similarity transformation x -> scale / (bias*x)
-
                 double median = Math.sqrt(scale / bias);
                 double rejection_mode = 1.0 / bias;      // mode of rejection distribution, x^-1 e^(-1/bias x)
                 if (rejection_mode < median)
@@ -296,30 +239,25 @@ public class GammaDistribution implements Distribution {
                 }
                 return sample;
             }
-
             // Current algorithm works for all shape parameters > 0, but it becomes very inefficient
             // for v. small shape parameters.
             if (shape <= 0.0) {
                 System.out.println("nextExpGamma: Illegal argument (shape parameter is must be positive)");
                 throw new IllegalArgumentException("");
             }
-
             // the function -1/(bias*x) is bounded by x/(bias x0^2) + C, with C = -2/(bias*x0), so that these functions
             // coincide precisely when x=x0. This gives the scale parameter of the majorating Gamma distribution
             //
             // First calculate the value that maximizes the acceptance probability at the mean of the proposal distribution
             double x0 = (shape * scale + Math.sqrt(4 * scale / bias + shape * shape * scale * scale)) / 2.0;
-
             // calculate the scale parameter of the majorating Gamma distribution
             double majorandScale = 1.0 / ((1.0 / scale) - 1.0 / (bias * x0 * x0));
-
             // now do rejection sampling
             do {
                 sample = nextGamma(shape, majorandScale);
                 accept = Math.exp(-(sample / x0 - 1) * (sample / x0 - 1) / (bias * sample));
                 iters += 1;
             } while (MathUtils.nextDouble() > accept && iters < 10000);
-
             if (accept > 1.0) {
                 System.out.println("PROBLEM!!  This should be impossible!!  Contact the authors.");
             }
@@ -330,20 +268,15 @@ public class GammaDistribution implements Distribution {
                 System.out.println("Severe Warning: nextExpGamma failed to generate a sample - returning bogus value!");
             }
         }
-
         return sample;
-
     }
-
     // Private
-
     private static double pointChi2(double prob, double v) {
         // Returns z so that Prob{x<z}=prob where x is Chi2 distributed with df
         // = v
         // RATNEST FORTRAN by
         // Best DJ & Roberts DE (1975) The percentage points of the
         // Chi2 distribution. Applied Statistics 24: 385-388. (AS91)
-
         final double e = 0.5e-6, aa = 0.6931471805, p = prob;
         double ch, a, q, p1, p2, t, x, b, s1, s2, s3, s4, s5, s6;
         double epsi = .01;
@@ -372,8 +305,6 @@ public class GammaDistribution implements Distribution {
             } else {
                 ch = 0.4;
                 a = Math.log(1 - p);
-
-
                 do {
                     q = ch;
                     p1 = 1 + ch * (4.67 + ch);
@@ -396,7 +327,6 @@ public class GammaDistribution implements Distribution {
             t = p2 * Math.exp(xx * aa + g + p1 - c * Math.log(ch));
             b = t / ch;
             a = 0.5 * t - b * c;
-
             s1 = (210 + a * (140 + a * (105 + a * (84 + a * (70 + 60 * a))))) / 420;
             s2 = (420 + a * (735 + a * (966 + a * (1141 + 1278 * a)))) / 2520;
             s3 = (210 + a * (462 + a * (707 + 932 * a))) / 2520;
@@ -405,20 +335,15 @@ public class GammaDistribution implements Distribution {
             s6 = (120 + c * (346 + 127 * c)) / 5040;
             ch += t
         } while (Math.abs(q / ch - 1) > e);
-
         return (ch);
     }
-
     public static void main(String[] args) {
-
         testQuantile(1e-10, 0.878328435043444, 0.0013696236839573005);
         testQuantile(0.5, 0.878328435043444, 0.0013696236839573005);
         testQuantile(1.0 - 1e-10, 0.878328435043444, 0.0013696236839573005);
-
         testQuantileCM(1e-10, 0.878328435043444, 0.0013696236839573005);
         testQuantileCM(0.5, 0.878328435043444, 0.0013696236839573005);
         testQuantileCM(1.0 - 1e-10, 0.878328435043444, 0.0013696236839573005);
-
         for (double i = 0.0125; i < 1.0; i += 0.025) {
         	System.out.print(i + ": ");
         	try {
@@ -427,7 +352,6 @@ public class GammaDistribution implements Distribution {
         	System.out.println(e.getMessage());
         	}
         }
-
         GammaDistribution gamma = new GammaDistribution(0.01,100.0);
         double[] samples = new double[100000];
         double sum = 0.0;
@@ -443,7 +367,6 @@ public class GammaDistribution implements Distribution {
         }
         variance = variance/(double)samples.length;
         System.out.println("Variance = " + variance);
-
 //        System.out
 //                .println("K-S critical values: 1.22(10%), 1.36(5%), 1.63(1%)\n");
 //
@@ -543,29 +466,20 @@ public class GammaDistribution implements Distribution {
 //        test(0.5, 0.1, iters);
 //        test(0.1, 1.0, iters);
 //        test(0.9, 1.0, iters);
-
     }
-
     private static void testQuantile(double y, double shape, double scale) {
-
         long time = System.currentTimeMillis();
-
         double value = 0;
         for (int i = 0; i < 1000; i++) {
             value = quantile(y, shape, scale);
         }
         value = quantile(y, shape, scale);
         long elapsed = System.currentTimeMillis() - time;
-
-
         System.out.println("Quantile, "+ y +", for shape=" + shape + ", scale=" + scale
                 + " : " + value + ", time=" + elapsed + "ms");
-
     }
     private static void testQuantileCM(double y, double shape, double scale) {
-
         long time = System.currentTimeMillis();
-
         double value = 0;
         try {
             for (int i = 0; i < 1000; i++) {
@@ -576,15 +490,10 @@ public class GammaDistribution implements Distribution {
             e.printStackTrace();
         }
         long elapsed = System.currentTimeMillis() - time;
-
-
         System.out.println("commons.maths inverseCDF, "+ y +", for shape=" + shape + ", scale=" + scale
                 + " : " + value + ", time=" + elapsed + "ms");
-
     }
-
     private static double KolmogorovSmirnov(List<Double> l1, List<Double> l2) {
-
         int idx2 = 0;
         int max = 0;
         for (int i = 0; i < l1.size(); i++) {
@@ -595,15 +504,12 @@ public class GammaDistribution implements Distribution {
         }
         return max / Math.sqrt(2.0 * l1.size());
     }
-
     private static void testExpGamma2(double shape, double scale, double bias,
                                       int iterations, double mean) {
-
         double s0 = 0;
         double s1 = 0;
         double s2 = 0;
         List<Double> fast = new ArrayList<Double>(0);
-
         for (int i = 0; i < iterations; i++) {
             double sample = nextExpGamma(shape, scale, bias, false);
             s0 += 1;
@@ -620,13 +526,10 @@ public class GammaDistribution implements Distribution {
                 + mean + " var=" + expvar + " median="
                 + fast.get(iterations / 2) + "): z=" + z);
     }
-
     private static void testExpGamma(double shape, double scale, double bias,
                                      int iterations) {
-
         List<Double> slow = new ArrayList<Double>(0);
         List<Double> fast = new ArrayList<Double>(0);
-
         long time = System.currentTimeMillis();
         for (int i = 0; i < iterations; i++) {
             slow.add(nextExpGamma(shape, scale, bias, true));
@@ -637,42 +540,30 @@ public class GammaDistribution implements Distribution {
         }
         long fasttime = System.currentTimeMillis() - slowtime;
         slowtime -= time;
-
         Collections.sort(slow);
         Collections.sort(fast);
-
         System.out.println("KS test for shape=" + shape + ", bias=" + bias
                 + " : " + KolmogorovSmirnov(slow, fast) + " and "
                 + KolmogorovSmirnov(fast, slow) + " slow=" + slowtime + "ms, fast=" + fasttime + "ms");
-
     }
-
     private static void test(double shape, double scale, int iterations) {
-
         List<Double> slow = new ArrayList<Double>(0);
         List<Double> fast = new ArrayList<Double>(0);
-
         for (int i = 0; i < iterations; i++) {
             slow.add(nextGamma(shape, scale, true));
             fast.add(nextGamma(shape, scale, false));
         }
-
         Collections.sort(slow);
         Collections.sort(fast);
-
         System.out.println("KS test for shape=" + shape + " : "
                 + KolmogorovSmirnov(slow, fast) + " and "
                 + KolmogorovSmirnov(fast, slow));
-
     }
-
     private static void testAddition(double shape, double scale, int N,
                                      int iterations) {
-
         List<Double> slow = new ArrayList<Double>(0);
         List<Double> fast = new ArrayList<Double>(0);
         List<Double> test = new ArrayList<Double>(0);
-
         for (int i = 0; i < iterations; i++) {
             double s = 0.0;
             for (int j = 0; j < N; j++) {
@@ -686,25 +577,18 @@ public class GammaDistribution implements Distribution {
             fast.add(s);
             test.add(nextGamma(shape * N, scale, true));
         }
-
         Collections.sort(slow);
         Collections.sort(fast);
         Collections.sort(test);
-
         System.out.println("KS test for shape=" + shape + " : slow="
                 + KolmogorovSmirnov(slow, test) + " & "
                 + KolmogorovSmirnov(test, slow) + "; fast="
                 + KolmogorovSmirnov(fast, test) + " & "
                 + KolmogorovSmirnov(test, fast));
-
     }
-
     protected double shape, scale;
     protected int samples;
-
     private static final boolean TRY_COLT = false;
     private static RandomEngine randomEngine;
     private static Gamma coltGamma;
-
 }
-

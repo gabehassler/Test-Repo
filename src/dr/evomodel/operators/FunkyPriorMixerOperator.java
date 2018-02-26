@@ -1,6 +1,4 @@
-
 package dr.evomodel.operators;
-
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
 import dr.evomodel.tree.TreeModel;
@@ -10,15 +8,12 @@ import dr.inference.model.Parameter;
 import dr.inference.operators.*;
 import dr.inferencexml.operators.RandomWalkOperatorParser;
 import dr.math.MathUtils;
-
 public class FunkyPriorMixerOperator extends
         SimpleMCMCOperator {
 //        AbstractCoercableOperator {
 //        implements GibbsOperator {
-
     public FunkyPriorMixerOperator(TreeModel treeModel, Parameter parameter, double windowSize, RandomWalkOperator.BoundaryCondition bc,
                                    double weight, CoercionMode mode) {
-      
 //        super(mode);
         this.treeModel = treeModel;
 //        this.parameter = treeModel.getRootHeightParameter();
@@ -26,12 +21,9 @@ public class FunkyPriorMixerOperator extends
         this.parameter = parameter;
         this.windowSize = windowSize;
         this.condition = bc;
-
         setWeight(weight);
     }
-
     public final double doOperation() throws OperatorFailedException {
-
 //        // a random dimension to perturb
 //        int index;
 //        index = MathUtils.nextInt(parameter.getDimension());
@@ -64,7 +56,6 @@ public class FunkyPriorMixerOperator extends
 //        }
 //
 //        parameter.setParameterValue(index, newValue);
-
 //        double[] minNodeHeights = new double[treeModel.getNodeCount()];
 //        recursivelyFindNodeMinHeights(treeModel, treeModel.getRoot(), minNodeHeights);
 //
@@ -79,44 +70,31 @@ public class FunkyPriorMixerOperator extends
 //        } catch (Exception e) {
 //            System.err.println("Got exception: " + e.getMessage());
 //        }
-
-
         int iterations = 100;
-
         for (int i = 0; i < iterations; i++) {
-
 //            NodeRef node = treeModel.getNode(MathUtils.nextInt(treeModel.getNodeCount()));
 //            if (node != treeModel.getRoot()) {
 //                treeModel.getN
 //            }
-
             final int index = MathUtils.nextInt(parameter.getDimension());
             final Bounds<Double> bounds = parameter.getBounds();
             final double lower = bounds.getLowerLimit(index);
             final double upper = bounds.getUpperLimit(index);
             final double newValue = (MathUtils.nextDouble() * (upper - lower)) + lower;
-
 //            parameter.setParameterValueQuietly(index, newValue);
             parameter.setParameterValue(index, newValue);
         }
 //        ((Parameter.Default)parameter).fireParameterChangedEvent(-1, Parameter.ChangeType.VALUE_CHANGED);
-
 //        System.err.println("logFD = " + logForwardDensity);
 //        System.err.println("logBD = " + logBackwardDensity);
-
         return
                 0.0;
 //                -1 *
 //        (logBackwardDensity - logForwardDensity);
     }
-
-
     private double recursivelyFindNodeMinHeights(Tree tree, NodeRef node, double[] minNodeHeights) {
-
         // Post-order traversal
-        
         double minHeight;
-
         if (tree.isExternal(node))
             minHeight = tree.getNodeHeight(node);
         else {
@@ -124,116 +102,85 @@ public class FunkyPriorMixerOperator extends
             double minHeightChild1 = recursivelyFindNodeMinHeights(tree, tree.getChild(node, 1), minNodeHeights);
             minHeight = (minHeightChild0 > minHeightChild1) ? minHeightChild0 : minHeightChild1;
         }
-
         minNodeHeights[node.getNumber()] = minHeight;
         return minHeight;
     }
-
     private void recursivelyDrawNodeHeights(TreeModel tree, NodeRef node,
                                             double oldParentHeight, double newParentHeight, double[] minNodeHeights) {//,
 //                                            Double logForwardDensity, Double logBackwardDensity) {
         // Pre-order traversal
-
         if (tree.isExternal(node))
             return;
-
         final double oldNodeHeight = tree.getNodeHeight(node);
         double newNodeHeight = oldNodeHeight;
-
 //        System.err.println("old: " + oldNodeHeight);
 //
         if (!tree.isRoot(node)) {
-
             double minHeight = minNodeHeights[node.getNumber()];
-
             double oldDiff = oldParentHeight - minHeight;
             double newDiff = newParentHeight - minHeight;
-
             newNodeHeight = MathUtils.nextDouble() * newDiff + minHeight; // Currently uniform
             logForwardDensity -= Math.log(newDiff);
             logBackwardDensity -= Math.log(oldDiff);
-
 //            System.err.println("inner logFD = " + logForwardDensity);
-
             tree.setNodeHeight(node, newNodeHeight);            
         }
-
 //        System.err.println("new: " + newNodeHeight + "\n");
 //
         recursivelyDrawNodeHeights(tree, tree.getChild(node, 0), oldNodeHeight, newNodeHeight, minNodeHeights); //,
 //                logForwardDensity, logBackwardDensity);
         recursivelyDrawNodeHeights(tree, tree.getChild(node, 1), oldNodeHeight, newNodeHeight, minNodeHeights); //,
 //                logForwardDensity, logBackwardDensity);
-
     }
-
     //MCMCOperator INTERFACE
-
     public final String getOperatorName() {
         return FunkyPriorMixerOperatorParser.FUNKY_OPERATOR;
     }
-
     public double getCoercableParameter() {
         return Math.log(windowSize);
     }
-
     public void setCoercableParameter(double value) {
         windowSize = Math.exp(value);
     }
-
     public double getRawParameter() {
         return windowSize;
     }
-
     public double getTargetAcceptanceProbability() {
         return 0.234;
     }
-
     public double getMinimumAcceptanceLevel() {
         return 0.1;
     }
-
     public double getMaximumAcceptanceLevel() {
         return 0.4;
     }
-
     public double getMinimumGoodAcceptanceLevel() {
         return 0.20;
     }
-
     public double getMaximumGoodAcceptanceLevel() {
         return 0.30;
     }
-
     public final String getPerformanceSuggestion() {
-
         double prob = MCMCOperator.Utils.getAcceptanceProbability(this);
         double targetProb = getTargetAcceptanceProbability();
-
 //        double ws = OperatorUtils.optimizeWindowSize(windowSize, parameter.getParameterValue(0) * 2.0, prob, targetProb);
         double ws = 2;
-
         if (prob < getMinimumGoodAcceptanceLevel()) {
             return "Try decreasing windowSize to about " + ws;
         } else if (prob > getMaximumGoodAcceptanceLevel()) {
             return "Try increasing windowSize to about " + ws;
         } else return "";
     }
-
     public String toString() {
         return RandomWalkOperatorParser.RANDOM_WALK_OPERATOR + "(" + parameter.getParameterName() + ", " + windowSize + ", " + getWeight() + ")";
     }
-
     public int getStepCount() {
         return 0;
     }
-
     private final TreeModel treeModel;
     private final Parameter parameter;
     private double windowSize;
     private final RandomWalkOperator.BoundaryCondition condition;
-
     private Double logForwardDensity;
     private Double logBackwardDensity;
-
 }

@@ -1,13 +1,8 @@
-
 package dr.evolution.datatype;
-
 import java.io.Serializable;
 import java.util.*;
-
 public abstract class DataType implements Serializable {
     public static final String DATA_TYPE = "dataType";
-
-
     public static final int NUCLEOTIDES = 0;
     public static final int AMINO_ACIDS = 1;
     public static final int CODONS = 2;
@@ -15,19 +10,14 @@ public abstract class DataType implements Serializable {
     public static final int GENERAL = 4;
     public static final int COVARION = 5;
     public static final int MICRO_SAT = 6;
-
     public static final int P2PTYPE = 7;
     public static final int CONTINUOUS = 8;
-
     public static final char UNKNOWN_CHARACTER = '?';
     public static final char GAP_CHARACTER = '-';
-
     protected int stateCount;
     protected int ambiguousStateCount;
-
     // this map contains all dataTypes in the class loader that have added themselves
     static private Map<String, DataType> registeredDataTypes = null;
-
     private static void lazyRegisterDataTypes() {
         if (registeredDataTypes == null) {
             registeredDataTypes = new Hashtable<String, DataType>();
@@ -62,19 +52,14 @@ public abstract class DataType implements Serializable {
             registerDataType(ContinuousDataType.DESCRIPTION, ContinuousDataType.INSTANCE);
         }
     }
-
-
     public static void registerDataType(String name, DataType dataType) {
         lazyRegisterDataTypes();
         registeredDataTypes.put(name, dataType);
-
     }
-
     public static DataType getRegisteredDataTypeByName(String name) {
         lazyRegisterDataTypes();
         return registeredDataTypes.get(name);
     }
-
     public static String[] getRegisteredDataTypeNames() {
         lazyRegisterDataTypes();
         Set<String> set = registeredDataTypes.keySet();
@@ -83,10 +68,8 @@ public abstract class DataType implements Serializable {
         for (int i = 0; i < names.length; i++) {
             names[i] = keys.get(i);
         }
-
         return names;
     }
-
     public static DataType guessDataType(String sequence) {
         // count A, C, G, T, U, N
         long numNucs = 0;
@@ -95,20 +78,15 @@ public abstract class DataType implements Serializable {
         for (int i = 0; i < sequence.length(); i++) {
             char c = sequence.charAt(i);
             int s = Nucleotides.INSTANCE.getState(c);
-
             if (s != Nucleotides.UNKNOWN_STATE && s != Nucleotides.GAP_STATE) {
                 numNucs++;
             }
-
             if (c != '-' && c != '?') numChars++;
-
             if (c == '0' || c == '1') numBins++;
         }
-
         if (numChars == 0) {
             numChars = 1;
         }
-
         // more than 85 % frequency advocates nucleotide data
         if ((double) numNucs / (double) numChars > 0.85) {
             return Nucleotides.INSTANCE;
@@ -118,47 +96,35 @@ public abstract class DataType implements Serializable {
             return AminoAcids.INSTANCE;
         }
     }
-
     public abstract char[] getValidChars();
-
     public int getStateCount() {
         return stateCount;
     }
-
     public int getAmbiguousStateCount() {
         return ambiguousStateCount;
     }
-
     public int getState(String code) {
         return getState(code.charAt(0));
     }
-
     public int getState(char c) {
         return (int) c - 'A';
     }
-
     public int getUnknownState() {
         return stateCount;
     }
-
     public int getGapState() {
         return stateCount + 1;
     }
-
     public char getChar(int state) {
         return (char) (state + 'A');
     }
-
     public String getCode(int state) {
         return String.valueOf(getChar(state));
     }
-
     public String getTriplet(int state) {
         return " " + getChar(state) + " ";
     }
-
     public int[] getStates(int state) {
-
         int[] states;
         if (!isAmbiguousState(state)) {
             states = new int[1];
@@ -169,40 +135,31 @@ public abstract class DataType implements Serializable {
                 states[i] = i;
             }
         }
-
         return states;
     }
-
     public boolean[] getStateSet(int state) {
-
         boolean[] stateSet = new boolean[stateCount];
         if (!isAmbiguousState(state)) {
             for (int i = 0; i < stateCount; i++) {
                 stateSet[i] = false;
             }
-
             stateSet[state] = true;
         } else {
             for (int i = 0; i < stateCount; i++) {
                 stateSet[i] = true;
             }
         }
-
         return stateSet;
     }
-
     public double getObservedDistance(int state1, int state2) {
         if (!isAmbiguousState(state1) && !isAmbiguousState(state2) && state1 != state2) {
             return 1.0;
         }
-
         return 0.0;
     }
-
     public double getObservedDistanceWithAmbiguity(int state1, int state2) {
         boolean[] stateSet1 = getStateSet(state1);
         boolean[] stateSet2 = getStateSet(state2);
-
         double sumMatch = 0.0;
         double sum1 = 0.0;
         double sum2 = 0.0;
@@ -217,42 +174,31 @@ public abstract class DataType implements Serializable {
                 sum2 += 1.0;
             }
         }
-
         return (1.0 - (sumMatch / (sum1 * sum2)));
     }
-
     public String toString() {
         return getDescription();
     }
-
     public abstract String getDescription();
-
     public abstract int getType();
-
     public boolean isAmbiguousChar(char c) {
         return isAmbiguousState(getState(c));
     }
-
     public boolean isUnknownChar(char c) {
         return isUnknownState(getState(c));
     }
-
     public boolean isGapChar(char c) {
         return isGapState(getState(c));
     }
-
     public boolean isAmbiguousState(int state) {
         return (state >= stateCount);
     }
-
     public boolean isUnknownState(int state) {
         return (state == getUnknownState());
     }
-
     public boolean isGapState(int state) {
         return (state == getGapState());
     }
-
     public String getName() {
         switch (getType()) {
             case DataType.NUCLEOTIDES:
@@ -273,26 +219,18 @@ public abstract class DataType implements Serializable {
                 return "Microsatellite";
             default:
                 throw new IllegalArgumentException("Unsupported data type");
-
         }
     }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof DataType)) return false;
-
         DataType dataType = (DataType) o;
-
         if (this.getType() != dataType.getType()) return false;
-
         return true;
     }
-
     @Override
     public int hashCode() {
         return getType();
     }
-
-
 }

@@ -1,41 +1,30 @@
-
 package dr.math.distributions;
-
 import dr.math.GammaFunction;
 import dr.stats.DiscreteStatistics;
-
 //import java.io.BufferedReader;
 //import java.io.FileReader;
 //import java.io.FileNotFoundException;
 //import java.io.IOException;
 //import java.util.StringTokenizer;
-
 public class BetaKDEDistribution extends KernelDensityEstimatorDistribution {
-
      public BetaKDEDistribution(Double[] sample, Double lowerBound, Double upperBound, Double bandWidth) {
          super(sample, lowerBound, upperBound, bandWidth);
-
      }
-
      protected void processBounds(Double lowerBound, Double upperBound) {
          if (lowerBound == null || upperBound == null || upperBound - lowerBound <= 0) {
              throw new RuntimeException("BetaKDEDistribution must be bounded");
          }
          if (lowerBound > DiscreteStatistics.min(sample) || upperBound < DiscreteStatistics.max(sample))
              throw new RuntimeException("Sample range outside bounds: "+DiscreteStatistics.min(sample)+" -> "+DiscreteStatistics.max(sample));
-
          this.lowerBound = lowerBound;
          this.upperBound = upperBound;
-
          // Make a copy because we are translating values into [0,1)
          double[] oldSample = sample;
          sample = new double[sample.length];
-
          range = upperBound - lowerBound;
          for(int i=0; i<N; i++)
              sample[i] = (oldSample[i] - this.lowerBound) / range;
      }
-
      protected void setBandWidth(Double bandWidth) {
          if (bandWidth == null) {
          // Default bandwidth
@@ -44,27 +33,20 @@ public class BetaKDEDistribution extends KernelDensityEstimatorDistribution {
          } else
              this.bandWidth = bandWidth;
      }
-
      protected double evaluateKernel(double x) {
-
          double xPrime = (x - lowerBound) / range;
          double alphaMinus1 = xPrime/bandWidth - 1.0;
          double betaMinus1 = (1.0 - xPrime)/bandWidth - 1.0;
-
          if (xPrime < 2*bandWidth)           // Removing these two cases reduces the kernel to C1
              alphaMinus1 = getRho(xPrime,bandWidth) - 1.0;
          else if (xPrime > 1 - 2*bandWidth)
              betaMinus1 = getRho(1.0-xPrime,bandWidth) - 1.0;
-
          double logK = GammaFunction.lnGamma(alphaMinus1+betaMinus1+2.0) - GammaFunction.lnGamma(alphaMinus1+1.0) - GammaFunction.lnGamma(betaMinus1+1.0);
-
          double pdf = 0;
          for(int i=0; i<N; i++)
              pdf +=  Math.pow(sample[i],alphaMinus1) * Math.pow(1.0-sample[i],betaMinus1);
-
          return pdf * Math.exp(logK) / (double)N / range;
      }
-
      private double getRho(double x, double bandWidth) {
          return 2*bandWidth*bandWidth + 2.5 - Math.sqrt(4*bandWidth*bandWidth*bandWidth*bandWidth
                                                             + 6*bandWidth*bandWidth
@@ -72,11 +54,8 @@ public class BetaKDEDistribution extends KernelDensityEstimatorDistribution {
                                                             - x*x
                                                             - x/bandWidth);
      }
-
     public double sampleMean() { return DiscreteStatistics.mean(sample); }
-
     private double range;
-
 // public static void main(String[] args) {
 //
 //     String fileName = "out.txt";

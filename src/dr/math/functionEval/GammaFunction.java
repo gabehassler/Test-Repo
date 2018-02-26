@@ -1,6 +1,4 @@
-
 package dr.math.functionEval;
-
 public final class GammaFunction
 {
 	static double sqrt2Pi = Math.sqrt( 2 * Math.PI);
@@ -10,7 +8,6 @@ public final class GammaFunction
 								     -1.231739572450155,
 								      0.1208650973866179e-2,
 								     -0.5395239384953e-5};
-
 public static double beta ( double x, double y)
 {
 	return Math.exp( logGamma( x) + logGamma( y) - logGamma( x + y));

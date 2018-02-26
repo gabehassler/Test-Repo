@@ -1,45 +1,33 @@
-
 package dr.evolution.alignment;
-
 import dr.evolution.util.TaxonList;
 import dr.util.Citable;
 import dr.util.Citation;
 import dr.util.CommonCitations;
-
 import java.util.List;
 import java.util.ArrayList;
-
 public class AscertainedSitePatterns extends SitePatterns implements Citable {
-
     protected int[] includePatterns;
     protected int[] excludePatterns;
     protected int ascertainmentIncludeCount;
     protected int ascertainmentExcludeCount;
-
     public AscertainedSitePatterns(Alignment alignment) {
         super(alignment);
     }
-
     public AscertainedSitePatterns(Alignment alignment, TaxonList taxa) {
         super(alignment, taxa);
     }
-
     public AscertainedSitePatterns(Alignment alignment, int from, int to, int every) {
         super(alignment, from, to, every);
     }
-
     public AscertainedSitePatterns(Alignment alignment, TaxonList taxa, int from, int to, int every) {
         super(alignment, taxa, from, to, every);
     }
-
     public AscertainedSitePatterns(SiteList siteList) {
         super(siteList);
     }
-
     public AscertainedSitePatterns(SiteList siteList, int from, int to, int every) {
         super(siteList, from, to, every);
     }
-
     public AscertainedSitePatterns(Alignment alignment, TaxonList taxa, int from, int to, int every,
                                    int includeFrom, int includeTo,
                                    int excludeFrom, int excludeTo) {
@@ -52,14 +40,11 @@ public class AscertainedSitePatterns extends SitePatterns implements Citable {
         }
         patterns = newPatterns;
         weights = newWeights;
-
         if (includeTo - includeFrom >= 1)
             includePatterns(includeFrom, includeTo, every);
         if (excludeTo - excludeFrom >= 1)
             excludePatterns(excludeFrom, excludeTo, every);
-
     }
-
     public List<Citation> getCitations() {
         List<Citation> citations = new ArrayList<Citation>();
         citations.add(
@@ -67,15 +52,12 @@ public class AscertainedSitePatterns extends SitePatterns implements Citable {
         );
         return citations;
     }    
-
     public int getIncludePatternCount() {
         return ascertainmentIncludeCount;
     }
-
     public int[] getIncludePatternIndices() {
         return includePatterns;
     }
-
     protected void includePatterns(int includeFrom, int includeTo, int every) {
         if (includePatterns == null) {
             includePatterns = new int[includeTo - includeFrom];
@@ -87,19 +69,15 @@ public class AscertainedSitePatterns extends SitePatterns implements Citable {
             ascertainmentIncludeCount += 1;
         }
     }
-
     public int getExcludePatternCount() {
         return ascertainmentExcludeCount;
     }
-
     public int[] getExcludePatternIndices() {
         return excludePatterns;
     }
-
     protected void excludePatterns(int excludeFrom, int excludeTo, int every) {
         if (excludePatterns == null)
             excludePatterns = new int[excludeTo - excludeFrom];
-
         for (int i = excludeFrom; i < excludeTo; i += every) {
             int[] pattern = siteList.getPattern(i);
             int index = addAscertainmentPattern(pattern);
@@ -107,12 +85,9 @@ public class AscertainedSitePatterns extends SitePatterns implements Citable {
             excludePatterns[ascertainmentExcludeCount] = index;
             ascertainmentExcludeCount += 1;
         }
-
     }
-
     public double getAscertainmentCorrection(double[] patternLogProbs) {
         double excludeProb = 0, includeProb = 0, returnProb = 1.0;
-
         int[] includeIndices = getIncludePatternIndices();
         int[] excludeIndices = getExcludePatternIndices();
         for (int i = 0; i < getIncludePatternCount(); i++) {
@@ -132,7 +107,6 @@ public class AscertainedSitePatterns extends SitePatterns implements Citable {
         }
         return Math.log(returnProb);
     }
-
     private int addAscertainmentPattern(int[] pattern) {
         for (int i = 0; i < patternCount; i++) {
             if (comparePatterns(patterns[i], pattern)) {
@@ -143,7 +117,6 @@ public class AscertainedSitePatterns extends SitePatterns implements Citable {
         patterns[index] = pattern;
         weights[index] = 0.0;  /* do not affect weight */
         patternCount++;
-
         return index;
     }
 }

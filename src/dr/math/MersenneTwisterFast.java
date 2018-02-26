@@ -1,9 +1,5 @@
-
 package dr.math;
-
 import java.io.Serializable;
-
-
 class MersenneTwisterFast implements Serializable {
 	private static final long serialVersionUID = 6185086957226269797L;
 	// Period parameters
@@ -12,42 +8,31 @@ class MersenneTwisterFast implements Serializable {
 	private static final int MATRIX_A = 0x9908b0df;   //  private static final * constant vector a
 	private static final int UPPER_MASK = 0x80000000; // most significant w-r bits
 	private static final int LOWER_MASK = 0x7fffffff; // least significant r bits
-
-
 	// Tempering parameters
 	private static final int TEMPERING_MASK_B = 0x9d2c5680;
 	private static final int TEMPERING_MASK_C = 0xefc60000;
-
 	// #define TEMPERING_SHIFT_U(y)  (y >>> 11)
 	// #define TEMPERING_SHIFT_S(y)  (y << 7)
 	// #define TEMPERING_SHIFT_T(y)  (y << 15)
 	// #define TEMPERING_SHIFT_L(y)  (y >>> 18)
-
 	private int mt[]; // the array for the state vector
 	private int mti; // mti==N+1 means mt[N] is not initialized
 	private int mag01[];
-
 	// a good initial seed (of int size, though stored in a long)
 	private static final long GOOD_SEED = 4357;
-
 	private double nextNextGaussian;
 	private boolean haveNextNextGaussian;
-
 	// The following can be accessed externally by the static accessor methods which
 	// inforce synchronization
 	public static final MersenneTwisterFast DEFAULT_INSTANCE = new MersenneTwisterFast();
-
 	// Added to curernt time in default constructor, and then adjust to allow for programs that construct
 	// multiple MersenneTwisterFast in a short amount of time.
 	private static long seedAdditive_ = 0;
-
 	private long initializationSeed;
-
 	public MersenneTwisterFast() {
 		this(System.currentTimeMillis() + seedAdditive_);
 		seedAdditive_ += nextInt();
 	}
-
 	private MersenneTwisterFast(long seed) {
 		if (seed == 0) {
 			setSeed(GOOD_SEED);
@@ -55,47 +40,35 @@ class MersenneTwisterFast implements Serializable {
 			setSeed(seed);
 		}
 	}
-
-
 	public final void setSeed(long seed) {
 		if (seed == 0) {
 			throw new IllegalArgumentException("Non zero random seed required.");
 		}
 		initializationSeed = seed;
 		haveNextNextGaussian = false;
-
 		mt = new int[N];
-
 		// setting initial seeds to mt[N] using
 		// the generator Line 25 of Table 1 in
 		// [KNUTH 1981, The Art of Computer Programming
 		//    Vol. 2 (2nd Ed.), pp102]
-
 		// the 0xffffffff is commented out because in Java
 		// ints are always 32 bits; hence i & 0xffffffff == i
-
 		mt[0] = ((int) seed); // & 0xffffffff;
-
 		for (mti = 1; mti < N; mti++)
 			mt[mti] = (69069 * mt[mti - 1]); //& 0xffffffff;
-
 		// mag01[x] = x * MATRIX_A  for x=0,1
 		mag01 = new int[2];
 		mag01[0] = 0x0;
 		mag01[1] = MATRIX_A;
 	}
-
 	public final long getSeed() {
 		return initializationSeed;
 	}
-
 	public final int nextInt() {
 		int y;
-
 		if (mti >= N)   // generate N words at one time
 		{
 			int kk;
-
 			for (kk = 0; kk < N - M; kk++) {
 				y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 				mt[kk] = mt[kk + M] ^ (y >>> 1) ^ mag01[y & 0x1];
@@ -106,27 +79,20 @@ class MersenneTwisterFast implements Serializable {
 			}
 			y = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 			mt[N - 1] = mt[M - 1] ^ (y >>> 1) ^ mag01[y & 0x1];
-
 			mti = 0;
 		}
-
 		y = mt[mti++];
 		y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
 		y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
 		y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
 		y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
-
 		return y;
 	}
-
-
 	public final short nextShort() {
 		int y;
-
 		if (mti >= N)   // generate N words at one time
 		{
 			int kk;
-
 			for (kk = 0; kk < N - M; kk++) {
 				y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 				mt[kk] = mt[kk + M] ^ (y >>> 1) ^ mag01[y & 0x1];
@@ -137,27 +103,20 @@ class MersenneTwisterFast implements Serializable {
 			}
 			y = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 			mt[N - 1] = mt[M - 1] ^ (y >>> 1) ^ mag01[y & 0x1];
-
 			mti = 0;
 		}
-
 		y = mt[mti++];
 		y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
 		y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
 		y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
 		y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
-
 		return (short) (y >>> 16);
 	}
-
-
 	public final char nextChar() {
 		int y;
-
 		if (mti >= N)   // generate N words at one time
 		{
 			int kk;
-
 			for (kk = 0; kk < N - M; kk++) {
 				y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 				mt[kk] = mt[kk + M] ^ (y >>> 1) ^ mag01[y & 0x1];
@@ -168,27 +127,20 @@ class MersenneTwisterFast implements Serializable {
 			}
 			y = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 			mt[N - 1] = mt[M - 1] ^ (y >>> 1) ^ mag01[y & 0x1];
-
 			mti = 0;
 		}
-
 		y = mt[mti++];
 		y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
 		y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
 		y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
 		y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
-
 		return (char) (y >>> 16);
 	}
-
-
 	public final boolean nextBoolean() {
 		int y;
-
 		if (mti >= N)   // generate N words at one time
 		{
 			int kk;
-
 			for (kk = 0; kk < N - M; kk++) {
 				y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 				mt[kk] = mt[kk + M] ^ (y >>> 1) ^ mag01[y & 0x1];
@@ -199,27 +151,20 @@ class MersenneTwisterFast implements Serializable {
 			}
 			y = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 			mt[N - 1] = mt[M - 1] ^ (y >>> 1) ^ mag01[y & 0x1];
-
 			mti = 0;
 		}
-
 		y = mt[mti++];
 		y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
 		y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
 		y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
 		y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
-
 		return ((y >>> 31) != 0);
 	}
-
-
 	public final byte nextByte() {
 		int y;
-
 		if (mti >= N)   // generate N words at one time
 		{
 			int kk;
-
 			for (kk = 0; kk < N - M; kk++) {
 				y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 				mt[kk] = mt[kk + M] ^ (y >>> 1) ^ mag01[y & 0x1];
@@ -230,28 +175,21 @@ class MersenneTwisterFast implements Serializable {
 			}
 			y = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 			mt[N - 1] = mt[M - 1] ^ (y >>> 1) ^ mag01[y & 0x1];
-
 			mti = 0;
 		}
-
 		y = mt[mti++];
 		y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
 		y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
 		y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
 		y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
-
 		return (byte) (y >>> 24);
 	}
-
-
 	public final void nextBytes(byte[] bytes) {
 		int y;
-
 		for (int x = 0; x < bytes.length; x++) {
 			if (mti >= N)   // generate N words at one time
 			{
 				int kk;
-
 				for (kk = 0; kk < N - M; kk++) {
 					y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 					mt[kk] = mt[kk + M] ^ (y >>> 1) ^ mag01[y & 0x1];
@@ -262,29 +200,22 @@ class MersenneTwisterFast implements Serializable {
 				}
 				y = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 				mt[N - 1] = mt[M - 1] ^ (y >>> 1) ^ mag01[y & 0x1];
-
 				mti = 0;
 			}
-
 			y = mt[mti++];
 			y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
 			y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
 			y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
 			y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
-
 			bytes[x] = (byte) (y >>> 24);
 		}
 	}
-
-
 	public final long nextLong() {
 		int y;
 		int z;
-
 		if (mti >= N)   // generate N words at one time
 		{
 			int kk;
-
 			for (kk = 0; kk < N - M; kk++) {
 				y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 				mt[kk] = mt[kk + M] ^ (y >>> 1) ^ mag01[y & 0x1];
@@ -295,20 +226,16 @@ class MersenneTwisterFast implements Serializable {
 			}
 			y = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 			mt[N - 1] = mt[M - 1] ^ (y >>> 1) ^ mag01[y & 0x1];
-
 			mti = 0;
 		}
-
 		y = mt[mti++];
 		y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
 		y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
 		y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
 		y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
-
 		if (mti >= N)   // generate N words at one time
 		{
 			int kk;
-
 			for (kk = 0; kk < N - M; kk++) {
 				z = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 				mt[kk] = mt[kk + M] ^ (z >>> 1) ^ mag01[z & 0x1];
@@ -319,28 +246,21 @@ class MersenneTwisterFast implements Serializable {
 			}
 			z = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 			mt[N - 1] = mt[M - 1] ^ (z >>> 1) ^ mag01[z & 0x1];
-
 			mti = 0;
 		}
-
 		z = mt[mti++];
 		z ^= z >>> 11;                          // TEMPERING_SHIFT_U(z)
 		z ^= (z << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(z)
 		z ^= (z << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(z)
 		z ^= (z >>> 18);                        // TEMPERING_SHIFT_L(z)
-
 		return (((long) y) << 32) + (long) z;
 	}
-
-
 	public final double nextDouble() {
 		int y;
 		int z;
-
 		if (mti >= N)   // generate N words at one time
 		{
 			int kk;
-
 			for (kk = 0; kk < N - M; kk++) {
 				y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 				mt[kk] = mt[kk + M] ^ (y >>> 1) ^ mag01[y & 0x1];
@@ -351,20 +271,16 @@ class MersenneTwisterFast implements Serializable {
 			}
 			y = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 			mt[N - 1] = mt[M - 1] ^ (y >>> 1) ^ mag01[y & 0x1];
-
 			mti = 0;
 		}
-
 		y = mt[mti++];
 		y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
 		y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
 		y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
 		y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
-
 		if (mti >= N)   // generate N words at one time
 		{
 			int kk;
-
 			for (kk = 0; kk < N - M; kk++) {
 				z = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 				mt[kk] = mt[kk + M] ^ (z >>> 1) ^ mag01[z & 0x1];
@@ -375,19 +291,15 @@ class MersenneTwisterFast implements Serializable {
 			}
 			z = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 			mt[N - 1] = mt[M - 1] ^ (z >>> 1) ^ mag01[z & 0x1];
-
 			mti = 0;
 		}
-
 		z = mt[mti++];
 		z ^= z >>> 11;                          // TEMPERING_SHIFT_U(z)
 		z ^= (z << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(z)
 		z ^= (z << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(z)
 		z ^= (z >>> 18);                        // TEMPERING_SHIFT_L(z)
-
 		return ((((long) (y >>> 6)) << 27) + (z >>> 5)) / (double) (1L << 53);
 	}
-
 	public final double nextGaussian() {
 		if (haveNextNextGaussian) {
 			haveNextNextGaussian = false;
@@ -399,11 +311,9 @@ class MersenneTwisterFast implements Serializable {
 				int z;
 				int a;
 				int b;
-
 				if (mti >= N)   // generate N words at one time
 				{
 					int kk;
-
 					for (kk = 0; kk < N - M; kk++) {
 						y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 						mt[kk] = mt[kk + M] ^ (y >>> 1) ^ mag01[y & 0x1];
@@ -414,20 +324,16 @@ class MersenneTwisterFast implements Serializable {
 					}
 					y = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 					mt[N - 1] = mt[M - 1] ^ (y >>> 1) ^ mag01[y & 0x1];
-
 					mti = 0;
 				}
-
 				y = mt[mti++];
 				y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
 				y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
 				y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
 				y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
-
 				if (mti >= N)   // generate N words at one time
 				{
 					int kk;
-
 					for (kk = 0; kk < N - M; kk++) {
 						z = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 						mt[kk] = mt[kk + M] ^ (z >>> 1) ^ mag01[z & 0x1];
@@ -438,20 +344,16 @@ class MersenneTwisterFast implements Serializable {
 					}
 					z = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 					mt[N - 1] = mt[M - 1] ^ (z >>> 1) ^ mag01[z & 0x1];
-
 					mti = 0;
 				}
-
 				z = mt[mti++];
 				z ^= z >>> 11;                          // TEMPERING_SHIFT_U(z)
 				z ^= (z << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(z)
 				z ^= (z << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(z)
 				z ^= (z >>> 18);                        // TEMPERING_SHIFT_L(z)
-
 				if (mti >= N)   // generate N words at one time
 				{
 					int kk;
-
 					for (kk = 0; kk < N - M; kk++) {
 						a = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 						mt[kk] = mt[kk + M] ^ (a >>> 1) ^ mag01[a & 0x1];
@@ -462,20 +364,16 @@ class MersenneTwisterFast implements Serializable {
 					}
 					a = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 					mt[N - 1] = mt[M - 1] ^ (a >>> 1) ^ mag01[a & 0x1];
-
 					mti = 0;
 				}
-
 				a = mt[mti++];
 				a ^= a >>> 11;                          // TEMPERING_SHIFT_U(a)
 				a ^= (a << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(a)
 				a ^= (a << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(a)
 				a ^= (a >>> 18);                        // TEMPERING_SHIFT_L(a)
-
 				if (mti >= N)   // generate N words at one time
 				{
 					int kk;
-
 					for (kk = 0; kk < N - M; kk++) {
 						b = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 						mt[kk] = mt[kk + M] ^ (b >>> 1) ^ mag01[b & 0x1];
@@ -486,16 +384,13 @@ class MersenneTwisterFast implements Serializable {
 					}
 					b = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 					mt[N - 1] = mt[M - 1] ^ (b >>> 1) ^ mag01[b & 0x1];
-
 					mti = 0;
 				}
-
 				b = mt[mti++];
 				b ^= b >>> 11;                          // TEMPERING_SHIFT_U(b)
 				b ^= (b << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(b)
 				b ^= (b << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(b)
 				b ^= (b >>> 18);                        // TEMPERING_SHIFT_L(b)
-
 				v1 = 2 *
 						(((((long) (y >>> 6)) << 27) + (z >>> 5)) / (double) (1L << 53))
 						- 1;
@@ -509,14 +404,11 @@ class MersenneTwisterFast implements Serializable {
 			return v1 * multiplier;
 		}
 	}
-
 	public final float nextFloat() {
 		int y;
-
 		if (mti >= N)   // generate N words at one time
 		{
 			int kk;
-
 			for (kk = 0; kk < N - M; kk++) {
 				y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 				mt[kk] = mt[kk + M] ^ (y >>> 1) ^ mag01[y & 0x1];
@@ -527,32 +419,24 @@ class MersenneTwisterFast implements Serializable {
 			}
 			y = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 			mt[N - 1] = mt[M - 1] ^ (y >>> 1) ^ mag01[y & 0x1];
-
 			mti = 0;
 		}
-
 		y = mt[mti++];
 		y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
 		y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
 		y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
 		y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
-
 		return (y >>> 8) / ((float) (1 << 24));
 	}
-
-
 	public int nextInt(int n) {
 		if (n <= 0)
 			throw new IllegalArgumentException("n must be positive");
-
 		if ((n & -n) == n)  // i.e., n is a power of 2
 		{
 			int y;
-
 			if (mti >= N)   // generate N words at one time
 			{
 				int kk;
-
 				for (kk = 0; kk < N - M; kk++) {
 					y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 					mt[kk] = mt[kk + M] ^ (y >>> 1) ^ mag01[y & 0x1];
@@ -563,27 +447,21 @@ class MersenneTwisterFast implements Serializable {
 				}
 				y = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 				mt[N - 1] = mt[M - 1] ^ (y >>> 1) ^ mag01[y & 0x1];
-
 				mti = 0;
 			}
-
 			y = mt[mti++];
 			y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
 			y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
 			y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
 			y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
-
 			return (int) ((n * (long) (y >>> 1)) >> 31);
 		}
-
 		int bits, val;
 		do {
 			int y;
-
 			if (mti >= N)   // generate N words at one time
 			{
 				int kk;
-
 				for (kk = 0; kk < N - M; kk++) {
 					y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 					mt[kk] = mt[kk + M] ^ (y >>> 1) ^ mag01[y & 0x1];
@@ -594,22 +472,18 @@ class MersenneTwisterFast implements Serializable {
 				}
 				y = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
 				mt[N - 1] = mt[M - 1] ^ (y >>> 1) ^ mag01[y & 0x1];
-
 				mti = 0;
 			}
-
 			y = mt[mti++];
 			y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
 			y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
 			y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
 			y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
-
 			bits = (y >>> 1);
 			val = bits % n;
 		} while (bits - val + (n - 1) < 0);
 		return val;
 	}
-
 	public final void permute(int[] array) {
 		int l = array.length;
 		for (int i = 0; i < l; i++) {
@@ -619,8 +493,6 @@ class MersenneTwisterFast implements Serializable {
 			array[i] = temp;
 		}
 	}
-
-
 	public final void shuffle(int[] array) {
 		int l = array.length;
 		for (int i = 0; i < l; i++) {
@@ -630,7 +502,6 @@ class MersenneTwisterFast implements Serializable {
 			array[i] = temp;
 		}
 	}
-
 	public final void shuffle(int[] array, int numberOfShuffles) {
 		int i, j, temp, l = array.length;
 		for (int shuffle = 0; shuffle < numberOfShuffles; shuffle++) {
@@ -643,34 +514,24 @@ class MersenneTwisterFast implements Serializable {
 			array[i] = temp;
 		}
 	}
-
 	public int[] shuffled(int l) {
-
 		int[] array = new int[l];
-
 		// initialize array
 		for (int i = 0; i < l; i++) {
 			array[i] = i;
 		}
 		shuffle(array);
-
 		return array;
 	}
-
 	public int[] permuted(int l) {
-
 		int[] array = new int[l];
-
 		// initialize array
 		for (int i = 0; i < l; i++) {
 			array[i] = i;
 		}
 		permute(array);
-
 		return array;
 	}
-
-
 	public double nextGamma(double alpha, double lambda) {
 		double a = alpha;
 		double aa = -1.0, aaa = -1.0,
@@ -684,15 +545,11 @@ class MersenneTwisterFast implements Serializable {
 				e1 = 1.000000000, e2 = 0.499999994, e3 = 0.166666848,
 				e4 = 0.041664508, e5 = 0.008345522, e6 = 0.001353826,
 				e7 = 0.000247453;
-
 		double gds, p, q, t, sign_u, u, v, w, x;
 		double v1, v2, v12;
-
 		// Check for invalid input values
-
 		if (a <= 0.0) throw new IllegalArgumentException();
 		if (lambda <= 0.0) new IllegalArgumentException();
-
 		if (a < 1.0) { // CASE A: Acceptance rejection algorithm gs
 			b = 1.0 + 0.36788794412 * a;              // Step 1
 			for (; ;) {
@@ -722,10 +579,8 @@ class MersenneTwisterFast implements Serializable {
 			x = s + 0.5 * t;
 			gds = x * x;
 			if (t >= 0.0) return (gds / lambda);         // Immediate acceptance
-
 			u = nextDouble();                // Step 3. Uniform random number
 			if (d * u <= t * t * t) return (gds / lambda); // Squeeze acceptance
-
 			if (a != aaa) {                           // Step 4. Set-up for hat case
 				aaa = a;
 				r = 1.0 / a;
@@ -757,7 +612,6 @@ class MersenneTwisterFast implements Serializable {
 				}								  // Step 7. Quotient acceptance
 				if (Math.log(1.0 - u) <= q) return (gds / lambda);
 			}
-
 			for (; ;) {			                    // Step 8. Double exponential deviate t
 				do {
 					e = -Math.log(nextDouble());
@@ -787,6 +641,4 @@ class MersenneTwisterFast implements Serializable {
 			}
 		}
 	}
-
-
 }

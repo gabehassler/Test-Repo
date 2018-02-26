@@ -1,6 +1,4 @@
-
 package dr.evomodel.continuous;
-
 import dr.evolution.alignment.PatternList;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.model.*;
@@ -9,44 +7,31 @@ import dr.util.Citable;
 import dr.util.Citation;
 import dr.util.CommonCitations;
 import dr.xml.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-
-
-
 public class IntervalLatentLiabilityLikelihood extends AbstractModelLikelihood implements LatentTruncation, Citable, SoftThresholdLikelihood {
-
     public final static String LATENT_LIABILITY_LIKELIHOOD = "intervalLatentLiabilityLikelihood";
-
     public IntervalLatentLiabilityLikelihood(TreeModel treeModel, CompoundParameter tipTraitParameter) {
         super(LATENT_LIABILITY_LIKELIHOOD);
         this.treeModel = treeModel;
         this.patternList = null;
         this.tipTraitParameter = tipTraitParameter;
-
         addVariable(tipTraitParameter);
-
         setTipDataValuesForAllNodes();
-
 //        System.err.println("Name: " + tipTraitParameter.getId());
 //        System.exit(-1);
-
         for (int i = 0; i < tipTraitParameter.getParameterCount(); ++i) {
             Parameter p = tipTraitParameter.getParameter(i);
             p.addBounds(new Parameter.DefaultBounds(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, p.getDimension()));
         }
-
 //        tipTraitParameter.addBounds(new Parameter.DefaultBounds(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, tipTraitParameter.getDimension()));
-
         StringBuilder sb = new StringBuilder();
         sb.append("Constructing a unit interval latent liability likelihood model:\n");
 //        sb.append("\tBinary patterns: ").append(patternList.getId()).append("\n");
         sb.append("\tPlease cite:\n").append(Utils.getCitationString(this));
         Logger.getLogger("dr.evomodel.continuous").info(sb.toString());
     }
-
     private void setTipDataValuesForAllNodes() {
         System.err.println(tipTraitParameter.getParameterCount());
         System.err.println(tipTraitParameter.getDimension());
@@ -55,15 +40,12 @@ public class IntervalLatentLiabilityLikelihood extends AbstractModelLikelihood i
 //            tipData = new int[treeModel.getExternalNodeCount()][patternList.getPatternCount()];
             tipData = new long[tipTraitParameter.getDimension()];
         }
-
-
 //        for (int i = 0; i < treeModel.getExternalNodeCount(); i++) {
 //            NodeRef node = treeModel.getExternalNode(i);
 //            String id = treeModel.getTaxonId(i);
 //            int index = patternList.getTaxonIndex(id);
 //            setTipDataValuesForNode(node, index);
 //        }
-
 //        for (int tip = 0; tip < treeModel.getExternalNodeCount(); ++tip) {
 //            System.err.println("Tip #" + tip);
 //        Parameter oneTipTraitParameter = tipTraitParameter.getParameter(tip);
@@ -74,12 +56,10 @@ public class IntervalLatentLiabilityLikelihood extends AbstractModelLikelihood i
 //            valid = Math.round(trait) == datum;
             tipData[index] = Math.round(tipTraitParameter.getParameterValue(index));
 //            System.err.print(" " + tipData[index]);
-
 //        }
         }
 //        System.exit(-1);
     }
-
 //    private void setTipDataValuesForNode(NodeRef node, int indexFromPatternList) {
 //        // Set tip data values
 //        int index = node.getNumber();
@@ -95,40 +75,32 @@ public class IntervalLatentLiabilityLikelihood extends AbstractModelLikelihood i
 //            }
 //        }
 //    }
-
     @Override
     protected void handleModelChangedEvent(Model model, Object object, int index) {
     }
-
     @Override
     protected void handleVariableChangedEvent(Variable variable, int index, Variable.ChangeType type) {
         likelihoodKnown = false;
     }
-
     @Override
     protected void storeState() {
         storedLogLikelihood = logLikelihood;
     }
-
     @Override
     protected void restoreState() {
         logLikelihood = storedLogLikelihood;
         likelihoodKnown = true;
     }
-
     @Override
     protected void acceptState() {
         // do nothing
     }
-
     public void makeDirty() {
         likelihoodKnown = false;
     }
-
     public Model getModel() {
         return this;
     }
-
     public double getLogLikelihood() {
         if (!likelihoodKnown) {
             logLikelihood = computeLogLikelihood();
@@ -136,11 +108,9 @@ public class IntervalLatentLiabilityLikelihood extends AbstractModelLikelihood i
         }
         return logLikelihood;
     }
-
     public String toString() {
         return getClass().getName() + "(" + getLogLikelihood() + ")";
     }
-
     protected double computeLogLikelihood() {
         boolean valid = true;
 //        for (int tip = 0; tip < tipData.length && valid; ++tip) {
@@ -154,7 +124,6 @@ public class IntervalLatentLiabilityLikelihood extends AbstractModelLikelihood i
             // TODO Handle missing values
         }
 //        System.err.println("valid = " + valid);
-
         // check
         boolean valid2 = true;
         for (int tip = 0; tip < treeModel.getExternalNodeCount() && valid2; ++tip) {
@@ -162,12 +131,10 @@ public class IntervalLatentLiabilityLikelihood extends AbstractModelLikelihood i
                 valid2 = false;
             }
         }
-
 //        System.err.println(valid + " " + valid2);
         if (valid != valid2) {
             throw new RuntimeException("Error in computing validity of tips values");
         }
-
         if (valid) {
             return 0.0;
         } else {
@@ -175,7 +142,6 @@ public class IntervalLatentLiabilityLikelihood extends AbstractModelLikelihood i
             return Double.NEGATIVE_INFINITY;
         }
     }
-
     public boolean validTraitForTip(int tip) {
         boolean valid = true;
         Parameter oneTipTraitParameter = tipTraitParameter.getParameter(tip);
@@ -187,70 +153,53 @@ public class IntervalLatentLiabilityLikelihood extends AbstractModelLikelihood i
         }
         return valid;
     }
-
     // **************************************************************
     // XMLObjectParser
     // **************************************************************
-
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-
         public final static String TIP_TRAIT = "tipTrait";
-
         public String getParserName() {
             return LATENT_LIABILITY_LIKELIHOOD;
         }
-
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
             AbstractMultivariateTraitLikelihood traitLikelihood = (AbstractMultivariateTraitLikelihood)
                     xo.getChild(AbstractMultivariateTraitLikelihood.class);
 //            PatternList patternList = (PatternList) xo.getChild(PatternList.class);
             TreeModel treeModel = (TreeModel) xo.getChild(TreeModel.class);
             CompoundParameter tipTraitParameter = (CompoundParameter) xo.getElementFirstChild(TIP_TRAIT);
-
             int numTaxa = treeModel.getTaxonCount();
             int numData = traitLikelihood.getNumData();
             int dimTrait = traitLikelihood.getDimTrait();
-
             if (tipTraitParameter.getDimension() != numTaxa * numData * dimTrait) {
                 throw new XMLParseException("Tip trait parameter is wrong dimension in latent liability model");
             }
-
 //            if (!(patternList.getDataType() instanceof TwoStates)) {
 //                throw new XMLParseException("Latent liability model currently only works for binary data");
 //            }
-
 //            if (patternList.getPatternCount() != numData * dimTrait) {
 //                throw new XMLParseException("Binary data is wrong dimension in latent liability model");
 //            }
-
             return new IntervalLatentLiabilityLikelihood(treeModel, tipTraitParameter);
         }
-
         //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
-
         public String getParserDescription() {
             return "Provides the likelihood of a latent liability model on multivariate-binary trait data";
         }
-
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
-
         private final XMLSyntaxRule[] rules = {
                 new ElementRule(AbstractMultivariateTraitLikelihood.class, "The model for the latent random variables"),
                 new ElementRule(TIP_TRAIT, CompoundParameter.class, "The parameter of tip locations from the tree"),
 //                new ElementRule(PatternList.class, "The binary tip data"),
                 new ElementRule(TreeModel.class, "The tree model"),
         };
-
         public Class getReturnType() {
             return IntervalLatentLiabilityLikelihood.class;
         }
     };
-
     public List<Citation> getCitations() {
         List<Citation> citations = new ArrayList<Citation>();
         citations.add(
@@ -258,13 +207,10 @@ public class IntervalLatentLiabilityLikelihood extends AbstractModelLikelihood i
         );
         return citations;
     }
-
     public double getNormalizationConstant(Distribution working) {
         return normalizationDelegate.getNormalizationConstant(working); // delegate to abstract Delegate
     }
-
     private final LatentTruncation.Delegate normalizationDelegate = new Delegate() {
-
         protected double computeNormalizationConstant(Distribution working) {
             double constant = 0.0;
             for (long datum : tipData) {
@@ -274,28 +220,20 @@ public class IntervalLatentLiabilityLikelihood extends AbstractModelLikelihood i
 //            return 16.30411;
         }
     };
-
     public void setPathParameter(double beta){
         pathParameter=beta;
     }
-
     @Override
     public double getLikelihoodCorrection() {
         return 0;
     }
-
     private TreeModel treeModel;
     private PatternList patternList;
     private CompoundParameter tipTraitParameter;
-
     private long[] tipData;
-
     private boolean likelihoodKnown = false;
     private double logLikelihood;
     private double storedLogLikelihood;
-
     private static final boolean DEBUG = false;
-
     private double pathParameter=1;
-
 }

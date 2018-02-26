@@ -1,10 +1,8 @@
 package test.dr.evomodel.coalescent;
-
 import junit.framework.TestCase;
 import dr.evomodel.coalescent.VDdemographicFunction;
 import dr.evomodel.coalescent.VariableDemographicModel;
 import dr.evolution.util.Units;
-
 public class VDdemographicFunctionTest extends TestCase {
     public void testExp() {
         // test that numerical and exact integration match (up to a point, numerical is not that good for those 
@@ -15,7 +13,6 @@ public class VDdemographicFunctionTest extends TestCase {
             VariableDemographicModel.Type type = VariableDemographicModel.Type.EXPONENTIAL;
             Units.Type units = Units.Type.SUBSTITUTIONS;
             final VDdemographicFunction f = new VDdemographicFunction(times, logPops, units, type);
-
             double[][] vals = {{0, 2, 1e-9}, {1, 2, 1e-9}, {0, 5, 1e-6}, {2, 6, 1e-6}};
             for(double[] c : vals) {
                 double v1 = f.getIntegral(c[0], c[1]);
@@ -23,7 +20,6 @@ public class VDdemographicFunctionTest extends TestCase {
                 assertEquals(Math.abs(1 - v1 / v2), 0, c[2]);
             }
         }
-
         {
             double[] times = {1, 3};
             // try a const interval
@@ -31,7 +27,6 @@ public class VDdemographicFunctionTest extends TestCase {
             VariableDemographicModel.Type type = VariableDemographicModel.Type.EXPONENTIAL;
             Units.Type units = Units.Type.SUBSTITUTIONS;
             final VDdemographicFunction f = new VDdemographicFunction(times, logPops, units, type);
-
             double[][] vals = {{0, .7, 1e-9}, {1, 2, 1e-9}, {0, 5, 1e-6}, {2, 6, 1e-6}};
             for(double[] c : vals) {
                 double v1 = f.getIntegral(c[0], c[1]);

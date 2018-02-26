@@ -1,51 +1,33 @@
-
 package dr.evomodelxml.clock;
-
 import dr.evomodel.clock.ACLikelihood;
 import dr.evomodel.clock.RateEvolutionLikelihood;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 public class ACLikelihoodParser extends AbstractXMLObjectParser {
-
     public static final String AC_LIKELIHOOD = "ACLikelihood";
-
     public static final String VARIANCE = "variance";
     public static final String SHAPE = "shape";
-
     public static final String DISTRIBUTION = "distribution";
-
     public String getParserName() {
         return AC_LIKELIHOOD;
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         TreeModel tree = (TreeModel) xo.getChild(TreeModel.class);
-
         Parameter ratesParameter = (Parameter) xo.getElementFirstChild(RateEvolutionLikelihood.RATES);
-
         Parameter rootRate = (Parameter) xo.getElementFirstChild(RateEvolutionLikelihood.ROOTRATE);
-
         Parameter variance = (Parameter) xo.getElementFirstChild(VARIANCE);
-
         boolean isEpisodic = xo.getBooleanAttribute(RateEvolutionLikelihood.EPISODIC);
-
         //Distribution distributionModel = new InverseGaussianDistribution(0,1);
         //Parameter distribution = (Parameter) xo.getElementFirstChild(DISTRIBUTION);
         String distribution = xo.getStringAttribute(DISTRIBUTION);
-
         //boolean isLogSpace = xo.getAttribute(LOGSPACE, false);
-
         //return new ACLikelihood(tree, ratesParameter, variance, rootRate, isEpisodic, isLogSpace);
         return new ACLikelihood(tree, ratesParameter, variance, rootRate, isEpisodic, distribution);
     }
-
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
-
     public String getParserDescription() {
         return
                 "This element returns an object that can calculate the likelihood " +
@@ -58,16 +40,12 @@ public class ACLikelihoodParser extends AbstractXMLObjectParser {
                         "parent branch and the given standard deviation (the variance can be optionally proportional to " +
                         "branch length).";
     }
-
     public Class getReturnType() {
         return ACLikelihood.class;
     }
-
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     private XMLSyntaxRule[] rules = new XMLSyntaxRule[]{
             new ElementRule(TreeModel.class),
             new ElementRule(RateEvolutionLikelihood.RATES, Parameter.class, "The branch rates parameter", false),

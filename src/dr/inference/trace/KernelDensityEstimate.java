@@ -1,21 +1,15 @@
-
 package dr.inference.trace;
-
 import dr.math.distributions.GammaKDEDistribution;
 import dr.math.distributions.KernelDensityEstimatorDistribution;
 import dr.math.distributions.NormalKDEDistribution;
 import dr.stats.Variate;
 import dr.util.FrequencyDistribution;
-
 public class KernelDensityEstimate extends DensityEstimate {
-
     public KernelDensityEstimate(Double[] samples, int minimumBinCount) {
         this(KernelDensityEstimatorDistribution.Type.GAUSSIAN, samples, minimumBinCount);
     }
-
     public KernelDensityEstimate(KernelDensityEstimatorDistribution.Type type, Double[] samples, int minimumBinCount) {
         super(samples, minimumBinCount);
-        
         switch (type) {
             case GAUSSIAN: this.kde = new NormalKDEDistribution(samples);
             case GAMMA: this.kde = new GammaKDEDistribution(samples);
@@ -23,25 +17,17 @@ public class KernelDensityEstimate extends DensityEstimate {
                 throw new RuntimeException("Unknown type");
         }
     }
-    
     public KernelDensityEstimate(String type, Double[] samples, int minimumBinCount) {
         super(samples, minimumBinCount);
-       
         this.kde = new NormalKDEDistribution(samples);
-
     }
-    
     public KernelDensityEstimatorDistribution getKernelDensityEstimatorDistribution() {
     	return this.kde;
     }
-        
     protected void calculateDensity(Variate data, int minimumBinCount) {
-    	
         FrequencyDistribution frequency = calculateFrequencies(data, minimumBinCount);
-
         xCoordinates = new Variate.D();
         yCoordinates = new Variate.D();
-
         double x = frequency.getLowerBound() - (frequency.getBinSize() / 2.0);
         int extraEdgeCount = 0;
         while (kde.pdf(x) > minDensity && x > lowerBoundary) {
@@ -68,7 +54,6 @@ public class KernelDensityEstimate extends DensityEstimate {
         }
         xCoordinates.add(x);
         yCoordinates.add(0.0);
-
 //
 //
 //        int extraBinsOnEdges = 5;
@@ -80,13 +65,10 @@ public class KernelDensityEstimate extends DensityEstimate {
 //            x += frequency.getBinSize();
 //        }
     }
-
     private KernelDensityEstimatorDistribution kde;
-
     private double lowerBoundary = 0;
     private double upperBoundary = Double.POSITIVE_INFINITY;
     private static final double minDensity = 10E-6;
-
     public static void main(String[] args) {
     	Double[] samples = new Double[101];
     	for (int i = 0; i <= 100; i++) {
@@ -100,5 +82,4 @@ public class KernelDensityEstimate extends DensityEstimate {
     	System.out.println("Bandwidth: " + kde.getBandWidth());
     	System.out.println();
     }
-    
 }

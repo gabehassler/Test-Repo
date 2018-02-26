@@ -1,34 +1,23 @@
-
 package dr.math;
-
-
  public class BFloat implements Cloneable {
  	float iF;
  	int iE;
- 	
  	    2^104 = 2.03e+31.  Nice clean float, to minimize computational noise. */  
  	static private final float iRange = 20282409603651670423947251286016.0F;
  	static private final float iRangeInv = 1.0F/iRange;
  	static private final float iLogRange = (float)Math.log(iRange);
- 	
  	    value should still be representable with full mantissa. */
  	static private final float iHalfRange = 1.0e+18F;
  	static private final float iHalfRangeInv = 1.0e-18F;
- 	
  	static private final int iInfExp = 1000000000;
- 	
  	static private final boolean iCheckOF = false;
-
 	static private final int iConvTableSize = 100;
 	static private float[] iConvTable = new float[iConvTableSize];
-
 	static {
 		iConvTable[0]= 1.0F;
 		for (int i=1; i<iConvTableSize; i++)
 			iConvTable[i] = iConvTable[i-1] * iRangeInv;
 	}
-
-
     public Object clone() {
 		try {
 	    	// This magically creates an object of the right type
@@ -42,7 +31,6 @@ package dr.math;
 	    	return null;
 		}
     }
-
     public String toString() {
 		String iResult;
 		if (iE == iInfExp) {
@@ -67,8 +55,6 @@ package dr.math;
 		}
 		return iResult;
 	}
-
- 	
  	private void normalise() {
  		if (iF > 0.0) {
  			while (iF > iHalfRange) {
@@ -97,7 +83,6 @@ package dr.math;
  			}
  		}
  	}
- 	
  	private void normaliseOnce() {
  		if (iF > 0.0) {
  			if (iF > iHalfRange) {
@@ -124,15 +109,11 @@ package dr.math;
  			}
  		}
  	}
-
-
-	
  	public BFloat(float iX) {
  		iF = iX;
  		iE = 0;
  		normalise();
  	}
- 	
  	public BFloat(double iX) {
  	    // This is a bit of code-duplication, but
  	    // I didn't see a clean way of doing it.
@@ -161,24 +142,17 @@ package dr.math;
  		iF = (float)iX;
  		iE = iExp;
  	}
- 	
  	public BFloat(float iF, int iE) {
  		this.iF = iF;
  		this.iE = iE;
  	}
-
-	
 	public static BFloat exp(float iX) {
 		int iN = (int)Math.round(iX / iLogRange);
 		return new BFloat( (float)Math.exp(iX - iN*iLogRange), iN );
 	}
-	
-	
 	public double log() {
 		return iE*(double)iLogRange + Math.log(iF);
 	}
- 	
- 	
  	public void add(BFloat iBF) {
  		if (iE >= iBF.iE) {
  			if (iE < iBF.iE + iConvTableSize) {
@@ -198,29 +172,21 @@ package dr.math;
  		// devious programming, since iHalfRange is not precisely 
  		// the square root of iRange.
  	}
- 	
  	public void add(float iX) {
  		this.add( new BFloat( iX ) );
  	}
- 	
  	public void add(double iX) {
  		this.add( new BFloat( iX ) );
  	}
- 	
  	public void multiply(BFloat iBF) {
  		iF *= iBF.iF;
  		iE += iBF.iE;
  		normaliseOnce();
  	}
- 	
  	public void multiply(float iX) {
  		this.multiply( new BFloat( iX ) );
  	}
- 	
  	public void multiply(double iX) {
  		this.multiply( new BFloat( iX ) );
  	}
- 	
-	
 }
-

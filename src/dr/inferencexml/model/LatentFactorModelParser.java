@@ -1,10 +1,6 @@
-
 package dr.inferencexml.model;
-
 import dr.inference.model.*;
 import dr.xml.*;
-
-
 public class LatentFactorModelParser extends AbstractXMLObjectParser {
     public final static String LATENT_FACTOR_MODEL = "latentFactorModel";
     public final static String NUMBER_OF_FACTORS = "factorNumber";
@@ -16,14 +12,10 @@ public class LatentFactorModelParser extends AbstractXMLObjectParser {
     public static final String SCALE_DATA="scaleData";
     public static final String CONTINUOUS="continuous";
     public static final String COMPUTE_RESIDUALS_FOR_DISCRETE="computeResidualsForDiscrete";
-
-
     public String getParserName() {
         return LATENT_FACTOR_MODEL;
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         MatrixParameter factors = MatrixParameter.recast("name",
                 (CompoundParameter) xo.getChild(FACTORS).getChild(CompoundParameter.class));
         MatrixParameter dataParameter = (MatrixParameter) xo.getChild(DATA).getChild(MatrixParameter.class);
@@ -39,18 +31,15 @@ public class LatentFactorModelParser extends AbstractXMLObjectParser {
         boolean scaleData=xo.getAttribute(SCALE_DATA, true);
  //       int numFactors = xo.getAttribute(NUMBER_OF_FACTORS, 4);
         Parameter temp=null;
-        for(int i=0; i<loadings.getColumnDimension(); i++)
-        {
-            if(loadings.getParameterValue(i,i)<0)
-            {
-               loadings.setParameterValue(i, i, temp.getParameterValue(i));
-            }
-        }
-
-
+//        for(int i=0; i<loadings.getColumnDimension(); i++)
+//        {
+//            if(loadings.getParameterValue(i,i)<0)
+//            {
+//               loadings.setParameterValue(i, i, temp.getParameterValue(i));
+//            }
+//        }
         return new LatentFactorModel(dataParameter, factors, loadings, rowPrecision, colPrecision, scaleData, continuous, newModel);
     }
-
     private static final XMLSyntaxRule[] rules = {
             AttributeRule.newIntegerRule(NUMBER_OF_FACTORS),
             AttributeRule.newBooleanRule(SCALE_DATA, true),
@@ -74,23 +63,18 @@ public class LatentFactorModelParser extends AbstractXMLObjectParser {
                     new ElementRule(Parameter.class)
             }, true),
     };
-
 //    <latentFactorModel>
 //      <factors>
 //         <parameter idref="factors"/>
 //      </factors>
 //    </latentFactorModel>
-
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     @Override
     public String getParserDescription() {
         return "Sets up a latent factor model, with starting guesses for the loadings and factor matrices as well as the data for the factor analysis";
     }
-
     @Override
     public Class getReturnType() {
         return LatentFactorModel.class;

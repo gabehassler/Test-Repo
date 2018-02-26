@@ -1,19 +1,13 @@
-
 package dr.inference.model;
-
 import java.util.ArrayList;
 import java.util.List;
-
 public class ProductStatistic extends Statistic.Abstract {
-
     private int dimension = 0;
     private final boolean elementwise;
-
     public ProductStatistic(String name, boolean elementwise) {
         super(name);
         this.elementwise = elementwise;
     }
-
     public void addStatistic(Statistic statistic) {
         if (!elementwise) {
             if (dimension == 0) {
@@ -26,15 +20,11 @@ public class ProductStatistic extends Statistic.Abstract {
         }
         statistics.add(statistic);
     }
-
     public int getDimension() {
         return dimension;
     }
-
     public double getStatisticValue(int dim) {
-
         double product = 1.0;
-
         for (Statistic statistic : statistics) {
             if (elementwise) {
                 for (int j = 0; j < statistic.getDimension(); j++) {
@@ -44,13 +34,10 @@ public class ProductStatistic extends Statistic.Abstract {
                 product *= statistic.getStatisticValue(dim);
             }
         }
-
         return product;
     }
-
     // ****************************************************************
     // Private and protected stuff
     // ****************************************************************
-
     private final List<Statistic> statistics = new ArrayList<Statistic>();
 }

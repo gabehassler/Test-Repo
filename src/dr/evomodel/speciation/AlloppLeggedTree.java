@@ -1,38 +1,19 @@
-
 package dr.evomodel.speciation;
-
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.Locale;
 import java.util.Stack;
-
-
 import dr.util.AlloppMisc;
 import jebl.util.FixedBitSet;
-
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.SlidableTree;
 import dr.evolution.util.Taxon;
 import dr.math.MathUtils;
-
-
-
-
-
-
-
-
-
 public class AlloppLeggedTree implements  SlidableTree  {
-
     private ALTNode[] altnodes;
     private int rootn;
-
     private int diphistlftleg;
     private int diphistrgtleg;
-
-
-
     private class ALTNode extends AlloppNode.Abstract implements AlloppNode, NodeRef {
         private int anc;
         private int lft;
@@ -41,7 +22,6 @@ public class AlloppLeggedTree implements  SlidableTree  {
         private Taxon taxon;
         private FixedBitSet union;
         private int nodeNumber;
-
         // dud constuctor
         ALTNode(int nn) {
             anc = -1;
@@ -52,7 +32,6 @@ public class AlloppLeggedTree implements  SlidableTree  {
             union = null;
             nodeNumber = nn;
         }
-
         // copy constructor
         public ALTNode(ALTNode node) {
             anc = node.anc;
@@ -61,7 +40,6 @@ public class AlloppLeggedTree implements  SlidableTree  {
             nodeNumber = node.nodeNumber;
             copyNonTopologyFields(node);
         }
-
         // no-topology constructor. Copies all fields of argument node,
         // except the anc, lft, rgt fields which are set to `unknown',
         // and the index field, which is set to nn
@@ -72,9 +50,6 @@ public class AlloppLeggedTree implements  SlidableTree  {
             nodeNumber = nn;
             copyNonTopologyFields(node);
         }
-
-
-
         private void copyNonTopologyFields(ALTNode node) {
             height = node.height;
             taxon = new Taxon(node.taxon.getId());
@@ -84,33 +59,26 @@ public class AlloppLeggedTree implements  SlidableTree  {
                 union = new FixedBitSet(node.union);
             }
         }
-
         @Override
         public AlloppNode getChild(int ch) {
             return ch==0 ? altnodes[lft] : altnodes[rgt];
         }
-
         @Override
         public AlloppNode getAnc() {
             return altnodes[anc];
         }
-
-
         @Override
         public double getHeight() {
             return height;
         }
-
         @Override
         public Taxon getTaxon() {
             return taxon;
         }
-
         @Override
         public FixedBitSet getUnion() {
             return union;
         }
-
         @Override
         public void setChild(int ch, AlloppNode newchild) {
             int newch = ((ALTNode)newchild).nodeNumber;
@@ -120,30 +88,22 @@ public class AlloppLeggedTree implements  SlidableTree  {
                 rgt = newch;
             }
         }
-
         @Override
         public void setAnc(AlloppNode anc) {
             this.anc = ((ALTNode)anc).nodeNumber;
         }
-
         @Override
         public void setTaxon(String name) {
             this.taxon = new Taxon(name);
-
         }
-
-
         @Override
         public void setHeight(double height) {
             this.height = height;
-
         }
-
         @Override
         public void setUnion(FixedBitSet union) {
             this.union = union;
         }
-
         @Override
         public void addChildren(AlloppNode c0, AlloppNode c1) {
             lft = ((ALTNode)c0).nodeNumber;
@@ -151,7 +111,6 @@ public class AlloppLeggedTree implements  SlidableTree  {
             rgt = ((ALTNode)c1).nodeNumber;
             altnodes[rgt].anc = nodeNumber;
         }
-
         @Override
         public String asText(int indentlen) {
             StringBuilder s = new StringBuilder();
@@ -167,32 +126,21 @@ public class AlloppLeggedTree implements  SlidableTree  {
             formatter.format("%s ", AlloppMisc.nonnegIn8Chars(height));
             return s.toString();
         }
-
-
         @Override
         public int nofChildren() {
             return (lft < 0) ? 0 : 2;
         }
-
         @Override
         public int getNumber() {
             return nodeNumber;
         }
-
         @Override
         public void setNumber(int n) {
             nodeNumber = n;
-
         }
-
-
-
     }
-
-
     public AlloppLeggedTree(Taxon[] taxa, double rate) {
         int noftets = taxa.length;
-
         // Make array of dud nodes
         altnodes = new ALTNode[2 * noftets - 1];
         for (int i = 0; i < altnodes.length; i++) {
@@ -222,9 +170,6 @@ public class AlloppLeggedTree implements  SlidableTree  {
         diphistrgtleg = -1;
         rootn = altnodes.length - 1;
     }
-
-
-
     public AlloppLeggedTree(AlloppLeggedTree x) {
         altnodes = new ALTNode[x.altnodes.length];
         for (int n = 0; n < altnodes.length; n++) {
@@ -233,10 +178,7 @@ public class AlloppLeggedTree implements  SlidableTree  {
         rootn = x.rootn;
         this.diphistlftleg = x.diphistlftleg;
         this.diphistrgtleg = x.diphistrgtleg;
-
     }
-
-
     public AlloppLeggedTree(AlloppLeggedTree ttree1, AlloppLeggedTree ttree2, double hybHeight) {
         altnodes = new ALTNode[1 + ttree1.altnodes.length + ttree2.altnodes.length];
         diphistlftleg = ttree2.diphistlftleg;
@@ -251,8 +193,6 @@ public class AlloppLeggedTree implements  SlidableTree  {
         altnodes[nextn].setHeight(hybHeight);
         rootn = nextn;
     }
-
-
     public AlloppLeggedTree(AlloppLeggedTree tetTree, AlloppNode sub) {
         ALTNode node = (ALTNode)sub;
         int ntips = tetTree.noftipsSubtree(node);
@@ -263,8 +203,6 @@ public class AlloppLeggedTree implements  SlidableTree  {
         int nextn = copySubtree(0, node);
         rootn = nextn - 1;
     }
-
-
     public AlloppLeggedTree(Taxon[] taxa) {
         int nTaxa = taxa.length;
         assert(nTaxa <= 4);
@@ -273,7 +211,6 @@ public class AlloppLeggedTree implements  SlidableTree  {
         for (int n = 0; n < nNodes; n++) {
             altnodes[n] = new ALTNode(n);
         }
-
         for (int t = 0; t<nTaxa; t++) {
             altnodes[t].setTaxon(taxa[t].getId());
             altnodes[t].setHeight(0.0);
@@ -298,67 +235,42 @@ public class AlloppLeggedTree implements  SlidableTree  {
         }
         rootn = altnodes.length - 1;
     }
-
-
-
     // SlidableTree implementation
-
     @Override
     public NodeRef getSlidableRoot() {
         assert altnodes[rootn].anc < 0;
         return altnodes[rootn];
     }
-
-
-
     @Override
     public void replaceSlidableRoot(NodeRef root) {
         rootn = root.getNumber();
         altnodes[rootn].anc = -1;
     }
-
-
-
     @Override
     public int getSlidableNodeCount() {
         return altnodes.length;
     }
-
-
-
     @Override
     public double getSlidableNodeHeight(NodeRef node) {
         return altnodes[node.getNumber()].getHeight();
     }
-
     @Override
     public Taxon getSlidableNodeTaxon(NodeRef node) {
         return altnodes[node.getNumber()].getTaxon();
     }
-
     @Override
     public void setSlidableNodeHeight(NodeRef node, double height) {
         altnodes[node.getNumber()].height = height;
-
     }
-
-
-
     @Override
     public boolean isExternalSlidable(NodeRef node) {
         return (altnodes[node.getNumber()].lft < 0);
     }
-
-
-
     @Override
     public NodeRef getSlidableChild(NodeRef node, int j) {
         int n = node.getNumber();
         return j == 0 ? altnodes[ altnodes[n].lft ] : altnodes[ altnodes[n].rgt ];
     }
-
-
-
     @Override
     public void replaceSlidableChildren(NodeRef node, NodeRef lft, NodeRef rgt) {
         int nn = node.getNumber();
@@ -370,20 +282,12 @@ public class AlloppLeggedTree implements  SlidableTree  {
         altnodes[lftn].anc = altnodes[nn].nodeNumber;
         altnodes[rgtn].anc = altnodes[nn].nodeNumber;
     }
-
-
-
     String asText(int tt) {
         String header = "Tetraploid tree " + String.valueOf(tt) + "     height" + System.getProperty("line.separator");
         String s = "";
         Stack<Integer> x = new Stack<Integer>();
         return header + AlloppNode.Abstract.subtreeAsText(altnodes[rootn], s, x, 0, "");
-
     }
-
-
-
-
     boolean leggedtreeOK() {
         int nroots = 0;
         for (int i = 0; i < altnodes.length; i++) {
@@ -442,11 +346,6 @@ public class AlloppLeggedTree implements  SlidableTree  {
         }
         return true;
     }
-
-
-
-
-
     public int scaleAllHeights(double scale) {
         int count = 0;
         for (int n = 0; n < altnodes.length; n++) {
@@ -457,8 +356,6 @@ public class AlloppLeggedTree implements  SlidableTree  {
         }
         return count;
     }
-
-
     public ArrayList<Taxon> getSpeciesTaxons() {
         ArrayList<Taxon> sptxs = new ArrayList<Taxon>();
         for (int n = 0; n < altnodes.length; n++) {
@@ -470,10 +367,6 @@ public class AlloppLeggedTree implements  SlidableTree  {
         assert sptxs.size() == getExternalNodeCount();
         return sptxs;
     }
-
-
-
-
     public void fillinTipUnions(AlloppSpeciesBindings apsp, int leg) {
         for (int n = 0; n < altnodes.length; n++) {
             if (altnodes[n].nofChildren() == 0) {
@@ -481,24 +374,15 @@ public class AlloppLeggedTree implements  SlidableTree  {
             }
         }
     }
-
     public double getRootHeight() {
         return altnodes[rootn].height;
     }
-
-
-
     public int getExternalNodeCount() {
         return (altnodes.length + 1) / 2;
     }
-
     public int getInternalNodeCount() {
         return (altnodes.length - 1) / 2;
     }
-
-
-
-
     public void collectInternalHeights(ArrayList<Double> heights) {
         for (int n = 0; n < altnodes.length; n++) {
             if (altnodes[n].nofChildren() > 0) {
@@ -506,28 +390,18 @@ public class AlloppLeggedTree implements  SlidableTree  {
             }
         }
     }
-
-
     public void setDiphistLftLeg(int lftleg) {
         diphistlftleg = lftleg;
     }
-
     public void setDiphistRgtLeg(int rgtleg) {
         diphistrgtleg = rgtleg;
     }
-
     public int getDiphistLftLeg() {
         return diphistlftleg;
     }
-
     public int getDiphistRgtLeg() {
         return diphistrgtleg;
     }
-
-
-
-
-
     private int copySubtree(int nextn, ALTNode node) {
         if (node.nofChildren() == 0) {
             altnodes[nextn] = new ALTNode(nextn, node);
@@ -545,7 +419,6 @@ public class AlloppLeggedTree implements  SlidableTree  {
         }
         return nextn;
     }
-
     private int noftipsSubtree(ALTNode node) {
         int ntips = 0;
         if (node.lft >= 0) {
@@ -557,20 +430,8 @@ public class AlloppLeggedTree implements  SlidableTree  {
         }
         return ntips;
     }
-
-
     private double randomnodeheight(double rate) {
         return MathUtils.nextExponential(rate) + 1e-6/rate;
         // 1e-6/rate to avoid very tiny heights
     }
-
-
-
-
-
-
-
-
-
-
 }

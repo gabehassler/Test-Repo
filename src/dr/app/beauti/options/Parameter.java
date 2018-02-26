@@ -1,27 +1,18 @@
-
 package dr.app.beauti.options;
-
 import dr.app.beauti.types.PriorScaleType;
 import dr.app.beauti.types.PriorType;
 import dr.math.distributions.Distribution;
-
 import java.io.Serializable;
 import java.util.Map;
-
 public class Parameter implements Serializable {
     private static final long serialVersionUID = -8008521511485034329L;
-
     public static final double UNIFORM_MAX_BOUND = 1.0E100;
-
     private String prefix = null;
     private boolean priorEdited;
-
     private boolean meanInRealSpace = false;
-
     // Required para
     private String baseName;
     private final String description;
-
     // final Builder para
     public String taxaId; // needs to change TMRCA stat name. Issue 520
     public final boolean isNodeHeight;
@@ -35,14 +26,10 @@ public class Parameter implements Serializable {
     public boolean isCalibratedYule = false;
 //    public final double lower;
 //    public final double upper;
-
     private PartitionOptions options;
-
     public final PriorScaleType scaleType;
-
     public final boolean isPriorFixed;
     public PriorType priorType;
-
     // Editable fields
     public boolean isFixed;
     public double initial;
@@ -58,18 +45,14 @@ public class Parameter implements Serializable {
     public double precision;
     public double uniformUpper;
     public double uniformLower;
-
     public boolean isLinked;
     public String linkedName;
-
     public static class Builder {
         // Required para
         private final String baseName;
         private final String description;
-
         // Optional para - initialized to default values
         private PriorScaleType scaleType = PriorScaleType.NONE;
-
         private String taxaId = null;
         private boolean isNodeHeight = false;
         private boolean isDiscrete = false;
@@ -79,12 +62,9 @@ public class Parameter implements Serializable {
         private boolean isZeroOne = false;
         private boolean isStatistic = false;
         private boolean isCached = false;
-
         private PartitionOptions options = null;
-
         private PriorType priorType = PriorType.NONE_TREE_PRIOR;
         private boolean isPriorFixed = false;
-
         private double initial = Double.NaN;
         //        private double upper = Double.NaN;
 //        private double lower = Double.NaN;
@@ -98,19 +78,14 @@ public class Parameter implements Serializable {
         public double scale = 1.0;
         public double offset = 0.0;
         public double precision = 1.0;
-
         // the uniform distribution has explicit bounds (ignores the truncations):
         public double uniformUpper = UNIFORM_MAX_BOUND;
         public double uniformLower = -UNIFORM_MAX_BOUND;
-
         private boolean isFixed = false;
-
-
         public Builder(String name, String description) {
             this.baseName = name;
             this.description = description;
         }
-
         public Builder duplicate(Parameter source) {
             scaleType = source.scaleType;
             taxaId = source.taxaId;
@@ -141,57 +116,46 @@ public class Parameter implements Serializable {
             isFixed = source.isFixed;
             return this;
         }
-
         public Builder scaleType(PriorScaleType scaleType) {
             this.scaleType = scaleType;
             return this;
         }
-
         public Builder initial(double initial) {
             this.initial = initial;
             return this;
         }
-
         public Builder taxaId(String taxaId) {
             this.taxaId = taxaId;
             return this;
         }
-
         public Builder isNodeHeight(boolean isNodeHeight) {
             this.isNodeHeight = isNodeHeight;
             return this;
         }
-
         public Builder isCached(boolean isCached) {
             this.isCached = isCached;
             return this;
         }
-
         public Builder isStatistic(boolean isStatistic) {
             this.isStatistic = isStatistic;
             return this;
         }
-
         public Builder partitionOptions(PartitionOptions options) {
             this.options = options;
             return this;
         }
-
         public Builder prior(PriorType priorType) {
             this.priorType = priorType;
             return this;
         }
-
         public Builder isDiscrete(boolean isDiscrete) {
             this.isDiscrete = isDiscrete;
             return this;
         }
-
         public Builder isHierarchical(boolean isHierarchical) {
             this.isHierarchical = isHierarchical;
             return this;
         }
-
         public Builder isNonNegative(boolean isNonNegative) {
             this.isNonNegative = isNonNegative;
             if (isNonNegative) {
@@ -199,7 +163,6 @@ public class Parameter implements Serializable {
             }
             return this;
         }
-
         public Builder isZeroOne(boolean isZeroOne) {
             this.isZeroOne = isZeroOne;
             if (isZeroOne) {
@@ -208,90 +171,73 @@ public class Parameter implements Serializable {
             }
             return this;
         }
-
         public Builder isCMTCRate(boolean isCMTCRate) {
             this.isCMTCRate = isCMTCRate;
             return this;
         }
-
         public Builder isFixed(boolean isFixed) {
             this.isFixed = isFixed;
             return this;
         }
-
         public Builder isPriorFixed(boolean priorFixed) {
             this.isPriorFixed = priorFixed;
             return this;
         }
-
         public Builder uniformUpper(double upper) {
             this.uniformUpper = upper;
             return this;
         }
-
         public Builder uniformLower(double lower) {
             this.uniformLower = lower;
             return this;
         }
-
         public Builder truncationUpper(double truncationUpper) {
             this.isTruncated = true;
             this.truncationUpper = truncationUpper;
             return this;
         }
-
         public Builder truncationLower(double truncationLower) {
             this.isTruncated = true;
             this.truncationLower = truncationLower;
             return this;
         }
-
         public Builder mean(double mean) {
             this.mean = mean;
             return this;
         }
-
         public Builder stdev(double stdev) {
             this.stdev = stdev;
             return this;
         }
-
         public Builder precision(double precision) {
             this.precision = precision;
             return this;
         }
-
         public Builder shape(double shape) {
             this.shape = shape;
             return this;
         }
-
         public Builder shapeB(double shapeB) {
             this.shapeB = shapeB;
             return this;
         }
-
         public Builder scale(double scale) {
             this.scale = scale;
             return this;
         }
-
         public Builder offset(double offset) {
             this.offset = offset;
             return this;
         }
-
         public Parameter build() {
             return new Parameter(this);
         }
-
         public Parameter build(Map<String, Parameter> map) {
             final Parameter parameter = new Parameter(this);
             map.put(baseName, parameter);
             return parameter;
         }
     }
-
     private Parameter(Builder builder) {
         baseName = builder.baseName;
         description = builder.description;
@@ -323,29 +269,24 @@ public class Parameter implements Serializable {
         offset = builder.offset;
         uniformUpper = builder.uniformUpper;
         uniformLower = builder.uniformLower;
-
         // ExponentialDistribution(1.0 / mean)
         if (priorType == PriorType.EXPONENTIAL_PRIOR && mean == 0) mean = 1;
         if (priorType == PriorType.LOGNORMAL_PRIOR && meanInRealSpace && mean <= 0) mean = 0.01;
     }
-
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++
     public void setPrefix(String prefix) {
         this.prefix = prefix;
     }
-
     private String getFullName() {
         if (prefix != null) return prefix + getBaseName();
         return getBaseName();
     }
-
     public String getBaseName() {
         if (taxaId != null) {
             return taxaId; // do not why use taxaId for tmrca, they seems duplicated
         }
         return baseName;
     }
-
     public String getName() {
         if (taxaId != null) {
             return "tmrca(" + getFullName() + ")";
@@ -353,12 +294,9 @@ public class Parameter implements Serializable {
             return getFullName();
         }
     }
-
     public void setName(String name) {
         this.baseName = name;
     }
-
-
     public String getXMLName() { // only for BeautiTemplate
         if (taxaId != null) {
             return "tmrca_" + getFullName();
@@ -366,48 +304,38 @@ public class Parameter implements Serializable {
             return getFullName();
         }
     }
-
     public String getDescription() {
         if (taxaId != null && options != null) {
             return description + " on tree " + options.getName();
         }
         return description;
     }
-
     public double getPriorExpectationMean() {
         double expMean = 1.0;
         Distribution dist = priorType.getDistributionInstance(this);
         if (dist != null) {
             expMean = dist.mean();
-
             if (expMean == 0) {
                 expMean = dist.quantile(0.975);
             }
-
             if (expMean == 0) {
                 expMean = 1.0;
             }
         }
-
         return expMean;
     }
-
     public PartitionOptions getOptions() {
         return options;
     }
-
     public void setOptions(PartitionOptions options) { // need to set, which keeps consistent to taxonSetsTreeModel
         this.options = options;
     }
-
     public void setPriorEdited(boolean priorEdited) {
         this.priorEdited = priorEdited;
     }
-
     public boolean isPriorEdited() {
         return priorEdited;
     }
-
     public boolean isPriorImproper() {
         if (
             // 1/x is an improper prior but we probably don't want to flag it as
@@ -419,51 +347,38 @@ public class Parameter implements Serializable {
         }
         return false;
     }
-
     public double getLowerBound() {
         double lower = Double.NEGATIVE_INFINITY;
-
         if (priorType == PriorType.UNIFORM_PRIOR) {
             lower = uniformLower;
         }
-
         if (isNonNegative || isZeroOne) {
             if (lower < 0) lower = 0.0;
         }
-
         if (isTruncated && !Double.isInfinite(truncationLower)) {
             lower = truncationLower;
         }
-
         return lower;
     }
-
     public double getUpperBound() {
         double upper = Double.POSITIVE_INFINITY;
-
         if (isZeroOne) {
             if (upper > 1) upper = 1.0;
         }
-
         if (priorType == PriorType.UNIFORM_PRIOR) {
             upper = uniformUpper;
         }
-
         if (isTruncated && !Double.isInfinite(truncationUpper)) {
             upper = truncationUpper;
         }
-
         return upper;
     }
-
     public boolean isMeanInRealSpace() {
         return meanInRealSpace;
     }
-
     public void setMeanInRealSpace(boolean meanInRealSpace) {
         this.meanInRealSpace = meanInRealSpace;
     }
-
     @Override
     public String toString() {
         return getName();

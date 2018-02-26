@@ -1,31 +1,20 @@
-
 package dr.app.gui.table;
-
 import dr.app.gui.components.RealNumberField;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
-
 public class DateCellEditor extends DefaultCellEditor {
-
     private static final long serialVersionUID = 5067833373685886590L;
     private RealNumberField editor;
-
     public DateCellEditor() {
         this(false);
     }
-
     public DateCellEditor(boolean allowEmpty) {
         super(new RealNumberField(0.0, Double.MAX_VALUE));
-
         editor = (RealNumberField) getComponent();
         editor.setAllowEmpty(allowEmpty);
-
         setClickCountToStart(2); //This is usually 1 or 2.
-
         // Must do this so that editing stops when appropriate.
         editor.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -33,15 +22,12 @@ public class DateCellEditor extends DefaultCellEditor {
             }
         });
     }
-
     protected void fireEditingStopped() {
         super.fireEditingStopped();
     }
-
     public Object getCellEditorValue() {
         return editor.getValue();
     }
-
     public Component getTableCellEditorComponent(JTable table,
                                                  Object value,
                                                  boolean isSelected,

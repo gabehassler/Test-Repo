@@ -1,18 +1,8 @@
-
 package dr.evomodel.speciation;
-
-
-
 import java.util.Stack;
-
 import dr.evolution.tree.SimpleNode;
 import dr.evolution.util.Taxon;
-
 import jebl.util.FixedBitSet;
-
-
-
-
 public interface AlloppNode {
 	int nofChildren();
 	AlloppNode getChild(int ch);
@@ -20,23 +10,16 @@ public interface AlloppNode {
 	Taxon getTaxon();
 	double getHeight();
 	FixedBitSet getUnion();
-	
 	void setChild(int ch, AlloppNode newchild);
 	void setAnc(AlloppNode anc);
 	void setTaxon(String name);
 	void setHeight(double height);
 	void setUnion(FixedBitSet union);
 	void addChildren(AlloppNode c0, AlloppNode c1);
-
     String asText(int indentlen);
-	
 	void fillinUnionsInSubtree(int unionsize);
 	AlloppNode nodeOfUnionInSubtree(FixedBitSet x);
-
-
     public abstract class Abstract implements AlloppNode {
-		 
-
 		public void fillinUnionsInSubtree(int unionsize) {
 			if (nofChildren() > 0) {
 				getChild(0).fillinUnionsInSubtree(unionsize);
@@ -47,8 +30,6 @@ public interface AlloppNode {
 				setUnion(union);
 			}
 		}	
-		
-		
 		public AlloppNode nodeOfUnionInSubtree(FixedBitSet x) {
 			if (nofChildren() == 0) {
 				return this;
@@ -61,12 +42,6 @@ public interface AlloppNode {
 				return this;
 			}
 		}
-
-
-
-
-
-
         public static String subtreeAsText(AlloppNode node, String s, Stack<Integer> x, int depth, String b) {
             Integer[] y = x.toArray(new Integer[x.size()]);
             StringBuffer indent = new StringBuffer();
@@ -91,9 +66,6 @@ public interface AlloppNode {
             }
             return s + subs;
         }
-
-
-
         static int simpletree2piotree(PopsIOSpeciesBindings piosb, AlloppNode[] nodes, int nextn,
                                          SimpleNode snode) {
             if (snode.isExternal()) {
@@ -112,8 +84,5 @@ public interface AlloppNode {
             nextn++;
             return nextn;
         }
-		
 	}
-
-
 }

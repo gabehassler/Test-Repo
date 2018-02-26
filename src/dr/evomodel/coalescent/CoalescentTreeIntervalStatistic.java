@@ -1,19 +1,13 @@
-
-
 package dr.evomodel.coalescent;
-
 import dr.evolution.coalescent.TreeIntervals;
 import dr.evolution.tree.Tree;
 import dr.inference.model.Statistic;
-
 public class CoalescentTreeIntervalStatistic extends Statistic.Abstract {
-
     private Tree tree;
     private TreeIntervals intervals;
     private int dimension;
     private double[] nonZeroIntervals;
     private int[] lineageCounts;
-
     public CoalescentTreeIntervalStatistic(Tree tree) {
         this.tree = tree;
         this.intervals = new TreeIntervals(tree);
@@ -23,38 +17,30 @@ public class CoalescentTreeIntervalStatistic extends Statistic.Abstract {
         this.nonZeroIntervals = new double[this.dimension];
         removeZeroLengthIntervals(intervals);
     }
-
     public int getDimension() {
     	return this.dimension;
     }
-
     public double getStatisticValue(int i) {
     	//need more elegant way to trigger recalculation of intervals
     	if (i == 0) {
     		intervals.setIntervalsUnknown();
     		removeZeroLengthIntervals(intervals);
     	}
-    	
         //double interval = intervals.getInterval(i);
     	//return interval;
-    	
     	return this.nonZeroIntervals[i];
     }
-    
     public double getLineageCount(int i) {
     	//need more elegant way to trigger recalculation of intervals
     	if (i == 0) {
     		intervals.setIntervalsUnknown();
     		removeZeroLengthIntervals(intervals);
     	}
-    	
     	return this.lineageCounts[i];
     }
-    
     public String getStatisticName() {
     	return "coalescentTreeIntervalStatistic";
     }
-    
     private void setDimension(TreeIntervals intervals) {
     	int dim = intervals.getIntervalCount();
     	for (int i = 0; i < intervals.getIntervalCount(); i++) {
@@ -64,7 +50,6 @@ public class CoalescentTreeIntervalStatistic extends Statistic.Abstract {
     	}
     	this.dimension = dim;
     }
-    
     private void removeZeroLengthIntervals(TreeIntervals intervals) {
     	int dim = 0;
     	for (int i = 0; i < intervals.getIntervalCount(); i++) {

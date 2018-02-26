@@ -1,14 +1,9 @@
-
 package dr.math.functionEval;
-
-
 import dr.math.interfaces.OneVariableFunction;
 public final class FunctionDerivative implements OneVariableFunction
 {
 	private OneVariableFunction f;
 	 private double relativePrecision = 0.0001;
-
-
 public FunctionDerivative( OneVariableFunction func)
 {
 	this( func, 0.000001);

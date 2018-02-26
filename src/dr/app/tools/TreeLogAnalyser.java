@@ -1,6 +1,4 @@
-
 package dr.app.tools;
-
 import dr.app.beast.BeastVersion;
 import dr.app.util.Arguments;
 import dr.app.util.Utils;
@@ -9,47 +7,35 @@ import dr.evolution.io.NexusImporter;
 import dr.evolution.tree.Tree;
 import dr.evomodel.tree.TreeTraceAnalysis;
 import dr.util.Version;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
 public class TreeLogAnalyser {
-
     private final static Version version = new BeastVersion();
-
     static boolean combine = true;
-
     public TreeLogAnalyser(int burnin, String inputFileName, String outputFileName, String trueTreeFileName,
                            String exportFileName, double minSupport, double credibleSetProbability, int maxExport, boolean verbose) throws IOException {
-
         List<File> files = new ArrayList<File>();
         File inputFile = new File(inputFileName);
-
         if (inputFile.isDirectory()) {
             System.out.println("Analysing all tree files below directory: " + inputFileName);
-
             collectFiles(inputFile, files);
         } else if (inputFile.isFile()) {
             System.out.println("Analysing tree file: " + inputFileName);
-
             files.add(inputFile);
         } else {
             System.err.println(inputFileName + " does not exist!");
             System.exit(0);
         }
-
         if( files.size() == 0 ) {
            System.err.println("No valid files");
            System.exit(0);
         }
-
         if (outputFileName != null) {
             FileOutputStream outputStream = new FileOutputStream(outputFileName);
             System.setOut(new PrintStream(outputStream));
         }
-
         Tree trueTree = null;
         if (trueTreeFileName != null) {
             NexusImporter importer = new NexusImporter(new FileReader(trueTreeFileName));
@@ -59,12 +45,9 @@ public class TreeLogAnalyser {
                 throw new IOException(e.getMessage());
             }
         }
-
         analyze(files, burnin, trueTree, verbose, exportFileName, minSupport, credibleSetProbability, maxExport, new boolean[]{true});
     }
-
     private static void collectFiles(File file, List<File> files) {
-
         if (file.isFile()) {
             if (file.getName().endsWith(".tre") || file.getName().endsWith(".trees") || file.getName().endsWith(".t")) {
                 files.add(file);
@@ -76,10 +59,8 @@ public class TreeLogAnalyser {
             }
         }
     }
-
     private static void analyze(List<File> files, int burnin, Tree tree, boolean verbose, String exportFileName,
                                 double minSupport, double credibleSetProbability, int maxExport, boolean[] drawHeader) {
-
         if (combine) {
             try {
                 Reader[] readers = new Reader[files.size()];
@@ -100,7 +81,6 @@ public class TreeLogAnalyser {
                         drawHeader[0] = false;
                     }
                 }
-
             } catch (IOException ioe) {
                 //
             }
@@ -121,7 +101,6 @@ public class TreeLogAnalyser {
             }
         }
     }
-
     public static void printTitle() {
         System.out.println();
         centreLine("TreeLogAnalyser " + version.getVersionString() + ", " + version.getDateString(), 60);
@@ -139,7 +118,6 @@ public class TreeLogAnalyser {
         System.out.println();
         System.out.println();
     }
-
     public static void centreLine(String line, int pageWidth) {
         int n = pageWidth - line.length();
         int n1 = n / 2;
@@ -148,25 +126,18 @@ public class TreeLogAnalyser {
         }
         System.out.println(line);
     }
-
-
     public static void printUsage(Arguments arguments) {
-
         arguments.printUsage("treeloganalyser", "<input-file-name> [<true-tree-file-name> [<output-file-name>]]");
         System.out.println();
         System.out.println("  Example: treeloganalyser test.trees trueTree.tree out.txt");
         System.out.println();
     }
-
     //Main method
     public static void main(String[] args) throws java.io.IOException {
-
         // There is a major issue with languages that use the comma as a decimal separator.
         // To ensure compatibility between programs in the package, enforce the US locale.
         Locale.setDefault(Locale.US);
-
         printTitle();
-
         Arguments arguments = new Arguments(
                 new Arguments.Option[]{
                         new Arguments.IntegerOption("burnin", "the number of states to be considered as 'burn-in' [default = none]"),
@@ -177,7 +148,6 @@ public class TreeLogAnalyser {
                         new Arguments.Option("short", "use this option to produce a short report"),
                         new Arguments.Option("help", "option to print this message")
                 });
-
         try {
             arguments.parseArguments(args);
         } catch (Arguments.ArgumentException ae) {
@@ -185,73 +155,56 @@ public class TreeLogAnalyser {
             printUsage(arguments);
             System.exit(1);
         }
-
         if (arguments.hasOption("help")) {
             printUsage(arguments);
             System.exit(0);
         }
-
         int burnin = -1;
         if (arguments.hasOption("burnin")) {
             burnin = arguments.getIntegerOption("burnin");
         }
-
         boolean shortReport = arguments.hasOption("short");
-
         String exportFileName = null;
         if (arguments.hasOption("export")) {
             exportFileName = arguments.getStringOption("export");
         }
-
         double minSupport = 0.0;
         if (arguments.hasOption("limit")) {
             minSupport = arguments.getRealOption("limit");
         }
-
         double credibleSetProbability = 0.95;
         if (arguments.hasOption("probability")) {
             credibleSetProbability = arguments.getRealOption("probability");
         }
-
         int maxExport = -1;
         if (arguments.hasOption("max")) {
             maxExport = arguments.getIntegerOption("max");
         }
-
         String inputFileName = null;
         String trueTreeFileName = null;
         String outputFileName = null;
-
         String[] args2 = arguments.getLeftoverArguments();
-
         if (args2.length > 3) {
             System.err.println("Unknown option: " + args2[2]);
             System.err.println();
             printUsage(arguments);
             System.exit(1);
         }
-
         if (args2.length > 0) {
             inputFileName = args2[0];
         }
-
         if (args2.length > 1) {
             trueTreeFileName = args2[1];
         }
-
         if (args2.length > 2) {
             outputFileName = args2[2];
         }
-
         if (inputFileName == null) {
             // No input file name was given so throw up a dialog box...
             inputFileName = Utils.getLoadFileName("TreeLogAnalyser " + version.getVersionString() + " - Select log file to analyse");
         }
-
         new TreeLogAnalyser(burnin, inputFileName, outputFileName, trueTreeFileName, exportFileName,
                 minSupport, credibleSetProbability, maxExport, !shortReport);
-
         System.exit(0);
     }
 }
-

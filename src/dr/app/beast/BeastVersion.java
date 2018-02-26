@@ -1,32 +1,19 @@
-
 package dr.app.beast;
-
 import dr.util.Version;
-
 public class BeastVersion implements Version {
-
     private static final String VERSION = "1.8.3";
-
     private static final String DATE_STRING = "2002-2015";
-
     private static final boolean IS_PRERELEASE = true;
-
-    // this is now being manually updated since the move to GitHub. Using date in yyyymmdd format (suffix
-    // with b,c,d etc if multiple revisions in a day.
-    private static final String REVISION = "GitHub 20150808";
-
+    private static final String REVISION = "$Rev$";
     public String getVersion() {
         return VERSION;
     }
-
     public String getVersionString() {
         return "v" + VERSION + (IS_PRERELEASE ? " Prerelease " + getBuildString() : "");
     }
-
     public String getDateString() {
         return DATE_STRING;
     }
-
     public String[] getCredits() {
         return new String[]{
                 "Designed and developed by",
@@ -45,7 +32,6 @@ public class BeastVersion implements Version {
                 "msuchard@ucla.edu",
                 "",
                 "Downloads, Help & Resources:",
-
                 "\thttp://beast.bio.ed.ac.uk",
                 "",
                 "Source code distributed under the GNU Lesser General Public License:",
@@ -60,7 +46,6 @@ public class BeastVersion implements Version {
                 "Thanks to:",
                 "\tRoald Forsberg, Beth Shapiro and Korbinian Strimmer"};
     }
-
     public String getHTMLCredits() {
         return
                 "<p>Designed and developed by<br>" +
@@ -81,7 +66,6 @@ public class BeastVersion implements Version {
                         "Oliver Pybus, Chieh-Hsi Wu, Walter Xie</p>" +
                         "<p>Thanks to Roald Forsberg, Beth Shapiro and Korbinian Strimmer</p>";
     }
-
     public String getBuildString() {
         try {
             return "r" + REVISION.split(" ")[1];

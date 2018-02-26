@@ -1,22 +1,14 @@
-
 package dr.evomodel.arg.coalescent;
-
-
 import dr.evomodel.arg.ARGModel;
 import dr.xml.*;
 import org.apache.commons.math.util.MathUtils;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Logger;
-
 public class ARGUniformPrior extends ARGCoalescentLikelihood {
-
 	public static final String ARG_UNIFORM_PRIOR = "argUniformPrior";
 	public static final String INITIAL_CALCULATIONS = "initialCalculations";
 	public static final int INITIAL_DEFAULT = 5;
-
-
 	public static final double[][] logARGCoalescentCount = {
 			//3 external taxa
 			{1.0986122886681098, 4.276666119016055, 8.265650165580329,
@@ -97,16 +89,11 @@ public class ARGUniformPrior extends ARGCoalescentLikelihood {
 					123.22250024459373, 132.52766774855348, 141.9423328912873,
 					151.46431112672838, 161.0911356940919, 170.82020228928107}
 	};
-
 	private ArrayList<Double> argNumber;
-
 	public ARGUniformPrior(ARGModel arg, int max, int initial) {
 		super(ARG_UNIFORM_PRIOR, arg, max);
-
 		addModel(arg);
-
 		argNumber = new ArrayList<Double>(15);
-
 		if (arg.getExternalNodeCount() - 3 < logARGCoalescentCount.length) {
 			Logger.getLogger("dr.evomodel").info("Creating ARGUniformPrior using stored arg counts");
 			for (int i = 0, n = arg.getExternalNodeCount() - 3; i < logARGCoalescentCount[n].length; i++)
@@ -118,68 +105,47 @@ public class ARGUniformPrior extends ARGCoalescentLikelihood {
 			}
 		}
 	}
-
 	public double getLogARGNumber(int i) {
 		if (i >= argNumber.size()) {
 			argNumber.add(logNumberARGS(arg.getExternalNodeCount(), i));
 		}
 		return argNumber.get(i);
 	}
-
 	public double getLogLikelihood() {
 		if (likelihoodKnown) {
 			return logLikelihood;
 		}
-
 		likelihoodKnown = true;
 		logLikelihood = calculateLogLikelihood();
-
-
 		if (arg.getReassortmentNodeCount() > maxReassortments)
 			logLikelihood = Double.NEGATIVE_INFINITY;
 		else
 			logLikelihood = calculateLogLikelihood();
-
 		if (!currentARGValid(true)) {
 			logLikelihood = Double.NEGATIVE_INFINITY;
 		}
-
 		return logLikelihood;
 	}
-
 	public double calculateLogLikelihood() {
-
-
 		double treeHeight = arg.getNodeHeight(arg.getRoot());
 		int internalNodes = arg.getInternalNodeCount() - 1;
-
-
 		double logLike = logFactorial(internalNodes) - (double) internalNodes * Math.log(treeHeight)
 				- getLogARGNumber(arg.getReassortmentNodeCount());
-
 		assert !Double.isInfinite(logLike) && !Double.isNaN(logLike);
-
-
 		return logLike;
 	}
-
 	private double logFactorial(int n) {
 		double rValue = 0;
-
 		for (int i = n; i > 0; i--) {
 			rValue += Math.log(i);
 		}
 		return rValue;
 	}
-
-
 	private int numberARGS(int taxa, int argNumber) {
 		int x = taxa;
 		int n = 2 * argNumber + taxa - 1;
-
 		return shurikoRecursion(x, n);
 	}
-
 	private int shurikoRecursion(int x, int n) {
 		int a = 0;
 		if (x == 0) {
@@ -203,10 +169,8 @@ public class ARGUniformPrior extends ARGCoalescentLikelihood {
 		}
 		return a;
 	}
-
 	public static double logNumberARGS(int start, int reassortments) {
 		Logger.getLogger("dr.evomodel").warning("Calculating ARG count for " + reassortments  + " reassortments.  This may take awhile");
-		
 		if (reassortments == 0) {
 			double a = 0;
 			for (int i = start; i > 2; i--) {
@@ -214,10 +178,8 @@ public class ARGUniformPrior extends ARGCoalescentLikelihood {
 			}
 			return a;
 		}
-
 		int[] max = new int[start - 3 + reassortments * 2];
 		int[] x = new int[max.length];
-
 		int i = 0;
 		while (i < reassortments) {
 			x[i] = max[i] = 1;
@@ -228,7 +190,6 @@ public class ARGUniformPrior extends ARGCoalescentLikelihood {
 			i++;
 		}
 		double before = 100;
-
 		double approx = 0;
 		while (x[0] != -9 && !stopCombination(x, start)) {
 			if (testCombination(x, start)) {
@@ -239,77 +200,54 @@ public class ARGUniformPrior extends ARGCoalescentLikelihood {
 			}
 			nextCombination(x);
 		}
-
 		approx = Math.log(approx);
-
 		int[] y = new int[max.length + 2];
 		for (i = 0; i < max.length; i++)
 			y[i] = max[i];
 		y[y.length - 2] = y[y.length - 1] = -1;
-
 		max = generateValues(y, start);
-
 		for (int k = 0; k < y.length; k++)
 			approx += Math.log(max[k]);
-
 		return approx;
-
 	}
-
 	private static double reduceThenDivide(int[] top, int[] bottom) {
-
 		if (false) {
 			for (int i = 0; i < top.length; i++) {
 				for (int j = 0; j < bottom.length; j++) {
 					int gcd = MathUtils.gcd(top[i], bottom[j]);
-
 					if (gcd > 1) {
 						top[i] = top[i] / gcd;
 						bottom[j] = bottom[j] / gcd;
 					}
 				}
-
 			}
-
 		}
-
 		Arrays.sort(top);
 		Arrays.sort(bottom);
-
-
 		double a = 1;
 		for (int i = 0; i < top.length; i++)
 			a *= (double) top[i] / bottom[i];
 		return a;
-
 	}
-
 	private static int[] generateValues(int[] x, int start) {
 		int[] y = new int[x.length];
-
 		for (int i = 0; i < x.length; i++) {
 			if (x[i] == 1)
 				y[i] = start;
 			else
 				y[i] = start * (start - 1) / 2;
-
 			start += x[i];
-
 		}
 		return y;
 	}
-
 	private static boolean testCombination(int[] x, int start) {
-
 		for (int i = 0; i < x.length; i++) {
 			start += x[i];
 			if (start == 1)
 				return false;
 		}
 		return true;
-
 	}
-
 	private static boolean stopCombination(int[] x, int start) {
 		for (int i = 0; i < x.length; i++) {
 			if (x[i] == -1) {
@@ -323,11 +261,9 @@ public class ARGUniformPrior extends ARGCoalescentLikelihood {
 		}
 		return false;
 	}
-
 	private static void nextCombination(int[] x) {
 		if (x[x.length - 1] == -1) {
 			int i = x.length - 1;
-
 			while (i > -1) {
 				if (x[i] == 1) {
 					x[i] = -1;
@@ -335,7 +271,6 @@ public class ARGUniformPrior extends ARGCoalescentLikelihood {
 					return;
 				} else
 					i--;
-
 			}
 		} else {
 			int endOnes = 0;
@@ -351,70 +286,49 @@ public class ARGUniformPrior extends ARGCoalescentLikelihood {
 					break;
 				} else
 					i--;
-
 			}
 			if (nextOne == -1) {
 				x[0] = -9;
 				return;
 			}
-
 			x[nextOne] = -1;
 			x[nextOne + 1] = 1;
-
 			for (i = 0; i < endOnes; i++)
 				x[i + nextOne + 2] = 1;
-
 			i = nextOne + 2 + endOnes;
-
 			while (i < x.length) {
 				x[i] = -1;
 				i++;
 			}
 		}
 	}
-
-
 	public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-
 		public String getParserDescription() {
 			return "A uniform prior for an ARG model";
 		}
-
 		public Class getReturnType() {
 			return ARGUniformPrior.class;
 		}
-
 		public String getParserName() {
 			return ARG_UNIFORM_PRIOR;
 		}
-
 		public XMLSyntaxRule[] getSyntaxRules() {
 			return rules;
 		}
-
 		private XMLSyntaxRule[] rules = new XMLSyntaxRule[]{
 				new ElementRule(ARGModel.class),
-
 		};
-
 		public Object parseXMLObject(XMLObject xo) throws XMLParseException {
 			ARGModel argModel = (ARGModel) xo.getChild(ARGModel.class);
-
 			int max = Integer.MAX_VALUE;
 			if (xo.hasAttribute(MAX_REASSORTMENTS)) {
 				max = xo.getIntegerAttribute(MAX_REASSORTMENTS);
 			}
-
 			int initial = INITIAL_DEFAULT;
 			if (xo.hasAttribute(INITIAL_CALCULATIONS)) {
 				initial = xo.getIntegerAttribute(INITIAL_CALCULATIONS);
 			}
-
 			return new ARGUniformPrior(argModel, max, initial);
 		}
-
-
 	};
-
-
 }

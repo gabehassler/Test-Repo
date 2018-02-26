@@ -1,24 +1,15 @@
-
 package dr.app.beauti.components.dollo;
-
 import dr.app.beauti.options.*;
 import dr.app.beauti.types.PriorScaleType;
-
 import java.util.List;
-
-
 public class DolloComponentOptions implements ComponentOptions {
-
     public static final String DEATH_RATE = "death.rate";
     public static final String DATA_NAME = "binaryDolloDataType";
     public static final String MODEL_NAME = "binaryDolloSubstModel";
-
 	final private BeautiOptions options;
-
 	public DolloComponentOptions(final BeautiOptions options) {
 		this.options = options;
 	}
-
 	public void createParameters(ModelOptions modelOptions) {
         for (AbstractPartitionData partition : options.dataPartitions) {
             if (partition.getPartitionSubstitutionModel().isDolloModel()) {
@@ -29,7 +20,6 @@ public class DolloComponentOptions implements ComponentOptions {
             }
         }
 	}
-
 	public void selectOperators(ModelOptions modelOptions, List<Operator> ops) {
         for (AbstractPartitionData partition : options.dataPartitions) {
             PartitionSubstitutionModel model = partition.getPartitionSubstitutionModel();
@@ -39,7 +29,6 @@ public class DolloComponentOptions implements ComponentOptions {
             }
         }
 	}
-
 	public void selectParameters(ModelOptions modelOptions,
 			List<Parameter> params) {
         for (AbstractPartitionData partition : options.dataPartitions) {
@@ -51,23 +40,18 @@ public class DolloComponentOptions implements ComponentOptions {
             }
         }
 	}
-
 	public void selectStatistics(ModelOptions modelOptions,
 			List<Parameter> stats) {
 		// Do nothing
 	}
-
 	public BeautiOptions getOptions() {
 		return options;
 	}
-
     public void setActive(boolean active) {
         this.active = active;
     }
-
     public boolean isActive() {
         return active;
     }
-
     private boolean active = false;
 }

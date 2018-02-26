@@ -1,18 +1,13 @@
 package test.dr.integration;
-
 public class BEASTInputFile {
-
 	public static final double ct = 1; // fixed	
 	public static final double birthRate = 50;
-	
 	private double ac;
 	private double ag;
 	private double at;
 	private double cg;
 	private double gt;
     private String fileNamePrefix;    
-
-    
 	public double getAc() {
 		return ac;
 	}
@@ -49,6 +44,4 @@ public class BEASTInputFile {
 	public void setFileNamePrefix (String fileNamePrefix) {
 		this.fileNamePrefix = fileNamePrefix;
 	}
-
- 
 }

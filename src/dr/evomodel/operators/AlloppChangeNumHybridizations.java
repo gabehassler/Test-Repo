@@ -1,45 +1,28 @@
-
-
 package dr.evomodel.operators;
-
 import java.util.ArrayList;
-
-
 import dr.evomodel.speciation.*;
 import dr.evomodelxml.operators.AlloppChangeNumHybridizationsParser;
 import dr.inference.operators.OperatorFailedException;
 import dr.inference.operators.SimpleMCMCOperator;
-
 import dr.math.MathUtils;
 import jebl.util.FixedBitSet;
-
-
-
-
 public class AlloppChangeNumHybridizations  extends SimpleMCMCOperator {
-
     private final AlloppSpeciesNetworkModel apspnet;
     private final AlloppSpeciesBindings apsp;
     static private final int footdistribution = 2;
-
-
     public AlloppChangeNumHybridizations(AlloppSpeciesNetworkModel apspnet, AlloppSpeciesBindings apsp, double weight) {
         this.apspnet = apspnet;
         this.apsp = apsp;
         setWeight(weight);
     }
-
-
     public String getPerformanceSuggestion() {
         return "None";
     }
-
     @Override
     public String getOperatorName() {
         return AlloppChangeNumHybridizationsParser.CHANGE_NUM_HYBRIDIZATIONS + "(" + apspnet.getId() +
                 "," + apsp.getId() + ")";
     }
-
     @Override
     public double doOperation() throws OperatorFailedException {
         if (apspnet.getOneHybridization()) {
@@ -56,31 +39,24 @@ public class AlloppChangeNumHybridizations  extends SimpleMCMCOperator {
         assert apspnet.netAndGTreesAreCompatible();
         return hr;
     }
-
     private class MergeCandidate {
         public int i;
         public int j;
-
         MergeCandidate(int i, int j) {
             this.i = i;
             this.j = j;
         }
     }
-
-
     private class SplitCandidate {
         public int i;
         public AlloppNode root1;
         public AlloppNode root2;
-
         SplitCandidate(int i, AlloppNode root1, AlloppNode root2) {
             this.i = i;
             this.root1 = root1;
             this.root2 = root2;
         }
     }
-
-
     private double doMergeMove() {
         double hr = 0.0;
         ArrayList<MergeCandidate> mcands = findCandidateMerges();
@@ -96,8 +72,6 @@ public class AlloppChangeNumHybridizations  extends SimpleMCMCOperator {
         }
         return hr;
     }
-
-
     private double doSplitMove() {
         double hr = 0.0;
         ArrayList<SplitCandidate> scands = findCandidateSplits();
@@ -113,8 +87,6 @@ public class AlloppChangeNumHybridizations  extends SimpleMCMCOperator {
         }
         return hr;
     }
-
-
     private ArrayList<MergeCandidate> findCandidateMerges() {
         ArrayList<MergeCandidate> mcands = new ArrayList<MergeCandidate>();
         int numttrees = apspnet.getNumberOfTetraTrees();
@@ -127,14 +99,9 @@ public class AlloppChangeNumHybridizations  extends SimpleMCMCOperator {
         }
         return mcands;
     }
-
-
     private int countCandidateMerges() {
         return findCandidateMerges().size();
     }
-
-
-
     private ArrayList<SplitCandidate> findCandidateSplits() {
         ArrayList<SplitCandidate> scands = new ArrayList<SplitCandidate>();
         int numttrees = apspnet.getNumberOfTetraTrees();
@@ -149,13 +116,9 @@ public class AlloppChangeNumHybridizations  extends SimpleMCMCOperator {
         }
         return scands;
     }
-
     private int countCandidateSplits() {
         return findCandidateSplits().size();
     }
-
-
-
     private boolean pairAreMergeable(int tt1, int tt2) {
         boolean mergeable = true;
         AlloppLeggedTree ttree1 = apspnet.getTetraploidTree(tt1);
@@ -165,8 +128,6 @@ public class AlloppChangeNumHybridizations  extends SimpleMCMCOperator {
         mergeable = mergeable && adhist.tettreesShareLegs(ttree1, ttree2);
         return mergeable;
     }
-
-
     private double mergeTettreePair(int tt1, int tt2) {
         double hr = 0.0;
         AlloppLeggedTree ttree1 = apspnet.getTetraploidTree(tt1);
@@ -224,13 +185,10 @@ public class AlloppChangeNumHybridizations  extends SimpleMCMCOperator {
         adhist.removeFeet(apspnet, ttree1);
         return hr;
     }
-
-
     private double uniformpdf(double min, double max) {
         double density = 1.0 / (max-min);
         return density;
     }
-
     private double splitTettree(int tt, AlloppNode root1, AlloppNode root2) {
         double hr = 0.0;
         // collect info from old TetraTree
@@ -285,11 +243,4 @@ public class AlloppChangeNumHybridizations  extends SimpleMCMCOperator {
         hr += Math.log(2.0);
         return hr;
     }
-
-
-
 }
-
-
-
-

@@ -1,25 +1,16 @@
-
 package dr.app.beauti.alignmentviewer;
-
 import javax.swing.*;
 import java.awt.*;
-
 public class TaxonPane extends JPanel {
-
 	private JList taxonList;
 	private DefaultListModel taxonListModel;
-
 	public TaxonPane() {
-
 		setLayout(new BorderLayout());
-
 		taxonListModel = new DefaultListModel();
 		taxonList = new JList(taxonListModel);
 		taxonList.setFont(new Font("sansserif", Font.PLAIN, 10));
-
 		add(taxonList, BorderLayout.CENTER);
 	}
-
 	public void setAlignmentBuffer(AlignmentBuffer alignment) {
 		taxonListModel.removeAllElements();
 		if (alignment != null) {
@@ -28,9 +19,7 @@ public class TaxonPane extends JPanel {
 			}
 		}
 	}
-
 	public void setRowHeight(int rowHeight) {
 		taxonList.setFixedCellHeight(rowHeight);
 	}
-
 }

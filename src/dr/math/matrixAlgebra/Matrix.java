@@ -1,14 +1,10 @@
-
 package dr.math.matrixAlgebra;
-
 public class Matrix {
     protected double[][] components;
     protected LUPDecomposition lupDecomposition = null;
-
     public Matrix(double[][] a) {
         components = a;
     }
-
     public Matrix(double[] a, int n, int m) {
         if (n <= 0 || m <= 0)
             throw new NegativeArraySizeException(
@@ -24,10 +20,8 @@ public class Matrix {
                 components[i][j] = a[k];
                 k++;
             }
-
         }
     }
-
     public Matrix(int n, int m) throws NegativeArraySizeException {
         if (n <= 0 || m <= 0)
             throw new NegativeArraySizeException(
@@ -35,7 +29,6 @@ public class Matrix {
         components = new double[n][m];
         clear();
     }
-
     public void accumulate(Matrix a) throws IllegalDimension {
         if (a.rows() != rows() || a.columns() != columns())
             throw new IllegalDimension("Operation error: cannot add a"
@@ -48,7 +41,6 @@ public class Matrix {
                 components[i][j] += a.component(i, j);
         }
     }
-
     public Matrix add(Matrix a) throws IllegalDimension {
         if (a.rows() != rows() || a.columns() != columns())
             throw new IllegalDimension("Operation error: cannot add a "
@@ -57,7 +49,6 @@ public class Matrix {
                     + columns() + " matrix");
         return new Matrix(addComponents(a));
     }
-
     protected double[][] addComponents(Matrix a) {
         int n = this.rows();
         int m = this.columns();
@@ -68,35 +59,27 @@ public class Matrix {
         }
         return newComponents;
     }
-
     public void clear() {
         int m = components[0].length;
         for (int i = 0; i < components.length; i++) {
             for (int j = 0; j < m; j++) components[i][j] = 0;
         }
     }
-
     public int columns() {
         return components[0].length;
     }
-
     public double component(int n, int m) {
         return components[n][m];
     }
-
     public double determinant() throws IllegalDimension {
         return lupDecomposition().determinant();
     }
-
     public double logDeterminant() throws IllegalDimension {
         return lupDecomposition().logDeterminant();
     }
-
     public boolean isPD() throws IllegalDimension {
         return lupDecomposition().isPD();
     }
-
-
     public boolean equals(Matrix a) {
         int n = this.rows();
         if (a.rows() != n)
@@ -112,7 +95,6 @@ public class Matrix {
         }
         return true;
     }
-
     public Matrix inverse() throws ArithmeticException {
         try {
             return new Matrix(
@@ -123,22 +105,18 @@ public class Matrix {
                             .productWithTransposedComponents(this));
         }
     }
-
     public boolean isSquare() {
         return rows() == columns();
     }
-
     protected LUPDecomposition lupDecomposition()
             throws IllegalDimension {
         if (lupDecomposition == null)
             lupDecomposition = new LUPDecomposition(this);
         return lupDecomposition;
     }
-
     public Matrix product(double a) {
         return new Matrix(productComponents(a));
     }
-
     public Vector product(Vector v) throws IllegalDimension {
         int n = this.rows();
         int m = this.columns();
@@ -148,7 +126,6 @@ public class Matrix {
                     + v.dimension());
         return secureProduct(v);
     }
-
     public Matrix product(Matrix a) throws IllegalDimension {
         if (a.rows() != columns())
             throw new IllegalDimension(
@@ -159,7 +136,6 @@ public class Matrix {
                             + " matrix");
         return new Matrix(productComponents(a));
     }
-
     protected double[][] productComponents(double a) {
         int n = this.rows();
         int m = this.columns();
@@ -170,7 +146,6 @@ public class Matrix {
         }
         return newComponents;
     }
-
     protected double[][] productComponents(Matrix a) {
         int p = this.columns();
         int n = this.rows();
@@ -186,7 +161,6 @@ public class Matrix {
         }
         return newComponents;
     }
-
     public Matrix productWithTransposed(Matrix a)
             throws IllegalDimension {
         if (a.columns() != columns())
@@ -198,7 +172,6 @@ public class Matrix {
                             + " matrix");
         return new Matrix(productWithTransposedComponents(a));
     }
-
     public static Matrix buildIdentityTimesElementMatrix(int dim, double element){
         double[][] idTemp=new double[dim][dim];
         for (int i = 0; i < dim; i++) {
@@ -206,7 +179,6 @@ public class Matrix {
         }
         return new Matrix(idTemp);
     }
-
     protected double[][] productWithTransposedComponents(Matrix a) {
         int p = this.columns();
         int n = this.rows();
@@ -222,11 +194,9 @@ public class Matrix {
         }
         return newComponents;
     }
-
     public int rows() {
         return components.length;
     }
-
     protected Vector secureProduct(Vector v) {
         int n = this.rows();
         int m = this.columns();
@@ -238,15 +208,12 @@ public class Matrix {
         }
         return new Vector(vectorComponents);
     }
-
     protected Matrix secureProduct(Matrix a) {
         return new Matrix(productComponents(a));
     }
-
     protected Matrix secureSubtract(Matrix a) {
         return new Matrix(subtractComponents(a));
     }
-
     public Matrix subtract(Matrix a) throws IllegalDimension {
         if (a.rows() != rows() || a.columns() != columns())
             throw new IllegalDimension(
@@ -255,7 +222,6 @@ public class Matrix {
                             + rows() + " by " + columns() + " matrix");
         return new Matrix(subtractComponents(a));
     }
-
     protected double[][] subtractComponents(Matrix a) {
         int n = this.rows();
         int m = this.columns();
@@ -266,7 +232,6 @@ public class Matrix {
         }
         return newComponents;
     }
-
     public double[][] toComponents() {
         int n = rows();
         int m = columns();
@@ -277,7 +242,6 @@ public class Matrix {
         }
         return answer;
     }
-
     public String toString() {
         StringBuffer sb = new StringBuffer();
         char[] separator = {'[', ' '};
@@ -295,7 +259,6 @@ public class Matrix {
         }
         return sb.toString();
     }
-
     public String toStringOctave() {
         StringBuffer sb = new StringBuffer();
         int n = rows();
@@ -316,7 +279,6 @@ public class Matrix {
         sb.append("]");
         return sb.toString();
     }
-
     public Matrix transpose() {
         int n = rows();
         int m = columns();
@@ -327,11 +289,9 @@ public class Matrix {
         }
         return new Matrix(newComponents);
     }
-
     public SymmetricMatrix transposedProduct() {
         return new SymmetricMatrix(transposedProductComponents(this));
     }
-
     public Matrix transposedProduct(Matrix a) throws IllegalDimension {
         if (a.rows() != rows())
             throw new IllegalDimension(
@@ -341,7 +301,6 @@ public class Matrix {
                             + a.columns() + " matrix");
         return new Matrix(transposedProductComponents(a));
     }
-
     protected double[][] transposedProductComponents(Matrix a) {
         int p = this.rows();
         int n = this.columns();

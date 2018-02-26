@@ -1,22 +1,16 @@
-
 package dr.evolution.datatype;
-
 public class TwoStateCovarion extends DataType {
-
     public static final String DESCRIPTION = "twoStateCovarion";
     public static final int TYPE = COVARION;
     public static final TwoStateCovarion INSTANCE = new TwoStateCovarion();
-
     private TwoStateCovarion() {
         stateCount = 4;
         ambiguousStateCount = 8;
     }
-
     @Override
     public char[] getValidChars() {
         return null;
     }
-
     public int getState(char c) {
         switch (c) {
             case 'a':
@@ -38,9 +32,7 @@ public class TwoStateCovarion extends DataType {
         }
         throw new IllegalArgumentException("Character " + c + " not recognised in two-state covarion datatype!");
     }
-
     public char getChar(int state) {
-
         switch (state) {
             case 0:
                 return 'a';
@@ -61,9 +53,7 @@ public class TwoStateCovarion extends DataType {
         }
         throw new IllegalArgumentException("State " + state + " not recognised in two-state covarion datatype!");
     }
-
     public int[] getStates(int state) {
-
         if (state == 4 || state == 5) {
             int[] states = new int[2];
             states[0] = state % 2;
@@ -71,9 +61,7 @@ public class TwoStateCovarion extends DataType {
             return states;
         } else throw new IllegalArgumentException();
     }
-
     public boolean[] getStateSet(int state) {
-
         boolean[] stateSet = new boolean[stateCount];
         for (int i = 0; i < stateCount; i++) {
             stateSet[i] = false;
@@ -93,46 +81,34 @@ public class TwoStateCovarion extends DataType {
         }
         return stateSet;
     }
-
     public int getUnknownState() {
         return stateCount + 2;
     }
-
     public int getGapState() {
         return stateCount + 3;
     }
-
     public boolean isAmbiguousChar(char c) {
         return isAmbiguousState(getState(c));
     }
-
     public boolean isUnknownChar(char c) {
         return isUnknownState(getState(c));
     }
-
     public boolean isGapChar(char c) {
         return isGapState(getState(c));
     }
-
     public boolean isAmbiguousState(int state) {
         return (state >= 4);
     }
-
     public boolean isUnknownState(int state) {
         return (state == getUnknownState());
     }
-
     public boolean isGapState(int state) {
         return (state == getGapState());
     }
-
-
     public String getDescription() {
         return DESCRIPTION;
     }
-
     public int getType() {
         return TYPE;
     }
-
 }

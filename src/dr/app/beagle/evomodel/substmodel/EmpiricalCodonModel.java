@@ -1,8 +1,5 @@
-
 package dr.app.beagle.evomodel.substmodel;
-
 import java.util.logging.Logger;
-
 import dr.evolution.datatype.AminoAcids;
 import dr.evolution.datatype.Codons;
 import dr.evolution.datatype.GeneticCode;
@@ -13,26 +10,19 @@ import dr.app.beagle.evomodel.substmodel.EigenSystem;
 import dr.app.beagle.evomodel.substmodel.FrequencyModel;
 import dr.app.beagle.evomodel.parsers.EmpiricalCodonModelParser;
 import dr.inference.model.Parameter;
-
 public class EmpiricalCodonModel extends BaseSubstitutionModel {
-
 	protected byte[] rateMap;
-	
 	protected Codons codonDataType;
 	protected GeneticCode geneticCode;
-	
 	private Parameter omegaParameter;
 	private Parameter kappaParameter;	// 2d: kappats and kappatv, 9d: ECM+F+omega
 	private Parameter multintParameter;
 	private EmpiricalRateMatrix rateMat;
-	
 	private int modelType;
 	private final int ECM_OMEGA_2K = 2;
 	private final int ECM_OMEGA_9K = 3;
 	private final int ECM_OMEGA_NU = 4;
 	private final int ECM_OMEGA = 1;
-
-
 	public EmpiricalCodonModel(Codons codonDataType,
 		    Parameter omegaParam,
 		    Parameter kappaParam,
@@ -42,8 +32,6 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 		this(codonDataType, omegaParam, kappaParam, mntParam, rMat, freqModel,
 				new DefaultEigenSystem(codonDataType.getStateCount()));
 	}
-	
-	
 	public EmpiricalCodonModel(Codons codonDataType,
 						    Parameter omegaParam,
 						    Parameter kappaParam,
@@ -53,16 +41,13 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 						    EigenSystem eigenSystem)
 	{
 		super(EmpiricalCodonModelParser.EMPIRICAL_CODON_MODEL, codonDataType, freqModel, eigenSystem);
-		
 		this.codonDataType = codonDataType;
 		this.geneticCode = codonDataType.getGeneticCode();
-		
 		// setup parameters
 		this.omegaParameter = omegaParam;
 		addVariable(omegaParameter);
 		omegaParameter.addBounds(new Parameter.DefaultBounds(Double.POSITIVE_INFINITY, 0.0,
 				omegaParameter.getDimension()));
-		
 		if(kappaParam != null) {
 			this.kappaParameter = kappaParam;
 			addVariable(kappaParameter);
@@ -75,14 +60,10 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 			multintParameter.addBounds(new Parameter.DefaultBounds(Double.POSITIVE_INFINITY, 0.0,
 				multintParameter.getDimension()));
 		}
-		
 		this.rateMat = rMat;
-
 		constructRateMap();
-		
 		checkForModelType();
 	}
-	
 	// decide which model to use: ECM_OMEGA_2K, ECM_OMEGA_9K, ECM_OMEGA_NU or ECM_OMEGA
 	private void checkForModelType() {
 		this.modelType = 0;
@@ -104,7 +85,6 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 			Logger.getLogger("dr.evomodel").info("Using model ECM+omega");
 		}
 	}
-    
 	// setup substitution matrix depending on model type
 	public void setupRelativeRates(double[] rates) {
 		switch(modelType) {
@@ -122,7 +102,6 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 			break;
 		}
 	}
-	
 	// actual setup routines for different models
 	private void setupRelativeRatesECMOmega(double[] rates) {
 		double[] initRateMatrix = rateMat.getRates();
@@ -138,7 +117,6 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 			case 13:										// 2ts, 1tv, syn
 			case 15:										// 1ts, 2tv, syn
 			case 17: rates[i] = initRateMatrix[i]; break;	// 0ts, 3tv, syn
-			
 			case 2:													// 1ts, 0tv, nonsyn
 			case 4:													// 0ts, 1tv, nonsyn
 			case 6:													// 2ts, 0tv, nonsyn
@@ -151,7 +129,6 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 			}
 		}
 	}
-	
 	private void setupRelativeRatesECMOmega2k(double[] rates) {
 		double[] initRateMatrix = rateMat.getRates();
 		double omega = getOmega();
@@ -180,7 +157,6 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 			}
 		}
 	}
-	
 	private void setupRelativeRatesECMOmega9k(double[] rates) {
 		double[] initRateMatrix = rateMat.getRates();
 		double omega = getOmega();
@@ -208,7 +184,6 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 			}
 		}
 	}
-	
 	private void setupRelativeRatesECMOmegaNu(double[] rates) {
 		double[] initRateMatrix = rateMat.getRates();
 		double omega = getOmega();
@@ -219,7 +194,6 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 			case 3: rates[i] = initRateMatrix[i]; break;				// 0ts, 1tv, syn
 			case 2: 													// 1ts, 0tv, nonsyn
 			case 4: rates[i] = initRateMatrix[i] * omega; break;		// 0ts, 1tv, nonsyn
-			
 			case 5:														// 2ts, 0tv, syn
 			case 7: 													// 1ts, 1tv, syn
 			case 9: 													// 0ts, 2tv, syn
@@ -227,7 +201,6 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 			case 13: 													// 2ts, 1tv, syn
 			case 15: 													// 1ts, 2tv, syn
 			case 17: rates[i] = initRateMatrix[i] * mnt; break;			// 0ts, 3tv, syn
-			
 			case 6: 													// 2ts, 0tv, nonsyn
 			case 8: 													// 1ts, 1tv, nonsyn
 			case 10: 													// 0ts, 2tv, nonsyn
@@ -238,23 +211,16 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 			}
 		}
 	}
-	
     protected void ratesChanged() {
 	}
-    
     protected void frequenciesChanged() {
 	}
-    
     // getter and setter for parameters
-
     public void setOmega(double omega) {
 		omegaParameter.setParameterValue(0, omega);
 		updateMatrix = true;
 	}
-
     public double getOmega() { return omegaParameter.getParameterValue(0); }
-    
-    
     public void setKappa(double kts, double ktv) {
     	if(kappaParameter != null) {
     		kappaParameter.setParameterValue(0, kts);
@@ -262,7 +228,6 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
     		updateMatrix = true;
     	}
 	}
-    
     public double getKappaTs() { 
     	if(kappaParameter != null) {
     		return kappaParameter.getParameterValue(0);
@@ -270,7 +235,6 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
     		return 0.0;
     	}
     }
-    
     public double getKappaTv() { 
     	if(kappaParameter != null) {
     		return kappaParameter.getParameterValue(1);
@@ -278,7 +242,6 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
     		return 0.0;
     	}
     }
-    
     public double[] getKappa() {
     	if(kappaParameter != null) {
     		return kappaParameter.getParameterValues();
@@ -286,15 +249,12 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
     		return new double[9];
     	}
     }
-    
-    
     public void setMultiNt(double mnt) {
     	if(multintParameter != null) {
     		multintParameter.setParameterValue(0, mnt);
     		updateMatrix = true;
     	}
 	}
-
     public double getMultiNt() { 
     	if(multintParameter != null) {
     		return multintParameter.getParameterValue(0);
@@ -302,44 +262,32 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
     		return 0.0;
     	}
 	}
-    
-    
 	protected void constructRateMap()
 	{
 		int u, v, i1, j1, k1, i2, j2, k2, ts, tv, non;
 		byte rateClass;
 		int[] codon;
 		int cs1, cs2, aa1, aa2;
-
 		int i = 0;
-
 		rateMap = new byte[rateCount];
-
 		for (u = 0; u < stateCount; u++) {
-
 			codon = codonDataType.getTripletStates(u);
 			i1 = codon[0];
 			j1 = codon[1];
 			k1 = codon[2];
-
 			cs1 = codonDataType.getState(i1, j1, k1);
 			aa1 = geneticCode.getAminoAcidState(codonDataType.getCanonicalState(cs1));
-
 			for (v = u + 1; v < stateCount; v++) {
-				
 				ts = 0;
 				tv = 0;
 				non = 0;
 				rateClass = -1;
-
 				codon = codonDataType.getTripletStates(v);
 				i2 = codon[0];
 				j2 = codon[1];
 				k2 = codon[2];
-
 				cs2 = codonDataType.getState(i2, j2, k2);
 				aa2 = geneticCode.getAminoAcidState(codonDataType.getCanonicalState(cs2));
-
 				if (i1 != i2) {
 					if ( (i1 == 0 && i2 == 2) || (i1 == 2 && i2 == 0) || // A <-> G
 						 (i1 == 1 && i2 == 3) || (i1 == 3 && i2 == 1) ) { // C <-> T
@@ -364,11 +312,9 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 						tv += 1; // Transversion
 					}
 				}
-
 	 			if (aa1 != aa2) {
 					non = 1; // Is a non-synonymous change
 				}
-
 	 			// decide for rateClass
 	 			switch(ts) {
 	 				case 0:
@@ -398,81 +344,64 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 	 					rateClass = 11; break;	// 3ts, 0tv
 	 				default: break;
 	 			}
-	 			
 	 			if(non == 1) {
 	 				rateClass += 1;
 	 			}
 				rateMap[i] = rateClass;
 				i++;
 			}
-
 		}
 	}
-
 	public void printRateMap()
     {
         int u, v, i1, j1, k1, i2, j2, k2, ts, tv, non;
         byte rateClass;
         int[] codon;
         int cs1, cs2, aa1, aa2;
-
         System.out.print("\t");
         for (v = 0; v < stateCount; v++) {
             codon = codonDataType.getTripletStates(v);
             i2 = codon[0];
             j2 = codon[1];
             k2 = codon[2];
-
             System.out.print("\t" + Nucleotides.INSTANCE.getChar(i2));
             System.out.print(Nucleotides.INSTANCE.getChar(j2));
             System.out.print(Nucleotides.INSTANCE.getChar(k2));
         }
         System.out.println();
-
         System.out.print("\t");
         for (v = 0; v < stateCount; v++) {
             codon = codonDataType.getTripletStates(v);
             i2 = codon[0];
             j2 = codon[1];
             k2 = codon[2];
-
             cs2 = codonDataType.getState(i2, j2, k2);
             aa2 = geneticCode.getAminoAcidState(codonDataType.getCanonicalState(cs2));
             System.out.print("\t" + AminoAcids.INSTANCE.getChar(aa2));
         }
         System.out.println();
-
         for (u = 0; u < stateCount; u++) {
-
             codon = codonDataType.getTripletStates(u);
             i1 = codon[0];
             j1 = codon[1];
             k1 = codon[2];
-
             System.out.print(Nucleotides.INSTANCE.getChar(i1));
             System.out.print(Nucleotides.INSTANCE.getChar(j1));
             System.out.print(Nucleotides.INSTANCE.getChar(k1));
-
             cs1 = codonDataType.getState(i1, j1, k1);
             aa1 = geneticCode.getAminoAcidState(codonDataType.getCanonicalState(cs1));
-
             System.out.print("\t" + AminoAcids.INSTANCE.getChar(aa1));
-
             for (v = 0; v < stateCount; v++) {
-	
             		ts = 0;
             		tv = 0;
             		non = 0;
 	            	rateClass = -1;
-	            	
 	                codon = codonDataType.getTripletStates(v);
 	                i2 = codon[0];
 	                j2 = codon[1];
 	                k2 = codon[2];
-	
 	                cs2 = codonDataType.getState(i2, j2, k2);
 	                aa2 = geneticCode.getAminoAcidState(codonDataType.getCanonicalState(cs2));
-	
 	                if (i1 != i2) {
 						if ( (i1 == 0 && i2 == 2) || (i1 == 2 && i2 == 0) || // A <-> G
 							 (i1 == 1 && i2 == 3) || (i1 == 3 && i2 == 1) ) { // C <-> T
@@ -497,11 +426,9 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 							tv += 1; // Transversion
 						}
 					}
-	
 		 			if (aa1 != aa2) {
 						non = 1; // Is a non-synonymous change
 					}
-	
 		 			// decide for rateClass
 		 			switch(ts) {
 		 				case 0:
@@ -531,25 +458,19 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 		 					rateClass = 11; break;	// 3ts, 0tv
 		 				default: break;
 		 			}
-		 			
 		 			if(non == 1) {
 		 				rateClass += 1;
 		 			}
-	
 	                System.out.print("\t" + rateClass);
-
             }
             System.out.println();
-
         }
     }
     // **************************************************************
     // XHTMLable IMPLEMENTATION
     // **************************************************************
-
 	public String toXHTML() {
 		StringBuffer buffer = new StringBuffer();
-
 		buffer.append("<em>Empirical Codon Model</em> omega = ");
 		buffer.append(getOmega());
 		buffer.append(", kappa_ts = ");
@@ -562,10 +483,7 @@ public class EmpiricalCodonModel extends BaseSubstitutionModel {
 		buffer.append(", initial freqs = " + rateMat.getDirName() + "/" + rateMat.getFreqName());
 		return buffer.toString();
 	}
-
-	
 	static String format = "%2.4e";
-	
 	public String printRelRates() {
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < relativeRates.length; i++) {

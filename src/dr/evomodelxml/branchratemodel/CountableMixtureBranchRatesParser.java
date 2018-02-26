@@ -1,6 +1,4 @@
-
 package dr.evomodelxml.branchratemodel;
-
 import dr.evolution.tree.Tree;
 import dr.evolution.util.Taxa;
 import dr.evolution.util.TaxonList;
@@ -11,13 +9,10 @@ import dr.evomodel.branchratemodel.CountableModelMixtureBranchRates;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-
 public class CountableMixtureBranchRatesParser extends AbstractXMLObjectParser {
-
     public static final String COUNTABLE_CLOCK_BRANCH_RATES = "countableMixtureBranchRates";
     public static final String RATES = "rates";
     public static final String ALLOCATION = "rateCategories";
@@ -26,15 +21,11 @@ public class CountableMixtureBranchRatesParser extends AbstractXMLObjectParser {
     public static final String RANDOM_EFFECTS = "randomEffects";
     public static final String FIXED_EFFECTS = "fixedEffects";
     public static final String IN_LOG_SPACE = "inLogSpace";
-
     public String getParserName() {
         return COUNTABLE_CLOCK_BRANCH_RATES;
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         Parameter ratesParameter = null;
-
         List<AbstractBranchRateModel> fixedEffects = null;
         if (xo.hasChildNamed(FIXED_EFFECTS)) {
             XMLObject cxo = xo.getChild(FIXED_EFFECTS);
@@ -45,8 +36,6 @@ public class CountableMixtureBranchRatesParser extends AbstractXMLObjectParser {
         } else {
             ratesParameter = (Parameter) xo.getElementFirstChild(RATES);
         }
-
-
         Parameter allocationParameter = (Parameter) xo.getElementFirstChild(ALLOCATION);
         TreeModel treeModel = (TreeModel) xo.getChild(TreeModel.class);
         List<AbstractBranchRateModel> randomEffects = null;
@@ -57,13 +46,9 @@ public class CountableMixtureBranchRatesParser extends AbstractXMLObjectParser {
                 randomEffects.add((AbstractBranchRateModel)cxo.getChild(i));
             }
         }
-
         boolean inLogSpace = xo.getAttribute(IN_LOG_SPACE, false);
-
         Logger.getLogger("dr.evomodel").info("Using a countable mixture molecular clock model.");
-
         CountableBranchCategoryProvider.BranchCategoryModel cladeModel;
-
         if (!xo.getAttribute(RANDOMIZE, true)) {
             CountableBranchCategoryProvider.CladeBranchCategoryModel cm = new
                     CountableBranchCategoryProvider.CladeBranchCategoryModel(treeModel, allocationParameter);
@@ -72,7 +57,6 @@ public class CountableMixtureBranchRatesParser extends AbstractXMLObjectParser {
                     XMLObject xoc = (XMLObject) xo.getChild(i);
                     if (xoc.getName().equals(LocalClockModelParser.CLADE)) {
                         TaxonList taxonList = (TaxonList) xoc.getChild(TaxonList.class);
-
                         boolean includeStem = xoc.getAttribute(LocalClockModelParser.INCLUDE_STEM, false);
                         boolean excludeClade = xoc.getAttribute(LocalClockModelParser.EXCLUDE_CLADE, false);
                         int rateCategory = xoc.getIntegerAttribute(CATEGORY) - 1; // XML index-start = 1 not 0
@@ -83,7 +67,6 @@ public class CountableMixtureBranchRatesParser extends AbstractXMLObjectParser {
                         }
                     }  else if (xoc.getName().equals(LocalClockModelParser.TRUNK)) {
                         TaxonList taxonList = (TaxonList) xoc.getChild(TaxonList.class);
-
                         boolean includeStem = xoc.getAttribute(LocalClockModelParser.INCLUDE_STEM, false);
                         boolean excludeClade = xoc.getAttribute(LocalClockModelParser.EXCLUDE_CLADE, false);
                         int rateCategory = xoc.getIntegerAttribute(CATEGORY) - 1; // XML index-start = 1 not 0
@@ -101,31 +84,25 @@ public class CountableMixtureBranchRatesParser extends AbstractXMLObjectParser {
             cm.randomize();
             cladeModel = cm;
         }
-
         if (fixedEffects != null) {
             return new CountableModelMixtureBranchRates(cladeModel, treeModel, fixedEffects, randomEffects, inLogSpace);
         } else {
             return new CountableMixtureBranchRates(cladeModel, treeModel, ratesParameter, randomEffects, inLogSpace);
         }
     }
-
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
-
     public String getParserDescription() {
         return
                 "This element provides a clock consisting of a mixture of fixed effects and random effects.";
     }
-
     public Class getReturnType() {
         return CountableMixtureBranchRates.class;
     }
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     private final XMLSyntaxRule[] rules = {
             new ElementRule(TreeModel.class),
             new XORRule(

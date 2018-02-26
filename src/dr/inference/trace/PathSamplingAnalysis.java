@@ -1,37 +1,28 @@
-
 package dr.inference.trace;
-
 import dr.inferencexml.trace.MarginalLikelihoodAnalysisParser;
 import dr.util.Attribute;
 import dr.util.FileHelpers;
 import dr.xml.*;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
-
 public class PathSamplingAnalysis {
-
     public static final String PATH_SAMPLING_ANALYSIS = "pathSamplingAnalysis";
     public static final String LIKELIHOOD_COLUMN = "likelihoodColumn";
     public static final String THETA_COLUMN = "thetaColumn";
     public static final String FORMAT = "%5.5g";
-
     PathSamplingAnalysis(String logLikelihoodName, List<Double> logLikelihoodSample, List<Double> thetaSample) {
         this.logLikelihoodSample = logLikelihoodSample;
         this.logLikelihoodName = logLikelihoodName;
         this.thetaSample = thetaSample;
     }
-
     public double getLogBayesFactor() {
         if (!logBayesFactorCalculated) {
             calculateBF();
         }
         return logBayesFactor;
     }
-
     private void calculateBF() {
-
 //  R code from Alex Alekseyenko
 //
 //  psMLE = function(likelihood, pathParameter){
@@ -42,10 +33,8 @@ public class PathSamplingAnalysis {
 //      widths = (x[2:L] - x[1:(L-1)])
 //      sum(widths*midpoints)
 //  }
-
         Map<Double, List<Double>> map = new HashMap<Double, List<Double>>();
         orderedTheta = new ArrayList<Double>();
-
         for (int i = 0; i < logLikelihoodSample.size(); i++) {
             if (!map.containsKey(thetaSample.get(i))) {
                 map.put(thetaSample.get(i), new ArrayList<Double>());
@@ -53,9 +42,7 @@ public class PathSamplingAnalysis {
             }
             map.get(thetaSample.get(i)).add(logLikelihoodSample.get(i));
         }
-
         Collections.sort(orderedTheta);
-
         meanLogLikelihood = new ArrayList<Double>();
         for (double t : orderedTheta) {
             double totalMean = 0;
@@ -67,9 +54,7 @@ public class PathSamplingAnalysis {
             }
             meanLogLikelihood.add(totalMean / lengthMean);
         }
-
         mlContribution = new ArrayList<Double>();
-        
         logBayesFactor = 0;
         innerArea = 0;
         for (int i = 0; i < meanLogLikelihood.size() - 1; i++) {
@@ -84,7 +69,6 @@ public class PathSamplingAnalysis {
         }
         logBayesFactorCalculated = true;
     }
-
     public String toString() {
         double bf = getLogBayesFactor();
         StringBuffer sb = new StringBuffer();
@@ -99,7 +83,6 @@ public class PathSamplingAnalysis {
             }
             sb.append("\n");
         }
-
         sb.append("\nlog marginal likelihood (using path sampling) from " + logLikelihoodName + " = " + bf + "\n");
         sb.append("\nInner area for path parameter in ("
                 + String.format(FORMAT, orderedTheta.get(1)) + ","
@@ -108,61 +91,43 @@ public class PathSamplingAnalysis {
         sb.append("\n");
         return sb.toString();
     }
-
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-
         public String getParserName() {
             return PATH_SAMPLING_ANALYSIS;
         }
-
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
             String fileName = xo.getStringAttribute(FileHelpers.FILE_NAME);
             StringTokenizer tokenFileName = new StringTokenizer(fileName);
     		int numberOfFiles = tokenFileName.countTokens();
     		System.out.println(numberOfFiles + " file(s) found with marginal likelihood samples");
             try {
-            	
             	String likelihoodName = "";
     			List sampleLogLikelihood = null;
     			List sampleTheta = null;
-    			
     			for (int j = 0; j < numberOfFiles; j++) {
-    				
     				File file = new File(tokenFileName.nextToken());
                     String name = file.getName();
                     String parent = file.getParent();
-
                     if (!file.isAbsolute()) {
                         parent = System.getProperty("user.dir");
                     }
-                    
                     file = new File(parent, name);
-
                     fileName = file.getAbsolutePath();
-                    
                     XMLObject cxo = xo.getChild(LIKELIHOOD_COLUMN);
                     likelihoodName = cxo.getStringAttribute(Attribute.NAME);
-    				
                     cxo = xo.getChild(THETA_COLUMN);
                     String thetaName = cxo.getStringAttribute(Attribute.NAME);
-                    
                     LogFileTraces traces = new LogFileTraces(fileName, file);
                     traces.loadTraces();
                     long maxState = traces.getMaxState();
-                    
                     // leaving the burnin attribute off will result in 10% being used
                     long burnin = xo.getAttribute(MarginalLikelihoodAnalysisParser.BURN_IN, maxState / 5);
-
                     if (burnin < 0 || burnin >= maxState) {
                         burnin = maxState / 5;
                         System.out.println("WARNING: Burn-in larger than total number of states - using 20%");
                     }
-
                     burnin = 0;
-
                     traces.setBurnIn(burnin);
-                    
                     int traceIndexLikelihood = -1;
                     int traceIndexTheta = -1;
                     for (int i = 0; i < traces.getTraceCount(); i++) {
@@ -174,15 +139,12 @@ public class PathSamplingAnalysis {
                             traceIndexTheta = i;
                         }
                     }
-
                     if (traceIndexLikelihood == -1) {
                         throw new XMLParseException("Column '" + likelihoodName + "' can not be found for " + getParserName() + " element.");
                     }
-
                     if (traceIndexTheta == -1) {
                         throw new XMLParseException("Column '" + thetaName + "' can not be found for " + getParserName() + " element.");
                     }
-                    
                     if (sampleLogLikelihood == null && sampleTheta == null) {
     					sampleLogLikelihood = traces.getValues(traceIndexLikelihood);
     					sampleTheta = traces.getValues(traceIndexTheta);
@@ -190,15 +152,10 @@ public class PathSamplingAnalysis {
     					sampleLogLikelihood.addAll(traces.getValues(traceIndexLikelihood));
     					sampleTheta.addAll(traces.getValues(traceIndexTheta));
     				}
-                    
     			}
-
                 PathSamplingAnalysis analysis = new PathSamplingAnalysis(likelihoodName, sampleLogLikelihood, sampleTheta);
-
                 System.out.println(analysis.toString());
-
                 return analysis;
-
             } catch (FileNotFoundException fnfe) {
                 throw new XMLParseException("File '" + fileName + "' can not be opened for " + getParserName() + " element.");
             } catch (java.io.IOException ioe) {
@@ -207,23 +164,18 @@ public class PathSamplingAnalysis {
                 throw new XMLParseException(e.getMessage());
             }
         }
-
         //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
-
         public String getParserDescription() {
             return "Performs a trace analysis.";
         }
-
         public Class getReturnType() {
             return PathSamplingAnalysis.class;
         }
-
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
-
         private final XMLSyntaxRule[] rules = {
                 new StringAttributeRule(FileHelpers.FILE_NAME,
                         "The traceName of a BEAST log file (can not include trees, which should be logged separately"),
@@ -233,7 +185,6 @@ public class PathSamplingAnalysis {
                         new StringAttributeRule(Attribute.NAME, "The column name")}),
         };
     };
-
     private boolean logBayesFactorCalculated = false;
     private double logBayesFactor;
     private double innerArea;

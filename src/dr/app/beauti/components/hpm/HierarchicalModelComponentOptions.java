@@ -1,26 +1,19 @@
-
 package dr.app.beauti.components.hpm;
-
 import dr.app.beauti.options.*;
 import dr.app.beauti.priorsPanel.PriorsPanel;
 import dr.app.beauti.types.PriorScaleType;
 import dr.app.beauti.types.PriorType;
-
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
-
 public class HierarchicalModelComponentOptions implements ComponentOptions {
-
     public HierarchicalModelComponentOptions(final BeautiOptions options) {
         this.options = options;
         hpmList = new ArrayList<HierarchicalPhylogeneticModel>();
     }
-
     public void createParameters(final ModelOptions modelOptions) {
         // Do nothing; this is only called at launch
     }
-
     public void selectParameters(final ModelOptions modelOptions, final List<Parameter> params) {
         // Do nothing because priors are previously defined for idref in operator schedule
 //        for (HierarchicalPhylogeneticModel hpm : hpmList) {
@@ -30,11 +23,9 @@ public class HierarchicalModelComponentOptions implements ComponentOptions {
 //            }
 //        }
     }
-
     public void selectStatistics(final ModelOptions modelOptions, final List<Parameter> stats) {
         // No statistics
     }
-
     public void selectOperators(final ModelOptions modelOptions, final List<Operator> ops) {
         // Do nothing because Gibbs operator format do not fit into the current Operator implementation
 //        for (HierarchicalPhylogeneticModel hpm : hpmList) {
@@ -43,7 +34,6 @@ public class HierarchicalModelComponentOptions implements ComponentOptions {
 //            }
 //        }
     }
-
     public boolean modelExists(String name) {
         boolean found = false;
         for (HierarchicalPhylogeneticModel hpm : hpmList) {
@@ -54,10 +44,8 @@ public class HierarchicalModelComponentOptions implements ComponentOptions {
         }
         return found;
     }
-
     public HierarchicalPhylogeneticModel addHPM(String text, List<Parameter> parameterList, PriorType priorType) {
         List<Parameter> argumentList = new ArrayList<Parameter>();
-
         // TODO May have to remove these constructors
         String meanName = text + HierarchicalModelComponentGenerator.MEAN_SUFFIX;
         Parameter mean = options.parameterExists(meanName) ?
@@ -65,23 +53,19 @@ public class HierarchicalModelComponentOptions implements ComponentOptions {
                 options.createParameterNormalPrior(meanName, "Unknown mean of HPM",
                 PriorScaleType.NONE, 0.0, 0.0, 1.0, 0.0);
         argumentList.add(mean);
-
         String precisionName = text + HierarchicalModelComponentGenerator.PRECISION_SUFFIX;
         Parameter precision = options.parameterExists(precisionName) ?
                 options.getParameter(precisionName) :
                 options.createParameterGammaPrior(precisionName, "Unknown precision of HPM",
                 PriorScaleType.NONE, 1.0, 0.001, 1000.0, true);
         argumentList.add(precision);
-
         HierarchicalPhylogeneticModel hpm = new HierarchicalPhylogeneticModel(text, parameterList, argumentList, priorType);
         hpmList.add(hpm);
-
         for (Parameter parameter : parameterList) {
             parameter.linkedName = hpm.getName();
         }
         return hpm;
     }
-
     public boolean isHierarchicalParameter(Parameter parameter) {
         boolean found = false;
         for (HierarchicalPhylogeneticModel hpm : hpmList) {
@@ -92,7 +76,6 @@ public class HierarchicalModelComponentOptions implements ComponentOptions {
         }
         return found;
     }
-
     public int removeParameter(PriorsPanel priorsPanel, Parameter parameter, boolean caution) {
         HierarchicalPhylogeneticModel toRemove = null;
         for (HierarchicalPhylogeneticModel hpm : hpmList) {
@@ -123,27 +106,21 @@ public class HierarchicalModelComponentOptions implements ComponentOptions {
         }
         return JOptionPane.YES_OPTION;
     }
-
     public List<HierarchicalPhylogeneticModel> getHPMList() {
         return hpmList;
     }
-
 //    public void generateDistributions(final XMLWriter writer) {
 //        for (HierarchicalPhylogeneticModel hpm : hpmList) {
 //            hpm.generateDistribution(writer);
 //        }
 //    }
-
     final private BeautiOptions options;
     final private List<HierarchicalPhylogeneticModel> hpmList;
-
-
 //    public void generatePriors(final XMLWriter writer) {
 //        for (HierarchicalPhylogeneticModel hpm : hpmList) {
 //            hpm.generatePriors(writer);
 //        }
 //    }
-
     public boolean isEmpty() {
         return hpmList.isEmpty();
     }

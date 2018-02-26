@@ -1,11 +1,6 @@
-
 package dr.app.beast;
-
-
 public class BeastMPI {
-
     private static final String msg = "Unable to load mpiJava or MPJ";
-
 //    private static Method getMPIMethod(String className, String methodName) {
 //        Method method = null;
 //        try {
@@ -17,7 +12,6 @@ public class BeastMPI {
 //        }
 //        return method;
 //    }
-
     public static void Init(String[] args) {
         try {
             mpi.MPI.Init(args);
@@ -25,7 +19,6 @@ public class BeastMPI {
             throw new RuntimeException(msg);
         }
     }
-
     public static void Finalize() {
         try {
             mpi.MPI.Finalize();
@@ -33,7 +26,6 @@ public class BeastMPI {
             throw new RuntimeException(msg);
         }
     }
-
     public static class COMM_WORLD {
         public static int Rank() {
             int rtnValue = -1;

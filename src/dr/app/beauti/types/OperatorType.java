@@ -1,13 +1,9 @@
-
 package dr.app.beauti.types;
-
 import dr.evomodel.operators.BitFlipInSubstitutionModelOperator;
 import dr.evomodelxml.operators.TreeNodeSlideParser;
 import dr.inference.operators.RateBitExchangeOperator;
 import dr.inferencexml.operators.ScaleOperatorParser;
-
 public enum OperatorType {
-
     SCALE("scale"),
     RANDOM_WALK("randomWalk"),
     RANDOM_WALK_ABSORBING("randomWalkAbsorbing"),
@@ -39,14 +35,11 @@ public enum OperatorType {
 //    PRECISION_GMRF_OPERATOR("precisionGMRFOperator"),
     WILSON_BALDING("wilsonBalding"),
     NODE_REHIGHT(TreeNodeSlideParser.TREE_NODE_REHEIGHT); // nodeReHeight
-
     OperatorType(String displayName) {
         this.displayName = displayName;
     }
-
     public String toString() {
         return displayName;
     }
-
     private final String displayName;
 }

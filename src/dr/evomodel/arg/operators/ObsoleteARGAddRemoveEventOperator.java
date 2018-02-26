@@ -1,6 +1,4 @@
-
 package dr.evomodel.arg.operators;
-
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
 import dr.evomodel.arg.ARGModel;
@@ -12,23 +10,18 @@ import dr.inference.operators.*;
 import dr.math.MathUtils;
 import dr.math.functionEval.GammaFunction;
 import dr.xml.*;
-
 import java.util.ArrayList;
-
 public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator {
 //		SimpleMCMCOperator implements CoercableMCMCOperator {
-
     public static final String SUBTREE_SLIDE = "addremoveARGEvent";
     public static final String SWAP_RATES = "swapRates";
     public static final String SWAP_TRAITS = "swapTraits";
     public static final String MAX_VALUE = "maxTips";
     public static final String SINGLE_PARTITION = "singlePartitionProbability";
     public static final String IS_RECOMBINATION = "isRecombination";
-
     public static final String JUST_INTERNAL = "justInternalNodes";
     public static final String INTERNAL_AND_ROOT = "internalAndRootNodes";
     public static final String NODE_RATES = TreeModelParser.NODE_RATES;
-
     private ARGModel arg = null;
     private double size = 1.0;
     private boolean gaussian = false;
@@ -41,7 +34,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
     private CompoundParameter internalAndRootNodeParameters;
     private CompoundParameter nodeRates;
 //	private int maxTips = 1;
-
     public ObsoleteARGAddRemoveEventOperator(ARGModel arg, int weight, double size, boolean gaussian,
                                              boolean swapRates, boolean swapTraits, CoercionMode mode,
                                              CompoundParameter param1,
@@ -61,14 +53,10 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
         this.nodeRates = param3;
         this.singlePartitionProbability = singlePartitionProbability;
         this.isRecombination = isRecombination;
-
 //		this.mode = mode;
     }
-
-
     public double doOperation() throws OperatorFailedException {
 //		System.err.println("Starting AddRemove Operation");
-
         double logq = 0;
         try {
             if (MathUtils.nextDouble() < 0.5)
@@ -85,7 +73,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
             throw new OperatorFailedException("trouble with double-rooted root");
         return logq;
     }
-
     private ArrayList<NodeRef> getPotentialSubtreesToMerge() {
         ArrayList<NodeRef> potentials = new ArrayList<NodeRef>();
         int n = arg.getNodeCount();
@@ -97,7 +84,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
         }
         return potentials;
     }
-
     private int countPotentialSubtreesToMerge() {
         int count = 0;
         //ArrayList<NodeRef> potentials = new ArrayList<NodeRef>();
@@ -112,8 +98,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
         //return potentials;
         return count;
     }
-
-
     private int findPotentialReassortmentNodes(ArrayList<NodeRef> list) {
         int count = 0;
         int n = arg.getNodeCount();
@@ -135,7 +119,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
 //		}
         return count;
     }
-
     private int findCurrentReassortmentNodes(ArrayList<NodeRef> list) {
         int count = 0;
         int n = arg.getNodeCount();
@@ -150,7 +133,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
         }
         return count;
     }
-
              arg.beginTreeEdit();
              if (arg.getReassortmentNodeCount() > 0)
                  arg.removeNullCounter();
@@ -163,7 +145,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
              arg.pushTreeSizeChangedEvent();
              return 0;
          }*/
-
             arg.beginTreeEdit();
             arg.addNullCounter();
             try {
@@ -175,32 +156,24 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
             arg.pushTreeSizeChangedEvent();
             return 0;
         }
-
     private double RemoveOperation() throws OperatorFailedException {
         double logq = 0;
-
 //	    System.err.println("Starting remove ARG operation.");
-
         // 1. Draw reassortment node uniform randomly
-
         ArrayList<NodeRef> potentialNodes = new ArrayList<NodeRef>();
-
         int totalPotentials = findCurrentReassortmentNodes(potentialNodes);
         if (totalPotentials == 0)
             throw new OperatorFailedException("No reassortment nodes to remove.");
         Node recNode = (Node) potentialNodes.get(MathUtils.nextInt(totalPotentials));
         logq += Math.log(totalPotentials);
-
         double reverseReassortmentSpan = 0;
         double reverseBifurcationSpan = 0;
-
         arg.beginTreeEdit();
         boolean doneSomething = false;
         Node recParent = recNode.leftParent;
         Node recChild = recNode.leftChild;
         if (recNode.leftParent == recNode.rightParent) { // Doubly linked.
             Node recGrandParent = recParent.leftParent;
-
             reverseReassortmentSpan = arg.getNodeHeight(recParent) - arg.getNodeHeight(recChild);
             reverseBifurcationSpan = arg.getNodeHeight(recGrandParent) - arg.getNodeHeight(recChild);
             if (arg.isRoot(recParent)) { // This case should never happen as double links
@@ -224,9 +197,7 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
             if ((!recParent1.bifurcation && !recParent2.bifurcation) ||
                     (!recParent1.bifurcation && recParent2.isRoot()) ||
                     (!recParent2.bifurcation && recParent1.isRoot())) {
-
                 arg.endTreeEdit();
-
 //                try {
 //                    arg.checkTreeIsValid();
 //                } catch (MutableTree.InvalidTreeException ite) {
@@ -248,7 +219,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
 //			System.err.println("recNode    ="+recNode.number);
 //			System.err.println("recParent1 ="+recParent1.number);
 //			System.err.println("recParent2 ="+recParent2.number);
-
             Node recGrandParent = recParent1.leftParent; // And currently recParent must be a bifurcatio
 //			System.err.println("recGrand   ="+recGrandParent.number);
             //Node recChild = recNode.leftChild;
@@ -265,7 +235,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
                 arg.singleRemoveChild(recGrandParent, recParent1);
             else
                 arg.doubleRemoveChild(recGrandParent, recParent1);
-
             arg.singleRemoveChild(recParent1, otherChild);
             if (recParent2.bifurcation)
                 arg.singleRemoveChild(recParent2, recNode);
@@ -296,7 +265,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
 //			System.err.println("End Remove Operator in sanity check");
             doneSomething = true;
             // Check for node height troubles
-
             if ((recChild.getHeight() > recParent2.getHeight()) ||
                     (otherChild.getHeight() > recGrandParent.getHeight())) {
                 arg.endTreeEdit();
@@ -311,8 +279,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
                     internalNodeParameters, internalAndRootNodeParameters, nodeRates);
         }
 //		System.err.println("End ARG\n"+arg.toGraphString());
-
-
         arg.pushTreeSizeChangedEvent();
         arg.endTreeEdit();
 //        try {
@@ -321,39 +287,28 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
 //            throw new RuntimeException(ite.toString() + "\n" + arg.toString()
 //                    + "\n" + Tree.Utils.uniqueNewick(arg, arg.getRoot()));
 //        }
-
 //	    System.err.println("Checking remove validity.");
-
         // todo -- check all ARGTree.Roots
 //	    if (!arg.validRoot())
 //	        throw new OperatorFailedException("Roots are invalid");
-
 //         logq -= Math.log(reverseBifurcationSpan) + Math.log(reverseReassortmentSpan);   // TODO removed? because of prior ratio
         logq -= Math.log(arg.getNodeCount() + arg.getReassortmentNodeCount() - 1); // findPotentialRessortmentNodes()
         logq -= Math.log(this.findPotentialAttachmentSisters(recChild,
                 arg.getNodeHeight(recChild), null));
 //        System.err.println(drawRandomPartitioning(null));
         // logq -= drawRandomPartitioning(null);
-
 //	    System.err.println("End remove ARG operation.");
-
-
         int nodes = arg.getInternalNodeCount() - 1;
         logq += lnGamma(nodes) - lnGamma(nodes + 2); // TODO move into prior
-
         logq += 3 * Math.log(2);
-
         logq = 0;
-
         return logq; // 1 / total potentials * 1 / 2 (if valid) * length1 * length2 * attachmentSisters
     }
-
     private static double lnGamma(double x) {
         if (x == 1 || x == 2)
             return 0.0;
         return GammaFunction.logGamma(x);
     }
-
     private void checkAllHeights() {
         int len = arg.getInternalNodeCount();
         System.err.println("# internal nodes = " + len);
@@ -370,7 +325,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
             System.err.println(((Node) node).getHeight());
         }
     }
-
                    int len = arg.getExternalNodeCount();
                    System.err.println("Tip Partitions:");
                    for(int i=0; i<len; i++) {
@@ -383,7 +337,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
                        System.err.println();
                    }
                }*/
-
         ArrayList<NodeRef> potentials = new ArrayList<NodeRef>();
         int len = arg.getExternalNodeCount();
         for(int i=0; i<len; i++){
@@ -394,7 +347,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
         }
         return potentials;
     }
-
     private ArrayList<Node> getSameTaxonTips(Node asMe) {
         ArrayList<Node> potentials = new ArrayList<Node>();
         int len = arg.getExternalNodeCount();
@@ -406,7 +358,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
         }
         return potentials;
     }
-
     private ArrayList<NodeRef> getPotentialTipsToSplit() {
         ArrayList<NodeRef> potentials = new ArrayList<NodeRef>();
         int len = arg.getExternalNodeCount();
@@ -418,7 +369,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
         }
         return potentials;
     }*/
-
              int draw = MathUtils.nextInt(partitionSet.cardinality());
      //		System.err.println("draw = "+draw);
              int result = partitionSet.nextSetBit(0);
@@ -426,7 +376,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
                  result = partitionSet.nextSetBit(result + 1);
              return result;
          }*/
-
 //    private BitSet bsTransportor = null;
                private ArrayList<NodeRef> getPotentialSubtreesToSplit() {
                    ArrayList<NodeRef> potentials = new ArrayList<NodeRef>();
@@ -488,7 +437,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
 		//return potentials;
 		return count;
 	}*/
-
 //	private ArrayList<NodeRef> getPotentialReattachments(double min) {
 //		ArrayList<NodeRef> potentials = new ArrayList<NodeRef>();
 //		int len = arg.getNodeCount();
@@ -502,7 +450,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
 //		}
 //		return potentials;
 //	}
-
     private int findPotentialAttachmentSisters(NodeRef rec, double min, ArrayList<NodeRef> list) {
         int count = 0;
         int len = arg.getNodeCount();
@@ -524,7 +471,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
         }
         return count;
     }
-
     private double drawRandomPartitioning(Parameter partitioning) {
         double logq = 0;
         int len = arg.getNumberOfPartitions();
@@ -545,8 +491,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
         }
         return logq;
     }
-
-
     private double drawRandomReassortment(Parameter partitioning) {
         int len = arg.getNumberOfPartitions();
         double logq = 0;
@@ -565,7 +509,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
         logq += Math.log(len - 1);
         return logq;
     }
-
     private double drawRandomRecombination(Parameter partitioning) {
         int len = arg.getNumberOfPartitions();
         double logq = 0;
@@ -582,14 +525,10 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
         logq += Math.log(len - 1);
         return logq;
     }
-
-
     private double AddOperation() throws OperatorFailedException {
         double logq = 0;
-
 //	    System.err.println("Starting add ARG operation. ... "+arg.getReassortmentNodeCount());
         // Draw potential places to add a reassortment node
-
         ArrayList<NodeRef> potentialNodes = new ArrayList<NodeRef>();
         int totalPotentials = findPotentialReassortmentNodes(potentialNodes);
         if (totalPotentials == 0) {
@@ -604,19 +543,15 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
         Node recParent = recParentL;
         if ((recParentL != recParentR) && MathUtils.nextDouble() > 0.5)
             recParent = recParentR;
-
         logq += Math.log(totalPotentials);
-
         double minHeight = arg.getNodeHeight(recNode); // Attachment must occur
         // previous to this time
-
         ArrayList<NodeRef> attachments = new ArrayList<NodeRef>();
         int totalAttachments = findPotentialAttachmentSisters(recNode,
                 minHeight, attachments);
         if (totalAttachments == 0) {
 //            System.err.println("Should never get here AB");
 //            System.exit(-1);
-
             throw new OperatorFailedException("no more attachment points for this recomb");
         }
         Node sisNode = (Node) attachments.get(MathUtils
@@ -631,9 +566,7 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
                     && MathUtils.nextDouble() > 0.5)
                 sisParent = sisParentR;
         }
-
         logq += Math.log(totalAttachments);
-
         Node newBifurcation = arg.new Node();
         Node newReassortment = arg.new Node();
         newReassortment.bifurcation = false;
@@ -643,16 +576,11 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
         }
         double spHeight = arg.getNodeHeight(sisParent);
         double totalLength = spHeight - sisHeight;
-
         double newLength = sisHeight + MathUtils.nextDouble() * totalLength;
-
         logq -= Math.log(totalLength); // prior ratio
-
         newBifurcation.heightParameter = new Parameter.Default(newLength);
         newBifurcation.setupHeightBounds();
-
         logq += Math.log(totalLength); // Uniform[spHeight, sisHeight]
-
         double topHeight = newLength;
         double recParentHeight = arg.getNodeHeight(recParent);
         if (topHeight > recParentHeight)
@@ -660,13 +588,10 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
         double recHeight = arg.getNodeHeight(recNode);
         totalLength = topHeight - recHeight;
         newLength = recHeight + MathUtils.nextDouble() * totalLength;
-
         logq -= Math.log(totalLength); // prior ratio
-
         newReassortment.heightParameter = new Parameter.Default(newLength);
         newReassortment.setupHeightBounds();
         logq += Math.log(totalLength); // Uniform[bifurcationHeight,recNodeHeight]
-
         arg.beginTreeEdit();
         if (sisParent.bifurcation)
             arg.singleRemoveChild(sisParent, sisNode);
@@ -685,7 +610,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
         if (sisNode != recNode)
             arg.singleAddChild(newBifurcation, sisNode);
         arg.doubleAddChild(newReassortment, recNode);
-
 		BitSet bitRight = new BitSet();
 		if (MathUtils.nextDouble() < 0.5) {
 			bitLeft.set(0);
@@ -696,15 +620,11 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
 		}
 		logq += Math.log(2.0);*/
         Parameter partitioning = new Parameter.Default(arg.getNumberOfPartitions());
-
 //        logq += drawRandomPartitioning(partitioning);          // TODO add back in
-
                   double[] v = partitioning.getParameterValues();
                   for (double d : v)
                       System.err.print(d+" ");
                   System.err.println("");*/
-
-
         if (sisNode != recNode) {
             arg.addChildAsRecombinant(newBifurcation, recParent,
                     newReassortment, partitioning);
@@ -712,7 +632,6 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
             arg.addChildAsRecombinant(newBifurcation, newBifurcation,
                     newReassortment, partitioning);
         }
-
                         arg.addChildAsRecombinant(newBifurcation, recParent,
                                 newReassortment, bitLeft, bitRight);
                     } else {
@@ -748,25 +667,19 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
 //    	System.err.println("Sanity check in Add Operation");
 //		sanityCheck();
 //		System.err.println("End Add Operator sanity check");
-
         arg.pushTreeSizeChangedEvent();
-
         arg.endTreeEdit();
-
 //        try {
 //            arg.checkTreeIsValid();
 //        } catch (MutableTree.InvalidTreeException ite) {
 //            throw new RuntimeException(ite.toString() + "\n" + arg.toString()
 //                    + "\n" + Tree.Utils.uniqueNewick(arg, arg.getRoot()));
 //        }
-
 //	    System.err.println("Checking add validity.");
         // todo -- check all ARGTree.Roots
 //	    if (!arg.validRoot())
 //	        throw new OperatorFailedException("Roots are invalid");
-
         // System.err.println("Made it thru once!");
-
         // System.exit(-1);
         // times++;
         // System.err.println("Adds = "+times);
@@ -776,24 +689,17 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
 //		int cnt = arg.getReassortmentNodeCount();
 //		if (cnt > 20)
 //			throw new OperatorFailedException("No more than X reassortments");
-
         logq -= Math.log(findCurrentReassortmentNodes(null));
         if (!(recNode.leftParent.isBifurcation() && recNode.rightParent.isRoot()) &&
                 !(recNode.rightParent.isBifurcation() && recNode.leftParent.isRoot()))
             logq -= Math.log(2.0);
-
 //	    System.err.println("End add ARG operation.");
-
         int nodes = arg.getInternalNodeCount() - 1;
         logq += lnGamma(nodes) - lnGamma(nodes - 2); // TODO move into prior
-
         logq = 0;
         return logq;
     }
-
 //	if( !recParent1.bifurcation || recParent1.isRoot() ) { // One orientation is valid
-
-
     public void sanityCheck() {
         int len = arg.getNodeCount();
         for (int i = 0; i < len; i++) {
@@ -822,9 +728,7 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
             }
         }
     }
-
     private int times = 0;
-
     private double getDelta() {
         if (!gaussian) {
             return (MathUtils.nextDouble() * size) - (size / 2.0);
@@ -832,94 +736,69 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
             return MathUtils.nextGaussian() * size;
         }
     }
-
     private int intersectingEdges(Tree tree, NodeRef node, double height, ArrayList directChildren) {
-
         NodeRef parent = arg.getParent(node);
-
         if (arg.getNodeHeight(parent) < height) return 0;
-
         if (arg.getNodeHeight(node) < height) {
             if (directChildren != null) directChildren.add(node);
             return 1;
         }
-
         int count = 0;
         for (int i = 0; i < arg.getChildCount(node); i++) {
             count += intersectingEdges(tree, arg.getChild(node, i), height, directChildren);
         }
         return count;
     }
-
     private NodeRef getOtherChild(Tree tree, NodeRef parent, NodeRef child) {
-
         if (arg.getChild(parent, 0) == child) {
             return arg.getChild(parent, 1);
         } else {
             return arg.getChild(parent, 0);
         }
     }
-
     public double getSize() {
         return size;
     }
-
     public void setSize(double size) {
         this.size = size;
     }
-
     public double getCoercableParameter() {
         return Math.log(getSize());
     }
-
     public void setCoercableParameter(double value) {
         setSize(Math.exp(value));
     }
-
     public double getRawParameter() {
         return getSize();
     }
-
 //	public int getMode() {
 //		return mode;
 //	}
-
     public double getTargetAcceptanceProbability() {
         return 0.234;
     }
-
-
     public String getPerformanceSuggestion() {
         double prob = MCMCOperator.Utils.getAcceptanceProbability(this);
         double targetProb = getTargetAcceptanceProbability();
-
         double ws = OperatorUtils.optimizeWindowSize(getSize(), Double.MAX_VALUE, prob, targetProb);
-
         if (prob < getMinimumGoodAcceptanceLevel()) {
             return "Try decreasing size to about " + ws;
         } else if (prob > getMaximumGoodAcceptanceLevel()) {
             return "Try increasing size to about " + ws;
         } else return "";
     }
-
     public String getOperatorName() {
         return SUBTREE_SLIDE;
     }
-
     public static dr.xml.XMLObjectParser PARSER = new dr.xml.AbstractXMLObjectParser() {
-
         public String getParserName() {
             return SUBTREE_SLIDE;
         }
-
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
             boolean swapRates = false;
             boolean swapTraits = false;
-
             double singlePartitionProbability = 0.0;
             boolean isRecombination = false;
-
 //			int mode = CoercableMCMCOperator.DEFAULT;
 //			if (xo.hasAttribute(AUTO_OPTIMIZE)) {
 //				if (xo.getBooleanAttribute(AUTO_OPTIMIZE)) {
@@ -928,18 +807,13 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
 //					mode = CoercableMCMCOperator.COERCION_OFF;
 //				}
 //			}
-
             CoercionMode mode = CoercionMode.parseMode(xo);
-
             if (xo.hasAttribute(SINGLE_PARTITION)) {
                 singlePartitionProbability = xo.getDoubleAttribute(SINGLE_PARTITION);
             }
-
             if (xo.hasAttribute(IS_RECOMBINATION)) {
                 isRecombination = xo.getBooleanAttribute(IS_RECOMBINATION);
-
             }
-
             if (xo.hasAttribute(SWAP_RATES)) {
                 swapRates = xo.getBooleanAttribute(SWAP_RATES);
             }
@@ -957,12 +831,10 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
                 System.err.println("Must specify a variable size tree model to use the AddRemoveSubtreeOperators");
                 System.exit(-1);
             }
-
             // bug, getChild(String) returns an xmlObject;   not in XML rules
             CompoundParameter parameter1 = null; //(CompoundParameter) xo.getChild(JUST_INTERNAL);
             CompoundParameter parameter2 = null; //CompoundParameter) xo.getChild(INTERNAL_AND_ROOT);
             CompoundParameter parameter3 = null; //(CompoundParameter) xo.getChild(NODE_RATES);
-
             int weight = xo.getIntegerAttribute("weight");
 //            int maxTips = xo.getIntegerAttribute(MAX_VALUE);
             double size = xo.getDoubleAttribute("size");
@@ -970,19 +842,15 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
             return new ObsoleteARGAddRemoveEventOperator(treeModel, weight, size, gaussian, swapRates, swapTraits,
                     mode, parameter1, parameter2, parameter3, singlePartitionProbability, isRecombination);
         }
-
         public String getParserDescription() {
             return "An operator that slides a subarg.";
         }
-
         public Class getReturnType() {
             return ObsoleteARGAddRemoveEventOperator.class;
         }
-
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
-
         private final XMLSyntaxRule[] rules = {
                 AttributeRule.newIntegerRule("weight"),
 //                AttributeRule.newIntegerRule(MAX_VALUE),
@@ -995,5 +863,4 @@ public class ObsoleteARGAddRemoveEventOperator extends AbstractCoercableOperator
 //			new ElementRule(Parameter.class)
         };
     };
-
 }

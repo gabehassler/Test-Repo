@@ -1,7 +1,4 @@
-
 package dr.geo.math;
-
-
 public enum Space {
     CARTESIAN,  // (x,y,z,...)
     LAT_LONG,   // (lat, long) in S^2

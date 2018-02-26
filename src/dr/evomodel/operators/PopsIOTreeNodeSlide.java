@@ -1,7 +1,4 @@
-
 package dr.evomodel.operators;
-
-
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.SlidableTree;
 import dr.evolution.util.Taxon;
@@ -12,50 +9,35 @@ import dr.inference.operators.OperatorFailedException;
 import dr.inference.operators.SimpleMCMCOperator;
 import dr.math.MathUtils;
 import jebl.util.FixedBitSet;
-
-
 public class PopsIOTreeNodeSlide  extends SimpleMCMCOperator {
     PopsIOSpeciesTreeModel piostm;
     PopsIOSpeciesBindings piosb ;
-
     public PopsIOTreeNodeSlide(PopsIOSpeciesTreeModel piostm, PopsIOSpeciesBindings piosb, double weight) {
         this.piostm = piostm;
         this.piosb = piosb;
         setWeight(weight);
     }
-
     @Override
     public String getPerformanceSuggestion() {
         return "None";
     }
-
     @Override
     public String getOperatorName() {
         return PopsIOTreeNodeSlideParser.PIOTREE_NODESLIDE;
     }
-
     @Override
     public double doOperation() throws OperatorFailedException {
         operateOneNodeInTree();
         return 0.0;
     }
-
-
     private int randomnode() {
         int count = piostm.getInternalNodeCount();
         int which = MathUtils.nextInt(count);
         return which;
     }
-
-
-
-
-
     private void operateOneNodeInTree() {
         int which = randomnode();
-
         NodeRef[] order = SlidableTree.Utils.mnlCanonical(piostm);
-
         // Find the time of the most recent gene coalescence which
         // has species to left and right of this node.
         FixedBitSet left = piosb.emptyUnion();
@@ -70,12 +52,9 @@ public class PopsIOTreeNodeSlide  extends SimpleMCMCOperator {
         }
         double genelimit = piosb.coalescenceUpperBoundBetween(left, right);
         double newHeight = MathUtils.nextDouble() * genelimit;
-
         final NodeRef node = order[2 * which + 1];
         piostm.setSlidableNodeHeight(node, newHeight);
         SlidableTree.Utils.mnlReconstruct(piostm, order);
         piostm.fixupAfterNodeSlide();
     }
-
-
 }

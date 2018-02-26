@@ -1,22 +1,13 @@
-
 package dr.util;
-
 import java.util.Formatter;
 import java.util.Iterator;
-
-
 import java.util.Locale;
-
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.SimpleTree;
 import dr.evolution.util.Taxon;
 import dr.math.MathUtils;
-
 import jebl.util.FixedBitSet;
-
 public class AlloppMisc {
-	
-	
 	public static String FixedBitSetasText(FixedBitSet x) {
         if (x == null) {
             return "{?}";
@@ -34,9 +25,6 @@ public class AlloppMisc {
 		rep.append("}");
 		return rep.toString();
 	}
-	
-	
-	
 	public static String nonnegIn8Chars(double x)
 	{
 		StringBuilder s = new StringBuilder();
@@ -60,8 +48,6 @@ public class AlloppMisc {
         }
 		return s.toString();
 	}
-
-	
 	public static String nonnegIntIn2Chars(int x)
 	{
 		StringBuilder s = new StringBuilder();
@@ -73,8 +59,6 @@ public class AlloppMisc {
 		}
 		return s.toString();
 	}
-	
-
 	public static String SimpleNodeAsText(SimpleTree stree, NodeRef node) {
 		String s = "" + node.getNumber() + " ";
 		while (s.length() < 3) { s += " "; }
@@ -93,11 +77,9 @@ public class AlloppMisc {
 			if (taxonid == null || taxonid.length() == 0) {
 				taxonid = "*";
 			}
-
 		}
 		s += taxonid;
 		while (s.length() < 20) { s += " "; }
-
 		stree.getNodeHeight(node);
 		s += " height=";
 		s += stree.getNodeHeight(node);
@@ -113,11 +95,6 @@ public class AlloppMisc {
 		}
 		return s;
 	}
-
-	
-	
-	
-	
     public static double uniformInRange(double oldx, double min, double max, double halfwidth) {
    	 assert halfwidth > 0.0;
    	 assert halfwidth < 0.5;
@@ -130,7 +107,4 @@ public class AlloppMisc {
    	 assert newx < max;
    	 return newx;
     }
-	
 }
-
-

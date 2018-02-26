@@ -1,27 +1,18 @@
-
 package dr.app.treestat.statistics;
-
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
 import dr.evolution.util.TaxonList;
-
 import java.util.Set;
-
 public class CladeMRCAAttributeStatistic extends AbstractTreeSummaryStatistic {
-
     private CladeMRCAAttributeStatistic() {
         this.attributeName = "";
     }
-
     public void setTaxonList(TaxonList taxonList) {
         this.taxonList = taxonList;
     }
-
     public void setString(String value) {
         this.attributeName = value;
     }
-
-
     public double[] getSummaryStatistic(Tree tree) {
         NodeRef node;
         if (taxonList == null) {
@@ -57,7 +48,6 @@ public class CladeMRCAAttributeStatistic extends AbstractTreeSummaryStatistic {
         }
         return null;
     }
-
     public String getSummaryStatisticName() {
         if (taxonList != null) {
             return attributeName + "(" + taxonList.getId() + ")";
@@ -65,85 +55,65 @@ public class CladeMRCAAttributeStatistic extends AbstractTreeSummaryStatistic {
             return attributeName + "(root)";
         }
     }
-
     public String getSummaryStatisticDescription() {
         if (taxonList != null) {
             return "Extracts a named attribute at the MRCA of a clade defined by a taxon set";
         }
         return "Extracts a named attribute at the root of the tree.";
     }
-
     public String getSummaryStatisticReference() {
         return FACTORY.getSummaryStatisticReference();
     }
-
     public boolean allowsPolytomies() {
         return FACTORY.allowsPolytomies();
     }
-
     public boolean allowsNonultrametricTrees() {
         return FACTORY.allowsNonultrametricTrees();
     }
-
     public boolean allowsUnrootedTrees() {
         return FACTORY.allowsUnrootedTrees();
     }
-
     public Category getCategory() {
         return FACTORY.getCategory();
     }
-
     public static final Factory FACTORY = new Factory() {
-
         public TreeSummaryStatistic createStatistic() {
             return new CladeMRCAAttributeStatistic();
         }
-
         public String getSummaryStatisticName() {
             return "Clade MRCA Attribute";
         }
-
         public String getSummaryStatisticDescription() {
             return "Extracts a named attribute for the MRCA of a clade defined by a taxon set";
         }
-
         public String getSummaryStatisticReference() {
             return "-";
         }
-
         public String getValueName() {
             return "The attribute name:";
         }
-
         public boolean allowsPolytomies() {
             return true;
         }
-
         public boolean allowsNonultrametricTrees() {
             return true;
         }
-
         public boolean allowsUnrootedTrees() {
             return false;
         }
-
         public Category getCategory() {
             return Category.GENERAL;
         }
-
         public boolean allowsWholeTree() {
             return true;
         }
-
         public boolean allowsTaxonList() {
             return true;
         }
-
         public boolean allowsString() {
             return true;
         }
     };
-
     private String attributeName = null;
     private TaxonList taxonList = null;
 }

@@ -1,6 +1,4 @@
-
 package dr.app.beauti.priorsPanel;
-
 import dr.app.beauti.BeautiFrame;
 import dr.app.beauti.BeautiPanel;
 import dr.app.beauti.components.hpm.HierarchicalModelComponentOptions;
@@ -18,7 +16,6 @@ import dr.app.gui.table.TableEditorStopper;
 import dr.util.NumberFormatter;
 import jam.framework.Exportable;
 import jam.table.TableRenderer;
-
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -30,7 +27,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
-
 public class PriorsPanel extends BeautiPanel implements Exportable {
     private static final long serialVersionUID = -2936049032365493416L;
     JScrollPane scrollPane = new JScrollPane();
@@ -40,51 +36,37 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
     JButton linkButton = null;
     JButton hpmButton = null;
     JButton unlinkButton = null;
-
     public ArrayList<Parameter> parameters = new ArrayList<Parameter>();
-
     BeautiFrame frame = null;
     BeautiOptions options = null;
-
     boolean hasUndefinedPrior = false;
     boolean hasImproperPrior = false;
     boolean hasRate = false;
-
     private final boolean isDefaultOnly;
-
     public PriorsPanel(BeautiFrame parent, boolean isDefaultOnly) {
         this.frame = parent;
         this.isDefaultOnly = isDefaultOnly;
-
         priorTableModel = new PriorTableModel(this);
         priorTable = new JTable(priorTableModel);
-
         priorTable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_LAST_COLUMN);
         priorTable.getTableHeader().setReorderingAllowed(false);
 //        priorTable.getTableHeader().setDefaultRenderer(
 //                new HeaderRenderer(SwingConstants.LEFT, new Insets(0, 4, 0, 4)));
-
         priorTable.getColumnModel().getColumn(0).setCellRenderer(
                 new TableRenderer(SwingConstants.LEFT, new Insets(0, 4, 0, 4)));
         priorTable.getColumnModel().getColumn(0).setMinWidth(200);
-
         priorTable.getColumnModel().getColumn(1).setCellRenderer(
                 new ButtonRenderer(SwingConstants.LEFT, new Insets(0, 8, 0, 8)));
         priorTable.getColumnModel().getColumn(1).setCellEditor(
                 new ButtonEditor(SwingConstants.LEFT, new Insets(0, 8, 0, 8)));
         priorTable.getColumnModel().getColumn(1).setMinWidth(260);
-
         priorTable.getColumnModel().getColumn(2).setCellRenderer(
                 new TableRenderer(SwingConstants.LEFT, new Insets(0, 4, 0, 4)));
         priorTable.getColumnModel().getColumn(2).setMinWidth(30);
-
-
         priorTable.getColumnModel().getColumn(3).setCellRenderer(
                 new TableRenderer(SwingConstants.LEFT, new Insets(0, 4, 0, 4)));
         priorTable.getColumnModel().getColumn(3).setMinWidth(410);
-
         TableEditorStopper.ensureEditingStopWhenTableLosesFocus(priorTable);
-
         DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
             // override renderer preparation
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
@@ -93,9 +75,7 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
             {
                 // allow default preparation
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-
                 Parameter parameter = parameters.get(row);
-
                 if (isSelected) {
                     setForeground(parameter.isLinked ? Color.LIGHT_GRAY : SystemColor.textHighlightText);
                 } else {
@@ -110,13 +90,10 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
         priorTable.getColumnModel().getColumn(0).setCellRenderer(renderer);
         priorTable.getColumnModel().getColumn(2).setCellRenderer(renderer);
         priorTable.getColumnModel().getColumn(3).setCellRenderer(renderer);
-
         scrollPane = new JScrollPane(priorTable,
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-
         scrollPane.setOpaque(false);
-
         Action setLinkedParametersAction = new AbstractAction("Link parameters together") {
             public void actionPerformed(ActionEvent actionEvent) {
                 // Make list of selected parameters;
@@ -124,14 +101,12 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                 linkButtonPressed(rows);
             }
         };
-
         linkButton = new JButton(setLinkedParametersAction);
         linkButton.setVisible(true);
         linkButton.setEnabled(false);
         linkButton.setToolTipText("<html>Join the selected parameters so their values are<br>" +
                 "kept the same. This will create a new controlling<br>" +
                 "parameter which can be given a prior.");
-
         Action setHierarchicalAction = new AbstractAction("Link parameters into a hierarchical model") {
             public void actionPerformed(ActionEvent actionEvent) {
                 // Make list of selected parameters;
@@ -139,12 +114,10 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                 hierarchicalButtonPressed(rows);
             }
         };
-
         hpmButton = new JButton(setHierarchicalAction);
         hpmButton.setVisible(true);
         hpmButton.setEnabled(false);
         hpmButton.setToolTipText(HierarchicalPhylogeneticModel.TIP_TOOL);
-
         Action setUnlinkAction = new AbstractAction("Unlink parameters") {
             public void actionPerformed(ActionEvent actionEvent) {
                 // Make list of selected parameters;
@@ -152,26 +125,20 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                 unlinkButtonPressed(rows);
             }
         };
-
         unlinkButton = new JButton(setUnlinkAction);
         unlinkButton.setVisible(true);
         unlinkButton.setEnabled(false);
         unlinkButton.setToolTipText("<html>Unlink parameters joined as a linked parameter<br>" +
                 "or hierarchical model. Will delete the enclosing<br>" +
                 "model.");
-
         messageLabel.setText(getMessage());
-
         setOpaque(false);
         setLayout(new BorderLayout(0, 0));
         setBorder(new BorderUIResource.EmptyBorderUIResource(new java.awt.Insets(12, 12, 12, 12)));
-
         if (!isDefaultOnly) {
             add(new JLabel("Priors for model parameters and statistics:"), BorderLayout.NORTH);
         }
-
         add(scrollPane, BorderLayout.CENTER);
-
         if (!isDefaultOnly) {
             JPanel southPanel = new JPanel();
             southPanel.setLayout(new BorderLayout(0, 0));
@@ -179,37 +146,28 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
             toolBar1.setFloatable(false);
             toolBar1.setOpaque(false);
             toolBar1.setLayout(new BoxLayout(toolBar1, BoxLayout.X_AXIS));
-
             PanelUtils.setupComponent(linkButton);
             toolBar1.add(linkButton);
-
             PanelUtils.setupComponent(hpmButton);
             toolBar1.add(hpmButton);
-
             toolBar1.addSeparator();
-
             PanelUtils.setupComponent(unlinkButton);
             toolBar1.add(unlinkButton);
-
             southPanel.add(toolBar1, BorderLayout.NORTH);
             southPanel.add(messageLabel, BorderLayout.SOUTH);
             add(southPanel, BorderLayout.SOUTH);
         } else {
             add(messageLabel, BorderLayout.SOUTH);
         }
-
         priorTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             public void valueChanged(ListSelectionEvent evt) {
                 selectionChanged();
             }
         });
-
     }
-
     public void selectionChanged() {
         LinkedParameterComponentOptions comp = (LinkedParameterComponentOptions)
                 options.getComponentOptions(LinkedParameterComponentOptions.class);
-
         int[] selRows = priorTable.getSelectedRows();
         int jointPriorCount = 0;
         for (int i = 0; i < selRows.length; ++i) {
@@ -218,36 +176,26 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                 jointPriorCount++;
             }
         }
-
         linkButton.setEnabled(selRows.length > 1);
         hpmButton.setEnabled(selRows.length > 1);
         unlinkButton.setEnabled(jointPriorCount > 0);
     }
-
-
     public void setOptions(BeautiOptions options) {
         this.options = options;
-
         parameters = options.selectParameters();
-
         messageLabel.setText(getMessage());
-
         priorTableModel.fireTableDataChanged();
-
         validate();
         repaint();
     }
-
     private String getMessage() {
         String message = "<html>";
         if (isDefaultOnly) {
             message += "<ul><li>These priors listed above are still set to the default values " +
                     "and need to be reviewed.</li>";
-
             hasUndefinedPrior = false;
             hasImproperPrior = false;
             hasRate = false;
-
             for (Parameter param : parameters) {
                 if (param.priorType == PriorType.UNDEFINED) {
                     hasUndefinedPrior = true;
@@ -260,7 +208,6 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                     hasRate = true;
                 }
             }
-
             if (hasUndefinedPrior) {
                 message += "<li><b><font color=\"#E42217\">These priors need to be defined by the user.</font></b></li>";
             }
@@ -273,19 +220,14 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                         "with a mean appropriate for the organism and units of time employed.</li>";
             }
             message += "</ul>";
-
         } else {
             message += "* Marked parameters currently have a default prior distribution. " +
                     "You should check that these are appropriate.";
         }
-
-
         return message + "</html>";
     }
-
     public void setParametersList(BeautiOptions options) {
         this.options = options;
-
         parameters.clear();
         for (Parameter param : options.selectParameters()) {
             if (!param.isPriorEdited() || param.isPriorImproper()) {
@@ -293,33 +235,26 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
             }
         }
         messageLabel.setText(getMessage());
-
         if (continueButton != null) {
             continueButton.setEnabled(!hasUndefinedPrior);
         }
     }
-
     private PriorDialog priorDialog = null;
     private HierarchicalPriorDialog hierarchicalPriorDialog = null;
     private JointPriorDialog linkParameterDialog = null;
-
     private JButton continueButton = null;
-
     public void setContinueButton(JButton continueButton) {
         this.continueButton = continueButton;
         if (continueButton != null) {
             continueButton.setEnabled(!hasUndefinedPrior);
         }
     }
-
     private void linkButtonPressed(int[] rows) {
         Parameter firstParameter = parameters.get(rows[0]);
-
         // gather the selected parameters...
         List<Parameter> selectedParameters = new ArrayList<Parameter>();
         boolean isLinked = false;
         for (int i = 0; i < rows.length; ++i) {
-
             Parameter parameter = parameters.get(rows[i]);
             if (parameter.isStatistic) {
                 JOptionPane.showMessageDialog(frame,
@@ -339,13 +274,11 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                         JOptionPane.WARNING_MESSAGE);
                 return; // Bail out
             }
-
             if (parameter.isLinked) {
                 isLinked = true;
             }
             selectedParameters.add(parameters.get(rows[i]));
         }
-
         if (isLinked) {
             int option = JOptionPane.showConfirmDialog(this,
                     "One or more selected parameters are already linked or\n" +
@@ -359,30 +292,22 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                 return;
             }
         }
-
         LinkedParameterComponentOptions comp = (LinkedParameterComponentOptions)
                 options.getComponentOptions(LinkedParameterComponentOptions.class);
-
         LinkedParameter linkedParameter = comp.createLinkedParameter(null, selectedParameters);
-
         editLinkedParameter(linkedParameter, selectedParameters);
     }
-
     private void unlinkButtonPressed(int[] rows) {
         for (int i = 0; i < rows.length; ++i) {
-
             Parameter parameter = parameters.get(rows[i]);
             if (parameter.isLinked) {
                 removeFromJointPrior(parameter);
             }
         }
-
         priorTableModel.fireTableDataChanged();
         frame.setAllOptions();
     }
-
     private void hierarchicalButtonPressed(int[] rows) {
-
         if (rows.length < 2) {
             JOptionPane.showMessageDialog(frame,
                     "Fewer than two parameters selected.",
@@ -390,10 +315,8 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         Double lowerBound = null;
         Double upperBound = null;
-
         List<Parameter> paramList = new ArrayList<Parameter>();
         for (int i = 0; i < rows.length; ++i) {
             Parameter parameter = parameters.get(rows[i]);
@@ -419,7 +342,6 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                     sameBounds = false;
                 }
             }
-
             if (!sameBounds) {
                 JOptionPane.showMessageDialog(frame,
                         "Only parameters that share the same bounds\n" +
@@ -428,10 +350,8 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                         JOptionPane.WARNING_MESSAGE);
                 return; // Bail out
             }
-
             paramList.add(parameter);
         }
-
         if (hierarchicalPriorDialog != null) { // Already called
             // Check to see if selected parameters are already in a HPM
             HierarchicalModelComponentOptions comp = (HierarchicalModelComponentOptions)
@@ -456,13 +376,10 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                 }
             }
         }
-
         if (hierarchicalPriorDialog == null) {
             hierarchicalPriorDialog = new HierarchicalPriorDialog(frame, options);
         }
-
         boolean done = false;
-
         while (!done) {
             int result = hierarchicalPriorDialog.showDialog(paramList);
             if (result == JOptionPane.OK_OPTION && hierarchicalPriorDialog.validateModelName()) {
@@ -473,7 +390,6 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                 return;
             }
         }
-
         // Remove parameters from old list
         for (Parameter parameter : paramList) {
             HierarchicalModelComponentOptions comp = (HierarchicalModelComponentOptions)
@@ -481,27 +397,20 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
             if (comp.isHierarchicalParameter(parameter)) {
                 comp.removeParameter(this, parameter, false);
             }
-
         }
-
         // Add HPM to component manager
         hierarchicalPriorDialog.addHPM(paramList);
-
         for (Parameter parameter : paramList) {
             parameter.setPriorEdited(true);
         }
         priorTableModel.fireTableDataChanged();
     }
-
     private void priorButtonPressed(int row) {
         Parameter parameter = parameters.get(row);
-
         LinkedParameterComponentOptions lpco = (LinkedParameterComponentOptions)
                 options.getComponentOptions(LinkedParameterComponentOptions.class);
-
         HierarchicalModelComponentOptions hmco = (HierarchicalModelComponentOptions)
                 options.getComponentOptions(HierarchicalModelComponentOptions.class);
-
         if (lpco.isArgumentParameter(parameter)) {
             LinkedParameter linkedParameter = lpco.getLinkedParameterForArgument(parameter);
             editLinkedParameter(linkedParameter, linkedParameter.getDependentParameterList());
@@ -529,15 +438,12 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                     return;
                 }
             }
-
             editPrior(parameter);
         }
     }
-
     private void editLinkedParameter(LinkedParameter linkedParameter, List<Parameter> selectedParameters) {
         Parameter sourceParameter = linkedParameter.getArgumentParameter();
         Operator sourceOperator = linkedParameter.getArgumentOperator();
-
         List<Parameter> compatibleParameters = new ArrayList<Parameter>();
         for (Parameter parameter : parameters) {
             boolean isCompatible = true;
@@ -555,17 +461,13 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                 compatibleParameters.add(parameter);
             }
         }
-
         if (linkParameterDialog == null) {
             linkParameterDialog = new JointPriorDialog(frame, options);
         }
-
         linkParameterDialog.setLinkedParameter(linkedParameter);
         linkParameterDialog.setCompatibleParameterList(compatibleParameters);
         linkParameterDialog.setDependentParameterList(selectedParameters);
-
         boolean done = false;
-
         while (!done) {
             int result = linkParameterDialog.showDialog();
             if (result == JOptionPane.OK_OPTION && linkParameterDialog.validateModelName()) {
@@ -575,51 +477,35 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                 return;
             }
         }
-
         linkedParameter.setName(linkParameterDialog.getName());
-
         linkedParameter.linkDependentParameters(linkParameterDialog.getDependentParameterList());
-
         linkParameterDialog.getArguments(linkedParameter.getArgumentParameter());
-
         for (Parameter parameter : linkParameterDialog.getDependentParameterList()) {
             parameter.setPriorEdited(true);
         }
-
         priorTableModel.fireTableDataChanged();
         frame.setAllOptions();
     }
-
     private void editPrior(Parameter parameter) {
         if (priorDialog == null) {
             priorDialog = new PriorDialog(frame);
         }
-
         priorDialog.setParameter(parameter);
-
         int result;
-
         do {
             result = priorDialog.showDialog();
         } while (result == JOptionPane.OK_OPTION && priorDialog.hasInvalidInput(true));
-
         if (result == JOptionPane.OK_OPTION) {
             // Only do this if OK button is pressed (not cancel):
-
             // If this was part of a linked parameter, remove it from that...
             removeFromJointPrior(parameter);
-
             // move to individual Dialog, otherwise it will change if Cancel
             priorDialog.getArguments(parameter);
-
             parameter.setPriorEdited(true);
-
             if (isDefaultOnly) {
                 setParametersList(options);
             }
-
             if (parameter.getBaseName().endsWith("treeModel.rootHeight") || parameter.taxaId != null) { // param.taxa != null is TMRCA
-
                 if (options.treeModelOptions.isNodeCalibrated(parameter)) {
                     List<ClockModelGroup> groupList;
                     if (options.useStarBEAST) {
@@ -627,7 +513,6 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                     } else {
                         groupList = options.clockModelOptions.getClockModelGroups(options.getDataPartitions(parameter.getOptions()));
                     }
-
                     for (ClockModelGroup clockModelGroup : groupList) {
                         options.clockModelOptions.nodeCalibration(clockModelGroup);
                     }
@@ -636,21 +521,17 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
 //        		options.clockModelOptions.fixRateOfFirstClockPartition();
                 }
             }
-
             priorTableModel.fireTableDataChanged();
             frame.setAllOptions();
         }
     }
-
     private void removeFromJointPrior(Parameter parameter) {
         LinkedParameterComponentOptions comp = (LinkedParameterComponentOptions)
                 options.getComponentOptions(LinkedParameterComponentOptions.class);
-
         LinkedParameter linkedParameter = comp.getLinkedParameter(parameter);
         if (linkedParameter != null) {
             comp.removeDependentParameter(parameter);
         }
-
         // Possibly remove parameter from its HPM
         HierarchicalModelComponentOptions hmco = (HierarchicalModelComponentOptions)
                 options.getComponentOptions(HierarchicalModelComponentOptions.class);
@@ -662,30 +543,20 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
             }
             System.err.println("Parameter removed from an HPM");
         }
-
     }
-
     public void getOptions(BeautiOptions options) {
     }
-
     public JComponent getExportableComponent() {
         return priorTable;
     }
-
     NumberFormatter formatter = new NumberFormatter(4);
-
     class DoubleRenderer extends TableRenderer {
-
         private static final long serialVersionUID = -2614341608257369805L;
-
         public DoubleRenderer(int alignment, Insets insets) {
-
             super(true, alignment, insets);
         }
-
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
                                                        boolean hasFocus, int row, int column) {
-
             String s;
             if (((Double) value).isNaN()) {
                 s = "random";
@@ -693,27 +564,20 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                 s = formatter.format((Double) value);
             }
             return super.getTableCellRendererComponent(table, s, isSelected, hasFocus, row, column);
-
         }
     }
-
     public class ButtonRenderer extends JButton implements TableCellRenderer {
         protected Color undefinedColour = new Color(0xE4, 0x22, 0x17);
         protected Color improperColour = new Color(0xB4, 0xB4, 0x17);
-
-
         private static final long serialVersionUID = -2416184092883649169L;
-
         public ButtonRenderer(int alignment, Insets insets) {
             setOpaque(true);
             setHorizontalAlignment(alignment);
             setMargin(insets);
-
 //            setFont(UIManager.getFont("SmallSystemFont"));
 //            putClientProperty("JComponent.sizeVariant", "small");
 //            putClientProperty("JButton.buttonType", "square");
         }
-
         public Component getTableCellRendererComponent(JTable table, Object value,
                                                        boolean isSelected, boolean hasFocus, int row, int column) {
             setEnabled(table.isEnabled());
@@ -725,7 +589,6 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
                 //setForeground(table.getForeground());
                 setBackground(UIManager.getColor("Button.background"));
             }
-
             String text = (value == null) ? "" : value.toString();
             if (text.toString().startsWith("?")) {
                 setForeground(undefinedColour);
@@ -734,21 +597,16 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
             } else {
                 setForeground(UIManager.getColor("Button.foreground"));
             }
-
             setText(text);
-
             return this;
         }
     }
-
     public class ButtonEditor extends DefaultCellEditor {
-
         private static final long serialVersionUID = 6372738480075411674L;
         protected JButton button;
         private String label;
         private boolean isPushed;
         private int row;
-
         public ButtonEditor(int alignment, Insets insets) {
             super(new JCheckBox());
             button = new JButton();
@@ -764,7 +622,6 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
 //            button.putClientProperty("JComponent.sizeVariant", "small");
 //            button.putClientProperty("JButton.buttonType", "square");
         }
-
         public Component getTableCellEditorComponent(JTable table, Object value,
                                                      boolean isSelected, int row, int column) {
             button.setEnabled(table.isEnabled());
@@ -782,7 +639,6 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
             this.row = row;
             return button;
         }
-
         public Object getCellEditorValue() {
             if (isPushed) {
                 priorButtonPressed(row);
@@ -790,16 +646,12 @@ public class PriorsPanel extends BeautiPanel implements Exportable {
             isPushed = false;
             return label;
         }
-
         public boolean stopCellEditing() {
             isPushed = false;
             return super.stopCellEditing();
         }
-
         protected void fireEditingStopped() {
             super.fireEditingStopped();
         }
     }
-
-
 }

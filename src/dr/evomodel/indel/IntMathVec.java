@@ -1,29 +1,21 @@
-
 package dr.evomodel.indel;
-
-
 class IntMathVec implements Cloneable {
     public int[] iV;
-
     IntMathVec(int iLen) {
 	iV = new int[iLen];
     }
-
     IntMathVec(IntMathVec iVec) {
 	iV = iVec.iV.clone();
     }
-
     IntMathVec(int[] iArr) {
 	iV = iArr.clone();
     }
-
     // I know, I should throw an exception..  Will likely happen automatically.
     private void check(IntMathVec iVec) {
 	if (iVec.iV.length != iV.length) {
 	    System.out.println("IntMathVec.check: Vector sizes don't match.");
 	}
     }
-
     public boolean equals(Object iObj) {
 	if (iObj instanceof IntMathVec) {
 	    IntMathVec iVec = (IntMathVec)iObj;
@@ -37,7 +29,6 @@ class IntMathVec implements Cloneable {
 	}
 	return false;
     }
-
     public int hashCode() {
         int iCode = 0;
         for( int anIV : iV ) {
@@ -45,7 +36,6 @@ class IntMathVec implements Cloneable {
         }
         return iCode;
     }
-
     public IntMathVec clone() {
         try {
             // This magically creates an object of the right type
@@ -57,7 +47,6 @@ class IntMathVec implements Cloneable {
             return null;
         }
     }
-
     public String toString() {
 	String iResult = "{";
 	for (int i=0; i<iV.length; i++) {
@@ -68,7 +57,6 @@ class IntMathVec implements Cloneable {
 	iResult += "}";
 	return iResult;
     }
-
     public int innerProduct(IntMathVec iVec) {
 	check(iVec);
 	int iSum = 0;
@@ -76,7 +64,6 @@ class IntMathVec implements Cloneable {
 	    iSum += iVec.iV[i]*iV[i];
 	return iSum;
     }
-
     public boolean zeroEntry() {
         for(int anIV : iV) {
             if( anIV == 0 ) {
@@ -85,30 +72,22 @@ class IntMathVec implements Cloneable {
         }
 	return false;
     }
-
     public void assign(IntMathVec iVec) {
 	iV = iVec.iV.clone();
     }
-
     public void add(IntMathVec iVec) {
 	check(iVec);
 	for (int i=0; i<iV.length; i++)
 	    iV[i] += iVec.iV[i];
     }
-
     public void addMultiple(IntMathVec iVec, int iMultiple) {
 	check(iVec);
 	for (int i=0; i<iV.length; i++)
 	    iV[i] += iVec.iV[i] * iMultiple;
     }
-
     public void subtract(IntMathVec iVec) {
 	check(iVec);
 	for (int i=0; i<iV.length; i++)
 	    iV[i] -= iVec.iV[i];
     }
-    
 }
-	
-
-

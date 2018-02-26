@@ -1,29 +1,20 @@
-
 package dr.evomodel.epidemiology;
-
 import dr.evolution.util.Units;
 import dr.evoxml.util.XMLUnits;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 public class LogisticGrowthN0ModelParser extends AbstractXMLObjectParser
 {
-	
 	public static String POPULATION_SIZE = "populationSize";
 	public static String LOGISTIC_GROWTH_MODEL = "logisticGrowthN0";
-	
 	public static String GROWTH_RATE = "growthRate";
 	public static String DOUBLING_TIME = "doublingTime";
 	public static String TIME_50 = "t50";
-	
 	public String getParserName() { return LOGISTIC_GROWTH_MODEL; }
-	
 	public Object parseXMLObject(XMLObject xo) throws XMLParseException {
 		Units.Type units = XMLUnits.Utils.getUnitsAttr(xo);
-		
 		XMLObject cxo = (XMLObject)xo.getChild(POPULATION_SIZE);
 		Parameter N0Param = (Parameter)cxo.getChild(Parameter.class);		
-		
 		boolean usingGrowthRate = true;		
 		Parameter rParam = null;		
 		if (xo.getChild(GROWTH_RATE) != null) {			
@@ -34,25 +25,18 @@ public class LogisticGrowthN0ModelParser extends AbstractXMLObjectParser
 			rParam = (Parameter)cxo.getChild(Parameter.class);
 			usingGrowthRate = false;
 		}
-		
 		cxo = (XMLObject)xo.getChild(TIME_50);
 		Parameter t50Param = (Parameter)cxo.getChild(Parameter.class);
-		
 		return new LogisticGrowthN0Model(N0Param, rParam, t50Param, units, usingGrowthRate);
 	}
-	
 	//************************************************************************
 	// AbstractXMLObjectParser implementation
 	//************************************************************************
-	
 	public String getParserDescription() {
 		return "Logistic growth demographic model.";
 	}
-	
 	public Class getReturnType() { return LogisticGrowthN0Model.class; }
-	
 	public XMLSyntaxRule[] getSyntaxRules() { return rules; }
-	
 	private XMLSyntaxRule[] rules = new XMLSyntaxRule[] {
 	XMLUnits.SYNTAX_RULES[0],
 	new ElementRule(POPULATION_SIZE, 

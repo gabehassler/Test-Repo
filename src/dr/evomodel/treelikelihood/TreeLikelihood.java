@@ -1,6 +1,4 @@
-
 package dr.evomodel.treelikelihood;
-
 import dr.evolution.alignment.AscertainedSitePatterns;
 import dr.evolution.alignment.PatternList;
 import dr.evolution.alignment.SitePatterns;
@@ -17,13 +15,9 @@ import dr.evomodel.tree.TreeModel;
 import dr.evomodelxml.treelikelihood.TreeLikelihoodParser;
 import dr.inference.model.Model;
 import dr.inference.model.Statistic;
-
 import java.util.logging.Logger;
-
-
 public class TreeLikelihood extends AbstractTreeLikelihood {
     private static final boolean DEBUG = false;
-
     public TreeLikelihood(PatternList patternList,
                           TreeModel treeModel,
                           SiteModel siteModel,
@@ -34,32 +28,21 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
                           boolean storePartials,
                           boolean forceJavaCore,
                           boolean forceRescaling) {
-
         super(TreeLikelihoodParser.TREE_LIKELIHOOD, patternList, treeModel);
-
         this.storePartials = storePartials;
-
         try {
             this.siteModel = siteModel;
             addModel(siteModel);
-
             this.frequencyModel = siteModel.getFrequencyModel();
             addModel(frequencyModel);
-
             this.tipStatesModel = tipStatesModel;
-
             integrateAcrossCategories = siteModel.integrateAcrossCategories();
-
             this.categoryCount = siteModel.getCategoryCount();
-
             final Logger logger = Logger.getLogger("dr.evomodel");
             String coreName = "Java general";
             if (integrateAcrossCategories) {
-
                 final DataType dataType = patternList.getDataType();
-
                 if (dataType instanceof dr.evolution.datatype.Nucleotides) {
-
                     if (!forceJavaCore && NativeNucleotideLikelihoodCore.isAvailable()) {
                         coreName = "native nucleotide";
                         likelihoodCore = new NativeNucleotideLikelihoodCore();
@@ -67,7 +50,6 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
                         coreName = "Java nucleotide";
                         likelihoodCore = new NucleotideLikelihoodCore();
                     }
-
                 } else if (dataType instanceof dr.evolution.datatype.AminoAcids) {
                     if (!forceJavaCore && NativeAminoAcidLikelihoodCore.isAvailable()) {
                         coreName = "native amino acid";
@@ -76,7 +58,6 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
                         coreName = "Java amino acid";
                         likelihoodCore = new AminoAcidLikelihoodCore();
                     }
-
                     // The codon core was out of date and did nothing more than the general core...
                 } else if (dataType instanceof dr.evolution.datatype.Codons) {
                     if (!forceJavaCore && NativeGeneralLikelihoodCore.isAvailable()) {
@@ -102,11 +83,9 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
             {
               final String id = getId();
               logger.info("TreeLikelihood(" + ((id != null) ? id : treeModel.getId()) + ") using " + coreName + " likelihood core");
-
               logger.info("  " + (useAmbiguities ? "Using" : "Ignoring") + " ambiguities in tree likelihood.");
               logger.info("  With " + patternList.getPatternCount() + " unique site patterns.");
             }
-
             if (branchRateModel != null) {
                 this.branchRateModel = branchRateModel;
                 logger.info("Branch rate model used: " + branchRateModel.getModelName());
@@ -114,40 +93,30 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
                 this.branchRateModel = new DefaultBranchRateModel();
             }
             addModel(this.branchRateModel);
-
             probabilities = new double[stateCount * stateCount];
-
             likelihoodCore.initialize(nodeCount, patternCount, categoryCount, integrateAcrossCategories);
-
             int extNodeCount = treeModel.getExternalNodeCount();
             int intNodeCount = treeModel.getInternalNodeCount();
-
             if (tipStatesModel != null) {
                 tipStatesModel.setTree(treeModel);
-
                 tipPartials = new double[patternCount * stateCount];
-
                 for (int i = 0; i < extNodeCount; i++) {
                     // Find the id of tip i in the patternList
                     String id = treeModel.getTaxonId(i);
                     int index = patternList.getTaxonIndex(id);
-
                     if (index == -1) {
                         throw new TaxonList.MissingTaxonException("Taxon, " + id + ", in tree, " + treeModel.getId() +
                                 ", is not found in patternList, " + patternList.getId());
                     }
-
                     tipStatesModel.setStates(patternList, index, i, id);
                     likelihoodCore.createNodePartials(i);
                 }
-
                 addModel(tipStatesModel);
             } else {
                 for (int i = 0; i < extNodeCount; i++) {
                     // Find the id of tip i in the patternList
                     String id = treeModel.getTaxonId(i);
                     int index = patternList.getTaxonIndex(id);
-
                     if (index == -1) {
                         if (!allowMissingTaxa) {
                             throw new TaxonList.MissingTaxonException("Taxon, " + id + ", in tree, " + treeModel.getId() +
@@ -170,32 +139,24 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
             for (int i = 0; i < intNodeCount; i++) {
                 likelihoodCore.createNodePartials(extNodeCount + i);
             }
-
             if (forceRescaling) {
                 likelihoodCore.setUseScaling(true);
                 logger.info("  Forcing use of partials rescaling.");
             }
-
         } catch (TaxonList.MissingTaxonException mte) {
             throw new RuntimeException(mte.toString());
         }
-
         addStatistic(new SiteLikelihoodsStatistic());
     }
-
     public final LikelihoodCore getLikelihoodCore() {
         return likelihoodCore;
     }
-
     // **************************************************************
     // ModelListener IMPLEMENTATION
     // **************************************************************
-
     protected void handleModelChangedEvent(Model model, Object object, int index) {
-
         if (model == treeModel) {
             if (object instanceof TreeModel.TreeChangedEvent) {
-
                 if (((TreeModel.TreeChangedEvent) object).isNodeChanged()) {
                     // If a node event occurs the node and its two child nodes
                     // are flagged for updating (this will result in everything
@@ -203,7 +164,6 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
                     // is added to a branch, removed from a branch or its height or
                     // rate changes.
                     updateNodeAndChildren(((TreeModel.TreeChangedEvent) object).getNode());
-
                 } else if (((TreeModel.TreeChangedEvent) object).isTreeChanged()) {
                     // Full tree events result in a complete updating of the tree likelihood
                     updateAllNodes();
@@ -212,7 +172,6 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
                     //System.err.println("Another tree event has occured (possibly a trait change).");
                 }
             }
-
         } else if (model == branchRateModel) {
             if (index == -1) {
                 updateAllNodes();
@@ -224,11 +183,8 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
                 }
                 updateNode(treeModel.getNode(index));
             }
-
         } else if (model == frequencyModel) {
-
             updateAllNodes();
-
         } else if (model == tipStatesModel) {
         	if(object instanceof Taxon)
         	{
@@ -237,54 +193,37 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
         				updateNode(treeModel.getNode(i));
         	}else
         		updateAllNodes();
-
         } else if (model instanceof SiteModel) {
-
             updateAllNodes();
-
         } else {
-
             throw new RuntimeException("Unknown componentChangedEvent");
         }
-
         super.handleModelChangedEvent(model, object, index);
     }
-
     // **************************************************************
     // Model IMPLEMENTATION
     // **************************************************************
-
     protected void storeState() {
-
         if (storePartials) {
             likelihoodCore.storeState();
         }
         super.storeState();
-
     }
-
     protected void restoreState() {
-
         if (storePartials) {
             likelihoodCore.restoreState();
         } else {
             updateAllNodes();
         }
-
         super.restoreState();
-
     }
-
     // **************************************************************
     // Likelihood IMPLEMENTATION
     // **************************************************************
-
     protected double calculateLogLikelihood() {
-
         if (patternLogLikelihoods == null) {
             patternLogLikelihoods = new double[patternCount];
         }
-
         if (!integrateAcrossCategories) {
             if (siteCategories == null) {
                 siteCategories = new int[patternCount];
@@ -293,7 +232,6 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
                 siteCategories[i] = siteModel.getCategoryOfSite(i);
             }
         }
-
         if (tipStatesModel != null) {
             int extNodeCount = treeModel.getExternalNodeCount();
             for (int index = 0; index < extNodeCount; index++) {
@@ -304,35 +242,27 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
                 }
             }
         }
-
-
         final NodeRef root = treeModel.getRoot();
         traverse(treeModel, root);
-
         double logL = 0.0;
         double ascertainmentCorrection = getAscertainmentCorrection(patternLogLikelihoods);
         for (int i = 0; i < patternCount; i++) {
             logL += (patternLogLikelihoods[i] - ascertainmentCorrection) * patternWeights[i];
         }
-
         if (logL == Double.NEGATIVE_INFINITY) {
             Logger.getLogger("dr.evomodel").info("TreeLikelihood, " + this.getId() + ", turning on partial likelihood scaling to avoid precision loss");
-
             // We probably had an underflow... turn on scaling
             likelihoodCore.setUseScaling(true);
-
             // and try again...
             updateAllNodes();
             updateAllPatterns();
             traverse(treeModel, root);
-
             logL = 0.0;
             ascertainmentCorrection = getAscertainmentCorrection(patternLogLikelihoods);
             for (int i = 0; i < patternCount; i++) {
                 logL += (patternLogLikelihoods[i] - ascertainmentCorrection) * patternWeights[i];
             }
         }
-
         //********************************************************************
         // after traverse all nodes and patterns have been updated --
         //so change flags to reflect this.
@@ -340,10 +270,8 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
             updateNode[i] = false;
         }
         //********************************************************************
-
         return logL;
     }
-
     public double[] getPatternLogLikelihoods() {
         getLogLikelihood(); // Ensure likelihood is up-to-date
         double ascertainmentCorrection = getAscertainmentCorrection(patternLogLikelihoods);
@@ -357,7 +285,6 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
         }
         return out;
     }
-
     @param patternLogProbs log pattern probabilities
     @return the log total probability for a pattern.
     protected double getAscertainmentCorrection(double[] patternLogProbs) {
@@ -367,7 +294,6 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
             return 0.0;
         }
     }
-
     public void checkScaling() {
 //	    if (useScaling) {
 //	        if (scalingCheckCount % 1000 == 0) {
@@ -386,112 +312,77 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
 //	        scalingCheckCount++;
 //	    }
     }
-
-
     protected boolean traverse(Tree tree, NodeRef node) {
-
         boolean update = false;
-
         int nodeNum = node.getNumber();
-
         NodeRef parent = tree.getParent(node);
-
         // First update the transition probability matrix(ices) for this branch
         if (parent != null && updateNode[nodeNum]) {
-
             final double branchRate = branchRateModel.getBranchRate(tree, node);
-
             // Get the operational time of the branch
             final double branchTime = branchRate * (tree.getNodeHeight(parent) - tree.getNodeHeight(node));
-
             if (branchTime < 0.0) {
                 throw new RuntimeException("Negative branch length: " + branchTime);
             }
-
             likelihoodCore.setNodeMatrixForUpdate(nodeNum);
-
             for (int i = 0; i < categoryCount; i++) {
-
                 double branchLength = siteModel.getRateForCategory(i) * branchTime;
                 siteModel.getSubstitutionModel().getTransitionProbabilities(branchLength, probabilities);
                 likelihoodCore.setNodeMatrix(nodeNum, i, probabilities);
             }
-
             update = true;
         }
-
         // If the node is internal, update the partial likelihoods.
         if (!tree.isExternal(node)) {
-
             // Traverse down the two child nodes
             NodeRef child1 = tree.getChild(node, 0);
             final boolean update1 = traverse(tree, child1);
-
             NodeRef child2 = tree.getChild(node, 1);
             final boolean update2 = traverse(tree, child2);
-
             // If either child node was updated then update this node too
             if (update1 || update2) {
-
                 final int childNum1 = child1.getNumber();
                 final int childNum2 = child2.getNumber();
-
                 likelihoodCore.setNodePartialsForUpdate(nodeNum);
-
                 if (integrateAcrossCategories) {
                     likelihoodCore.calculatePartials(childNum1, childNum2, nodeNum);
                 } else {
                     likelihoodCore.calculatePartials(childNum1, childNum2, nodeNum, siteCategories);
                 }
-
                 if (COUNT_TOTAL_OPERATIONS) {
                     totalOperationCount ++;
                 }
-
                 if (parent == null) {
                     // No parent this is the root of the tree -
                     // calculate the pattern likelihoods
                     double[] frequencies = frequencyModel.getFrequencies();
-
                     double[] partials = getRootPartials();
-
                     likelihoodCore.calculateLogLikelihoods(partials, frequencies, patternLogLikelihoods);
                 }
-
                 update = true;
             }
         }
-
         return update;
-
     }
-
     public final double[] getRootPartials() {
         if (rootPartials == null) {
             rootPartials = new double[patternCount * stateCount];
         }
-
         int nodeNum = treeModel.getRoot().getNumber();
         if (integrateAcrossCategories) {
-
             // moved this call to here, because non-integrating siteModels don't need to support it - AD
             double[] proportions = siteModel.getCategoryProportions();
             likelihoodCore.integratePartials(nodeNum, proportions, rootPartials);
         } else {
             likelihoodCore.getPartials(nodeNum, rootPartials);
         }
-
         return rootPartials;
     }
-
     private double[] rootPartials = null;
-
     public class SiteLikelihoodsStatistic extends Statistic.Abstract {
-
         public SiteLikelihoodsStatistic() {
             super("siteLikelihoods");
         }
-
         public int getDimension() {
             if (patternList instanceof SitePatterns) {
                 return ((SitePatterns)patternList).getSiteCount();
@@ -499,13 +390,10 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
                 return patternList.getPatternCount();
             }
         }
-
         public String getDimensionName(int dim) {
             return getTreeModel().getId() + "site-" + dim;
         }
-
         public double getStatisticValue(int i) {
-
             if (patternList instanceof SitePatterns) {
                 int index = ((SitePatterns)patternList).getPatternIndex(i);
                 if( index >= 0 ) {
@@ -517,36 +405,20 @@ public class TreeLikelihood extends AbstractTreeLikelihood {
                 return patternList.getPatternCount();
             }
         }
-
     }
-
     // **************************************************************
     // INSTANCE VARIABLES
     // **************************************************************
-
     protected final FrequencyModel frequencyModel;
-
     protected final SiteModel siteModel;
-
     protected final BranchRateModel branchRateModel;
-
     private final TipStatesModel tipStatesModel;
-
     private final boolean storePartials;
-
     protected final boolean integrateAcrossCategories;
-
     protected int[] siteCategories = null;
-
-
     protected double[] patternLogLikelihoods = null;
-
     protected int categoryCount;
-
     protected double[] probabilities;
-
-
     protected double[] tipPartials;
-
     protected LikelihoodCore likelihoodCore;
 }

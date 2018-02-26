@@ -1,12 +1,8 @@
-
 package dr.inferencexml.distribution;
-
 import dr.inference.distribution.LogNormalDistributionModel;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 public class LogNormalDistributionModelParser extends AbstractXMLObjectParser {
-
     public static final String LOGNORMAL_DISTRIBUTION_MODEL = "logNormalDistributionModel";
     public static final String MEAN = "mean";
     public static final String STDEV = "stdev";
@@ -14,23 +10,17 @@ public class LogNormalDistributionModelParser extends AbstractXMLObjectParser {
     public static final String OFFSET = "offset";
     public static final String MEAN_IN_REAL_SPACE = "meanInRealSpace";
     public static final String STDEV_IN_REAL_SPACE = "stdevInRealSpace";
-
     public String getParserName() {
         return LOGNORMAL_DISTRIBUTION_MODEL;
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
         Parameter meanParam;
-
         final double offset = xo.getAttribute(OFFSET, 0.0);
-
         final boolean meanInRealSpace = xo.getAttribute(MEAN_IN_REAL_SPACE, false);
         final boolean stdevInRealSpace = xo.getAttribute(STDEV_IN_REAL_SPACE, false);
         if(!meanInRealSpace && stdevInRealSpace) {
             throw new RuntimeException("Cannot parameterise Lognormal model with M and Stdev");
         }
-
-
         {
             final XMLObject cxo = xo.getChild(MEAN);
             if (cxo.getChild(0) instanceof Parameter) {
@@ -39,7 +29,6 @@ public class LogNormalDistributionModelParser extends AbstractXMLObjectParser {
                 meanParam = new Parameter.Default(cxo.getDoubleChild(0));
             }
         }
-
         {
             final XMLObject cxo = xo.getChild(PRECISION);
             if (cxo != null) {
@@ -60,19 +49,15 @@ public class LogNormalDistributionModelParser extends AbstractXMLObjectParser {
             } else {
                 stdevParam = new Parameter.Default(cxo.getDoubleChild(0));
             }
-
             return new LogNormalDistributionModel(meanParam, stdevParam, offset, meanInRealSpace, stdevInRealSpace);
         }
     }
-
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     private final XMLSyntaxRule[] rules = {
             AttributeRule.newBooleanRule(MEAN_IN_REAL_SPACE, true),
             AttributeRule.newBooleanRule(STDEV_IN_REAL_SPACE, true),
@@ -98,15 +83,12 @@ public class LogNormalDistributionModelParser extends AbstractXMLObjectParser {
                                             new ElementRule(Parameter.class),
                                             new ElementRule(Double.class)
                                     )}
-
                     ))
     };
-
     public String getParserDescription() {
         return "Describes a normal distribution with a given mean and standard deviation " +
                 "that can be used in a distributionLikelihood element";
     }
-
     public Class getReturnType() {
         return LogNormalDistributionModel.class;
     }

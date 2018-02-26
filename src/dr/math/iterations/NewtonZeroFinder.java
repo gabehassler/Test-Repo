@@ -1,6 +1,4 @@
-
 package dr.math.iterations;
-
 import dr.math.functionEval.DrMath;
 import dr.math.functionEval.FunctionDerivative;
 import dr.math.interfaces.OneVariableFunction;

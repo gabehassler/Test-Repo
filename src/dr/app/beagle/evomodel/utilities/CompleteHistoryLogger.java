@@ -1,6 +1,4 @@
-
 package dr.app.beagle.evomodel.utilities;
-
 import dr.app.beagle.evomodel.treelikelihood.MarkovJumpsBeagleTreeLikelihood;
 import dr.app.beagle.evomodel.treelikelihood.MarkovJumpsTraitProvider;
 import dr.evolution.tree.NodeRef;
@@ -12,22 +10,17 @@ import dr.inference.markovjumps.StateHistory;
 import dr.util.Citable;
 import dr.util.Citation;
 import dr.util.CommonCitations;
-
 import java.awt.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-
 public class CompleteHistoryLogger implements Loggable, Citable {
-
     public static final String TOTAL_COUNT_NAME = "totalChangeCount";
     public static final String COMPLETE_HISTORY_NAME = "completeHistory";
-
     public CompleteHistoryLogger(MarkovJumpsTraitProvider treeLikelihood, HistoryFilter filter) {
         this.tree = treeLikelihood.getTreeModel();
         this.patternCount = treeLikelihood.getPatternCount();
-
         treeTraitHistory = new TreeTrait[patternCount];
         for (int site = 0; site < patternCount; ++site) {
             String traitName = (patternCount == 1) ? MarkovJumpsBeagleTreeLikelihood.HISTORY : MarkovJumpsBeagleTreeLikelihood.HISTORY + "_" + (site + 1);
@@ -36,35 +29,25 @@ public class CompleteHistoryLogger implements Loggable, Citable {
                 throw new RuntimeException("Tree '" + treeLikelihood.getId() + "' does not have a complete history trait at site " + (site + 1));
             }
         }
-
         treeTraitCount = treeLikelihood.getTreeTrait(MarkovJumpsBeagleTreeLikelihood.TOTAL_COUNTS);
-
         if (treeTraitCount == null) {
             throw new RuntimeException("No sum");
         }
-
         Logger.getLogger("dr.app.beagle").info("\tConstructing a complete history logger;  please cite:\n"
                 + Citable.Utils.getCitationString(this));
-
-
         if (filter == null) {
             this.filter = new HistoryFilter.Default();
         } else {
             this.filter = filter;
             Logger.getLogger("dr.app.beagle").info("\tWith filter: " + filter.getDescription() + "\n");
         }
-
-
     }
-
     private static int parseListString(String listString, int currentOffset, List list) {
-
         while (currentOffset < listString.length()) {
             // Skip leading separators
             if (listString.startsWith(",", currentOffset)) {
                 currentOffset++;
             }
-
             if (listString.startsWith("{", currentOffset)) {
                 // Need to make a new list
                 List newList = new ArrayList();
@@ -80,20 +63,17 @@ public class CompleteHistoryLogger implements Loggable, Citable {
                 if (nextComma < 0) nextComma = listString.length() - 1;
                 if (nextClose < 0) nextClose = listString.length() - 1;
                 int nextOffset = Math.min(nextComma, nextClose);
-
                 list.add(listString.substring(currentOffset, nextOffset).trim());
                 currentOffset = nextOffset;
             }
         }
         return currentOffset;
     }
-
     public static Serializable parseValue(String value) {
         List nestedParse = new ArrayList<Object>();
         parseListString(value, 0, nestedParse);
         return parseValueObject(nestedParse.get(0));
     }
-
     private static Serializable parseValueObject(Object objValue) {
         if (objValue instanceof List) {
             List newObjList = (List) objValue;
@@ -103,7 +83,6 @@ public class CompleteHistoryLogger implements Loggable, Citable {
             }
             return newObjects;
         }
-
         String value = (String) objValue;
         if (value.startsWith("#")) {
             // I am not sure whether this is a good idea but
@@ -114,52 +93,39 @@ public class CompleteHistoryLogger implements Loggable, Citable {
                 // not a colour
             }
         }
-
         if (value.equalsIgnoreCase("TRUE") || value.equalsIgnoreCase("FALSE")) {
             return Boolean.valueOf(value);
         }
-
         // Attempt to format the value as an integer
         try {
             return new Integer(value);
         } catch (NumberFormatException nfe1) {
             // not an integer
         }
-
         // Attempt to format the value as a double
         try {
             return new Double(value);
         } catch (NumberFormatException nfe2) {
             // not a double
         }
-
         // return the trimmed string
         return value;
-
     }
-
-
     public void setFilter(HistoryFilter filter) {
         this.filter = filter;
     }
-
     public LogColumn[] getColumns() {
-
         LogColumn[] columns = new LogColumn[1 + patternCount];
         columns[0] = new LogColumn.Abstract(TOTAL_COUNT_NAME) {
-
             @Override
             protected String getFormattedValue() {
                 return treeTraitCount.getTraitString(tree, null);
             }
         };
-
         for (int site = 0; site < patternCount; ++site) {
-
             String name = (patternCount == 0) ? COMPLETE_HISTORY_NAME : COMPLETE_HISTORY_NAME + "_" + (site + 1);
             final int anonSite = site;
             columns[1 + site] = new LogColumn.Abstract(name) {
-
                 @Override
                 protected String getFormattedValue() {
                     boolean empty = true;
@@ -177,7 +143,6 @@ public class CompleteHistoryLogger implements Loggable, Citable {
                             if (trait != null && trait.compareTo("{}") != 0) {
                                 Object[] changes = (Object[]) parseValue(trait);
                                 for (int j = 0; j < changes.length; ++j) {
-
                                     Object[] change = (Object[]) changes[j];
                                     int offset = (change.length == 4) ? 1 : 0;
                                     String source = (String) change[1 + offset];
@@ -189,7 +154,6 @@ public class CompleteHistoryLogger implements Loggable, Citable {
                                     if (thisTime > maxTime || thisTime < minTime) {
                                         throw new RuntimeException("Invalid simulation time");
                                     }
-
                                     // TODO Delegate to Filter(source, dest, thisTime).  If filtered then
                                     boolean filtered = filter.filter(source, dest, thisTime);
                                     if (filtered) {
@@ -214,7 +178,6 @@ public class CompleteHistoryLogger implements Loggable, Citable {
         }
         return columns;
     }
-
     public List<Citation> getCitations() {
         List<Citation> citations = new ArrayList<Citation>();
         citations.add(CommonCitations.LEMEY_2012);
@@ -222,11 +185,9 @@ public class CompleteHistoryLogger implements Loggable, Citable {
         citations.add(CommonCitations.BLOOM_2012);
         return citations;
     }
-
     final private Tree tree;
     final private TreeTrait[] treeTraitHistory;
     final private TreeTrait treeTraitCount;
     final private int patternCount;
-
     private HistoryFilter filter;
 }

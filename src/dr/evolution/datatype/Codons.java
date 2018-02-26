@@ -1,11 +1,7 @@
-
 package dr.evolution.datatype;
-
 public class Codons extends DataType {
-
     public static final String DESCRIPTION = "codon";
     public static final int TYPE = CODONS;
-
     public static final Codons UNIVERSAL = new Codons(GeneticCode.UNIVERSAL);
     public static final Codons VERTEBRATE_MT = new Codons(GeneticCode.VERTEBRATE_MT);
     public static final Codons YEAST = new Codons(GeneticCode.YEAST);
@@ -21,10 +17,8 @@ public class Codons extends DataType {
     public static final Codons FLATWORM_MT = new Codons(GeneticCode.FLATWORM_MT);
     public static final Codons BLEPHARISMA_NUC = new Codons(GeneticCode.BLEPHARISMA_NUC);
     public static final Codons NO_STOPS = new Codons(GeneticCode.NO_STOPS);
-
     public static final int UNKNOWN_STATE = 64;
     public static final int GAP_STATE = 65;
-
     public static final String[] CODON_TRIPLETS = {
             "AAA", "AAC", "AAG", "AAT", "ACA", "ACC", "ACG", "ACT",
             "AGA", "AGC", "AGG", "AGT", "ATA", "ATC", "ATG", "ATT",
@@ -36,20 +30,14 @@ public class Codons extends DataType {
             "TGA", "TGC", "TGG", "TGT", "TTA", "TTC", "TTG", "TTT",
             "???", "---"
     };
-
-
     public Codons() {
     }
-
     protected Codons(GeneticCode geneticCode) {
         this.geneticCode = geneticCode;
-
         stateCount = 64 - geneticCode.getStopCodonCount();
         ambiguousStateCount = 66;
-
         stateMap = new int[ambiguousStateCount];
         reverseMap = new int[ambiguousStateCount];
-
         int j = 0;
         int k = stateCount;
         for (int i = 0; i < 64; i++) {
@@ -67,96 +55,72 @@ public class Codons extends DataType {
             stateMap[i] = i;
             reverseMap[i] = i;
         }
-
     }
-
     @Override
     public char[] getValidChars() {
         return null;
     }
-
     public final int getState(char c) {
         throw new IllegalArgumentException("Codons datatype cannot be expressed as char");
     }
-
     public int getUnknownState() {
         return UNKNOWN_STATE;
     }
-
     public int getGapState() {
         return GAP_STATE;
     }
-
     public final int getState(char nuc1, char nuc2, char nuc3) {
         return getState(Nucleotides.INSTANCE.getState(nuc1),
                 Nucleotides.INSTANCE.getState(nuc2),
                 Nucleotides.INSTANCE.getState(nuc3));
     }
-
     public final int getCanonicalState(int funnyState) {
         return stateMap[funnyState];
-
     }
-
     public final int getState(int nuc1, int nuc2, int nuc3) {
         if (Nucleotides.INSTANCE.isGapState(nuc1) ||
                 Nucleotides.INSTANCE.isGapState(nuc2) ||
                 Nucleotides.INSTANCE.isGapState(nuc3)) {
             return GAP_STATE;
         }
-
         if (Nucleotides.INSTANCE.isAmbiguousState(nuc1) ||
                 Nucleotides.INSTANCE.isAmbiguousState(nuc2) ||
                 Nucleotides.INSTANCE.isAmbiguousState(nuc3)) {
             return UNKNOWN_STATE;
         }
-
         int canonicalState = (nuc1 * 16) + (nuc2 * 4) + nuc3;
-
         return reverseMap[canonicalState];
     }
-
     public final char getChar(int state) {
         throw new IllegalArgumentException("Codons datatype cannot be expressed as char");
     }
-
     public final String getTriplet(int state) {
         return CODON_TRIPLETS[stateMap[state]];
     }
-
     public final int[] getTripletStates(int state) {
         int[] triplet = new int[3];
-
         triplet[0] = Nucleotides.INSTANCE.getState(CODON_TRIPLETS[stateMap[state]].charAt(0));
         triplet[1] = Nucleotides.INSTANCE.getState(CODON_TRIPLETS[stateMap[state]].charAt(1));
         triplet[2] = Nucleotides.INSTANCE.getState(CODON_TRIPLETS[stateMap[state]].charAt(2));
-
         return triplet;
     }
-
     public String getDescription() {
         return DESCRIPTION;
     }
-
     public int getType() {
         return TYPE;
     }
-
     public GeneticCode getGeneticCode() {
         return geneticCode;
     }
-
     public final boolean isStopCodon(int state) {
         return geneticCode.isStopCodon(stateMap[state]);
     }
-
     public static byte[] constructRateMap(Codons codonDataType) {
         final int stateCount = codonDataType.getStateCount();
         final int rateCount = (stateCount * (stateCount - 1)) / 2;
         return constructRateMap(rateCount, stateCount, codonDataType, codonDataType.getGeneticCode());
     }
-
-
     public static Codons findByName(String codeStr) {
         Codons codons = null;
         if (codeStr.equals(GeneticCode.UNIVERSAL.getName())) {
@@ -192,7 +156,6 @@ public class Codons extends DataType {
         }
         return codons;
     }
-
 	public static byte[] constructRateMap(int rateCount,
                                           int stateCount,
                                           Codons codonDataType,
@@ -202,31 +165,22 @@ public class Codons extends DataType {
 		byte rateClass;
 		int[] codon;
 		int cs1, cs2, aa1, aa2;
-
 		int i = 0;
-
 		byte[] rateMap = new byte[rateCount];
-
 		for (u = 0; u < stateCount; u++) {
-
 			codon = codonDataType.getTripletStates(u);
 			i1 = codon[0];
 			j1 = codon[1];
 			k1 = codon[2];
-
 			cs1 = codonDataType.getState(i1, j1, k1);
 			aa1 = geneticCode.getAminoAcidState(codonDataType.getCanonicalState(cs1));
-
 			for (v = u + 1; v < stateCount; v++) {
-
 				codon = codonDataType.getTripletStates(v);
 				i2 = codon[0];
 				j2 = codon[1];
 				k2 = codon[2];
-
 				cs2 = codonDataType.getState(i2, j2, k2);
 				aa2 = geneticCode.getAminoAcidState(codonDataType.getCanonicalState(cs2));
-
 				rateClass = -1;
 				if (i1 != i2) {
 					if ( (i1 == 0 && i2 == 2) || (i1 == 2 && i2 == 0) || // A <-> G
@@ -258,23 +212,18 @@ public class Codons extends DataType {
 					} else
 						rateClass = 0; // Codon changes at more than one position
 				}
-
 	 			if (rateClass != 0) {
 					if (aa1 != aa2) {
 						rateClass += 2; // Is a non-synonymous change
 					}
 				}
-
 				rateMap[i] = rateClass;
 				i++;
 			}
-
 		}
         return rateMap;
 	}
-
     // Private members
-
     protected GeneticCode geneticCode;
     protected int[] stateMap;
     protected int[] reverseMap;

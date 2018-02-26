@@ -1,6 +1,4 @@
-
 package dr.evomodel.epidemiology.casetocase;
-
 import dr.app.tools.NexusExporter;
 import dr.evolution.coalescent.*;
 import dr.evolution.tree.FlexibleNode;
@@ -18,19 +16,13 @@ import dr.inference.model.Model;
 import dr.inference.model.Parameter;
 import dr.math.*;
 import dr.xml.*;
-
 import java.io.IOException;
 import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.util.*;
-
-
 public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
-
     public static final String WITHIN_CASE_COALESCENT = "withinCaseCoalescent";
-
     private enum Mode {TRUNCATE, NORMAL}
-
     private double[] partitionTreeLogLikelihoods;
     private double[] storedPartitionTreeLogLikelihoods;
     private boolean[] recalculateCoalescentFlags;
@@ -38,19 +30,14 @@ public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
     private HashMap<AbstractCase,Treelet> storedPartitionsAsTrees;
     private DemographicModel demoModel;
     private Mode mode;
-
-
     private double infectiousPeriodsLogLikelihood;
     private double storedInfectiousPeriodsLogLikelihood;
     private double coalescencesLogLikelihood;
     private double storedCoalescencesLogLikelihood;
-
-
     public WithinCaseCoalescent(PartitionedTreeModel virusTree, AbstractOutbreak caseData,
                                 String startingNetworkFileName, Parameter maxFirstInfToRoot, DemographicModel demoModel,
                                 Mode mode)
             throws TaxonList.MissingTaxonException {
-
         super(WITHIN_CASE_COALESCENT, virusTree, caseData, maxFirstInfToRoot);
         this.mode = mode;
         this.demoModel = demoModel;
@@ -59,99 +46,59 @@ public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
         partitionTreeLogLikelihoods = new double[outbreak.getCases().size()];
         storedPartitionTreeLogLikelihoods = new double[outbreak.getCases().size()];
         recalculateCoalescentFlags = new boolean[outbreak.getCases().size()];
-
         partitionsAsTrees = new HashMap<AbstractCase, Treelet>();
         for(AbstractCase aCase: outbreak.getCases()){
             if(aCase.wasEverInfected()){
                 partitionsAsTrees.put(aCase, null);
             }
         }
-
         storedPartitionsAsTrees = new HashMap<AbstractCase, Treelet>();
-
-
         prepareTree(startingNetworkFileName);
-
     }
-
     protected double calculateLogLikelihood(){
-
         //checkPartitions();
-
         if(DEBUG){
-
             super.debugOutputTree("bleh.nex", true);
         }
-
         double logL = 0;
-
         // you shouldn't need to do this, because C2CTransL will already have done it
-
         // super.prepareTimings();
-
         HashMap<String, ArrayList<Double>> infectiousPeriodsByCategory
                 = new HashMap<String, ArrayList<Double>>();
-
         // todo do this only once? Using indexes?
-
         for (AbstractCase aCase : outbreak.getCases()) {
             if(aCase.wasEverInfected()) {
-
                 String category = ((CategoryOutbreak) outbreak).getInfectiousCategory(aCase);
-
                 if (!infectiousPeriodsByCategory.keySet().contains(category)) {
                     infectiousPeriodsByCategory.put(category, new ArrayList<Double>());
                 }
-
                 ArrayList<Double> correspondingList
                         = infectiousPeriodsByCategory.get(category);
-
                 correspondingList.add(getInfectiousPeriod(aCase));
             }
         }
-
         infectiousPeriodsLogLikelihood = 0;
-
         for (String category : ((CategoryOutbreak) outbreak).getInfectiousCategories()) {
-
             Double[] infPeriodsInThisCategory = infectiousPeriodsByCategory.get(category)
                     .toArray(new Double[infectiousPeriodsByCategory.size()]);
-
             AbstractPeriodPriorDistribution hyperprior = ((CategoryOutbreak) outbreak)
                     .getInfectiousCategoryPrior(category);
-
             double[] values = new double[infPeriodsInThisCategory.length];
-
             for (int i = 0; i < infPeriodsInThisCategory.length; i++) {
                 values[i] = infPeriodsInThisCategory[i];
             }
-
             infectiousPeriodsLogLikelihood += hyperprior.getLogLikelihood(values);
-
         }
-
         logL += infectiousPeriodsLogLikelihood;
-
         explodeTree();
-
         coalescencesLogLikelihood = 0;
-
-
         for(AbstractCase aCase : outbreak.getCases()){
-
             int number = outbreak.getCaseIndex(aCase);
-
             if(aCase.wasEverInfected()) {
-
                 // and then the little tree calculations
-
                 HashSet<AbstractCase> children = getInfectees(aCase);
-
                 if (recalculateCoalescentFlags[number]) {
                     Treelet treelet = partitionsAsTrees.get(aCase);
-
-
-
                     if (children.size() != 0) {
                         SpecifiedZeroCoalescent coalescent = new SpecifiedZeroCoalescent(treelet, demoModel,
                                 treelet.getZeroHeight(), mode == Mode.TRUNCATE);
@@ -172,48 +119,32 @@ public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
                 recalculateCoalescentFlags[number] = false;
             }
         }
-
         logL += coalescencesLogLikelihood;
-
         likelihoodKnown = true;
-
         if(DEBUG){
             debugOutputTree("outstandard.nex", false);
             debugOutputTree("outfancy.nex", true);
         }
-
         return logL;
     }
-
     public void storeState(){
         super.storeState();
         storedPartitionsAsTrees = new HashMap<AbstractCase, Treelet>(partitionsAsTrees);
         storedPartitionTreeLogLikelihoods = Arrays.copyOf(partitionTreeLogLikelihoods,
                 partitionTreeLogLikelihoods.length);
-
-
         storedCoalescencesLogLikelihood = coalescencesLogLikelihood;
         storedInfectiousPeriodsLogLikelihood = infectiousPeriodsLogLikelihood;
-
     }
-
     public void restoreState(){
         super.restoreState();
         partitionsAsTrees = storedPartitionsAsTrees;
         partitionTreeLogLikelihoods = storedPartitionTreeLogLikelihoods;
-
-
         coalescencesLogLikelihood = storedCoalescencesLogLikelihood;
         infectiousPeriodsLogLikelihood = storedInfectiousPeriodsLogLikelihood;
-
     }
-
     protected void handleModelChangedEvent(Model model, Object object, int index) {
-
         super.handleModelChangedEvent(model, object, index);
-
         if(model == treeModel){
-
             if(object instanceof PartitionedTreeModel.PartitionsChangedEvent){
                 HashSet<AbstractCase> changedPartitions =
                         ((PartitionedTreeModel.PartitionsChangedEvent)object).getCasesToRecalculate();
@@ -223,17 +154,13 @@ public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
             }
         } else if(model == branchMap){
             if(object instanceof ArrayList){
-
                 for(int i=0; i<((ArrayList) object).size(); i++){
                     BranchMapModel.BranchMapChangedEvent event
                             =  (BranchMapModel.BranchMapChangedEvent)((ArrayList) object).get(i);
-
                     recalculateCaseWCC(event.getOldCase());
                     recalculateCaseWCC(event.getNewCase());
-
                     NodeRef node = treeModel.getNode(event.getNodeToRecalculate());
                     NodeRef parent = treeModel.getParent(node);
-
                     if(parent!=null){
                         recalculateCaseWCC(branchMap.get(parent.getNumber()));
                     }
@@ -246,30 +173,23 @@ public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
         } else if(model == outbreak){
             if(object instanceof AbstractCase){
                 AbstractCase thisCase = (AbstractCase)object;
-
                 recalculateCaseWCC(thisCase);
-
                 AbstractCase parent = getInfector(thisCase);
-
                 if(parent!=null){
                     recalculateCaseWCC(parent);
                 }
             }
         }
     }
-
     protected void recalculateCaseWCC(int index){
         partitionsAsTrees.put(outbreak.getCase(index), null);
         recalculateCoalescentFlags[index] = true;
     }
-
     protected void recalculateCaseWCC(AbstractCase aCase){
         if(aCase.wasEverInfected()) {
             recalculateCaseWCC(outbreak.getCaseIndex(aCase));
         }
     }
-
-
     public void makeDirty(){
         super.makeDirty();
         Arrays.fill(recalculateCoalescentFlags, true);
@@ -279,9 +199,7 @@ public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
             }
         }
     }
-
     // Tears the tree into small pieces. Indexes correspond to indexes in the outbreak.
-
     private void explodeTree(){
         if(DEBUG){
             debugOutputTree("test.nex", false);
@@ -289,34 +207,24 @@ public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
         for(int i=0; i<outbreak.size(); i++){
             AbstractCase aCase = outbreak.getCase(i);
             if(aCase.wasEverInfected() && partitionsAsTrees.get(aCase)==null){
-
                 NodeRef partitionRoot = getEarliestNodeInPartition(aCase);
-
                 double extraHeight;
-
                 if(treeModel.isRoot(partitionRoot)){
                     extraHeight = maxFirstInfToRoot.getParameterValue(0) * aCase.getInfectionBranchPosition().getParameterValue(0);
                 } else {
                     extraHeight = treeModel.getBranchLength(partitionRoot) * aCase.getInfectionBranchPosition().getParameterValue(0);
                 }
-
                 FlexibleNode newRoot = new FlexibleNode();
-
                 FlexibleTree littleTree = new FlexibleTree(newRoot);
                 littleTree.beginTreeEdit();
-
                 if (!treeModel.isExternal(partitionRoot)) {
                     for (int j = 0; j < treeModel.getChildCount(partitionRoot); j++) {
                         copyPartitionToTreelet(littleTree, treeModel.getChild(partitionRoot, j), newRoot, aCase);
                     }
                 }
-
                 littleTree.endTreeEdit();
-
                 littleTree.resolveTree();
-
                 double sampleTipHeight = 0;
-
                 if(littleTree.getExternalNodeCount()>1) {
                     for (int j = 0; j < littleTree.getExternalNodeCount(); j++) {
                         NodeRef node = littleTree.getExternalNode(j);
@@ -324,42 +232,26 @@ public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
                             sampleTipHeight = littleTree.getNodeHeight(node);
                             break;
                         }
-
                     }
                 }
-
-
-
-
-
                 Treelet treelet = new Treelet(littleTree,
                         littleTree.getRootHeight() + extraHeight);
-
-
-
-
 //                if(sampleTipHeight==-1){
 //                    System.out.println();
 //                }
-
 //                double heightPlusRB = treelet.getZeroHeight() - sampleTipHeight;
 //                double infectedTime = aCase.examTime - getInfectionTime(aCase);
 //
 //                if(heightPlusRB!=infectedTime){
 //                    System.out.println();
 //                }
-
                 partitionsAsTrees.put(aCase, treelet);
-
-
             }
         }
     }
-
     public ArrayList<AbstractCase> postOrderTransmissionTreeTraversal(){
         return traverseTransmissionTree(branchMap.get(treeModel.getRoot().getNumber()));
     }
-
     private ArrayList<AbstractCase> traverseTransmissionTree(AbstractCase aCase){
         ArrayList<AbstractCase> out = new ArrayList<AbstractCase>();
         HashSet<AbstractCase> children = getInfectees(aCase);
@@ -373,7 +265,6 @@ public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
         out.add(aCase);
         return out;
     }
-
     private void copyPartitionToTreelet(FlexibleTree littleTree, NodeRef oldNode, NodeRef newParent,
                                         AbstractCase partition){
         if(partition.wasEverInfected()) {
@@ -401,176 +292,111 @@ public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
             }
         }
     }
-
     private class Treelet extends FlexibleTree {
-
         private double zeroHeight;
-
         private Treelet(FlexibleTree tree, double zeroHeight){
             super(tree);
             this.zeroHeight = zeroHeight;
-
         }
-
         private double getZeroHeight(){
             return zeroHeight;
         }
-
-
-
         private void setZeroHeight(double rootBranchLength){
             this.zeroHeight = zeroHeight;
         }
     }
-
     private Treelet transformTreelet(Treelet treelet){
-
         double[] transformedNodeTimes = new double[treelet.getNodeCount()];
-
         double totalHeight = treelet.getZeroHeight();
-
         double willMapToZero = totalHeight - 1;
-
         for(int i=0; i<treelet.getNodeCount(); i++){
             NodeRef node = treelet.getNode(i);
-
             double time =  treelet.getNodeHeight(node) - totalHeight;
-
             transformedNodeTimes[i] = -Math.log(-(time));
         }
-
         double first = Double.POSITIVE_INFINITY;
         for (double transformedNodeTime : transformedNodeTimes) {
             if (transformedNodeTime < first) {
                 first = transformedNodeTime;
             }
         }
-
         double zeroHeight = -first;
-
         Treelet copy = new Treelet(treelet, zeroHeight);
-
         for(int i=0; i<copy.getNodeCount(); i++){
             NodeRef node = copy.getNode(i);
-
             copy.setNodeHeight(node, transformedNodeTimes[i] - first);
         }
-
         copy.resolveTree();
-
         return copy;
-
     }
-
-
     private class SpecifiedZeroCoalescent extends Coalescent {
-
         private double zeroHeight;
         boolean truncate;
-
         private SpecifiedZeroCoalescent(Tree tree, DemographicModel demographicModel, double zeroHeight,
                                         boolean truncate){
             super(tree, demographicModel.getDemographicFunction());
-
             this.zeroHeight = zeroHeight;
             this.truncate = truncate;
-
         }
-
         public double calculateLogLikelihood() {
-
             return calculatePartitionTreeLogLikelihood(getIntervals(), getDemographicFunction(), 0, zeroHeight,
                     truncate);
         }
-
     }
-
     public static double calculatePartitionTreeLogLikelihood(IntervalList intervals,
                                                              DemographicFunction demographicFunction, double threshold,
                                                              double zeroHeight, boolean truncate) {
-
         double logL = 0.0;
-
         double startTime = -zeroHeight;
         final int n = intervals.getIntervalCount();
-
         //TreeIntervals sets up a first zero-length interval with a lineage count of zero - skip this one
-
         for (int i = 0; i < n; i++) {
-
             if(truncate) {
-
                 // time zero corresponds to the date of first infection
-
                 final double duration = intervals.getInterval(i);
                 final double finishTime = startTime + duration;
-
                 // if this has happened the run is probably pretty unhappy
-
                 if (finishTime == 0) {
                     return Double.NEGATIVE_INFINITY;
                 }
-
                 final double intervalArea = demographicFunction.getIntegral(startTime, finishTime);
                 final double normalisationArea = demographicFunction.getIntegral(startTime, 0);
-
                 if (intervalArea == 0 && duration != 0) {
                     return Double.NEGATIVE_INFINITY;
                 }
-
                 final int lineageCount = intervals.getLineageCount(i);
-
                 if (lineageCount >= 2) {
-
                     final double kChoose2 = Binomial.choose2(lineageCount);
-
                     if (intervals.getIntervalType(i) == IntervalType.COALESCENT) {
-
                         logL += -kChoose2 * intervalArea;
-
                         final double demographicAtCoalPoint = demographicFunction.getDemographic(finishTime);
-
                         if (duration == 0.0 || demographicAtCoalPoint * (intervalArea / duration) >= threshold) {
                             logL -= Math.log(demographicAtCoalPoint);
                         } else {
                             return Double.NEGATIVE_INFINITY;
                         }
-
                     } else {
                         double numerator = Math.exp(-kChoose2 * intervalArea) - Math.exp(-kChoose2 * normalisationArea);
                         logL += Math.log(numerator);
-
                     }
-
                     // normalisation
-
                     double normExp = Math.exp(-kChoose2 * normalisationArea);
-
                     double logDenominator;
-
                     // the denominator has an irritating tendency to round to zero
-
                     if (normExp != 1) {
                         logDenominator = Math.log1p(-normExp);
                     } else {
                         logDenominator = handleDenominatorUnderflow(-kChoose2 * normalisationArea);
                     }
-
-
                     logL -= logDenominator;
-
                 }
-
                 startTime = finishTime;
             } else {
                 if(!(demographicFunction instanceof LinearGrowth)){
-
                     throw new RuntimeException("Function must have zero population at t=0 if truncate=false");
                 }
-
                 final double duration = intervals.getInterval(i);
                 final double finishTime = startTime + duration;
-
                 final double intervalArea = demographicFunction.getIntegral(startTime, finishTime);
                 if( intervalArea == 0 && duration != 0 ) {
                     return Double.NEGATIVE_INFINITY;
@@ -579,15 +405,11 @@ public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
                 final double kChoose2 = Binomial.choose2(lineageCount);
                 // common part
                 logL += -kChoose2 * intervalArea;
-
                 if (intervals.getIntervalType(i) == IntervalType.COALESCENT) {
-
                     final double demographicAtCoalPoint = demographicFunction.getDemographic(finishTime);
-
                     // if value at end is many orders of magnitude different than mean over interval reject the interval
                     // This is protection against cases where ridiculous infinitesimal population size at the end of a
                     // linear interval drive coalescent values to infinity.
-
                     if( duration == 0.0 || demographicAtCoalPoint * (intervalArea/duration) >= threshold ) {
                         //                if( duration == 0.0 || demographicAtCoalPoint >= threshold * (duration/intervalArea) ) {
                         logL -= Math.log(demographicAtCoalPoint);
@@ -596,19 +418,12 @@ public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
                         //  System.err.println("Warning: " + i + " " + demographicAtCoalPoint + " " + (intervalArea/duration) );
                         return Double.NEGATIVE_INFINITY;
                     }
-
                 }
-
                 startTime = finishTime;
             }
         }
-
-
-
         return logL;
     }
-
-
     private static double handleDenominatorUnderflow(double input){
         BigDecimal bigDec = new BigDecimal(input);
         BigDecimal expBigDec = BigDecimalUtils.exp(bigDec, bigDec.scale());
@@ -617,7 +432,6 @@ public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
         BigDecimal logOneMinusExpBigDec = BigDecimalUtils.ln(oneMinusExpBigDec, oneMinusExpBigDec.scale());
         return logOneMinusExpBigDec.doubleValue();
     }
-
     public void debugTreelet(Tree treelet, String fileName){
         try{
             FlexibleTree treeCopy = new FlexibleTree(treelet);
@@ -629,16 +443,12 @@ public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
             testTreesOut.exportTree(treeCopy);
         } catch (IOException ignored) {System.out.println("IOException");}
     }
-
     public LogColumn[] passColumns(){
         ArrayList<LogColumn> columns = new ArrayList<LogColumn>(Arrays.asList(super.passColumns()));
-
         if(outbreak instanceof CategoryOutbreak) {
-
             for (AbstractPeriodPriorDistribution hyperprior : ((CategoryOutbreak) outbreak).getInfectiousMap().values()) {
                 columns.addAll(Arrays.asList(hyperprior.getColumns()));
             }
-
             columns.add(new LogColumn.Abstract("inf_LL") {
                 protected String getFormattedValue() {
                     return String.valueOf(infectiousPeriodsLogLikelihood);
@@ -659,71 +469,50 @@ public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
                     return String.valueOf(coalescencesLogLikelihood);
                 }
             });
-
             return columns.toArray(new LogColumn[columns.size()]);
         }
         return null;
-
     }
-
-
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
-
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
         public static final String STARTING_NETWORK = "startingNetwork";
         public static final String MAX_FIRST_INF_TO_ROOT = "maxFirstInfToRoot";
         public static final String DEMOGRAPHIC_MODEL = "demographicModel";
         public static final String TRUNCATE = "truncate";
-
         public String getParserName() {
             return WITHIN_CASE_COALESCENT;
         }
-
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
             PartitionedTreeModel virusTree = (PartitionedTreeModel) xo.getChild(TreeModel.class);
-
             String startingNetworkFileName=null;
-
             if(xo.hasChildNamed(STARTING_NETWORK)){
                 startingNetworkFileName = (String) xo.getElementFirstChild(STARTING_NETWORK);
             }
-
             AbstractOutbreak caseSet = (AbstractOutbreak) xo.getChild(AbstractOutbreak.class);
-
             CaseToCaseTreeLikelihood likelihood;
-
             Parameter earliestFirstInfection = (Parameter) xo.getElementFirstChild(MAX_FIRST_INF_TO_ROOT);
-
             DemographicModel demoModel = (DemographicModel) xo.getElementFirstChild(DEMOGRAPHIC_MODEL);
-
             Mode mode = xo.hasAttribute(TRUNCATE) & xo.getBooleanAttribute(TRUNCATE) ? Mode.TRUNCATE : Mode.NORMAL;
-
             try {
                 likelihood = new WithinCaseCoalescent(virusTree, caseSet, startingNetworkFileName,
                         earliestFirstInfection, demoModel, mode);
             } catch (TaxonList.MissingTaxonException e) {
                 throw new XMLParseException(e.toString());
             }
-
             return likelihood;
         }
-
         public String getParserDescription() {
             return "This element provides a tree prior for a partitioned tree, with each partitioned tree generated" +
                     "by a coalescent process";
         }
-
         public Class getReturnType() {
             return WithinCaseCoalescent.class;
         }
-
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
-
         private final XMLSyntaxRule[] rules = {
                 new ElementRule(PartitionedTreeModel.class, "The tree"),
                 new ElementRule(CategoryOutbreak.class, "The set of cases", 0,1),
@@ -737,7 +526,4 @@ public class WithinCaseCoalescent extends CaseToCaseTreeLikelihood {
                 AttributeRule.newBooleanRule(TRUNCATE)
         };
     };
-
-
-
 }

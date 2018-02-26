@@ -1,13 +1,9 @@
-
 package dr.evomodel.substmodel;
-
 import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
 import dr.evolution.datatype.Microsatellite;
 import dr.math.ModifiedBesselFirstKind;
-
 public class NewMicrosatelliteModel extends MicrosatelliteModel {
-
     Parameter biasConst;
     private boolean normalize;
     public NewMicrosatelliteModel(Microsatellite msat, FrequencyModel rootFreqModel){
@@ -40,7 +36,6 @@ public class NewMicrosatelliteModel extends MicrosatelliteModel {
                 k++;
             }
             //System.out.println(rowSums[i]);
-
         }
         if(normalize){
             k = 0;
@@ -52,18 +47,14 @@ public class NewMicrosatelliteModel extends MicrosatelliteModel {
             }
         }
     }
-
     public double[] getRowTransitionProbabilities(double distance, int parentState){
-
         double[] probabilities = new double[stateCount];
         for(int i = 0; i < probabilities.length;i++){
             int n = parentState - i;
             probabilities[i] = Math.exp(-distance)*ModifiedBesselFirstKind.bessi(distance,Math.abs(n));
         }
-
         return probabilities;
     }
-   
     public double[] getColTransitionProbabilities(double distance, int childState){
         double[] probabilities = new double[stateCount];
         for(int i = 0; i < probabilities.length;i++){
@@ -75,7 +66,6 @@ public class NewMicrosatelliteModel extends MicrosatelliteModel {
     public double getLogOneTransitionProbabilityEntry(double distance, int parentState, int childState){
         return Math.log(getOneTransitionProbabilityEntry(distance, parentState, childState));
     }
-
     public double getOneTransitionProbabilityEntry(double distance, int parentState, int childState){
         int n = parentState - childState;
         double probability = Math.exp(-distance)*ModifiedBesselFirstKind.bessi(distance,Math.abs(n));
@@ -85,7 +75,6 @@ public class NewMicrosatelliteModel extends MicrosatelliteModel {
     protected void setupRelativeRates(){};
     public void setupInfinitesimalRates(){};
     protected void frequenciesChanged() {};
-
     public static void main(String[] args){
         Microsatellite msat = new Microsatellite(1,5);
         NewMicrosatelliteModel nmsatModel = new NewMicrosatelliteModel(msat, null);
@@ -103,5 +92,4 @@ public class NewMicrosatelliteModel extends MicrosatelliteModel {
             System.out.print(statDist[i]+" ");
         }
     }
-
 }

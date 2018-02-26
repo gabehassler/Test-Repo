@@ -1,18 +1,13 @@
-
 package dr.inference.model;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-
 import dr.inference.trace.LogFileTraces;
 import dr.inference.trace.TraceException;
 import dr.math.MathUtils;
 import dr.math.distributions.Distribution;
 import dr.xml.*;
-
 public class ParameterParser extends dr.xml.AbstractXMLObjectParser {
-
     public static final String UPPER = "upper";
     public static final String LOWER = "lower";
     public static final String DIMENSION = "dimension";
@@ -22,21 +17,16 @@ public class ParameterParser extends dr.xml.AbstractXMLObjectParser {
     public static final String FILENAME = "fileName";
     public static final String BURNIN = "burnin";
     public static final String PARAMETERCOLUMN = "parameterColumn";
-
     public String getParserName() {
         return PARAMETER;
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         double[] values = null;
         double[] uppers;
         double[] lowers;
-
         if( xo.hasAttribute(DIMENSION) ) {
             values = new double[xo.getIntegerAttribute(DIMENSION)];
         }
-        
         if ( xo.hasAttribute(FILENAME)) {
         	//read samples from a file (used for a reference prior) and calculate the mean
         	String fileName = xo.getStringAttribute(FILENAME);
@@ -115,17 +105,14 @@ public class ParameterParser extends dr.xml.AbstractXMLObjectParser {
                 values[0] = 1.0;
             }
         }
-
         uppers = new double[values.length];
         for(int i = 0; i < values.length; i++) {
             uppers[i] = Double.POSITIVE_INFINITY;
         }
-
         lowers = new double[values.length];
         for(int i = 0; i < values.length; i++) {
             lowers[i] = Double.NEGATIVE_INFINITY;
         }
-
         if( xo.hasAttribute(UPPER) ) {
             double[] v = xo.getDoubleArrayAttribute(UPPER);
             if( v.length == uppers.length ) {
@@ -138,7 +125,6 @@ public class ParameterParser extends dr.xml.AbstractXMLObjectParser {
                 throw new XMLParseException("uppers string must have 1 value or dimension values");
             }
         }
-
         if( xo.hasAttribute(LOWER) ) {
             double[] v = xo.getDoubleArrayAttribute(LOWER);
             if( v.length == lowers.length ) {
@@ -151,26 +137,20 @@ public class ParameterParser extends dr.xml.AbstractXMLObjectParser {
                 throw new XMLParseException("lowers string must have 1 value or dimension values");
             }
         }
-
         //  assert uppers != null && lowers != null;
-
         if( (uppers.length != values.length) ) {
             throw new XMLParseException("value and upper limit strings have different dimension, in parameter");
         }
-
         if( (lowers.length != values.length) ) {
             throw new XMLParseException("value and lower limit strings have different dimension, in parameter");
         }
-
         // check if uppers and lowers are consistent
         for(int i = 0; i < values.length; i++) {
             if( uppers[i] < lowers[i] ) {
                 throw new XMLParseException("upper is lower than lower, in parameter");
             }
         }
-
         if (xo.hasChildNamed(RANDOMIZE)) {
-                     
             Distribution distribution = (Distribution) xo.getChild(RANDOMIZE).getChild(Distribution.class);
             for (int i = 0; i < values.length; i++) {
                 do {
@@ -178,19 +158,15 @@ public class ParameterParser extends dr.xml.AbstractXMLObjectParser {
                     values[i] = distribution.quantile(MathUtils.nextDouble());
                 } while (values[i] < lowers[i] || values[i] > uppers[i]);
             }
-
         } else {
-
             // make values consistent with bounds
             for(int i = 0; i < values.length; i++) {
                 if( uppers[i] < values[i] ) values[i] = uppers[i];
             }
-
             for(int i = 0; i < values.length; i++) {
                 if (lowers[i] > values[i]) values[i] = lowers[i];
             }
         }
-
         Parameter param = new Parameter.Default(values.length);
         for(int i = 0; i < values.length; i++) {
             param.setParameterValue(i, values[i]);
@@ -198,11 +174,9 @@ public class ParameterParser extends dr.xml.AbstractXMLObjectParser {
         param.addBounds(new Parameter.DefaultBounds(uppers, lowers));
         return param;
     }
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     private final XMLSyntaxRule[] rules = {
             AttributeRule.newDoubleArrayRule(VALUE, true),
             AttributeRule.newIntegerRule(DIMENSION, true),
@@ -215,25 +189,17 @@ public class ParameterParser extends dr.xml.AbstractXMLObjectParser {
                     new ElementRule(Distribution.class),
             },true),
     };
-
-
     public String getParserDescription() {
         return "A real-valued parameter of one or more dimensions.";
     }
-
     public Class getReturnType() {
         return Parameter.class;
     }
-
     static public void replaceParameter(XMLObject xo, Parameter newParam) throws XMLParseException {
-
         for (int i = 0; i < xo.getChildCount(); i++) {
-
             if (xo.getChild(i) instanceof Parameter) {
-
                 XMLObject rxo;
                 Object obj = xo.getRawChild(i);
-
                 if (obj instanceof Reference ) {
                     rxo = ((Reference) obj).getReferenceObject();
                 } else if (obj instanceof XMLObject) {
@@ -241,38 +207,29 @@ public class ParameterParser extends dr.xml.AbstractXMLObjectParser {
                 } else {
                     throw new XMLParseException("object reference not available");
                 }
-
                 if (rxo.getChildCount() > 0) {
                     throw new XMLParseException("No child elements allowed in parameter element.");
                 }
-
                 if (rxo.hasAttribute(XMLParser.IDREF)) {
                     throw new XMLParseException("References to " + xo.getName() + " parameters are not allowed in treeModel.");
                 }
-
                 if (rxo.hasAttribute(VALUE)) {
                     throw new XMLParseException("Parameters in " + xo.getName() + " have values set automatically.");
                 }
-
                 if (rxo.hasAttribute(UPPER)) {
                     throw new XMLParseException("Parameters in " + xo.getName() + " have bounds set automatically.");
                 }
-
                 if (rxo.hasAttribute(LOWER)) {
                     throw new XMLParseException("Parameters in " + xo.getName() + " have bounds set automatically.");
                 }
-
                 if (rxo.hasAttribute(XMLParser.ID)) {
                     newParam.setId(rxo.getStringAttribute(XMLParser.ID));
                 }
-
                 rxo.setNativeObject(newParam);
-
                 return;
             }
         }
     }
-
 //    static public Parameter getParameter(XMLObject xo) throws XMLParseException {
 //
 //        int paramCount = 0;

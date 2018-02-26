@@ -1,7 +1,4 @@
-
-
 package dr.evomodel.arg.likelihood;
-
 import dr.evolution.alignment.PatternList;
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
@@ -18,18 +15,13 @@ import dr.inference.model.Likelihood;
 import dr.inference.model.Model;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 import java.util.logging.Logger;
 import java.util.*;
-
-
 public class ARGLikelihood extends AbstractARGLikelihood {
-
 	public static final String ARG_LIKELIHOOD = "argTreeLikelihood";
 	public static final String USE_AMBIGUITIES = "useAmbiguities";
 	public static final String STORE_PARTIALS = "storePartials";
 	public static final String USE_SCALING = "useScaling";
-
 	public ARGLikelihood(PatternList patternList,
 	                     ARGModel treeModel,
 	                     SiteModel siteModel,
@@ -37,40 +29,27 @@ public class ARGLikelihood extends AbstractARGLikelihood {
 	                     boolean useAmbiguities,
 	                     boolean storePartials,
 	                     boolean useScaling) {
-
 		super(ARG_LIKELIHOOD, patternList, treeModel);
-
 		partition = treeModel.addLikelihoodCalculator(this);
-		
 		this.storePartials = storePartials;
 		this.useAmbiguities = useAmbiguities;
-
 		try {
 			this.siteModel = siteModel;
 			addModel(siteModel);
-
 			this.frequencyModel = siteModel.getFrequencyModel();
 			addModel(frequencyModel);
-
 			integrateAcrossCategories = siteModel.integrateAcrossCategories();
-
 			this.categoryCount = siteModel.getCategoryCount();
-
 			if (integrateAcrossCategories) {
 				if (patternList.getDataType() instanceof dr.evolution.datatype.Nucleotides) {
-
 					if (NativeNucleotideLikelihoodCore.isAvailable()) {
-
 						Logger.getLogger("dr.evomodel").info("TreeLikelihood using native nucleotide likelihood core");
 						likelihoodCore = new NativeNucleotideLikelihoodCore();
 					} else {
-
 						Logger.getLogger("dr.evomodel").info("TreeLikelihood using Java nucleotide likelihood core");
 						likelihoodCore = new NucleotideLikelihoodCore();
 					}
-
 				} else if (patternList.getDataType() instanceof dr.evolution.datatype.AminoAcids) {
-
 					if (NativeAminoAcidLikelihoodCore.isAvailable()) {
 						Logger.getLogger("dr.evomodel").info("TreeLikelihood using native amino acid likelihood core");
 						likelihoodCore = new NativeAminoAcidLikelihoodCore();
@@ -92,16 +71,13 @@ public class ARGLikelihood extends AbstractARGLikelihood {
 						Logger.getLogger("dr.evomodel").info("TreeLikelihood using Java general likelihood core");
 						likelihoodCore = new GeneralLikelihoodCore(patternList.getStateCount());
 					}
-
 				}
 			} else {
-
 				Logger.getLogger("dr.evomodel").info("TreeLikelihood using Java general likelihood core");
 				likelihoodCore = new GeneralLikelihoodCore(patternList.getStateCount());
 			}
 			Logger.getLogger("dr.evomodel").info("  " + (useAmbiguities ? "Using" : "Ignoring") + " ambiguities in tree likelihood.");
 			Logger.getLogger("dr.evomodel").info("  Partial likelihood scaling " + (useScaling ? "on." : "off."));
-
 			if (branchRateModel != null) {
 				this.branchRateModel = branchRateModel;
 				Logger.getLogger("dr.evomodel").info("Branch rate model used: " + branchRateModel.getModelName());
@@ -109,34 +85,26 @@ public class ARGLikelihood extends AbstractARGLikelihood {
 				this.branchRateModel = new DefaultBranchRateModel();
 			}
 			addModel(this.branchRateModel);
-
 			probabilities = new double[stateCount * stateCount];
-
 //			likelihoodCore.initialize(nodeCount, patternCount, categoryCount, integrateAcrossCategories, useScaling);
 			likelihoodCore.initialize(nodeCount, patternCount, categoryCount, integrateAcrossCategories);
-
 			int extNodeCount = treeModel.getExternalNodeCount();
 			int intNodeCount = treeModel.getInternalNodeCount();
-
 			for (int i = 0; i < extNodeCount; i++) {
 				// Find the id of tip i in the patternList
 				String id = treeModel.getTaxonId(i);
 				int index = patternList.getTaxonIndex(id);
-
 //                System.err.println("id = "+id+"  index = "+index);
-
 				if (index == -1) {
 					throw new TaxonList.MissingTaxonException("Taxon, " + id + ", in tree, " + treeModel.getId() +
 							", is not found in patternList, " + patternList.getId());
 				}
-
 				if (useAmbiguities) {
 					setPartials(likelihoodCore, patternList, categoryCount, index, i);
 				} else {
 					setStates(likelihoodCore, patternList, index, i);
 				}
 			}
-
 //            System.exit(-1);
 			for (int i = 0; i < intNodeCount; i++) {
 				likelihoodCore.createNodePartials(extNodeCount + i);
@@ -144,23 +112,16 @@ public class ARGLikelihood extends AbstractARGLikelihood {
 		} catch (TaxonList.MissingTaxonException mte) {
 			throw new RuntimeException(mte.toString());
 		}
-
 	}
-
 	// **************************************************************
 	// ModelListener IMPLEMENTATION
 	// **************************************************************
-
-
     private static final boolean NO_CACHING = false;
-
     protected void handleModelChangedEvent(Model model, Object object, int index) {
-
         if (NO_CACHING) {
             reconstructTree = true;
             updateAllNodes();
         }
-
         if (model == treeModel) {
             if (object instanceof ARGModel.TreeChangedEvent) {
                 ARGModel.TreeChangedEvent event = (ARGModel.TreeChangedEvent) object;
@@ -173,7 +134,6 @@ public class ARGLikelihood extends AbstractARGLikelihood {
                     // above being updated as well. Node events occur when a node
                     // is added to a branch, removed from a branch or its height or
                     // rate changes.
-
                     NodeRef treeNode = mapARGNodesToTreeNodes.get(event.getNode());
                     if ( treeNode != null ) {                        
                         if (event.isHeightChanged() || event.isRateChanged()) {
@@ -204,7 +164,6 @@ public class ARGLikelihood extends AbstractARGLikelihood {
                 // ignore, most of these are handled in isNodeChanged()
             } else
                 throw new RuntimeException("Unexpected ARGModel update "+object.getClass());
-
         } else if (model == branchRateModel) {
             // TODO Only update affected branches
             updateAllNodes();
@@ -215,24 +174,18 @@ public class ARGLikelihood extends AbstractARGLikelihood {
         } else {
             throw new RuntimeException("Unknown componentChangedEvent");
         }
-
         super.handleModelChangedEvent(model, object, index);
     }
-
 	// **************************************************************
 	// Model IMPLEMENTATION
 	// **************************************************************
-
           protected void storeState() {
-
               if (storePartials) {
                   likelihoodCore.storeState();
               }
               super.storeState();
           }
-
           protected void restoreState() {
-
               if (storePartials) {
                   likelihoodCore.restoreState();
               } else {
@@ -241,7 +194,6 @@ public class ARGLikelihood extends AbstractARGLikelihood {
               reconstructTree = true; // currently the tree is not cached, because the ARG that generates it is cached
               super.restoreState();
           }
-
         private int getUnusedInt(Map<NodeRef,Integer> inMap) {
             Collection<Integer> intSet = inMap.values();
             int i = tree.getExternalNodeCount();
@@ -249,20 +201,14 @@ public class ARGLikelihood extends AbstractARGLikelihood {
                 i++;
             return i;
         }
-
-
     private Set<NodeRef> unsetNodes = null;
-
         private void reconstructTree() {
-            
             oldTree = tree;
             oldMapARGNodesToInts = mapARGNodesToInts;
-
             tree = new ARGTree(treeModel, partition);            
             reconstructTree = false;
             mapARGNodesToInts = new HashMap<NodeRef,Integer>(tree.getInternalNodeCount());
             mapARGNodesToTreeNodes = tree.getMapping();
-
             if (oldTree == null) {
                  // First initialization
                 for(int i=0; i<tree.getInternalNodeCount(); i++) {
@@ -270,27 +216,22 @@ public class ARGLikelihood extends AbstractARGLikelihood {
                     mapARGNodesToInts.put(treeModel.getMirrorNode(node),node.getNumber());
                 }
             } else {
-
                 // Need to renumber
                 if (unsetNodes == null)
                     unsetNodes = new HashSet<NodeRef>();
                 else
                     unsetNodes.clear();
-
                 // Copy over numbers for nodes that still exist in tree
                 for (int i = 0; i < tree.getInternalNodeCount(); i++) {
                     NodeRef newNode = tree.getInternalNode(i);
                     NodeRef argNode = treeModel.getMirrorNode(newNode);
-
                     if (oldMapARGNodesToInts.containsKey(argNode)) { // was in old tree
-
                         int oldNumber = oldMapARGNodesToInts.get(argNode);
                         treeModel.setNodeNumber(newNode,oldNumber);
                         mapARGNodesToInts.put(argNode,oldNumber);
                     } else  // was not in old tree
                         unsetNodes.add(newNode);
                 }
-
                 // Set unused numbers for nodes that are new and mark for update
                 for (NodeRef node : unsetNodes) {
                     int newNumber = getUnusedInt(mapARGNodesToInts);
@@ -300,27 +241,20 @@ public class ARGLikelihood extends AbstractARGLikelihood {
                 }
             }
         }
-
 	// **************************************************************
 	// Likelihood IMPLEMENTATION
 	// **************************************************************
-
 	protected double calculateLogLikelihood() {
-
               if (reconstructTree) {
                   reconstructTree();
               }
-              
 		NodeRef root = tree.getRoot();
-
 		if (rootPartials == null) {
 			rootPartials = new double[patternCount * stateCount];
 		}
-
 		if (patternLogLikelihoods == null) {
 			patternLogLikelihoods = new double[patternCount];
 		}
-
 		if (!integrateAcrossCategories) {
 			if (siteCategories == null) {
 				siteCategories = new int[patternCount];
@@ -329,14 +263,12 @@ public class ARGLikelihood extends AbstractARGLikelihood {
 				siteCategories[i] = siteModel.getCategoryOfSite(i);
 			}
 		}
-
         try {
 		    traverse(tree, root);
         } catch (NegativeBranchLengthException e) {
             System.err.println("Negative branch length found, trying to return 0 likelihood");
             return Double.NEGATIVE_INFINITY;
         }
-
 		//********************************************************************
 		// after traverse all nodes and patterns have been updated --
 		//so change flags to reflect this.
@@ -344,38 +276,23 @@ public class ARGLikelihood extends AbstractARGLikelihood {
 			updateNode[i] = false;
 		}
 		//********************************************************************
-
 		double logL = 0.0;
-
 		for (int i = 0; i < patternCount; i++) {
 //        	System.err.printf("Pattern %2d:  %5.4f  %5.4f\n",i,patternLogLikelihoods[i],patternWeights[i]);
 			logL += patternLogLikelihoods[i] * patternWeights[i];
 		}
-
 		return logL;
 	}
-
     class NegativeBranchLengthException extends Exception {
-
     }
-
 	private boolean traverse(Tree tree, NodeRef node) throws NegativeBranchLengthException {
-
 		boolean update = false;
-
 		int nodeNum = node.getNumber();
 //        System.err.println(nodeNum);
-
 		NodeRef parent = tree.getParent(node);
-		
-		
-
 		// First update the transition probability matrix(ices) for this branch
 		if (parent != null && updateNode[nodeNum]) {
-
-
 			double branchRate = branchRateModel.getBranchRate(tree, node);
-						
 			// Get the operational time of the branch
 			double branchTime = branchRate * (tree.getNodeHeight(parent) - tree.getNodeHeight(node));
 			if (branchTime < 0.0) {
@@ -385,76 +302,56 @@ public class ARGLikelihood extends AbstractARGLikelihood {
                     throw new NegativeBranchLengthException();
                 }
 			}
-
 			for (int i = 0; i < categoryCount; i++) {
                 double branchLength = siteModel.getRateForCategory(i) * branchTime;
                 siteModel.getSubstitutionModel().getTransitionProbabilities(branchLength, probabilities);
 				likelihoodCore.setNodeMatrix(nodeNum, i, probabilities);
 			}
-
 			update = true;
 		}
-
 		// If the node is internal, update the partial likelihoods.
 		if (!tree.isExternal(node)) {
-
 			int nodeCount = tree.getChildCount(node);
 			if (nodeCount != 2)
 				throw new RuntimeException("binary trees only!");
-
 			// Traverse down the two child nodes
 			NodeRef child1 = tree.getChild(node, 0);
 			boolean update1 = traverse(tree, child1);
-
 			NodeRef child2 = tree.getChild(node, 1);
 			boolean update2 = traverse(tree, child2);
-
 			// If either child node was updated then update this node too
 			if (update1 || update2) {
-
 				int childNum1 = child1.getNumber();
 				int childNum2 = child2.getNumber();
-
 				if (integrateAcrossCategories) {
 					likelihoodCore.calculatePartials(childNum1, childNum2, nodeNum);
 				} else {
 					likelihoodCore.calculatePartials(childNum1, childNum2, nodeNum,
 							siteCategories);
 				}
-
 				if (parent == null) {
 					// No parent this is the root of the tree -
 					// calculate the pattern likelihoods
 					double[] frequencies = frequencyModel.getFrequencies();
-
 					if (integrateAcrossCategories) {
-
 						// moved this call to here, because non-integrating siteModels don't need to support it - AD
 						double[] proportions = siteModel.getCategoryProportions();
 						likelihoodCore.integratePartials(nodeNum, proportions, rootPartials);
 					} else {
 						likelihoodCore.getPartials(nodeNum, rootPartials);
 					}
-
 					likelihoodCore.calculateLogLikelihoods(rootPartials, frequencies, patternLogLikelihoods);
 				}
-
 				update = true;
 			}
 		}
-
 		return update;
-
 	}
-
 	public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
-
 		public String getParserName() {
 			return ARG_LIKELIHOOD;
 		}
-
 		public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
 			boolean useAmbiguities = false;
 			boolean storePartials = true;
 			boolean useScaling = false;
@@ -470,28 +367,21 @@ public class ARGLikelihood extends AbstractARGLikelihood {
 			PatternList patternList = (PatternList) xo.getChild(PatternList.class);
 			ARGModel treeModel = (ARGModel) xo.getChild(ARGModel.class);
 			SiteModel siteModel = (SiteModel) xo.getChild(SiteModel.class);
-
 			BranchRateModel branchRateModel = (BranchRateModel) xo.getChild(BranchRateModel.class);
-
 			return new ARGLikelihood(patternList, treeModel, siteModel, branchRateModel, useAmbiguities, storePartials, useScaling);
 		}
-
 		//************************************************************************
 		// AbstractXMLObjectParser implementation
 		//************************************************************************
-
 		public String getParserDescription() {
 			return "This element represents the likelihood of a patternlist on a tree given the site model.";
 		}
-
 		public Class getReturnType() {
 			return Likelihood.class;
 		}
-
 		public XMLSyntaxRule[] getSyntaxRules() {
 			return rules;
 		}
-
 		private final XMLSyntaxRule[] rules = {
 				AttributeRule.newBooleanRule(USE_AMBIGUITIES, true),
 				AttributeRule.newBooleanRule(STORE_PARTIALS, true),
@@ -502,48 +392,29 @@ public class ARGLikelihood extends AbstractARGLikelihood {
 				new ElementRule(BranchRateModel.class, true)
 		};
 	};
-
-
 //	public Element toXML() {
 //		Element likelihoodElement
 //	}
-
 	// **************************************************************
 	// INSTANCE VARIABLES
 	// **************************************************************
-
 	protected FrequencyModel frequencyModel = null;
-
 	protected SiteModel siteModel = null;
-
 	protected BranchRateModel branchRateModel = null;
-
 	private boolean storePartials = false;
-
 	private boolean integrateAcrossCategories = false;
-
 	protected int[] siteCategories = null;
-
 	protected double[] rootPartials = null;
-
 	protected double[] patternLogLikelihoods = null;
-
 	protected int categoryCount;
-
 	protected double[] probabilities;
-
 	protected LikelihoodCore likelihoodCore;
-
 	private boolean useAmbiguities;
-
     private boolean reconstructTree = true;
     private ARGTree tree = null;
     private ARGTree oldTree;
-
     private Map<NodeRef,Integer> mapARGNodesToInts = null;
     private Map<NodeRef,Integer> oldMapARGNodesToInts;
-
     private Map<NodeRef,NodeRef> mapARGNodesToTreeNodes = null;
-
     private static final boolean DEBUG = true;
 }

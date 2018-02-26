@@ -1,22 +1,16 @@
-
 package dr.app.gui.components;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.io.StringWriter;
 import java.io.PrintWriter;
-
 public class ColorWellButton extends JButton {
 	private JColorChooser chooser;
 	private String colorChooserTitle;
-
 	public ColorWellButton(Color color, final String colorChooserTitle) {
 		super();
-
 		this.colorChooserTitle = colorChooserTitle;
-
 		putClientProperty("JButton.buttonType", "square");
 		setBorderPainted(true);
 //		putClientProperty("Quaqua.Button.style", "colorWell");
@@ -28,16 +22,13 @@ public class ColorWellButton extends JButton {
 			}
 		});
 	}
-
 	public Color getSelectedColor() {
 		return ((ColorWell)getIcon()).color;
 	}
-
 	public void setSelectedColor(Color color) {
 		((ColorWell)getIcon()).color = color;
 		repaint();
 	}
-
     private void chooserButtonActionPerformed(java.awt.event.ActionEvent evt) {
         try {
             //      System.out.println("chooserButtonActionPerformed "+evt);
@@ -65,23 +56,18 @@ public class ColorWellButton extends JButton {
             t.printStackTrace();
         }
     }
-
 	private class ColorWell implements Icon {
 		Color color;
-
 		ColorWell(Color color) {
 			super();
 			this.color = color;
 		}
-
 		public int getIconWidth() {
 			return 15;
 		}
-
 		public int getIconHeight() {
 			return 15;
 		}
-
 		public void paintIcon(Component c, Graphics g, int x, int y) {
 			if (color == null) return;
 			g.setColor(color);
@@ -90,5 +76,4 @@ public class ColorWellButton extends JButton {
 			g.drawRect(x, y, getIconWidth() - 1, getIconHeight() - 1);
 		}
 	}
-
 }

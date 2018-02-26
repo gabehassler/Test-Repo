@@ -1,6 +1,4 @@
-
 package dr.app.beauti.generator;
-
 import dr.app.beauti.components.ComponentFactory;
 import dr.app.beauti.options.*;
 import dr.app.beauti.types.ClockType;
@@ -28,18 +26,13 @@ import dr.inferencexml.model.CompoundParameterParser;
 import dr.inferencexml.operators.*;
 import dr.util.Attribute;
 import dr.xml.XMLParser;
-
 import java.util.List;
-
 public class OperatorsGenerator extends Generator {
-
     public OperatorsGenerator(BeautiOptions options, ComponentFactory[] components) {
         super(options, components);
     }
-
     public void writeOperatorSchedule(List<Operator> operators, XMLWriter writer) {
         Attribute[] operatorAttributes;
-
         // certain models would benefit from a logarithm operator optimization
         boolean shouldLogCool = false;
         for (PartitionTreePrior partition : options.getPartitionTreePriors()) {
@@ -56,37 +49,28 @@ public class OperatorsGenerator extends Generator {
                 break;
             }
         }
-
         operatorAttributes = new Attribute[] {
                 new Attribute.Default<String>(XMLParser.ID, "operators"),
                 new Attribute.Default<String>(SimpleOperatorScheduleParser.OPTIMIZATION_SCHEDULE,
                         (shouldLogCool ? SimpleOperatorSchedule.LOG_STRING : SimpleOperatorSchedule.DEFAULT_STRING))
         };
-
         writer.writeComment("Define operators");
         writer.writeOpenTag(
                 SimpleOperatorScheduleParser.OPERATOR_SCHEDULE,
                 operatorAttributes
 //				new Attribute[]{new Attribute.Default<String>(XMLParser.ID, "operators")}
         );
-
         for (Operator operator : operators) {
             if (operator.weight > 0. && operator.inUse) {
                 setModelPrefix(operator.getPrefix());
-
                 writeOperator(operator, writer);
             }
         }
-
         generateInsertionPoint(ComponentGenerator.InsertionPoint.IN_OPERATORS, writer); // Added for special operators
-
         writer.writeCloseTag(SimpleOperatorScheduleParser.OPERATOR_SCHEDULE);
     }
-
     private void writeOperator(Operator operator, XMLWriter writer) {
-
         switch (operator.operatorType) {
-
             case SCALE:
                 writeScaleOperator(operator, writer);
                 break;
@@ -181,19 +165,15 @@ public class OperatorsGenerator extends Generator {
                 throw new IllegalArgumentException("Unknown operator type");
         }
     }
-
     private void writeParameter1Ref(XMLWriter writer, Operator operator) {
         writer.writeIDref(ParameterParser.PARAMETER, operator.parameter1.getName());
     }
-
     private void writeParameter2Ref(XMLWriter writer, Operator operator) {
         writer.writeIDref(ParameterParser.PARAMETER, operator.parameter2.getName());
     }
-
     private void writeOperatorRef(XMLWriter writer, Operator operator) {
         writer.writeIDref(ParameterParser.PARAMETER, operator.getName());
     }
-
     private void writeScaleOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(
                 ScaleOperatorParser.SCALE_OPERATOR,
@@ -205,7 +185,6 @@ public class OperatorsGenerator extends Generator {
 //        writeOperatorRef(writer, operator);
         writer.writeCloseTag(ScaleOperatorParser.SCALE_OPERATOR);
     }
-
     private void writeScaleOperator(Operator operator, XMLWriter writer, boolean indepedently) {
         writer.writeOpenTag(
                 ScaleOperatorParser.SCALE_OPERATOR,
@@ -218,7 +197,6 @@ public class OperatorsGenerator extends Generator {
 //        writeOperatorRef(writer, operator);
         writer.writeCloseTag(ScaleOperatorParser.SCALE_OPERATOR);
     }
-
     private void writeRandomWalkOperator(Operator operator, XMLWriter writer) {
         final String name = RandomWalkOperatorParser.RANDOM_WALK_OPERATOR;
         writer.writeOpenTag(
@@ -231,7 +209,6 @@ public class OperatorsGenerator extends Generator {
 //        writeOperatorRef(writer, operator);
         writer.writeCloseTag(name);
     }
-
     private void writeRandomWalkOperator(Operator operator, boolean reflecting, XMLWriter writer) {
         final String name = RandomWalkOperatorParser.RANDOM_WALK_OPERATOR;
         writer.writeOpenTag(
@@ -246,7 +223,6 @@ public class OperatorsGenerator extends Generator {
 //        writeOperatorRef(writer, operator);
         writer.writeCloseTag(name);
     }
-
     private void writeRandomWalkIntegerOperator(Operator operator, XMLWriter writer) {
         final String name = RandomWalkIntegerOperatorParser.RANDOM_WALK_INTEGER_OPERATOR;
         writer.writeOpenTag(
@@ -258,9 +234,7 @@ public class OperatorsGenerator extends Generator {
         writeParameter1Ref(writer, operator);
         writer.writeCloseTag(name);
     }
-
     private void writeIntegerRandomWalkOperator(Operator operator, XMLWriter writer) {
-
         int windowSize = (int) Math.round(operator.tuning);
         if (windowSize < 1) windowSize = 1;
         final String name = RandomWalkIntegerOperatorParser.RANDOM_WALK_INTEGER_OPERATOR;
@@ -274,7 +248,6 @@ public class OperatorsGenerator extends Generator {
 //        writeOperatorRef(writer, operator);
         writer.writeCloseTag(name);
     }
-
     private void writeScaleAllOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(
                 ScaleOperatorParser.SCALE_OPERATOR,
@@ -283,7 +256,6 @@ public class OperatorsGenerator extends Generator {
                         new Attribute.Default<String>(ScaleOperatorParser.SCALE_ALL, "true"),
                         getWeightAttribute(operator.weight)
                 });
-
         if (operator.parameter2 == null) {
             writeParameter1Ref(writer, operator);
         } else {
@@ -293,10 +265,8 @@ public class OperatorsGenerator extends Generator {
             writeParameter2Ref(writer, operator);
             writer.writeCloseTag(CompoundParameterParser.COMPOUND_PARAMETER);
         }
-
         writer.writeCloseTag(ScaleOperatorParser.SCALE_OPERATOR);
     }
-
     private void writeCenteredOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(CenteredScaleOperatorParser.CENTERED_SCALE,
                 new Attribute[]{
@@ -308,13 +278,9 @@ public class OperatorsGenerator extends Generator {
 //        writeOperatorRef(writer, operator);
         writer.writeCloseTag(CenteredScaleOperatorParser.CENTERED_SCALE);
     }
-
     private void writeDeltaOperator(Operator operator, XMLWriter writer) {
-
         if (operator.getBaseName().startsWith(RelativeRatesType.MU_RELATIVE_RATES.toString())) {
-
             int[] parameterWeights = ((PartitionSubstitutionModel) operator.parameter1.getOptions()).getPartitionCodonWeights();
-
             if (parameterWeights != null && parameterWeights.length > 1) {
                 String pw = "" + parameterWeights[0];
                 for (int i = 1; i < parameterWeights.length; i++) {
@@ -328,11 +294,8 @@ public class OperatorsGenerator extends Generator {
                         }
                 );
             }
-
         } else if (operator.getBaseName().startsWith(RelativeRatesType.CLOCK_RELATIVE_RATES.toString())) {
-
             int[] parameterWeights = options.clockModelOptions.getPartitionClockWeights(operator.getClockModelGroup());
-
             if (parameterWeights != null && parameterWeights.length > 1) {
                 String pw = "" + parameterWeights[0];
                 for (int i = 1; i < parameterWeights.length; i++) {
@@ -346,7 +309,6 @@ public class OperatorsGenerator extends Generator {
                         }
                 );
             }
-
         } else {
             writer.writeOpenTag(DeltaExchangeOperatorParser.DELTA_EXCHANGE,
                     new Attribute[]{
@@ -355,11 +317,9 @@ public class OperatorsGenerator extends Generator {
                     }
             );
         }
-
         writeParameter1Ref(writer, operator);
         writer.writeCloseTag(DeltaExchangeOperatorParser.DELTA_EXCHANGE);
     }
-
     private void writeIntegerDeltaOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(DeltaExchangeOperatorParser.DELTA_EXCHANGE,
                 new Attribute[]{
@@ -373,7 +333,6 @@ public class OperatorsGenerator extends Generator {
 //        writeOperatorRef(writer, operator);
         writer.writeCloseTag(DeltaExchangeOperatorParser.DELTA_EXCHANGE);
     }
-
     private void writeSwapOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(SwapOperatorParser.SWAP_OPERATOR,
                 new Attribute[]{
@@ -386,7 +345,6 @@ public class OperatorsGenerator extends Generator {
 //        writeOperatorRef(writer, operator);
         writer.writeCloseTag(SwapOperatorParser.SWAP_OPERATOR);
     }
-
     private void writeBitFlipOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(BitFlipOperatorParser.BIT_FLIP_OPERATOR,
                 getWeightAttribute(operator.weight));
@@ -394,7 +352,6 @@ public class OperatorsGenerator extends Generator {
 //        writeOperatorRef(writer, operator);
         writer.writeCloseTag(BitFlipOperatorParser.BIT_FLIP_OPERATOR);
     }
-
     private void writeBitFlipInSubstOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(BitFlipInSubstitutionModelOperator.BIT_FLIP_OPERATOR, new Attribute[]{
                 new Attribute.Default<Double>(ScaleOperatorParser.SCALE_FACTOR, operator.tuning),
@@ -406,29 +363,23 @@ public class OperatorsGenerator extends Generator {
         // <svsGeneralSubstitutionModel idref="originModel"/>
         writer.writeCloseTag(BitFlipInSubstitutionModelOperator.BIT_FLIP_OPERATOR);
     }
-
     private void writeRateBitExchangeOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(RateBitExchangeOperator.OPERATOR_NAME,
                 getWeightAttribute(operator.weight));
-
         writer.writeOpenTag(RateBitExchangeOperator.BITS);
         writeParameter1Ref(writer, operator);
         writer.writeCloseTag(RateBitExchangeOperator.BITS);
-
         writer.writeOpenTag(RateBitExchangeOperator.RATES);
         writeParameter2Ref(writer, operator);
         writer.writeCloseTag(RateBitExchangeOperator.RATES);
-
         writer.writeCloseTag(RateBitExchangeOperator.OPERATOR_NAME);
     }
-
     private void writeTreeBitMoveOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(TreeBitMoveOperatorParser.BIT_MOVE_OPERATOR,
                 getWeightAttribute(operator.weight));
         writer.writeIDref(TreeModel.TREE_MODEL, modelPrefix + TreeModel.TREE_MODEL);
         writer.writeCloseTag(TreeBitMoveOperatorParser.BIT_MOVE_OPERATOR);
     }
-
     private void writeUniformOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag("uniformOperator",
                 getWeightAttribute(operator.weight));
@@ -436,7 +387,6 @@ public class OperatorsGenerator extends Generator {
 //        writeOperatorRef(writer, operator);
         writer.writeCloseTag("uniformOperator");
     }
-
     private void writeIntegerUniformOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(UniformIntegerOperatorParser.UNIFORM_INTEGER_OPERATOR,
                 getWeightAttribute(operator.weight));
@@ -444,21 +394,18 @@ public class OperatorsGenerator extends Generator {
 //        writeOperatorRef(writer, operator);
         writer.writeCloseTag(UniformIntegerOperatorParser.UNIFORM_INTEGER_OPERATOR);
     }
-
     private void writeNarrowExchangeOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(ExchangeOperatorParser.NARROW_EXCHANGE,
                 getWeightAttribute(operator.weight));
         writer.writeIDref(TreeModel.TREE_MODEL, modelPrefix + TreeModel.TREE_MODEL);
         writer.writeCloseTag(ExchangeOperatorParser.NARROW_EXCHANGE);
     }
-
     private void writeWideExchangeOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(ExchangeOperatorParser.WIDE_EXCHANGE,
                 getWeightAttribute(operator.weight));
         writer.writeIDref(TreeModel.TREE_MODEL, modelPrefix + TreeModel.TREE_MODEL);
         writer.writeCloseTag(ExchangeOperatorParser.WIDE_EXCHANGE);
     }
-
     private void writeWilsonBaldingOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(WilsonBaldingParser.WILSON_BALDING,
                 getWeightAttribute(operator.weight));
@@ -469,26 +416,20 @@ public class OperatorsGenerator extends Generator {
 //        }
         writer.writeCloseTag(WilsonBaldingParser.WILSON_BALDING);
     }
-
     private void writeSampleNonActiveOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(SampleNonActiveGibbsOperatorParser.SAMPLE_NONACTIVE_GIBBS_OPERATOR,
                 getWeightAttribute(operator.weight));
-
         writer.writeOpenTag(SampleNonActiveGibbsOperatorParser.DISTRIBUTION);
         writeOperatorRef(writer, operator);
         writer.writeCloseTag(SampleNonActiveGibbsOperatorParser.DISTRIBUTION);
-
         writer.writeOpenTag(SampleNonActiveGibbsOperatorParser.DATA_PARAMETER);
         writeParameter1Ref(writer, operator);
         writer.writeCloseTag(SampleNonActiveGibbsOperatorParser.DATA_PARAMETER);
-
         writer.writeOpenTag(SampleNonActiveGibbsOperatorParser.INDICATOR_PARAMETER);
         writeParameter2Ref(writer, operator);
         writer.writeCloseTag(SampleNonActiveGibbsOperatorParser.INDICATOR_PARAMETER);
-
         writer.writeCloseTag(SampleNonActiveGibbsOperatorParser.SAMPLE_NONACTIVE_GIBBS_OPERATOR);
     }
-
     private void writeSkyGridGibbsOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(
                 GMRFSkyrideBlockUpdateOperatorParser.GRID_BLOCK_UPDATE_OPERATOR,
@@ -500,7 +441,6 @@ public class OperatorsGenerator extends Generator {
         writer.writeIDref(GMRFSkyrideLikelihoodParser.SKYLINE_LIKELIHOOD, modelPrefix + "skygrid");
         writer.writeCloseTag(GMRFSkyrideBlockUpdateOperatorParser.GRID_BLOCK_UPDATE_OPERATOR);
     }
-
     private void writeGMRFGibbsOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(
                 GMRFSkyrideBlockUpdateOperatorParser.BLOCK_UPDATE_OPERATOR,
@@ -512,7 +452,6 @@ public class OperatorsGenerator extends Generator {
         writer.writeIDref(GMRFSkyrideLikelihoodParser.SKYLINE_LIKELIHOOD, modelPrefix + "skyride");
         writer.writeCloseTag(GMRFSkyrideBlockUpdateOperatorParser.BLOCK_UPDATE_OPERATOR);
     }
-
     private void writeScaleWithIndicatorsOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(
                 ScaleOperatorParser.SCALE_OPERATOR,
@@ -526,7 +465,6 @@ public class OperatorsGenerator extends Generator {
         writer.writeCloseTag(ScaleOperatorParser.INDICATORS);
         writer.writeCloseTag(ScaleOperatorParser.SCALE_OPERATOR);
     }
-
     private void writeSubtreeSlideOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(SubtreeSlideOperatorParser.SUBTREE_SLIDE,
                 new Attribute[]{
@@ -538,7 +476,6 @@ public class OperatorsGenerator extends Generator {
         writer.writeIDref(TreeModel.TREE_MODEL, modelPrefix + TreeModel.TREE_MODEL);
         writer.writeCloseTag(SubtreeSlideOperatorParser.SUBTREE_SLIDE);
     }
-
     private void writeSpeciesTreeOperator(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(TreeNodeSlideParser.TREE_NODE_REHEIGHT,
                 new Attribute[]{getWeightAttribute(operator.weight)}
@@ -547,7 +484,6 @@ public class OperatorsGenerator extends Generator {
         writer.writeIDref(SpeciesTreeModelParser.SPECIES_TREE, Generator.SP_TREE);
         writer.writeCloseTag(TreeNodeSlideParser.TREE_NODE_REHEIGHT);
     }
-
     private void writeUpDownOperator(String opTag, Operator operator, XMLWriter writer) {
         writer.writeOpenTag(opTag,
                 new Attribute[]{
@@ -555,14 +491,12 @@ public class OperatorsGenerator extends Generator {
                         getWeightAttribute(operator.weight)
                 }
         );
-
         writer.writeOpenTag(UpDownOperatorParser.UP);
         // for isEstimatedRate() = false, write nothing on up part of upDownOp
         if (!operator.parameter1.isFixed && operator.getClockModelGroup().getRateTypeOption() != FixRateType.FIX_MEAN) {
             writeParameter1Ref(writer, operator);
         }
         writer.writeCloseTag(UpDownOperatorParser.UP);
-
         writer.writeOpenTag(UpDownOperatorParser.DOWN);
         if (operator.tag == null) {
 //	        writer.writeIDref(ParameterParser.PARAMETER,  operator.parameter2.getName());
@@ -571,10 +505,8 @@ public class OperatorsGenerator extends Generator {
             writer.writeIDref(operator.tag, operator.idref);
         }
         writer.writeCloseTag(UpDownOperatorParser.DOWN);
-
         writer.writeCloseTag(opTag);
     }
-
     private void writeUpDownOperatorAllRatesTrees(Operator operator, XMLWriter writer) {
         writer.writeOpenTag(UpDownOperatorParser.UP_DOWN_OPERATOR,
                 new Attribute[]{
@@ -582,9 +514,7 @@ public class OperatorsGenerator extends Generator {
                         getWeightAttribute(operator.weight)
                 }
         );
-
         writer.writeOpenTag(UpDownOperatorParser.UP);
-
         for (PartitionClockModel model : options.getPartitionClockModels()) {
             if (model.isEstimatedRate()) {
                 switch (model.getClockType()) {
@@ -592,7 +522,6 @@ public class OperatorsGenerator extends Generator {
                     case RANDOM_LOCAL_CLOCK:
                         writer.writeIDref(ParameterParser.PARAMETER, model.getPrefix() + "clock.rate");
                         break;
-
                     case UNCORRELATED:
                         switch (model.getClockDistributionType()) {
                             case LOGNORMAL:
@@ -609,11 +538,9 @@ public class OperatorsGenerator extends Generator {
                                 break;
                         }
                         break;
-
                     case AUTOCORRELATED:
                         throw new UnsupportedOperationException("Autocorrelated relaxed clock model not implemented yet");
 //	                break;
-
                     default:
                         throw new IllegalArgumentException("Unknown clock model");
                 }
@@ -626,11 +553,8 @@ public class OperatorsGenerator extends Generator {
                 writer.writeIDref(ParameterParser.PARAMETER, TraitData.TRAIT_SPECIES + "." + YuleModelParser.YULE + "." + YuleModelParser.BIRTH_RATE);
             }
         }// nothing for EBSP
-
         writer.writeCloseTag(UpDownOperatorParser.UP);
-
         writer.writeOpenTag(UpDownOperatorParser.DOWN);
-
         if (options.useStarBEAST) {
             writer.writeIDref(SpeciesTreeModelParser.SPECIES_TREE, SP_TREE); // <speciesTree idref="sptree" /> has to be the 1st always
             writer.writeIDref(ParameterParser.PARAMETER, TraitData.TRAIT_SPECIES + "." + options.starBEASTOptions.POP_MEAN);
@@ -639,16 +563,12 @@ public class OperatorsGenerator extends Generator {
             writer.writeIDref(ParameterParser.PARAMETER, VariableDemographicModelParser.demoElementName + ".populationMean");
             writer.writeIDref(ParameterParser.PARAMETER, VariableDemographicModelParser.demoElementName + ".popSize");
         }
-
         for (PartitionTreeModel tree : options.getPartitionTreeModels()) {
             writer.writeIDref(ParameterParser.PARAMETER, tree.getPrefix() + "treeModel.allInternalNodeHeights");
         }
-
         writer.writeCloseTag(UpDownOperatorParser.DOWN);
-
         writer.writeCloseTag(UpDownOperatorParser.UP_DOWN_OPERATOR);
     }
-
     private Attribute getWeightAttribute(double weight) {
         if (weight == (int) weight) {
             return new Attribute.Default<Integer>("weight", (int) weight);

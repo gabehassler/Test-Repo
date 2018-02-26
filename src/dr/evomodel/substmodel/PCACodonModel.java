@@ -1,30 +1,22 @@
-
 package dr.evomodel.substmodel;
-
 import dr.evolution.datatype.Codons;
 import dr.evomodel.substmodel.FrequencyModel;
 import dr.evomodel.substmodel.AbstractCodonModel;
 import dr.evomodelxml.substmodel.PCACodonModelParser;
 import dr.evomodel.substmodel.AbstractPCARateMatrix;
 import dr.inference.model.Parameter;
-
 public class PCACodonModel extends AbstractCodonModel {
 	// principal components, means, scale factors
 	protected AbstractPCARateMatrix rateMatrix;
-
 	protected byte[] rateMap;
-	
 	private Parameter pcFactors;
-
 	public PCACodonModel(Codons codonDataType,
 						    AbstractPCARateMatrix pcaType,
 						    Parameter pcaDimensionParameter,
 						    FrequencyModel freqModel)
 	{
 		super(PCACodonModelParser.PCA_CODON_MODEL, codonDataType, freqModel);
-		
 		this.rateMatrix = pcaType;
-		
 		// initialize scalars for principal components
 		this.pcFactors = pcaDimensionParameter;
 		double[] startFacs = pcaType.getStartFacs();
@@ -39,8 +31,6 @@ public class PCACodonModel extends AbstractCodonModel {
 		pcFactors.addBounds(new Parameter.DefaultBounds(Double.POSITIVE_INFINITY, 0.0,
 				pcFactors.getDimension()));
 	}
-
-    
 	// setup substitution matrix
     public void setupRelativeRates() {
         double[] m = rateMatrix.getMeans();
@@ -61,50 +51,36 @@ public class PCACodonModel extends AbstractCodonModel {
         	}
         }
     }
-    
     protected void ratesChanged() {
 	}
-    
     protected void frequenciesChanged() {
 	}
-    
-
     public double getPcFactor(int dim) {
         return pcFactors.getParameterValue(dim);
     }
-    
     public double[] getPcFactor() {
     	return pcFactors.getParameterValues();
     }
-    
     public void setPcFactor(int dim, double fac) {
 		pcFactors.setParameterValue(dim, fac);
 		updateMatrix = true;
 	}
-    
     public void setPcFactor(double[] fac) {
     	for(int i=0; i<pcFactors.getDimension(); i++) {
     		pcFactors.setParameterValue(i, fac[i]);
     	}
     	updateMatrix = true;
     }
-
     // **************************************************************
     // XHTMLable IMPLEMENTATION
     // **************************************************************
-
 	public String toXHTML() {
 		StringBuffer buffer = new StringBuffer();
-
 		buffer.append("<em>PCA Codon Model</em>");
-
 		return buffer.toString();
 	}
-
-	
 	static String format1 = "%2.1e";
 	static String format2 = "%2.4e";
-	
 	public String printQ() {
 		double[][] myQ = getQ();
 		if (myQ != null) {
@@ -121,7 +97,6 @@ public class PCACodonModel extends AbstractCodonModel {
 			return "No Q ready.";
 		}
     }
-	
 	public String printRelRates() {
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < relativeRates.length; i++) {

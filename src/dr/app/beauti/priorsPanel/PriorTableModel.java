@@ -1,29 +1,19 @@
-
 package dr.app.beauti.priorsPanel;
-
 import dr.app.beauti.options.Parameter;
-
 import javax.swing.table.AbstractTableModel;
-
 class PriorTableModel extends AbstractTableModel {
-
     private static final long serialVersionUID = -8864178122484971872L;
-
     String[] columnNames = {"Parameter", "Prior", "Bound", "Description"};
     private PriorsPanel priorsPanel;
-
     public PriorTableModel(PriorsPanel priorsPanel) {
         this.priorsPanel = priorsPanel;
     }
-
     public int getColumnCount() {
         return columnNames.length;
     }
-
     public int getRowCount() {
         return priorsPanel.parameters.size();
     }
-
     public Object getValueAt(int row, int col) {
         Parameter param = priorsPanel.parameters.get(row);
         switch (col) {
@@ -38,30 +28,24 @@ class PriorTableModel extends AbstractTableModel {
         }
         return null;
     }
-
     public String getColumnName(int column) {
         return columnNames[column];
     }
-
     public Class getColumnClass(int c) {
         return getValueAt(0, c).getClass();
     }
-
     public boolean isCellEditable(int row, int col) {
         Parameter param = priorsPanel.parameters.get(row);
         return col == 1 && !param.isPriorFixed;
     }
-
     public String toString() {
         StringBuffer buffer = new StringBuffer();
-
         buffer.append(getColumnName(0));
         for (int j = 1; j < getColumnCount(); j++) {
             buffer.append("\t");
             buffer.append(getColumnName(j));
         }
         buffer.append("\n");
-
         for (int i = 0; i < getRowCount(); i++) {
             buffer.append(getValueAt(i, 0));
             for (int j = 1; j < getColumnCount(); j++) {
@@ -70,7 +54,6 @@ class PriorTableModel extends AbstractTableModel {
             }
             buffer.append("\n");
         }
-
         return buffer.toString();
     }
 }

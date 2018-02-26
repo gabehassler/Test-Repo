@@ -1,6 +1,4 @@
-
 package dr.app.beagle.evomodel.parsers;
-
 import dr.app.beagle.evomodel.branchmodel.BranchModel;
 import dr.app.beagle.evomodel.sitemodel.GammaSiteRateModel;
 import dr.app.beagle.evomodel.substmodel.FrequencyModel;
@@ -17,23 +15,17 @@ import dr.evomodel.treelikelihood.AncestralStateTreeLikelihood;
 import dr.evomodel.treelikelihood.TipStatesModel;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 import java.util.Map;
 import java.util.Set;
-
-
 public class AncestralStateTreeLikelihoodParser extends BeagleTreeLikelihoodParser {
-
     public static final String RECONSTRUCTING_TREE_LIKELIHOOD = "ancestralTreeLikelihood";
     public static final String RECONSTRUCTION_TAG = AncestralStateTreeLikelihood.STATES_KEY;
     public static final String RECONSTRUCTION_TAG_NAME = "stateTagName";
     public static final String MAP_RECONSTRUCTION = "useMAP";
     public static final String MARGINAL_LIKELIHOOD = "useMarginalLikelihood";
-
     public String getParserName() {
         return RECONSTRUCTING_TREE_LIKELIHOOD;
     }
-
 	protected BeagleTreeLikelihood createTreeLikelihood(
 			PatternList patternList, //
 			TreeModel treeModel, //
@@ -47,18 +39,12 @@ public class AncestralStateTreeLikelihoodParser extends BeagleTreeLikelihoodPars
 			Parameter> partialsRestrictions, //
 			XMLObject xo //
 	) throws XMLParseException {
-
-		
 //		System.err.println("XML object: " + xo.toString());
-	
 		DataType dataType = branchModel.getRootSubstitutionModel().getDataType();
-
         // default tag is RECONSTRUCTION_TAG
         String tag = xo.getAttribute(RECONSTRUCTION_TAG_NAME, RECONSTRUCTION_TAG);
-
         boolean useMAP = xo.getAttribute(MAP_RECONSTRUCTION, false);
         boolean useMarginalLogLikelihood = xo.getAttribute(MARGINAL_LIKELIHOOD, true);
-
         return new AncestralStateBeagleTreeLikelihood(  // Current just returns a OldBeagleTreeLikelihood
                 patternList,
                 treeModel,
@@ -75,7 +61,6 @@ public class AncestralStateTreeLikelihoodParser extends BeagleTreeLikelihoodPars
                 useMarginalLogLikelihood
         );
     }
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return new XMLSyntaxRule[] {
                 AttributeRule.newBooleanRule(OldTreeLikelihoodParser.USE_AMBIGUITIES, true),

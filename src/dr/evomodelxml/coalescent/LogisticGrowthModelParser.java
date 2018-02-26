@@ -1,33 +1,23 @@
-
 package dr.evomodelxml.coalescent;
-
 import dr.evolution.util.Units;
 import dr.evomodel.coalescent.LogisticGrowthModel;
 import dr.evoxml.util.XMLUnits;
 import dr.inference.model.Parameter;
 import dr.xml.*;
-
 public class LogisticGrowthModelParser extends AbstractXMLObjectParser {
-
     public static String POPULATION_SIZE = "populationSize";
     public static String LOGISTIC_GROWTH_MODEL = "logisticGrowth";
-
     public static String GROWTH_RATE = "growthRate";
     public static String DOUBLING_TIME = "doublingTime";
     public static String TIME_50 = "t50";
     public static String ALPHA = "alpha";
-
     public String getParserName() {
         return LOGISTIC_GROWTH_MODEL;
     }
-
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
-
         Units.Type units = XMLUnits.Utils.getUnitsAttr(xo);
-
         XMLObject cxo = xo.getChild(POPULATION_SIZE);
         Parameter N0Param = (Parameter) cxo.getChild(Parameter.class);
-
         boolean usingGrowthRate = true;
         Parameter rParam;
         if (xo.getChild(GROWTH_RATE) != null) {
@@ -38,36 +28,28 @@ public class LogisticGrowthModelParser extends AbstractXMLObjectParser {
             rParam = (Parameter) cxo.getChild(Parameter.class);
             usingGrowthRate = false;
         }
-
         cxo = xo.getChild(TIME_50);
         Parameter cParam = (Parameter) cxo.getChild(Parameter.class);
-
         return new LogisticGrowthModel(N0Param, rParam, cParam, 0.5, units, usingGrowthRate);
     }
-
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
-
     public String getParserDescription() {
         return "Logistic growth demographic model.";
     }
-
     public Class getReturnType() {
         return LogisticGrowthModel.class;
     }
-
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
-
     private XMLSyntaxRule[] rules = new XMLSyntaxRule[]{
             XMLUnits.SYNTAX_RULES[0],
             new ElementRule(POPULATION_SIZE,
                     new XMLSyntaxRule[]{new ElementRule(Parameter.class)},
                     "This parameter represents the population size at time 0 (the time of the last tip of the tree)"),
             new XORRule(
-
                     new ElementRule(GROWTH_RATE,
                             new XMLSyntaxRule[]{new ElementRule(Parameter.class)},
                             "This parameter determines the rate of growth during the exponential phase. See " +

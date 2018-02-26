@@ -1,6 +1,4 @@
-
 package dr.app.beauti.priorsPanel;
-
 import dr.app.beauti.options.Parameter;
 import dr.app.beauti.types.PriorType;
 import dr.app.beauti.util.PanelUtils;
@@ -8,7 +6,6 @@ import dr.app.gui.components.RealNumberField;
 import dr.app.util.OSType;
 import dr.math.distributions.*;
 import jam.panels.OptionsPanel;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -17,9 +14,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 abstract class PriorOptionsPanel extends OptionsPanel {
-
     // this not throw exception, exception thrown by FocusListener in RealNumberField
     public boolean hasInvalidInput(PriorType priorType) { // TODO move all validation here
         for (JComponent component : argumentFields) {
@@ -53,38 +48,28 @@ abstract class PriorOptionsPanel extends OptionsPanel {
         error = "";
         return false;
     }
-
     public String error = "";
-
     interface Listener {
         void optionsPanelChanged();
     }
-
     private List<JComponent> argumentFields = new ArrayList<JComponent>();
     private List<String> argumentNames = new ArrayList<String>();
-
     private boolean isCalibratedYule = true;
     private boolean isInitializable = true;
     private final boolean isTruncatable;
-
     private final RealNumberField initialField = new RealNumberField();
     private final JButton negativeInfinityButton;
     private final JButton positiveInfinityButton;
-
     private final JCheckBox isTruncatedCheck = new JCheckBox("Truncate to:");
     // only this RealNumberField constructor adds FocusListener
     private final RealNumberField lowerField = new RealNumberField(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, "truncate lower");
     private final JLabel lowerLabel = new JLabel("Lower: ");
     private final RealNumberField upperField = new RealNumberField(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, "truncate upper");
     private final JLabel upperLabel = new JLabel("Upper: ");
-
     protected final Set<Listener> listeners = new HashSet<Listener>();
-
     PriorOptionsPanel(boolean isTruncatable) {
         super(12, (OSType.isMac() ? 6 : 24));
-
         this.isTruncatable = isTruncatable;
-
         negativeInfinityButton = new JButton(NumberFormat.getNumberInstance().format(Double.NEGATIVE_INFINITY));
         PanelUtils.setupComponent(negativeInfinityButton);
         negativeInfinityButton.setFocusable(false);
@@ -95,7 +80,6 @@ abstract class PriorOptionsPanel extends OptionsPanel {
             }
         });
         negativeInfinityButton.setToolTipText("Click to set 'Positive Infinity' in the numerical field.");
-
         positiveInfinityButton = new JButton(NumberFormat.getNumberInstance().format(Double.POSITIVE_INFINITY));
         PanelUtils.setupComponent(positiveInfinityButton);
         positiveInfinityButton.setFocusable(false);
@@ -106,13 +90,10 @@ abstract class PriorOptionsPanel extends OptionsPanel {
             }
         });
         positiveInfinityButton.setToolTipText("Click to set 'Negative Infinity' in the numerical field.");
-
         initialField.setColumns(10);
         lowerField.setColumns(10);
         upperField.setColumns(10);
-
         setup();
-
         isTruncatedCheck.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 lowerField.setEnabled(isTruncatedCheck.isSelected());
@@ -126,7 +107,6 @@ abstract class PriorOptionsPanel extends OptionsPanel {
                 }
             }
         });
-
         KeyListener listener = new KeyAdapter() {
             public void keyReleased(KeyEvent e) {
                 if (e.getComponent() instanceof RealNumberField) {
@@ -142,124 +122,97 @@ abstract class PriorOptionsPanel extends OptionsPanel {
                 }
             }
         };
-
         initialField.addKeyListener(listener);
-
         for (JComponent component : argumentFields) {
             if (component instanceof RealNumberField) {
                 component.addKeyListener(listener);
             }
         }
-
         lowerField.addKeyListener(listener);
         upperField.addKeyListener(listener);
     }
-
     protected RealNumberField getInitialField() {
         return initialField;
     }
-
     void addListener(Listener listener) {
         listeners.add(listener);
     }
-
     void removeAllListeners() {
         listeners.clear();
     }
-
     protected void setFieldRange(RealNumberField field, boolean isNonNegative, boolean isZeroOne) {
         double lower = Double.NEGATIVE_INFINITY;
         double upper = Double.POSITIVE_INFINITY;
-
         if (isZeroOne) {
             lower = 0.0;
             upper = 1.0;
         } else if (isNonNegative) {
             lower = 0.0;
         }
-
         field.setRange(lower, upper);
     }
-
     protected void setFieldRange(RealNumberField field, boolean isNonNegative, boolean isZeroOne, double truncationLower, double truncationUpper) {
         double lower = Double.NEGATIVE_INFINITY;
         double upper = Double.POSITIVE_INFINITY;
-
         if (isZeroOne) {
             lower = 0.0;
             upper = 1.0;
         } else if (isNonNegative) {
             lower = 0.0;
         }
-
         if (lower < truncationLower) {
             lower = truncationLower;
         }
         if (upper > truncationUpper) {
             upper = truncationUpper;
         }
-
         field.setRange(lower, upper);
     }
-
     protected void addField(String name, double initialValue, double min, boolean includeMin, double max, boolean includeMax) {
         RealNumberField field = new RealNumberField(min, includeMin, max, includeMax, name);
         field.setValue(initialValue);
         addField(name, field);
     }
-
     protected void addField(String name, double initialValue, double min, double max) {
         RealNumberField field = new RealNumberField(min, max, name);
         field.setValue(initialValue);
         addField(name, field);
     }
-
     protected void addField(String name, RealNumberField field) {
         argumentNames.add(name);
-
         field.setColumns(10);
         argumentFields.add(field);
         setupComponents();
     }
-
     protected void addCheckBox(String name, JCheckBox jCheckBox) {
         argumentNames.add(name);
-
         argumentFields.add(jCheckBox);
         setupComponents();
     }
-
     protected void replaceFieldName(int i, String name) {
         argumentNames.set(i, name);
         ((RealNumberField) argumentFields.get(i)).setLabel(name);
         setupComponents();
     }
-
     protected double getValue(int i) {
         return ((RealNumberField) argumentFields.get(i)).getValue();
     }
-
     protected double getValue(String fieldName) {
         int i = argumentNames.indexOf(fieldName);
         if (i < 0) return -1; // has no offset field
         return ((RealNumberField) argumentFields.get(i)).getValue();
     }
-
     protected String getArguName(int i) {
         return argumentNames.get(i);
     }
-
     private void setupComponents() {
         removeAll();
-
         if (isInitializable && !isCalibratedYule) {
             addComponentWithLabel("Initial value: ", initialField);
         }
-
         for (int i = 0; i < argumentFields.size(); i++) {
             addComponentWithLabel(argumentNames.get(i) + ":", argumentFields.get(i));
         }
-
         if (isTruncatable && !isCalibratedYule) {
             addSpanningComponent(isTruncatedCheck);
             JPanel panel = new JPanel();
@@ -270,9 +223,7 @@ abstract class PriorOptionsPanel extends OptionsPanel {
             panel.add(lowerField);
             panel.add(negativeInfinityButton);
             addComponents(lowerLabel, panel);
-
             positiveInfinityButton.setMinimumSize(new Dimension(negativeInfinityButton.getWidth(), negativeInfinityButton.getHeight()));
-
             lowerField.setEnabled(isTruncatedCheck.isSelected());
             lowerLabel.setEnabled(isTruncatedCheck.isSelected());
             negativeInfinityButton.setEnabled(isTruncatedCheck.isSelected());
@@ -281,29 +232,22 @@ abstract class PriorOptionsPanel extends OptionsPanel {
             positiveInfinityButton.setEnabled(isTruncatedCheck.isSelected());
         }
     }
-
     RealNumberField getField(int i) {
         return (RealNumberField) argumentFields.get(i);
     }
-
     Distribution getDistribution(Parameter parameter) {
         Distribution dist = getDistribution();
-
         boolean isBounded = isTruncatedCheck.isSelected();
-
         double lower = Double.NEGATIVE_INFINITY;
         double upper = Double.POSITIVE_INFINITY;
-
         if (parameter.isZeroOne) {
             lower = 0.0;
             upper = 1.0;
 //            isBounded = true;
         } else if (parameter.isNonNegative) {
             lower = 0.0;
-
 //            isBounded = true;
         }
-
         if (dist != null && isTruncatable && isBounded) {
             if (isTruncatedCheck.isSelected()) {
                 lower = lowerField.getValue();
@@ -313,7 +257,6 @@ abstract class PriorOptionsPanel extends OptionsPanel {
         }
         return dist;
     }
-
     void setArguments(Parameter parameter, PriorType priorType) {
         this.isCalibratedYule = parameter.isCalibratedYule;
         this.isInitializable = priorType.isInitializable;
@@ -328,12 +271,9 @@ abstract class PriorOptionsPanel extends OptionsPanel {
         upperField.setLabel(parameter.getName() + " truncate upper");
         lowerField.setValue(parameter.getLowerBound());
         upperField.setValue(parameter.getUpperBound());
-
         setArguments(parameter);
-
         setupComponents();
     }
-
     void getArguments(Parameter parameter, PriorType priorType) {
         if (priorType.isInitializable) {
             parameter.initial = initialField.getValue();
@@ -343,173 +283,132 @@ abstract class PriorOptionsPanel extends OptionsPanel {
             parameter.truncationLower = lowerField.getValue();
             parameter.truncationUpper = upperField.getValue();
         }
-
         getArguments(parameter);
     }
-
     abstract void setup();
-
     abstract Distribution getDistribution();
-
     abstract void setArguments(Parameter parameter);
-
     abstract void getArguments(Parameter parameter);
-
     abstract boolean isInputValid();
-
     private static final String OFFSET = "Offset";
-
     static final PriorOptionsPanel INFINITE_UNIFORM = new PriorOptionsPanel(false) {
         void setup() {
         }
-
         Distribution getDistribution() {
             return null;
         }
-
         void setArguments(Parameter parameter) {
         }
-
         void getArguments(Parameter parameter) {
         }
-
         @Override
         boolean isInputValid() {
             return getValue(0) > getValue(1);
         }
     };
-
     static final PriorOptionsPanel UNIFORM = new PriorOptionsPanel(false) {
         void setup() {
             addField("Upper", 1.0, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
             addField("Lower", 0.0, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
         }
-
         Distribution getDistribution() {
             return new UniformDistribution(
                     getValue(1), // lower
                     getValue(0) // upper
             );
         }
-
         void setArguments(Parameter parameter) {
             super.setFieldRange(getField(0), parameter.isNonNegative, parameter.isZeroOne, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
             super.setFieldRange(getField(1), parameter.isNonNegative, parameter.isZeroOne, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
-
             getField(0).setValue(parameter.uniformUpper);
             getField(1).setValue(parameter.uniformLower);
-
             getField(0).setLabel(parameter.getName() + " " + getArguName(0).toLowerCase());
             getField(1).setLabel(parameter.getName() + " " + getArguName(1).toLowerCase());
         }
-
         void getArguments(Parameter parameter) {
             parameter.isTruncated = false;
             parameter.uniformUpper = getValue(0);
             parameter.uniformLower = getValue(1);
         }
-
         @Override
         boolean isInputValid() {
             return getValue(0) > getValue(1);
         }
     };
-
     static final PriorOptionsPanel EXPONENTIAL = new PriorOptionsPanel(true) {
-
         void setup() {
             addField("Mean", 1.0, 0.0, false, Double.POSITIVE_INFINITY, true);
             addField(OFFSET, 0.0, 0.0, true, Double.POSITIVE_INFINITY, true);
         }
-
         public Distribution getDistribution() {
             return new OffsetPositiveDistribution(
                     new ExponentialDistribution(1.0 / getValue(0)), getValue(1));
         }
-
         public void setArguments(Parameter parameter) {
             setFieldRange(getField(0), true, parameter.isZeroOne);
             getField(0).setValue(parameter.mean != 0.0 ? parameter.mean : 1.0);
             getField(1).setValue(parameter.offset);
-
             getField(0).setLabel(parameter.getName() + " " + getArguName(0).toLowerCase());
             getField(1).setLabel(parameter.getName() + " " + getArguName(1).toLowerCase());
         }
-
         public void getArguments(Parameter parameter) {
             parameter.mean = getValue(0);
             parameter.offset = getValue(1);
         }
-
         @Override
         boolean isInputValid() {
             return true;
         }
     };
-
     static final PriorOptionsPanel LAPLACE = new PriorOptionsPanel(true) {
         void setup() {
             addField("Mean", 0.0, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
             addField("Scale", 1.0, 0.0, false, Double.POSITIVE_INFINITY, true);
         }
-
         public Distribution getDistribution() {
             return new LaplaceDistribution(getValue(0), getValue(1));
         }
-
         public void setArguments(Parameter parameter) {
             getField(0).setValue(parameter.mean);
             setFieldRange(getField(0), true, false);
             getField(1).setValue(parameter.scale);
-
             getField(0).setLabel(parameter.getName() + " " + getArguName(0).toLowerCase());
             getField(1).setLabel(parameter.getName() + " " + getArguName(1).toLowerCase());
         }
-
         public void getArguments(Parameter parameter) {
             parameter.mean = getValue(0);
             parameter.scale = getValue(1);
         }
-
         @Override
         boolean isInputValid() {
             return true;
         }
     };
-
     static final PriorOptionsPanel NORMAL = new PriorOptionsPanel(true) {
-
         void setup() {
             addField("Mean", 0.0, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
             addField("Stdev", 1.0, 0.0, false, Double.POSITIVE_INFINITY, true);
         }
-
         public Distribution getDistribution() {
             return new NormalDistribution(getValue(0), getValue(1));
         }
-
         public void setArguments(Parameter parameter) {
             getField(0).setValue(parameter.mean);
             getField(1).setValue(parameter.stdev);
-
             getField(0).setLabel(parameter.getName() + " " + getArguName(0).toLowerCase());
             getField(1).setLabel(parameter.getName() + " " + getArguName(1).toLowerCase());
         }
-
         public void getArguments(Parameter parameter) {
             parameter.mean = getValue(0);
             parameter.stdev = getValue(1);
         }
-
         @Override
         boolean isInputValid() {
             return true;
         }
     };
-
     static final PriorOptionsPanel LOG_NORMAL = new PriorOptionsPanel(true) {
         private JCheckBox meanInRealSpaceCheck;
-
         void setup() {
             meanInRealSpaceCheck = new JCheckBox();
             if (meanInRealSpaceCheck.isSelected()) {
@@ -520,10 +419,8 @@ abstract class PriorOptionsPanel extends OptionsPanel {
             addField("Log(Stdev)", 1.0, 0.0, Double.POSITIVE_INFINITY);
             addField(OFFSET, 0.0, 0.0, Double.POSITIVE_INFINITY);
             addCheckBox("Mean In Real Space", meanInRealSpaceCheck);
-
             meanInRealSpaceCheck.addItemListener(new ItemListener() {
                 public void itemStateChanged(ItemEvent ev) {
-
                     if (meanInRealSpaceCheck.isSelected()) {
                         replaceFieldName(0, "Mean");
                         if (getValue(0) <= 0) {
@@ -534,14 +431,12 @@ abstract class PriorOptionsPanel extends OptionsPanel {
                         replaceFieldName(0, "Log(Mean)");
                         getField(0).setRange(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
                     }
-
                     for (Listener listener : listeners) {
                         listener.optionsPanelChanged();
                     }
                 }
             });
         }
-
         public Distribution getDistribution() {
             double mean = getValue(0);
             if (meanInRealSpaceCheck.isSelected()) {
@@ -553,102 +448,82 @@ abstract class PriorOptionsPanel extends OptionsPanel {
             return new OffsetPositiveDistribution(
                     new LogNormalDistribution(mean, getValue(1)), getValue(2));
         }
-
         public void setArguments(Parameter parameter) {
             getField(0).setValue(parameter.mean);
             getField(1).setValue(parameter.stdev);
             getField(2).setValue(parameter.offset);
             meanInRealSpaceCheck.setSelected(parameter.isMeanInRealSpace());
-
             getField(0).setLabel(parameter.getName() + " " + getArguName(0).toLowerCase());
             getField(1).setLabel(parameter.getName() + " " + getArguName(1).toLowerCase());
             getField(2).setLabel(parameter.getName() + " " + getArguName(2).toLowerCase());
         }
-
         public void getArguments(Parameter parameter) {
             parameter.mean = getValue(0);
             parameter.stdev = getValue(1);
             parameter.offset = getValue(2);
             parameter.setMeanInRealSpace(meanInRealSpaceCheck.isSelected());
         }
-
         @Override
         boolean isInputValid() {
             return true;
         }
-
     };
-
     static final PriorOptionsPanel GAMMA = new PriorOptionsPanel(true) {
-
         void setup() {
             addField("Shape", 1.0, 0.0, false, Double.POSITIVE_INFINITY, true);
             addField("Scale", 1.0, 0.0, false, Double.POSITIVE_INFINITY, true);
             addField(OFFSET, 0.0, 0.0, Double.POSITIVE_INFINITY);
         }
-
         public Distribution getDistribution() {
             return new OffsetPositiveDistribution(
                     new GammaDistribution(getValue(0), getValue(1)), getValue(2));
         }
-
         public void setArguments(Parameter parameter) {
             getField(0).setValue(parameter.shape);
             getField(1).setValue(parameter.scale);
             getField(2).setValue(parameter.offset);
-
             getField(0).setLabel(parameter.getName() + " " + getArguName(0).toLowerCase());
             getField(1).setLabel(parameter.getName() + " " + getArguName(1).toLowerCase());
             getField(2).setLabel(parameter.getName() + " " + getArguName(2).toLowerCase());
         }
-
         public void getArguments(Parameter parameter) {
             parameter.shape = getValue(0);
             parameter.scale = getValue(1);
             parameter.offset = getValue(2);
         }
-
         @Override
         boolean isInputValid() {
             return true;
         }
     };
-
     static final PriorOptionsPanel INVERSE_GAMMA = new PriorOptionsPanel(true) {
-
         void setup() {
             addField("Shape", 1.0, 0.0, false, Double.POSITIVE_INFINITY, true);
             addField("Scale", 1.0, 0.0, false, Double.POSITIVE_INFINITY, true);
             addField(OFFSET, 0.0, 0.0, Double.POSITIVE_INFINITY);
         }
-
         public Distribution getDistribution() {
             return new OffsetPositiveDistribution(
                     new InverseGammaDistribution(getValue(0), getValue(1)), getValue(2));
         }
-
         public void setArguments(Parameter parameter) {
             getField(0).setValue(parameter.shape);
             getField(1).setValue(parameter.scale);
             getField(2).setValue(parameter.offset);
-
             getField(0).setLabel(parameter.getName() + " " + getArguName(0).toLowerCase());
             getField(1).setLabel(parameter.getName() + " " + getArguName(1).toLowerCase());
             getField(2).setLabel(parameter.getName() + " " + getArguName(2).toLowerCase());
         }
-
         public void getArguments(Parameter parameter) {
             parameter.shape = getValue(0);
             parameter.scale = getValue(1);
             parameter.offset = getValue(2);
         }
-
         @Override
         boolean isInputValid() {
             return true;
         }
     };
-
 //    class TruncatedNormalOptionsPanel extends PriorOptionsPanel {
 //
 //        public TruncatedNormalOptionsPanel() {
@@ -671,82 +546,62 @@ abstract class PriorOptionsPanel extends OptionsPanel {
 //            parameter.truncationUpper = getValue(3);
 //        }
 //    }
-
     static final PriorOptionsPanel BETA = new PriorOptionsPanel(true) {
-
         void setup() {
             addField("Shape", 1.0, 0.0, false, Double.POSITIVE_INFINITY, true);
             addField("ShapeB", 1.0, 0.0, false, Double.POSITIVE_INFINITY, true);
             addField(OFFSET, 0.0, 0.0, Double.POSITIVE_INFINITY);
         }
-
         public Distribution getDistribution() {
             return new OffsetPositiveDistribution(
                     new BetaDistribution(getValue(0), getValue(1)), getValue(2));
         }
-
         public void setArguments(Parameter parameter) {
             getField(0).setValue(parameter.shape);
             getField(1).setValue(parameter.shapeB);
             getField(2).setValue(parameter.offset);
-
             getField(0).setLabel(parameter.getName() + " " + getArguName(0).toLowerCase());
             getField(1).setLabel(parameter.getName() + " " + getArguName(1).toLowerCase());
             getField(2).setLabel(parameter.getName() + " " + getArguName(2).toLowerCase());
         }
-
         public void getArguments(Parameter parameter) {
             parameter.shape = getValue(0);
             parameter.shapeB = getValue(1);
             parameter.offset = getValue(2);
         }
-
         @Override
         boolean isInputValid() {
             return true;
         }
     };
-
     static final PriorOptionsPanel CTMC_RATE_REFERENCE = new PriorOptionsPanel(false) {
-
         void setup() {
         }
-
         public Distribution getDistribution() {
             return null;
         }
-
         public void setArguments(Parameter parameter) {
         }
-
         public void getArguments(Parameter parameter) {
         }
-
         @Override
         boolean isInputValid() {
             return true;
         }
     };
-
     static final PriorOptionsPanel ONE_OVER_X = new PriorOptionsPanel(false) {
-
         void setup() {
         }
-
         public Distribution getDistribution() {
             return null;
         }
-
         public void setArguments(Parameter parameter) {
         }
-
         public void getArguments(Parameter parameter) {
         }
-
         @Override
         boolean isInputValid() {
             return true;
         }
     };
-
 }
