@@ -156,7 +156,7 @@ public class LoadingsGibbsOperator extends SimpleMCMCOperator implements GibbsOp
     private void copy(int i, double[] random) {
         TransposedBlockUpperTriangularMatrixParameter changing = (TransposedBlockUpperTriangularMatrixParameter) LFM.getLoadings();
         for (int j = 0; j < random.length; j++) {
-            changing.setParameterValueQuietly(i, j, random[j]);
+            changing.setParameterValue(i, j, random[j]);
         }
     }
     private void drawI(int i, ListIterator<double[][]> currentPrecision, ListIterator<double[]> currentMidMean, ListIterator<double[]> currentMean) {
@@ -244,7 +244,6 @@ public class LoadingsGibbsOperator extends SimpleMCMCOperator implements GibbsOp
                 currentMean = meanArray.listIterator();
             }
             drawI(i, currentPrecision, currentMidMean, currentMean);
-            LFM.getLoadings().fireParameterChangedEvent();
 //            LFM.getLoadings().fireParameterChangedEvent();
         }
         return 0;

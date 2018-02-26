@@ -23,13 +23,12 @@ public class SubtreeJumpOperatorParser extends AbstractXMLObjectParser {
         TreeModel treeModel = (TreeModel) xo.getChild(TreeModel.class);
         final double weight = xo.getDoubleAttribute(MCMCOperator.WEIGHT);
 //        final double targetAcceptance = xo.getAttribute(TARGET_ACCEPTANCE, 0.234);
-        final double bias = xo.getAttribute("bias", 0.0);
-        final boolean arctanTransform = xo.getAttribute("arctanTransform", true);
-        if (Double.isInfinite(bias)) {
-            throw new XMLParseException("bias attribute must be not infinite. was " + bias +
+        final double size = xo.getAttribute("size", 1.0);
+        if (Double.isInfinite(size) || size <= 0.0) {
+            throw new XMLParseException("size attribute must be positive and not infinite. was " + size +
            " for tree " + treeModel.getId() );
         }
-        SubtreeJumpOperator operator = new SubtreeJumpOperator(treeModel, weight, bias, arctanTransform, mode);
+        SubtreeJumpOperator operator = new SubtreeJumpOperator(treeModel, weight, size, mode);
 //        operator.setTargetAcceptanceProbability(targetAcceptance);
         return operator;
     }
@@ -44,9 +43,9 @@ public class SubtreeJumpOperatorParser extends AbstractXMLObjectParser {
     }
     private final XMLSyntaxRule[] rules = {
             AttributeRule.newDoubleRule(MCMCOperator.WEIGHT),
-            AttributeRule.newDoubleRule("bias", true),
-            AttributeRule.newBooleanRule("arctanTransform", true),
-            AttributeRule.newBooleanRule(CoercableMCMCOperator.AUTO_OPTIMIZE, true),
+            // No coercion at the moment.
+            //AttributeRule.newDoubleRule("size", true),
+            //AttributeRule.newBooleanRule(CoercableMCMCOperator.AUTO_OPTIMIZE, true),
             new ElementRule(TreeModel.class)
     };
 }

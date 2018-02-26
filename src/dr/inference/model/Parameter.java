@@ -2,10 +2,7 @@ package dr.inference.model;
 import dr.inference.parallel.MPIServices;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 public interface Parameter extends Statistic, Variable<Double> {
     double getParameterValue(int dim);
     double[] getParameterValues();
@@ -27,11 +24,14 @@ public interface Parameter extends Statistic, Variable<Double> {
     public double removeDimension(int index);
     public void fireParameterChangedEvent();
     boolean isUsed();
+    public final static Set<Parameter> FULL_PARAMETER_SET = new LinkedHashSet<Parameter>();
     public abstract class Abstract extends Statistic.Abstract implements Parameter {
         protected Abstract() {
+            FULL_PARAMETER_SET.add(this);
         }
         protected Abstract(final String name) {
             super(name);
+            FULL_PARAMETER_SET.add(this);
         }
         // **************************************************************
         // MPI IMPLEMENTATION
@@ -436,5 +436,4 @@ public interface Parameter extends Statistic, Variable<Double> {
         }
         private final double[] uppers, lowers;
     }
-    final static Set<Parameter> FULL_PARAMETER_SET = new HashSet<Parameter>();
 }

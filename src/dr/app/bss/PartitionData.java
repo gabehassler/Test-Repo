@@ -89,7 +89,7 @@ public class PartitionData implements Serializable {
     	"Constant Population",
         "Exponential Growth (Growth Rate)",
         "Exponential Growth (Doubling Time)",
-//        "Logistic Growth (Growth Rate)",
+        "Logistic Growth (Growth Rate)",
 //        "Logistic Growth (Doubling Time)",
 //        "Expansion (Growth Rate)",
 //        "Expansion (Doubling Time)",

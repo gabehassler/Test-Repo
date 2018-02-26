@@ -20,23 +20,20 @@ public class TreeModel extends AbstractModel implements MultivariateTraitTree {
         internalNodeCount = 0;
     }
     public TreeModel(Tree tree) {
-        this(TREE_MODEL, tree, false, false);
+        this(TREE_MODEL, tree, false);
     }
-    public TreeModel(String id, Tree tree) { this(id, tree, false); }
-    public TreeModel(String id, Tree tree, boolean fixHeights) {
-        this(TREE_MODEL, tree, false, fixHeights);
+    public TreeModel(String id, Tree tree) {
+        this(TREE_MODEL, tree, false);
         setId(id);
     }
-    public TreeModel(String name, Tree tree, boolean copyAttributes, boolean fixHeights) {
+    public TreeModel(String name, Tree tree, boolean copyAttributes) {
         super(name);
         // get a rooted version of the tree to clone
         FlexibleTree binaryTree = new FlexibleTree(tree, copyAttributes);
         binaryTree.resolveTree();
         // adjust the heights to be compatible with the tip dates and perturb
         // any zero branches.
-        if (!fixHeights) {
-            MutableTree.Utils.correctHeightsForTips(binaryTree);
-        }
+        MutableTree.Utils.correctHeightsForTips(binaryTree);
         // clone the node structure (this will create the individual parameters)
         Node node = new Node(binaryTree, binaryTree.getRoot());
         internalNodeCount = binaryTree.getInternalNodeCount();

@@ -18,14 +18,13 @@ public class DirichletProcessOperatorParser extends AbstractXMLObjectParser {
 		DirichletProcessPrior dpp = (DirichletProcessPrior) xo.getChild(DirichletProcessPrior.class);
 		CompoundLikelihood likelihood = (CompoundLikelihood) xo .getElementFirstChild(DATA_LOG_LIKELIHOOD);
 		Parameter categoriesParameter = (Parameter) xo.getElementFirstChild(  DirichletProcessPriorParser.CATEGORIES);
-//		CountableRealizationsParameter allParameters = (CountableRealizationsParameter) xo.getChild(CountableRealizationsParameter.class);
+//		CountableRealizationsParameter countableRealizationsParameter = (CountableRealizationsParameter) xo.getChild(CountableRealizationsParameter.class);
 		CompoundParameter uniquelyRealizedParameters = (CompoundParameter) xo.getChild(CompoundParameter.class);
 		int M = xo.getIntegerAttribute(MH_STEPS);
 		final double weight = xo.getDoubleAttribute(MCMCOperator.WEIGHT);
 		return 
-		new DirichletProcessOperator(dpp, categoriesParameter, 
-				uniquelyRealizedParameters, 
-//				allParameters,
+		new DirichletProcessOperator(dpp, categoriesParameter, uniquelyRealizedParameters,
+//				countableRealizationsParameter, 
 				likelihood, M, weight);
 	}// END: parseXMLObject
 	@Override
@@ -33,7 +32,6 @@ public class DirichletProcessOperatorParser extends AbstractXMLObjectParser {
 		return new XMLSyntaxRule[] {
 		new ElementRule(DirichletProcessPrior.class, false),
 		new ElementRule(CompoundParameter.class, false), //
-//		new ElementRule(CountableRealizationsParameter.class, false), //
 		AttributeRule.newDoubleRule(MCMCOperator.WEIGHT) //
 		};
 	}// END: getSyntaxRules

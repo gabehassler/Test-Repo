@@ -31,9 +31,8 @@ public class LineageSpecificBranchModelParser extends AbstractXMLObjectParser {
 			}//END: models loop
 			// TODO: check if categories numbering starts from zero
 			Parameter categories = (Parameter) xo.getElementFirstChild(CATEGORIES); 
-//			CountableBranchCategoryProvider.CladeBranchCategoryModel provider = new CountableBranchCategoryProvider.CladeBranchCategoryModel(treeModel, categories);// false);
-		return new LineageSpecificBranchModel(treeModel, rootFrequencyModel, substitutionModels, //provider, 
-				categories);
+			CountableBranchCategoryProvider.CladeBranchCategoryModel provider = new CountableBranchCategoryProvider.CladeBranchCategoryModel(treeModel, categories);// false);
+		return new LineageSpecificBranchModel(treeModel, rootFrequencyModel, substitutionModels, provider, categories);
 	}
 	@Override
 	public XMLSyntaxRule[] getSyntaxRules() {

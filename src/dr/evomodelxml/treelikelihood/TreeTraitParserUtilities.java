@@ -21,7 +21,6 @@ public class TreeTraitParserUtilities {
     public static final String JITTER = "jitter";
     public static final String WINDOW = "window";
     public static final String DUPLICATES = "duplicatesOnly";
-    public static final String STANDARDIZE = "standardize";
     public void randomize(Parameter trait, double[] lower, double[] upper) {
         // Draws each dimension in each trait from U[lower, upper)
         for (int i = 0; i < trait.getDimension(); i++) {
@@ -31,9 +30,6 @@ public class TreeTraitParserUtilities {
             trait.setParameterValue(i, newValue);
         }
     }
-//    public void standardize(Parameter trait) {
-//        for (int i = 0; i < trait.)
-//    }
     public static ElementRule randomizeRules(boolean optional) {
         return new ElementRule(TreeTraitParserUtilities.RANDOMIZE, new XMLSyntaxRule[]{
                 AttributeRule.newDoubleRule(TreeTraitParserUtilities.RANDOMIZE_LOWER, true),

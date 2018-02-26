@@ -51,10 +51,6 @@ public class MassivelyParallelMDSImpl implements MultiDimensionalScalingCore {
         precision = storedPrecision;
     }
     @Override
-    public void acceptState() {
-        singleton.acceptState(instance);
-    }
-    @Override
     public void makeDirty() {
         singleton.makeDirty(instance);
     }

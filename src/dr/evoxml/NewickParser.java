@@ -3,6 +3,7 @@ import dr.evolution.io.Importer;
 import dr.evolution.io.NewickImporter;
 import dr.evolution.tree.*;
 import dr.evolution.util.Taxon;
+import dr.evolution.util.TimeScale;
 import dr.evolution.util.Units;
 import dr.evoxml.util.XMLUnits;
 import dr.xml.*;
@@ -30,18 +31,18 @@ public class NewickParser extends AbstractXMLObjectParser {
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
         final Units.Type units = XMLUnits.Utils.getUnitsAttr(xo);
 //        boolean usingDates = xo.getAttribute(USING_DATES, true);
-        boolean usingDates = true;
-        if (xo.hasAttribute(USING_DATES)) {
-            usingDates = xo.getAttribute(USING_DATES, true);
-        }
+		boolean usingDates = true;
+		if (xo.hasAttribute(USING_DATES)) {
+			usingDates = xo.getAttribute(USING_DATES, true);
+		}
         boolean usingHeights = false;
-        if (xo.hasAttribute(USING_HEIGHTS)) {
-            usingHeights = xo.getAttribute(USING_HEIGHTS, true);
+        if(xo.hasAttribute(USING_HEIGHTS)) {
+        	 usingHeights = xo.getAttribute(USING_HEIGHTS, true);
         }
 //        System.out.println("UsingDates=" + usingDates + " usingHeights= " + usingHeights);
-        if (usingDates && usingHeights) {
-            throw new XMLParseException("Unable to use both dates and node heights. Specify value of usingDates attribute.");
-        }
+		if (usingDates && usingHeights) {
+			throw new XMLParseException("Unable to use both dates and node heights. Specify value of usingDates attribute.");
+		} 
 //		else if (!usingDates && !usingHeights) {
 //			System.out.println("Tree is assumed to be ultrametric");
 //		}
@@ -108,23 +109,23 @@ public class NewickParser extends AbstractXMLObjectParser {
                     double height = Taxon.getHeightFromDate(date);
                     tree.setNodeHeight(tree.getInternalNode(i), height);
                 }
-            }// END: i loop
+			}// END: i loop
             MutableTree.Utils.correctHeightsForTips(tree);
-        } else if (!usingDates && !usingHeights) {
-            System.out.println("Tree is assumed to be ultrametric");
+        } else if(!usingDates && !usingHeights) {
+        	System.out.println("Tree is assumed to be ultrametric");
             // not using dates or heights
             for (int i = 0; i < tree.getTaxonCount(); i++) {
                 final NodeRef leaf = tree.getExternalNode(i);
                 final double h = tree.getNodeHeight(leaf);
                 if (h != 0.0) {
-                    double zero = 0.0;
-                    System.out.println("  Changing height of leaf node " + tree.getTaxon(leaf.getNumber()) + " from " + h + " to " + zero);
+                	double zero = 0.0;
+                	System.out.println("  Changing height of leaf node " + tree.getTaxon(leaf.getNumber()) + " from " + h + " to " + zero);
                     tree.setNodeHeight(leaf, zero);
                 }
-            }// END: i loop
-        } else {
-            System.out.println("Using node heights.");
-        }// END: usingDates check
+			}// END: i loop
+		} else {
+			System.out.println("Using node heights.");
+		}// END: usingDates check
         if (xo.hasAttribute(RESCALE_HEIGHT)) {
             double rescaleHeight = xo.getDoubleAttribute(RESCALE_HEIGHT);
             double scale = rescaleHeight / tree.getNodeHeight(tree.getRoot());
@@ -142,7 +143,6 @@ public class NewickParser extends AbstractXMLObjectParser {
             }
         }
         //System.out.println("Constructed newick tree = " + Tree.Utils.uniqueNewick(tree, tree.getRoot()));
-        System.err.println(tree.toString());
         return tree;
     }
     //************************************************************************

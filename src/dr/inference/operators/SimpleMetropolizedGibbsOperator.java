@@ -45,13 +45,13 @@ public abstract class SimpleMetropolizedGibbsOperator extends SimpleOperator imp
     protected double evaluate(Likelihood likelihood, Prior prior, double pathParameter) {
         double logPosterior = 0.0;
         if (prior != null) {
-            final double logPrior = prior.getLogPrior(likelihood.getModel()) * pathParameter;
+            final double logPrior = prior.getLogPrior(likelihood.getModel());
             if (logPrior == Double.NEGATIVE_INFINITY) {
                 return Double.NEGATIVE_INFINITY;
             }
             logPosterior += logPrior;
         }
-        final double logLikelihood = likelihood.getLogLikelihood() * pathParameter;
+        final double logLikelihood = likelihood.getLogLikelihood()*pathParameter;
         if (Double.isNaN(logLikelihood)) {
             return Double.NEGATIVE_INFINITY;
         }

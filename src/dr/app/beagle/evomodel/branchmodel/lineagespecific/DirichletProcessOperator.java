@@ -1,6 +1,8 @@
 package dr.app.beagle.evomodel.branchmodel.lineagespecific;
 import org.apache.commons.math.MathException;
+import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.model.CompoundLikelihood;
+import dr.inference.model.CompoundParameter;
 import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
@@ -16,36 +18,36 @@ public class DirichletProcessOperator extends SimpleMCMCOperator implements
 	private int realizationCount;
 	private int uniqueRealizationCount;
 	private double intensity;
-	private int mhSteps;
-	private Parameter zParameter;
-	// private CountableRealizationsParameter countableRealizationsParameter;
-	private Parameter parameter;
-	private Likelihood likelihood;
-	public DirichletProcessOperator(DirichletProcessPrior dpp, //
-			Parameter zParameter, //
-			// CountableRealizationsParameter countableRealizationsParameter,
-			Parameter parameter, //
-			Likelihood likelihood, //
-			int mhSteps, //
-			double weight//
-	) {
+    private int mhSteps;
+	private Parameter categoriesParameter;
+//	private CountableRealizationsParameter countableRealizationsParameter;
+	// Compound Parameter 
+	private CompoundParameter parameter;
+	private CompoundLikelihood likelihood;
+	public DirichletProcessOperator(DirichletProcessPrior dpp, 
+			Parameter categoriesParameter, 
+//			CountableRealizationsParameter countableRealizationsParameter,
+			CompoundParameter parameter,
+		    CompoundLikelihood likelihood,
+			int mhSteps,
+			double weight) {
 		this.dpp = dpp;
 		this.intensity = dpp.getGamma();
 		this.uniqueRealizationCount = dpp.getCategoryCount();
-		this.realizationCount = zParameter.getDimension();
-		this.zParameter = zParameter;
-		// this.countableRealizationsParameter = countableRealizationsParameter;
+		this.realizationCount = categoriesParameter.getDimension();
+		this.categoriesParameter = categoriesParameter;
+//		this.countableRealizationsParameter = countableRealizationsParameter;
 		this.parameter = parameter;
 		this.likelihood = likelihood;
 		this.mhSteps = mhSteps;
 		setWeight(weight);
 	}// END: Constructor
-	public Parameter getParameter() {
-		return zParameter;
-	}// END: getParameter
-	public Variable getVariable() {
-		return zParameter;
-	}// END: getVariable
+    public Parameter getParameter() {
+        return categoriesParameter;
+    }//END: getParameter
+    public Variable<?> getVariable() {
+        return categoriesParameter;
+    }//END: getVariable
 	@Override
 	public double doOperation() throws OperatorFailedException {
 		try {
@@ -56,12 +58,14 @@ public class DirichletProcessOperator extends SimpleMCMCOperator implements
 		return 0.0;
 	}// END: doOperation
 	private void doOperate() throws MathException {
-		// int index = 0;
+//		System.out.println(likelihood.toString());
+//		System.out.println("likelihood count: " + likelihood.getLikelihoodCount());
+//		int index = 0;
 		for (int index = 0; index < realizationCount; index++) {
 			int[] occupancy = new int[uniqueRealizationCount];
 			for (int i = 0; i < realizationCount; i++) {
 				if (i != index) {
-					int j = (int) zParameter.getParameterValue(i);
+					int j = (int) categoriesParameter.getParameterValue(i);
 					occupancy[j]++;
 				}// END: i check
 			}// END: i loop
@@ -69,52 +73,62 @@ public class DirichletProcessOperator extends SimpleMCMCOperator implements
 				System.out.println("N[-index]: ");
 				dr.app.bss.Utils.printArray(occupancy);
 			}
-//			Likelihood clusterLikelihood = (Likelihood) likelihood.getLikelihood(index);
-			Likelihood clusterLikelihood = likelihood;
 			double[] clusterProbs = new double[uniqueRealizationCount];
 			for (int i = 0; i < uniqueRealizationCount; i++) {
+				double loglike = 0;
 				double logprob = 0;
 				if (occupancy[i] == 0) {// draw new
+					// M-H for poor people
 					// draw from base model, evaluate at likelihood
-					double candidate = dpp.baseModel.nextRandom()[0];
-					int category = (int) zParameter.getParameterValue(index);
-					double value = parameter.getParameterValue(category);
-					parameter.setParameterValue(category, candidate);
-					double loglike = clusterLikelihood.getLogLikelihood();
-					parameter.setParameterValue(category, value);
-					logprob = Math.log((intensity)
-							/ (realizationCount - 1 + intensity))
-							+ loglike;
+					double candidate = 0.0;
+					for (int j = 0; j < mhSteps; j++) {
+						 candidate = dpp.baseModel.nextRandom()[0];
+						 loglike += Math.exp(getPartialLoglike(index, candidate));
+					}
+					loglike /= mhSteps;
+					logprob = Math.log( ( (intensity) / (realizationCount - 1 + intensity) ) * loglike   ) ;
 				} else {// draw existing
 					// likelihood for component x_index
-					double candidate = dpp.getUniqueParameter(i)
-							.getParameterValue(0);
-					int category = (int) zParameter.getParameterValue(index);
-					double value = parameter.getParameterValue(category);
-					parameter.setParameterValue(category, candidate);
-					double loglike = clusterLikelihood.getLogLikelihood();
-					parameter.setParameterValue(category, value);
-					logprob = Math.log(occupancy[i])
-							/ (realizationCount - 1 + intensity) + loglike;
+					 double value = dpp.getUniqueParameter(i).getParameterValue(0);
+					 loglike = getPartialLoglike(index, value);
+					 logprob = Math.log(occupancy[i]) / (realizationCount - 1 + intensity) + loglike;
 				}// END: occupancy check
 				clusterProbs[i] = logprob;
 			}// END: i loop
+			//rescale
+			double max = dr.app.bss.Utils.max(clusterProbs);
+			for (int i = 0; i < clusterProbs.length; i++) {
+				clusterProbs[i] -=  max;
+			}
 			dr.app.bss.Utils.exponentiate(clusterProbs);
-//			dr.app.bss.Utils.printArray(clusterProbs);
-//			System.exit(-1);
+//			dr.app.bss.Utils.normalize(clusterProbs);
 			if (DEBUG) {
 				System.out.println("P(z[index] | z[-index]): ");
 				dr.app.bss.Utils.printArray(clusterProbs);
 			}
 			// sample
 			int sampledCluster = MathUtils.randomChoicePDF(clusterProbs);
-			zParameter.setParameterValue(index, sampledCluster);
+			categoriesParameter.setParameterValue(index, sampledCluster);
 			if (DEBUG) {
-				System.out
-						.println("sampled category: " + sampledCluster + "\n");
+				System.out.println("sampled category: " + sampledCluster + "\n");
 			}
 		}// END: index loop
 	}// END: doOperate
+	private double getPartialLoglike(int index, double candidate) {
+		DistributionLikelihood dl = (DistributionLikelihood) likelihood .getLikelihood(index);
+		int category = (int) categoriesParameter.getParameterValue(index);
+		double value = parameter.getParameterValue(category);
+		double loglike = 0.0;
+		if (candidate != value) {
+			//TODO: which category
+			parameter.setParameterValue(category, candidate);
+			loglike = dl.getLogLikelihood();
+			parameter.setParameterValue(category, value);
+		} else {
+			loglike = dl.getLogLikelihood();
+		}
+		return loglike;
+	}// END: getPartialLoglike
 	@Override
 	public String getOperatorName() {
 		return DirichletProcessOperatorParser.DIRICHLET_PROCESS_OPERATOR;

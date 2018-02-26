@@ -131,12 +131,8 @@ public class MultiDimensionalScalingLikelihood extends AbstractModelLikelihood {
     protected void handleVariableChangedEvent(Variable variable, int index, Variable.ChangeType type) {
         // TODO Flag which cachedDistances or mdsPrecision need to be updated
         if (variable == locationsParameter) {
-            if (index == -1) {
-                mdsCore.updateLocation(-1, locationsParameter.getParameterValues());
-            } else {
-                int locationIndex = index / mdsDimension;
-                mdsCore.updateLocation(locationIndex, locationsParameter.getColumnValues(locationIndex));
-            }
+            int locationIndex = index / mdsDimension;
+            mdsCore.updateLocation(locationIndex, locationsParameter.getColumnValues(locationIndex));
         } else if (variable == mdsPrecisionParameter) {
             mdsCore.setParameters(mdsPrecisionParameter.getParameterValues());
         } else {
@@ -158,7 +154,6 @@ public class MultiDimensionalScalingLikelihood extends AbstractModelLikelihood {
     }
     @Override
     protected void acceptState() {
-        mdsCore.acceptState();
         // do nothing
     }
     public void makeDirty() {

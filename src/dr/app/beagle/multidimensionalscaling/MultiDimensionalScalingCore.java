@@ -8,5 +8,4 @@ public interface MultiDimensionalScalingCore {
     void storeState();
     void restoreState();
     void makeDirty();
-    void acceptState();
 }
