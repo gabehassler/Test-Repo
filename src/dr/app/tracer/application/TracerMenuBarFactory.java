@@ -1,8 +1,12 @@
 package dr.app.tracer.application;
+
 import jam.framework.*;
 import jam.mac.*;
+
 import dr.app.util.OSType;
+
 public class TracerMenuBarFactory extends DefaultMenuBarFactory {
+
     public TracerMenuBarFactory() {
         if (OSType.isMac()) {
             registerMenuFactory(new TracerMacFileMenuFactory());
@@ -16,5 +20,7 @@ public class TracerMenuBarFactory extends DefaultMenuBarFactory {
 	        registerMenuFactory(new AnalysisMenuFactory());
             registerMenuFactory(new DefaultHelpMenuFactory());
         }
+
     }
 }
+

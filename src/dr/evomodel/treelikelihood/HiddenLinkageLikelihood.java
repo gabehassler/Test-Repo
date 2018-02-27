@@ -1,4 +1,5 @@
 package dr.evomodel.treelikelihood;
+
 import dr.evolution.LinkedGroup;
 import dr.evolution.util.Taxon;
 import dr.evolution.util.TaxonList;
@@ -8,34 +9,60 @@ import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Model;
 import dr.inference.model.Variable;
 import dr.inference.model.Variable.ChangeType;
+
 import java.util.ArrayList;
 import java.util.Set;
+
+/**
+ * @author Aaron Darling
+ */
 public class HiddenLinkageLikelihood extends AbstractModelLikelihood
 {
+
 	TreeModel tree;
 	HiddenLinkageModel hlm;
+	
+
 	public HiddenLinkageLikelihood(HiddenLinkageModel hlm, TreeModel tree)
 	{
 		super("HiddenLinkageLikelihood");
 		this.hlm = hlm;
 		this.tree = tree;
 	}
+
+
+
 	protected void acceptState() {
 		// nothing to do
 	}
+
+
+
 	protected void handleModelChangedEvent(Model model, Object object, int index) {
 		// nothing to do
 	}
+
+
+
 	protected void handleVariableChangedEvent(Variable variable, int index,
 			ChangeType type) {
 		// nothing to do
 	}
+
+
+
 	protected void restoreState() {
 		// nothing to do
 	}
+
+
+
 	protected void storeState() {
 		// nothing to do
 	}
+
+
+
 	public double getLogLikelihood() {
 		double logL = 0;
 		// first check whether the reads are linked together
@@ -60,6 +87,7 @@ public class HiddenLinkageLikelihood extends AbstractModelLikelihood
 				}
 			}
 		}
+
 		// then check whether the topology of reference taxa is consistent with the fixed 
 		// reference tree topology
 		if(hlm.getData().getFixedReferenceTree()){
@@ -67,10 +95,17 @@ public class HiddenLinkageLikelihood extends AbstractModelLikelihood
 		}
 		return logL;
 	}
+
+
+
 	public Model getModel() {
 		return this;
 	}
+
+
+	
 	public void makeDirty() {
 		// nothing to do
 	}
+
 }

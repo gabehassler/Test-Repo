@@ -1,21 +1,30 @@
 package dr.inference.model;
+
 import java.util.List;
+
 import dr.inference.model.Bounds;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import dr.inference.model.VariableListener;
+
 public class DifferenceMatrixParameter extends MatrixParameter implements
         VariableListener{
+
     private Parameter parameter1;
     private Parameter parameter2;
     private Bounds bounds = null;
+
     public DifferenceMatrixParameter(Parameter parameter1, Parameter parameter2) {
         super(null);
+
         this.parameter1 = parameter1;
         this.parameter2 = parameter2;
+
         this.parameter1.addVariableListener(this);
         this.parameter2.addVariableListener(this);
+
     }// END: Constructor
+
     @Override
     public double getParameterValue(int dim) {
         double value=0;
@@ -26,6 +35,7 @@ public class DifferenceMatrixParameter extends MatrixParameter implements
                         - parameter2.getParameterValue(dim);                   }
             else if(parameter1.getDimension()<parameter2.getDimension()){
                 value=parameter1.getParameterValue(dim%parameter1.getDimension())-parameter2.getParameterValue(dim);
+
             }
             else
                 value=parameter1.getParameterValue(dim)-parameter2.getParameterValue(dim% parameter2.getDimension());
@@ -36,6 +46,7 @@ public class DifferenceMatrixParameter extends MatrixParameter implements
         }
         return value;
     }// END: getParameterValue
+
     public double getParameterValue(int row, int col){
         double val1;
         double val2;
@@ -53,6 +64,7 @@ public class DifferenceMatrixParameter extends MatrixParameter implements
         }
         return val1-val2;
     }
+
     public int getParameterCount(){
         int pcount1=1;
         int pcount2=1;
@@ -64,6 +76,7 @@ public class DifferenceMatrixParameter extends MatrixParameter implements
         }
         return Math.max(pcount1, pcount2);
     }
+
     @Override
     public Parameter getParameter(int index) {
         Parameter tempParam1;
@@ -82,18 +95,22 @@ public class DifferenceMatrixParameter extends MatrixParameter implements
         }
         return new DifferenceMatrixParameter(tempParam1, tempParam2);
     }
+
     @Override
     public void setParameterValue(int dim, double value) {
         throw new RuntimeException("Not implemented");
     }
+
     @Override
     public void setParameterValueQuietly(int dim, double value) {
         throw new RuntimeException("Not implemented");
     }
+
     @Override
     public void setParameterValueNotifyChangedAll(int dim, double value) {
         throw new RuntimeException("Not implemented");
     }
+
 //    @Override
 //    public String getParameterName() {
 //        if (getId() == null) {
@@ -106,41 +123,51 @@ public class DifferenceMatrixParameter extends MatrixParameter implements
 //
 //        return getId();
 //    }// END: getParameterName
+
+
     @Override
     public int getDimension() {
         return Math.max(parameter1.getDimension(), parameter2.getDimension());
     }
+
     @Override
     public void addBounds(Bounds<Double> bounds) {
         this.bounds = bounds;
     }
+
     @Override
     public Bounds<Double> getBounds() {
         return bounds;
     }
+
     @Override
     public void addDimension(int index, double value) {
         throw new RuntimeException("Not yet implemented.");
     }
+
     @Override
     public double removeDimension(int index) {
         throw new RuntimeException("Not yet implemented.");
     }
+
     @Override
     public void variableChangedEvent(Variable variable, int index,
                                      dr.inference.model.Variable.ChangeType type) {
         fireParameterChangedEvent(index, type);
     }
+
     @Override
     protected void storeValues() {
         parameter1.storeParameterValues();
         parameter2.storeParameterValues();
     }
+
     @Override
     protected void restoreValues() {
         parameter1.restoreParameterValues();
         parameter2.restoreParameterValues();
     }
+
     @Override
     public int getRowDimension() {
         boolean param1 = parameter1 instanceof MatrixParameter;
@@ -160,6 +187,7 @@ public class DifferenceMatrixParameter extends MatrixParameter implements
             return parameter1.getDimension();
         }
     }
+
     @Override
     public int getColumnDimension(){
         System.out.println("column");
@@ -183,6 +211,7 @@ public class DifferenceMatrixParameter extends MatrixParameter implements
             return 1;
         }
     }
+
 //    @Override
 //    protected void acceptValues() {
 //        parameter1.acceptParameterValues();
@@ -193,4 +222,5 @@ public class DifferenceMatrixParameter extends MatrixParameter implements
 //    protected void adoptValues(Parameter source) {
 //        throw new RuntimeException("Not implemented");
 //    }
+
 }// END: class

@@ -1,4 +1,5 @@
 package dr.inferencexml.distribution;
+
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.linalg.SingularValueDecomposition;
 import dr.inference.distribution.GeneralizedLinearModel;
@@ -9,8 +10,14 @@ import dr.inference.model.DesignMatrix;
 import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
 import dr.xml.*;
+
+/**
+ *
+ */
 public class GeneralizedLinearModelParser extends AbstractXMLObjectParser {
+
     public static final String GLM_LIKELIHOOD = "glmModel";
+
     public static final String DEPENDENT_VARIABLES = "dependentVariables";
     public static final String INDEPENDENT_VARIABLES = "independentVariables";
     public static final String BASIS_MATRIX = "basis";
@@ -24,14 +31,18 @@ public class GeneralizedLinearModelParser extends AbstractXMLObjectParser {
 //    public static final String LOG_TRANSFORM = "logDependentTransform";
     public static final String RANDOM_EFFECTS = "randomEffects";
     public static final String CHECK_IDENTIFIABILITY = "checkIdentifiability";
+
     public String getParserName() {
         return GLM_LIKELIHOOD;
     }
+
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
         XMLObject cxo = xo.getChild(DEPENDENT_VARIABLES);
         Parameter dependentParam = null;
         if (cxo != null)
             dependentParam = (Parameter) cxo.getChild(Parameter.class);
+
         String family = xo.getStringAttribute(FAMILY);
         GeneralizedLinearModel glm;
         if (family.compareTo(LOGISTIC_REGRESSION) == 0) {
@@ -44,6 +55,7 @@ public class GeneralizedLinearModelParser extends AbstractXMLObjectParser {
             glm = new LogLinearModel(dependentParam);
         } else
             throw new XMLParseException("Family '" + family + "' is not currently implemented");
+
         if (glm.requiresScale()) {
             cxo = xo.getChild(SCALE_VARIABLES);
             Parameter scaleParameter = null;
@@ -70,21 +82,27 @@ public class GeneralizedLinearModelParser extends AbstractXMLObjectParser {
                     scaleDesign.setParameterValue(i, value - 1);
                 }
             }
+
             glm.addScaleParameter(scaleParameter, scaleDesign);
         }
+
         addIndependentParameters(xo, glm, dependentParam);
         addRandomEffects(xo, glm, dependentParam);
+
         boolean checkIdentifiability = xo.getAttribute(CHECK_IDENTIFIABILITY, true);
         if (checkIdentifiability) {
             if (!glm.getAllIndependentVariablesIdentifiable()) {
                 throw new XMLParseException("All design matrix predictors are not identifiable in "+  xo.getId());
             }
         }
+
         return glm;
     }
+
     public void addRandomEffects(XMLObject xo, GeneralizedLinearModel glm,
                                  Parameter dependentParam) throws XMLParseException {
         int totalCount = xo.getChildCount();
+
         for (int i = 0; i < totalCount; i++) {
             if (xo.getChildName(i).compareTo(RANDOM_EFFECTS) == 0) {
                 XMLObject cxo = (XMLObject) xo.getChild(i);
@@ -94,9 +112,11 @@ public class GeneralizedLinearModelParser extends AbstractXMLObjectParser {
             }
         }
     }
+
     public void addIndependentParameters(XMLObject xo, GeneralizedLinearModel glm,
                                          Parameter dependentParam) throws XMLParseException {
         int totalCount = xo.getChildCount();
+
         for (int i = 0; i < totalCount; i++) {
             if (xo.getChildName(i).compareTo(INDEPENDENT_VARIABLES) == 0) {
                 XMLObject cxo = (XMLObject) xo.getChild(i);
@@ -115,8 +135,10 @@ public class GeneralizedLinearModelParser extends AbstractXMLObjectParser {
             }
         }
     }
+
     private void checkFullRank(DesignMatrix designMatrix) throws XMLParseException {
         int fullRank = designMatrix.getColumnDimension();
+
         SingularValueDecomposition svd = new SingularValueDecomposition(
                 new DenseDoubleMatrix2D(designMatrix.getParameterAsMatrix()));
         int realRank = svd.rank();
@@ -127,6 +149,7 @@ public class GeneralizedLinearModelParser extends AbstractXMLObjectParser {
             );
         }
     }
+
     private void checkRandomEffectsDimensions(Parameter randomEffect, Parameter dependentParam)
             throws XMLParseException {
         if (dependentParam != null) {
@@ -137,6 +160,7 @@ public class GeneralizedLinearModelParser extends AbstractXMLObjectParser {
             }
         }
     }
+
     private void checkDimensions(Parameter independentParam, Parameter dependentParam, DesignMatrix designMatrix)
             throws XMLParseException {
         if (dependentParam != null) {
@@ -153,12 +177,15 @@ public class GeneralizedLinearModelParser extends AbstractXMLObjectParser {
             }
         }
     }
+
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
+
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
+
     private final XMLSyntaxRule[] rules = {
             AttributeRule.newStringRule(FAMILY),
             AttributeRule.newBooleanRule(CHECK_IDENTIFIABILITY, true),
@@ -178,9 +205,11 @@ public class GeneralizedLinearModelParser extends AbstractXMLObjectParser {
 //				new ElementRule(BASIS_MATRIX,
 //						new XMLSyntaxRule[]{new ElementRule(DesignMatrix.class)})
     };
+
     public String getParserDescription() {
         return "Calculates the generalized linear model likelihood of the dependent parameters given one or more blocks of independent parameters and their design matrix.";
     }
+
     public Class getReturnType() {
         return Likelihood.class;
     }

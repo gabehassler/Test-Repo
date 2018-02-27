@@ -1,10 +1,40 @@
+/*
+ * LatentFactorModelPrecisionGibbsOperator.java
+ *
+ * Copyright (c) 2002-2014 Alexei Drummond, Andrew Rambaut and Marc Suchard
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.inference.operators;
+
 import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.model.DiagonalMatrix;
 import dr.inference.model.LatentFactorModel;
 import dr.inference.model.MatrixParameter;
 import dr.math.MathUtils;
 import dr.math.distributions.GammaDistribution;
+
+/**
+ * Created by max on 6/12/14.
+ */
 public class LatentFactorModelPrecisionGibbsOperator extends SimpleMCMCOperator implements GibbsOperator {
     //    private double[] FacXLoad;
 //    private double[] residual;
@@ -13,18 +43,22 @@ public class LatentFactorModelPrecisionGibbsOperator extends SimpleMCMCOperator 
     private boolean randomScan;
     private double shape;
     double pathWeight=1.0;
+
     public LatentFactorModelPrecisionGibbsOperator(LatentFactorModel LFM, DistributionLikelihood prior, double weight, boolean randomScan) {
         setWeight(weight);
         this.LFM = LFM;
         this.prior = (GammaDistribution) prior.getDistribution();
         this.randomScan = randomScan;
+
 //        FacXLoad=new double[LFM.getFactors().getColumnDimension()];
 //        residual=new double[LFM.getFactors().getColumnDimension()];
         setShape();
     }
+
     private void setShape(){
         shape=this.prior.getShape()+LFM.getFactors().getColumnDimension()*.5 *pathWeight;
     }
+
     private void setPrecision(int i) {
         MatrixParameter factors = LFM.getFactors();
         MatrixParameter loadings = LFM.getLoadings();
@@ -51,24 +85,30 @@ public class LatentFactorModelPrecisionGibbsOperator extends SimpleMCMCOperator 
         double nextPrecision = GammaDistribution.nextGamma(shape, scale);
         precision.setParameterValueQuietly(i, nextPrecision);
     }
+
     public void setPathParameter(double beta)
     {
         pathWeight=beta;
     }
+
     @Override
     public int getStepCount() {
         return 0;
     }
+
     @Override
     public String getPerformanceSuggestion() {
         return "Only works for diagonal column precision matrices for a LatentFactorModel with a gamma prior";
     }
+
     @Override
     public String getOperatorName() {
         return "Latent Factor Model Precision Gibbs Operator";
     }
+
     @Override
     public double doOperation() throws OperatorFailedException {
+
         if (!randomScan) for (int i = 0; i < LFM.getColumnPrecision().getColumnDimension(); i++) {
             if (LFM.getContinuous().getParameterValue(i) != 0)
                 setPrecision(i);
@@ -80,6 +120,8 @@ public class LatentFactorModelPrecisionGibbsOperator extends SimpleMCMCOperator 
             setPrecision(i);
         }
         LFM.getColumnPrecision().getParameter(0).fireParameterChangedEvent();
+
+
         return 0;
     }
 }

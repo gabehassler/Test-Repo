@@ -1,9 +1,11 @@
 package dr.evomodel.tree;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
 import dr.evolution.MetagenomeData;
 import dr.evolution.alignment.Alignment;
 import dr.evolution.alignment.PatternList;
@@ -20,8 +22,18 @@ import dr.inference.model.Model;
 import dr.inference.model.Variable;
 import dr.inference.model.Variable.ChangeType;
 import dr.math.MathUtils;
+
+/**
+ * A model of linkage among sets of metagenome sequence reads
+ * Reads are assumed to derive from a fixed number of organisms, where
+ * the identity of the organisms is unknown, and the assignment of reads
+ * to those organisms is also unknown.
+ * @author Aaron Darling (koadman)
+ *
+ */
 public class HiddenLinkageModel extends TipStatesModel implements PatternList
 {
+
 	int linkageGroupCount = 0;
 	ArrayList< HashSet<Taxon> > groups = null;
 	MetagenomeData data = null;
@@ -29,13 +41,16 @@ public class HiddenLinkageModel extends TipStatesModel implements PatternList
 	double[][] tipPartials;
 	double[][] storedTipPartials;
 	boolean[] dirtyTipPartials;
+	
 	LikelihoodCore core;
 	double blen = 0.001;
 	SubstitutionModel substitutionModel;
+	
 	public HiddenLinkageModel(int linkageGroupCount, MetagenomeData data) {
 		super("HiddenLinkageModel", data.getReferenceTaxa(), data.getReadsTaxa());
 		this.linkageGroupCount = linkageGroupCount;
 		this.data = data;
+
 		// initial state: randomly assign reads to groups
 		groups = new ArrayList< HashSet<Taxon> >(linkageGroupCount);
 		for(int i=0; i<linkageGroupCount; i++)
@@ -45,22 +60,32 @@ public class HiddenLinkageModel extends TipStatesModel implements PatternList
 			int g = MathUtils.nextInt(linkageGroupCount);
 			groups.get(g).add(reads.getTaxon(i));
 		}
+		
 		// create an alignment taxa list with reference + hidden groups
 		alignmentTaxa = new ArrayList<Taxon>(data.getReferenceTaxa().asList());
 		for(int i=0; i<linkageGroupCount; i++)
 			alignmentTaxa.add(new Taxon("LinkageGroup_" + i));
+		
 		int plen = data.getAlignment().getSiteCount() * data.getAlignment().getStateCount();
 		tipPartials = new double[alignmentTaxa.size()][plen];
 		storedTipPartials = new double[alignmentTaxa.size()][plen];
 		dirtyTipPartials = new boolean[alignmentTaxa.size()];
+		
 		initCore();
 		setupMatrices();
+
 		// compute initial partials
 		for(int i=0; i<tipPartials.length; i++)
 			computeTipPartials(i);
 	}
+
 	double[] tipMatrix;
 	double[] internalMatrix;
+
+	/*
+	 * Initializes a likelihoodCore to calculate likelihoods for 
+	 * the tips
+	 */
 	private void initCore(){
 		if(data.getAlignment().getDataType() instanceof dr.evolution.datatype.Nucleotides)
 			core = new NativeNucleotideLikelihoodCore();
@@ -80,6 +105,10 @@ public class HiddenLinkageModel extends TipStatesModel implements PatternList
 		for(int i=0; i<data.getReadsTaxa().getTaxonCount(); i++)
 			core.createNodePartials(i+data.getReadsTaxa().getTaxonCount());
 	}
+
+	/*
+	 * set up transition matrices for internal and external nodes
+	 */
 	private void setupMatrices(){
 		tipMatrix=new double[data.getAlignment().getStateCount()*data.getAlignment().getStateCount()];
 		internalMatrix=new double[data.getAlignment().getStateCount()*data.getAlignment().getStateCount()];
@@ -97,17 +126,27 @@ public class HiddenLinkageModel extends TipStatesModel implements PatternList
 			tipMatrix[i*data.getAlignment().getStateCount() + i] = diag;
 			internalMatrix[i*data.getAlignment().getStateCount() + i] = internalDiag;
 		}
+
 		for(int i=0; i<data.getReadsTaxa().getTaxonCount(); i++)
 			core.setNodeMatrix(i, 0, tipMatrix);
 		for(int i=0; i<data.getReadsTaxa().getTaxonCount(); i++)
 			core.setNodeMatrix(i+data.getReadsTaxa().getTaxonCount(), 0, internalMatrix);
 	}
+
 	public int getLinkageGroupCount() {
 		return linkageGroupCount;
 	}
+
 	public MetagenomeData getData() {
 		return data;
 	}
+
+
+	/**
+	 * Returns the group ID to which a particular metagenomic read belongs
+	 * @param t
+	 * @return
+	 */
 	public int getLinkageGroupId(Taxon t)
 	{
 		int i=0;
@@ -118,6 +157,7 @@ public class HiddenLinkageModel extends TipStatesModel implements PatternList
 		}
 		return i;
 	}
+	
 	private class Move {
 		public Move(Taxon read, int fromGroup, int toGroup){
 			this.read = read;
@@ -129,20 +169,26 @@ public class HiddenLinkageModel extends TipStatesModel implements PatternList
 		int toGroup;
 	}
 	ArrayList<Move>	movesMade = new ArrayList<Move>();
+	
 	@Override
 	protected void acceptState() {
 		movesMade.clear();
 		for(int i=0; i<dirtyTipPartials.length; i++)
 			dirtyTipPartials[i]=false;
 	}
+
 	@Override
 	protected void handleModelChangedEvent(Model model, Object object, int index) {
 		// TODO Auto-generated method stub
+
 	}
+
 	protected void handleVariableChangedEvent(Variable variable, int index,
 			ChangeType type) {
 		// TODO Auto-generated method stub
+
 	}
+
 	protected void restoreState() {
 		// make all moves in reverse
 		for(int i=movesMade.size(); i>0; i--)
@@ -160,14 +206,27 @@ public class HiddenLinkageModel extends TipStatesModel implements PatternList
 			}
 		}
 	}
+
 	protected void storeState() {
 		movesMade.clear();
 		for(int i=0; i<dirtyTipPartials.length; i++)
 			dirtyTipPartials[i]=false;
 	}
+
+	/**
+	 * Get the members of the i'th linkage group
+	 * @param i
+	 * @return Members of the i'th group
+	 */
 	public Set<Taxon> getGroup(int i){
 		return groups.get(i);
 	}
+	/**
+	 * Moves a read from one linkage group to another linkage group
+	 * @param read
+	 * @param oldGroup
+	 * @param newGroup
+	 */
 	public void moveReadGroup(Taxon read, int oldGroup, int newGroup)
 	{
 		boolean found = groups.get(oldGroup).remove(read);
@@ -177,21 +236,25 @@ public class HiddenLinkageModel extends TipStatesModel implements PatternList
 		movesMade.add(new Move(read, oldGroup, newGroup));
 		computeTipPartials(data.getReferenceTaxa().getTaxonCount() + oldGroup);
 		computeTipPartials(data.getReferenceTaxa().getTaxonCount() + newGroup);
+
 //		this.fireModelChanged();
 		this.fireModelChanged(alignmentTaxa.get(alignmentTaxa.size() - groups.size() + oldGroup));
 		this.fireModelChanged(alignmentTaxa.get(alignmentTaxa.size() - groups.size() + newGroup));
 	}
+
 	private void swapTipPartials(int nodeIndex){
 		double[] tmp = storedTipPartials[nodeIndex];
 		storedTipPartials[nodeIndex] = tipPartials[nodeIndex];
 		tipPartials[nodeIndex] = tmp;
 	}
+
 	private void computeTipPartials(int nodeIndex){
 		if(!dirtyTipPartials[nodeIndex]){
 			swapTipPartials(nodeIndex);
 			dirtyTipPartials[nodeIndex]=true;
 		}
 		double[] tipPartials = this.tipPartials[nodeIndex];
+
 		// if this is one of the reference organisms, then return the resolved partials
 		// if this is a linkage group, return partials that correspond to probabilities of each nucleotide.
 		Alignment aln = data.getAlignment();
@@ -260,12 +323,14 @@ public class HiddenLinkageModel extends TipStatesModel implements PatternList
 			j += sc;
 		}
 	}
+/*	
 	private void computeTipPartials(int nodeIndex){
 		if(!dirtyTipPartials[nodeIndex]){
 			swapTipPartials(nodeIndex);
 			dirtyTipPartials[nodeIndex]=true;
 		}
 		double[] tipPartials = this.tipPartials[nodeIndex];
+
 		// if this is one of the reference organisms, then return the resolved partials
 		// if this is a linkage group, return partials that correspond to probabilities of each nucleotide.
 		Alignment aln = data.getAlignment();
@@ -290,6 +355,7 @@ public class HiddenLinkageModel extends TipStatesModel implements PatternList
 			HashSet<Taxon> group = groups.get(gI);
 			for( Taxon tax : group){
 				int sI = data.getAlignment().getTaxonIndex(tax);
+
 				int j=0;
 				for(int i=0; i<aln.getSiteCount(); i++){
 					int s = aln.getState(sI, i);
@@ -298,6 +364,7 @@ public class HiddenLinkageModel extends TipStatesModel implements PatternList
 					j += sc;
 				}
 			}
+
 			// now normalize back to probability distributions
 			int j=0;
 			int l=tipPartials.length / sc;
@@ -320,25 +387,37 @@ public class HiddenLinkageModel extends TipStatesModel implements PatternList
 			}
 		}
 	}
+*/
+	/**
+	 * NOT YET IMPLEMENTED. Creates a new read linkage group.
+	 * @return the new group id
+	 */
 	public int newGroup(){
 		throw new RuntimeException("Not implemented!");
 	}
+	/**
+	 * NOT YET IMPLEMENTED. Deletes a read linkage group.  Must be empty.
+	 */
 	public void deleteGroup(){
 		throw new RuntimeException("Not implemented!");
 	}
+
     @Override
     public Type getModelType() {
         return Type.PARTIALS;
     }
+
     @Override
     public void getTipStates(int nodeIndex, int[] tipStates) {
         throw new IllegalArgumentException("This model emits only tip partials");
     }
+
     @Override
 	public void getTipPartials(int nodeIndex, double[] tipPartials) {
 		int n = nodeIdToMyTaxaMap[tree.getNode(nodeIndex).getNumber()];
 		System.arraycopy(this.tipPartials[n], 0, tipPartials, 0, tipPartials.length);
 	}
+
 	int[] nodeIdToMyTaxaMap;
 	protected void taxaChanged() {
 		nodeIdToMyTaxaMap = new int[tree.getNodeCount()];
@@ -357,54 +436,74 @@ public class HiddenLinkageModel extends TipStatesModel implements PatternList
 			}
 		}
 	}
+
+	
+	
+	
 	//
 	// BEGIN PatternList Implementation
 	// This merely delegates to Alignment for most methods
 	//
+	
 	public DataType getDataType() {
 		return data.getAlignment().getDataType();
 	}
+
 	public int[] getPattern(int patternIndex) {
 		return data.getAlignment().getPattern(patternIndex);
 	}
+
 	public int getPatternCount() {
 		return data.getAlignment().getPatternCount();
 	}
+
 	public int getPatternLength() {
 		return data.getAlignment().getPatternLength();
 	}
+
 	public int getPatternState(int taxonIndex, int patternIndex) {
 		if(taxonIndex<data.getReferenceTaxa().getTaxonCount())
 			return data.getAlignment().getPatternState(taxonIndex, patternIndex);
+
 		return 0;
 	}
+
 	public double getPatternWeight(int patternIndex) {
 		return data.getAlignment().getPatternWeight(patternIndex);
 	}
+
 	public double[] getPatternWeights() {
 		return data.getAlignment().getPatternWeights();
 	}
+
 	public int getStateCount() {
 		return data.getAlignment().getStateCount();
 	}
+
 	public double[] getStateFrequencies() {
 		return data.getAlignment().getStateFrequencies();
 	}
+
 	public List<Taxon> asList() {
 		return alignmentTaxa;
 	}
+
 	public Taxon getTaxon(int taxonIndex) {
 		return alignmentTaxa.get(taxonIndex);
 	}
+
 	public Object getTaxonAttribute(int taxonIndex, String name) {
 		return alignmentTaxa.get(taxonIndex).getAttribute(name);
 	}
+
 	public int getTaxonCount() {
 		return alignmentTaxa.size();
 	}
+
 	public String getTaxonId(int taxonIndex) {
 		return alignmentTaxa.get(taxonIndex).getId();
 	}
+
 	public int getTaxonIndex(String id) {
 		for(int i=0; i<alignmentTaxa.size(); i++){
 			if(alignmentTaxa.get(i).getId().equals(id))
@@ -412,6 +511,7 @@ public class HiddenLinkageModel extends TipStatesModel implements PatternList
 		}
 		return -1;
 	}
+
 	public int getTaxonIndex(Taxon taxon) {
 		for(int i=0; i<alignmentTaxa.size(); i++){
 			if(alignmentTaxa.get(i).compareTo(taxon)==0)
@@ -419,6 +519,7 @@ public class HiddenLinkageModel extends TipStatesModel implements PatternList
 		}
 		return -1;
 	}
+
 	public Iterator<Taxon> iterator() {
 		return alignmentTaxa.iterator();
 	}

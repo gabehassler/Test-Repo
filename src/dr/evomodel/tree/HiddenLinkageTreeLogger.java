@@ -1,6 +1,8 @@
 package dr.evomodel.tree;
+
 import java.text.NumberFormat;
 import java.util.Set;
+
 import dr.evolution.tree.BranchRates;
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.SimpleNode;
@@ -11,10 +13,18 @@ import dr.evolution.tree.TreeTraitProvider;
 import dr.evolution.util.Taxon;
 import dr.evolution.util.TaxonList;
 import dr.inference.loggers.LogFormatter;
+
+/**
+ * @author Aaron Darling (koadman)
+ * This class logs hidden linkage trees
+ * It modifies a tree to add nodes for metagenomic reads according to a hidden linkage model
+ */
 public class HiddenLinkageTreeLogger extends TreeLogger {
+
 	HiddenLinkageModel hlm;
 	Tree originalTree;
     private LogUpon condition = null;
+	
     public HiddenLinkageTreeLogger(HiddenLinkageModel hlm, Tree tree, BranchRates branchRates,
             TreeAttributeProvider[] treeAttributeProviders,
             TreeTraitProvider[] treeTraitProviders,
@@ -22,10 +32,12 @@ public class HiddenLinkageTreeLogger extends TreeLogger {
             boolean sortTranslationTable, boolean mapNames, NumberFormat format,
             TreeLogger.LogUpon condition) {
     	super(processTree(tree, hlm), branchRates, treeAttributeProviders, treeTraitProviders,formatter, logEvery, nexusFormat, sortTranslationTable, mapNames, format, condition);
+
     	this.originalTree = tree;
     	this.condition = condition;
     	this.hlm = hlm;
     }
+
     public void log(long state) {
         final boolean doIt = condition != null ? condition.logNow(state) :
             (logEvery < 0 || ((state % logEvery) == 0));
@@ -34,10 +46,15 @@ public class HiddenLinkageTreeLogger extends TreeLogger {
         setTree(processTree(originalTree, hlm));
     	super.log(state);
     }
+    /**
+     * Create a tree of the same topology as the input tree, but with 
+     * the linkage groups replaced by their constituent reads
+     */
     protected static SimpleTree processTree(Tree tree, HiddenLinkageModel hlm)
     {
     	TaxonList reads = hlm.getData().getReadsTaxa();
     	TaxonList reference = hlm.getData().getReferenceTaxa();
+    	
     	// allocate space
     	int nodeCount = tree.getTaxonCount() + reads.getTaxonCount();
     	nodeCount = 2*nodeCount - 1;
@@ -47,6 +64,7 @@ public class HiddenLinkageTreeLogger extends TreeLogger {
     		nodes[i].setNumber(i);
     	}
     	SimpleNode root = null;
+
     	// copy the tree structure
     	for(int i=0; i<tree.getNodeCount(); i++){
     		NodeRef n = tree.getNode(i);
@@ -60,6 +78,7 @@ public class HiddenLinkageTreeLogger extends TreeLogger {
     		nodes[n.getNumber()].setTaxon(tree.getNodeTaxon(n));
     	}
     	root = nodes[tree.getRoot().getNumber()];
+    	
     	// now replace linkage groups with their constituent reads
     	// first free up anything in the range of read leaf nodes
     	int nextFree=tree.getNodeCount();
@@ -75,6 +94,7 @@ public class HiddenLinkageTreeLogger extends TreeLogger {
     		readI++;
     		nextFree++;
     	}
+
     	// now find all linkage group nodes.
     	// if a linkage group has one read, then swap in the read's node
     	// if a linkage group has no reads, delete it and the parent.
@@ -87,6 +107,7 @@ public class HiddenLinkageTreeLogger extends TreeLogger {
     		if(reads.getTaxonIndex(n.getTaxon())>=0 || 
     			reference.getTaxonIndex(n.getTaxon())>= 0)
     			continue;	// not a linkage group
+
     		int gid = hlm.getTaxonIndex(n.getTaxon()) - reference.getTaxonCount();
     		if(gid<0){
     			System.err.println("big trouble, little china");
@@ -138,9 +159,11 @@ public class HiddenLinkageTreeLogger extends TreeLogger {
     			nextFree++;
     		}
     	}
+    	
     	SimpleTree st = new SimpleTree(root);
     	return st;
     }
+    
     private static int getTaxonNode(Taxon t, SimpleNode[] nodes){
 		int rI=0;
 		for(; rI<nodes.length; rI++){

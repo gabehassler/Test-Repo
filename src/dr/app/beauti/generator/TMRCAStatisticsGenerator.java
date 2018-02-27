@@ -1,4 +1,5 @@
 package dr.app.beauti.generator;
+
 import dr.app.beauti.components.ComponentFactory;
 import dr.app.beauti.options.BeautiOptions;
 import dr.app.beauti.options.PartitionTreeModel;
@@ -12,14 +13,32 @@ import dr.evoxml.TaxaParser;
 import dr.evoxml.TaxonParser;
 import dr.util.Attribute;
 import dr.xml.XMLParser;
+
 import java.util.List;
 import java.util.Map;
+
+
+/**
+ * @author Alexei Drummond
+ * @author Andrew Rambaut
+ * @author Walter Xie
+ */
 public class TMRCAStatisticsGenerator extends Generator {
+
+
     public TMRCAStatisticsGenerator(BeautiOptions options, ComponentFactory[] components) {
         super(options, components);
     }
+
+    /**
+     * Generate additional taxon sets
+     *
+     * @param writer    the writer
+     * @param taxonSets a list of taxa to write
+     */
     public void writeTaxonSets(XMLWriter writer, List<Taxa> taxonSets) {
         writer.writeText("");
+
         for (Taxa taxa : taxonSets) {
             writer.writeOpenTag(
                     TaxaParser.TAXA,
@@ -27,18 +46,27 @@ public class TMRCAStatisticsGenerator extends Generator {
                             new Attribute.Default<String>(XMLParser.ID, taxa.getId())
                     }
             );
+
             for (int j = 0; j < taxa.getTaxonCount(); j++) {
                 writer.writeIDref(TaxonParser.TAXON, taxa.getTaxon(j).getId());
             }
             writer.writeCloseTag(TaxaParser.TAXA);
         }
     }
+
+    /**
+     * Generate tmrca statistics
+     *
+     * @param writer       the writer
+     */
     public void writeTMRCAStatistics(XMLWriter writer) {
         List<Taxa> taxonSets;
         Map<Taxa, Boolean> taxonSetsMono;
+
         if (options.useStarBEAST) {
             taxonSets = options.speciesSets;
             taxonSetsMono = options.speciesSetsMono;
+
             writer.writeComment("Species Sets");
             writer.writeText("");
             for (Taxa taxa : taxonSets) {
@@ -53,6 +81,7 @@ public class TMRCAStatisticsGenerator extends Generator {
                 writer.writeCloseTag(TMRCAStatisticParser.MRCA);
                 writer.writeIDref(SpeciesTreeModelParser.SPECIES_TREE, SP_TREE);
                 writer.writeCloseTag(TMRCAStatisticParser.TMRCA_STATISTIC);
+
                 if (taxonSetsMono.get(taxa)) {
 //                    && treeModel.getPartitionTreePrior().getNodeHeightPrior() != TreePriorType.YULE
 //                    && options.getKeysFromValue(options.taxonSetsTreeModel, treeModel).size() > 1) {
@@ -68,9 +97,11 @@ public class TMRCAStatisticsGenerator extends Generator {
                     writer.writeCloseTag(MonophylyStatisticParser.MONOPHYLY_STATISTIC);
                 }
             }
+
         } else {
             taxonSets = options.taxonSets;
             taxonSetsMono = options.taxonSetsMono;
+
             writer.writeComment("Taxon Sets");
             writer.writeText("");
             for (Taxa taxa : taxonSets) {
@@ -86,6 +117,7 @@ public class TMRCAStatisticsGenerator extends Generator {
                 writer.writeCloseTag(TMRCAStatisticParser.MRCA);
                 writer.writeIDref(TreeModel.TREE_MODEL, treeModel.getPrefix() + TreeModel.TREE_MODEL);
                 writer.writeCloseTag(TMRCAStatisticParser.TMRCA_STATISTIC);
+
                 if (taxonSetsMono.get(taxa)) {
 //                    && treeModel.getPartitionTreePrior().getNodeHeightPrior() != TreePriorType.YULE
 //                    && options.getKeysFromValue(options.taxonSetsTreeModel, treeModel).size() > 1) {
@@ -103,4 +135,6 @@ public class TMRCAStatisticsGenerator extends Generator {
             }
         }
     }
+
+
 }

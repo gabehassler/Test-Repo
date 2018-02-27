@@ -1,23 +1,34 @@
 package dr.inferencexml.model;
+
 import dr.inference.model.Statistic;
 import dr.inference.model.TestStatistic;
 import dr.util.Attribute;
 import dr.xml.*;
+
+/**
+ */
 public class TestStatisticParser extends AbstractXMLObjectParser {
+
     public static String TEST_STATISTIC = "test";
+
     private static final String SEQUALS = "equals";
     private static final String SGREATER_THAN = "greaterThan";
     private static final String SLESS_THAN = "lessThan";
     private static final String SINSIDE = "inside";
     private static final String SOUTSIDE = "outside";
+
     public String getParserName() {
         return TEST_STATISTIC;
     }
+
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
         String name = xo.getAttribute(Statistic.NAME, xo.hasId() ? xo.getId() : "");
         Attribute attr = (Attribute) xo.getChild(Attribute.class);
         double testValue1;
+
         TestStatistic statistic;
+
         if (xo.hasChildNamed(SEQUALS)) {
             Attribute attr2 = (Attribute) xo.getElementFirstChild(SEQUALS);
             statistic = new TestStatistic(name, attr, attr2, TestStatistic.EQUALS);
@@ -47,21 +58,27 @@ public class TestStatisticParser extends AbstractXMLObjectParser {
                 throw new XMLParseException("outside attribute of test element requires two values");
             statistic = new TestStatistic(name, attr, values[0], values[1], TestStatistic.OUTSIDE);
         } else throw new XMLParseException();
+
         return statistic;
     }
+
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
+
     public String getParserDescription() {
         return "This element represents a boolean statistic that returns 1 " +
                         "if the conditions are met and 0 otherwise.";
     }
+
     public Class getReturnType() {
         return TestStatistic.class;
     }
+
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
+
     private final XMLSyntaxRule[] rules = {
             new StringAttributeRule("name", "A name for this statistic, for logging purposes", true),
             new ElementRule(Attribute.class),

@@ -1,32 +1,59 @@
 package dr.math;
+
 import cern.jet.stat.Gamma;
+
+/**
+ * @author Marc Suchard
+ *         <p/>
+ *         Evaluates numerical approximations to the Mittag-Leffler function E_{\alpha}(-x^{\alpha}).
+ *         This function forms a basis for many solutions to fractional differential equations (i.e., Levy flights)
+ *         <p/>
+ *         Diethelm K, Ford NJ, Freed AD, Luchko Y (2005) Algorithms for the fractional calculus: a selection
+ *         of numerical methods. Comput. Methods Appl. Mech. Engrg. 194, 742-773.
+ *         <p/>
+ *         In my hands, the approximation from DKKL is poor for \alpha < 0.1 in the truncated series span of x
+ *
+ */
 public class MittagLefflerFunction {
+
     private static final double EPS = 10E-15;
     private static final boolean DEBUG = false;
+
     public MittagLefflerFunction(double alpha) {
         this.alpha = alpha;
         this.beta = 1;
     }
+
     public MittagLefflerFunction(double alpha, double beta) {
         this.alpha = alpha;
         this.beta = beta;
     }
+
     public static void main(String arg[]) {
+
         System.out.println("Comparing power-series expansion to Pade approximation of");
         System.out.println("E_{\\alpha}(-x^{\\alpha})");
+
         int lenAlpha = 20;
         int lenX = 1000;
+
         double startAlpha = 0.05;
         double endAlpha = 0.999;
+
         double startX = 0.001;
         double endX = 20;
+
         double incAlpha = (endAlpha - startAlpha) / (lenAlpha);
         double incX = (endX - startX) / (lenX);
+
         double[][] padeResults = new double[lenAlpha][lenX];
         double[][] powsResults = new double[lenAlpha][lenX];
+
         long start, end;
         double alpha;
         double x;
+
+
         start = System.nanoTime();
         alpha = startAlpha;
         for(int i=0; i<lenAlpha; i++) {
@@ -39,18 +66,21 @@ public class MittagLefflerFunction {
         }
         end = System.nanoTime();
         System.out.println("Pade run: "+(end-start));
+
         start = System.nanoTime();
         alpha = startAlpha;       
         for(int i=0; i<lenAlpha; i++) {
             x = startX;
             for(int j=0; j<lenX; j++) {
                 powsResults[i][j] = evaluatePowerSeries(x,alpha);
+
                 x += incX;
             }
             alpha += incAlpha;
         }
         end = System.nanoTime();
         System.out.println("PowS run: "+(end-start));
+
         // Report MSE by alpha
         double MSE = 0;
         for(int i=0; i<lenAlpha; i++) {
@@ -60,20 +90,27 @@ public class MittagLefflerFunction {
                 if (Math.abs(delta) > 1E-1) {
                     System.err.println("Big difference at ("+i+","+j+") = "+delta);
                 }
+
             }
         }
         MSE /= (lenAlpha*lenX);
+
         System.out.println("MSE = "+MSE);
+
     }
+
     public double evaluate(double x) {
         return evaluatePowerSeries(x, alpha, beta);
     }
+
     public static double evaluatePowerSeries(double x, double alpha, double beta) {
         return evaluatePowerSeries(x, alpha, beta, EPS);
     }
+
     public static double evaluatePowerSeries(double x, double alpha) {
         return evaluatePowerSeries(x,alpha,1.0,EPS);
     }
+
     public static double evaluatePowerSeries(double x, double alpha, double beta, double eps) {
         final double z = -Math.pow(x,alpha);
         double E = 0;
@@ -91,36 +128,48 @@ public class MittagLefflerFunction {
         }
         return E;
     }
+
     public static double evaluatePade(double x, double alpha) {
         return evaluatePade(x, 0, alpha);
     }
+
     public static double evaluatePade(double x, double y, double alpha) {
+
         if (alpha < 0.01 || alpha > 1) {
             System.err.println("alpha = "+alpha);
             throw new RuntimeException("Mittag-Leffler function only implemented for 0.01 <= alpha <= 1");
         }
+
         if (y != 0) {
             throw new RuntimeException("Mittag-Leffler function only implemented for real arguments");
         }
+
         double E;
+
         if (alpha == 1) { // Returns standard exponential function
             return Math.exp(-Math.pow(x, alpha));
         }
+
         if (x < 0) {
+
             throw new RuntimeException("Mittag-Leffler function only defined for positive quantities");
+
         } else if (x <= 0.1) {
             E = 0;
             final double z = -Math.pow(x, alpha);
             for (int k = 0; k <= 4; k++) {
                 E += Math.pow(z, k) / gamma(1 + alpha * k);
             }
+
         } else if (x < 15) {
+
             // Do a linear interpolation between grid pts.
             // Pade approximation grid pts { 0.01, 0.02, ..., 0.99 }
             final double rescaledAlpha = alpha * 100.0;
             final int end = (int) rescaledAlpha;
             final int start = end - 1;
             double delta = rescaledAlpha - end;
+
             E = padeApproximation(x, start);
             if (delta > 0) {
                 E *= (1 - delta);
@@ -130,16 +179,21 @@ public class MittagLefflerFunction {
                     E += Math.exp(x) * delta;
                 }
             }
+
         } else {
+
             E = 0;
             final double z = -Math.pow(x, -alpha);
             for (int k = 1; k <= 4; k++) {
                 E -= Math.pow(z, k) / gamma(1 - alpha * k);
             }
         }
+
         return E;
     }
+
     private static double gamma(double z) {
+
         // To extend the gamma function to negative (non-integer) numbers, apply the relationship
         // \Gamma(z) = \frac{ \Gamma(z+n) }{ z(z+1)\cdots(z+n-1),
         // by choosing n such that z+n is positive
@@ -153,9 +207,12 @@ public class MittagLefflerFunction {
         }
         return Gamma.gamma(z+n) / factor;
     }
+
+
     private static double padeApproximation(double x, int i) {
         return (a0[i] + a1[i] * x + a2[i] * x * x) / (1.0 + b1[i] * x + b2[i] * x * x + b3[i] * x * x * x);
     }
+
     private static double[] a0 = {
             -4.24129e+02, -2.91078e+03, -1.59594e+03, -4.01668e+03, -4.80619e+03, -3.58700e+03, -4.31271e+03, -1.04813e+04, -1.13182e+04,
             -1.00534e+04, -7.71890e+03, -2.09949e+03, -2.01966e+04, -1.44185e+04, -3.58699e+03, -3.67384e+04, -8.34348e+03, -6.65920e+03,
@@ -169,6 +226,7 @@ public class MittagLefflerFunction {
             -6.75467e+03, -7.02848e+02, -6.09980e+03, -1.03053e+04, -7.74771e+03, -8.38904e+03, -4.47750e+03, -3.90787e+03, -7.24688e+03,
             -1.52262e+04, -1.50108e+04, -1.06495e+04, -1.53906e+04, -6.00332e+03, -4.45797e+04, -3.55171e+04, -1.45397e+04, -1.05996e+04
     };
+
     private static double[] a1 = {
             -6.95856e+05, -2.31705e+06, -8.83786e+05, -1.51329e+06, -1.45550e+06, -9.53746e+05, -9.58824e+05, -2.20562e+06, -2.04162e+06,
             -1.65546e+06, -1.16952e+06, -3.31485e+05, -2.64628e+06, -1.77380e+06, -4.14163e+05, -3.87982e+06, -8.77610e+05, -6.61019e+05,
@@ -182,6 +240,7 @@ public class MittagLefflerFunction {
             -6.88012e+05, -6.90578e+04, -5.83751e+05, -9.15547e+05, -6.67011e+05, -6.93431e+05, -3.59964e+05, -2.96304e+05, -5.09096e+05,
             -1.00158e+06, -9.42028e+05, -6.26399e+05, -8.47297e+05, -3.11566e+05, -2.14492e+06, -1.59674e+06, -6.10793e+05, -4.16113e+05
     };
+
     private static double[] a2 = {
             -3.91944e+05, -1.21393e+06, -4.85177e+05, -6.78102e+05, -6.43881e+05, -4.52754e+05, -4.24475e+05, -1.09649e+06, -9.31135e+05,
             -7.53470e+05, -5.30686e+05, -1.78194e+05, -1.18361e+06, -7.87251e+05, -1.80624e+05, -1.57708e+06, -3.81391e+05, -2.79508e+05,
@@ -195,6 +254,7 @@ public class MittagLefflerFunction {
             -2.75764e+05, -2.40789e+04, -1.76849e+05, -2.47199e+05, -1.56824e+05, -1.41730e+05, -6.29983e+04, -4.46099e+04, -6.54940e+04,
             -1.06340e+05, -7.92810e+04, -3.98859e+04, -3.71308e+04, +7.56057e+03, -1.19855e+04, +2.06708e+04, +1.90402e+04, +2.04340e+04
     };
+
     private static double[] b1 = {
             -1.38637e+06, -4.60100e+06, -1.74711e+06, -2.98958e+06, -2.86638e+06, -1.86815e+06, -1.87447e+06, -4.27837e+06, -3.95568e+06,
             -3.19371e+06, -2.24658e+06, -6.28014e+05, -5.03944e+06, -3.36281e+06, -7.82040e+05, -7.32069e+06, -1.63991e+06, -1.23090e+06,
@@ -208,6 +268,7 @@ public class MittagLefflerFunction {
             -8.19312e+05, -8.24283e+04, -6.97471e+05, -1.10278e+06, -8.05409e+05, -8.40712e+05, -4.37447e+05, -3.62820e+05, -6.30388e+05,
             -1.25254e+06, -1.18669e+06, -7.97901e+05, -1.09242e+06, -4.06277e+05, -2.84119e+06, -2.14673e+06, -8.34188e+05, -5.77797e+05
     };
+
     private static double[] b2 = {
             -7.95778e+05, -2.50385e+06, -1.01562e+06, -1.44743e+06, -1.39751e+06, -9.96694e+05, -9.52144e+05, -2.48747e+06, -2.15524e+06,
             -1.77305e+06, -1.26954e+06, -4.28531e+05, -2.92906e+06, -1.98184e+06, -4.63020e+05, -4.14017e+06, -1.01120e+06, -7.55801e+05,
@@ -221,6 +282,7 @@ public class MittagLefflerFunction {
             -9.08437e+05, -8.47142e+04, -6.67838e+05, -9.63517e+05, -6.51177e+05, -6.24128e+05, -2.99094e+05, -2.22076e+05, -3.35377e+05,
             -5.74996e+05, -4.67003e+05, -2.55226e+05, -2.68144e+05, -7.10353e+04, -2.70455e+05, -4.23690e+04, +4.64083e+04, +7.55603e+04
     };
+
     private static double[] b3 = {
             -2.07400e+02, -1.27923e+03, -8.32687e+02, -1.38260e+03, -1.71118e+03, -1.60873e+03, -1.75012e+03, -5.94850e+03, -5.60193e+03,
             -5.27749e+03, -4.29168e+03, -1.83967e+03, -1.23451e+04, -9.23408e+03, -2.35432e+03, -2.18683e+04, -6.19007e+03, -4.95376e+03,
@@ -234,6 +296,8 @@ public class MittagLefflerFunction {
             -8.00006e+05, -7.79293e+04, -6.42815e+05, -1.01397e+06, -7.33497e+05, -7.63282e+05, -3.96021e+05, -3.31368e+05, -5.84487e+05,
             -1.17309e+06, -1.12366e+06, -7.66267e+05, -1.06481e+06, -4.01715e+05, -2.85641e+06, -2.19239e+06, -8.65369e+05, -6.08788e+05
     };
+
     private double alpha;
     private double beta;
+
 }

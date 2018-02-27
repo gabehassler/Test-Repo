@@ -1,66 +1,141 @@
 package dr.app.tools;
+
 import dr.app.beast.BeastVersion;
 import dr.app.util.Arguments;
 import dr.app.util.Utils;
 import dr.inference.trace.TraceException;
 import dr.util.Version;
+
 import java.io.*;
 import java.util.Hashtable;
+
+/*
+ * MakeAncestralSequenceAnnotatedTree.java
+ *
+ * Copyright (C) 2002-2011 Alexei Drummond, Andrew Rambaut and Marc A. Suchard
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ *
+ *
+ *
+ *
+ */
+
+
+
 import dr.app.beast.BeastVersion;
 import dr.app.util.Arguments;
 import dr.app.util.Utils;
 import dr.inference.trace.TraceException;
 import dr.util.Version;
+
 import java.io.*;
 import java.util.*;
+
+/**
+ * MakeAncestralSequenceAnnotatedTree - Converts BAli-Phy *.out, *.fastas, *.trees files into
+ * NEXUS format readable by BEAST and AncestralSequenceAnnotator
+ * Based on Marc A. Suchard's make-nexus-file script
+ * Reimplemented by Wai Lok Sibon Li in BEAST for compatibility with BAli-Phy v2.1.0 and above
+ *
+ *
+ * @author Wai Lok Sibon Li
+ */
+
 public class MakeAncestralSequenceAnnotatedTree {
+
     private final static Version version = new BeastVersion();
+
+
     public MakeAncestralSequenceAnnotatedTree(int thin, int skip, String outInputFileName, String fastasInputFileName,
                                               String treesInputfileName, String outputFileName) throws IOException, TraceException {
+
         File outInputFile = new File(outInputFileName);
+
         if (outInputFile.isFile()) {
             System.out.println("Analysing *.out file: " + outInputFileName);
         } else {
             System.err.println(outInputFileName + " does not exist!");
             System.exit(0);
         }
+
         File fastasInputFile = new File(fastasInputFileName);
+
         if (fastasInputFile.isFile()) {
             System.out.println("Analysing *.fastas file: " + fastasInputFileName);
         } else {
             System.err.println(fastasInputFileName + " does not exist!");
             System.exit(0);
         }
+
         File treesInputfile = new File(treesInputfileName);
+
         if (treesInputfile.isFile()) {
             System.out.println("Analysing *.trees file: " + treesInputfileName);
         } else {
             System.err.println(treesInputfileName + " does not exist!");
             System.exit(0);
         }
+
+
         if (outputFileName != null) {
             FileOutputStream outputStream = new FileOutputStream(outputFileName);
             System.setOut(new PrintStream(outputStream));
         }
+
         analyze(outInputFile, fastasInputFile, treesInputfile, skip, thin);
     }
+
+    /**
+     *
+     * Analyses the output files
+     *
+     */
     private void analyze(File outInputFile, File fastasInputFile, File treesInputfileName, int skip, int thin) throws TraceException {
+
         try {
             BufferedReader outFileReader = new BufferedReader(new FileReader(outInputFile));
             BufferedReader fastasFileReader = new BufferedReader(new FileReader(fastasInputFile));
             BufferedReader treesFileReader = new BufferedReader(new FileReader(treesInputfileName));
             //BufferedReader br = new BufferedReader(fileReader);
+
             String line;
+
             int count = 0;
             int printedCount = 0;
             String substModel = null;
+
             ArrayList<String> trees = new ArrayList<String>();
             Hashtable<String, Boolean> translateHash = new Hashtable<String, Boolean>();
             Hashtable<String, Boolean> taxaHash = new Hashtable<String, Boolean>();
+
+
+
+
             //int discreteVariableIndex = -1;
             //Hashtable<String, Integer> hash = new Hashtable<String, Integer>();
             line = outFileReader.readLine();
             while(line != null) {
+
+
+
                 if(line.matches("subst model\\d* = .*?")) {
                     substModel = line.replaceFirst("subst model\\d* = ", "").replaceFirst("\\(.*\\/(.*)\\.dat\\)/\\(","").replaceFirst("\\.dat\\)", "").replaceAll(" \\+ ", "+");
                     line = outFileReader.readLine();
@@ -72,6 +147,7 @@ public class MakeAncestralSequenceAnnotatedTree {
                         double likelihood = 0;
                         String model = null;
                         search: while((line=outFileReader.readLine()) != null) {
+
                             if(line.matches("iterations = \\d+")) {
                                 break search;
                             }
@@ -83,9 +159,16 @@ public class MakeAncestralSequenceAnnotatedTree {
                                 model = line.replaceAll(" = ", "=").replaceAll("::", "_").replaceAll("\\*", "")
                                         .replaceAll("^ ", "").replaceAll("\\s+", ",");
                             }
+
                         }
+
+
+
                         String tree = treesFileReader.readLine();
+
                         // parse the sequence here
+
+
                         String line2;
                         int previousLineLength=1;
                         search: while((line2=fastasFileReader.readLine()) != null) {
@@ -100,6 +183,7 @@ public class MakeAncestralSequenceAnnotatedTree {
                                 break search;
                             }
                             else if(line2.matches(">.+")) {
+
                                 String sequence = fastasFileReader.readLine();
                                 String sequenceName = line2.replaceFirst(">","").replaceFirst("\\s+.+","");
                                 if(tree.matches(".*\\(\\s*"+sequenceName+":.+")) {
@@ -119,34 +203,49 @@ public class MakeAncestralSequenceAnnotatedTree {
                                 else {
                                     throw new RuntimeException("Sequence name " + sequenceName + " does not exist in tree " + tree);
                                 }
+
                                 translateHash.put(sequenceName, false);
                             }
                             previousLineLength = line2.length();
                         }
+
+
+
                         if((count % thin)==0 && count >= skip) {
                             trees.add("tree STATE_"+iterations+" [&lnL="+likelihood+
                                     ",subst="+substModel+"," + model +"] = [&U] "+ tree);
                             printedCount++;
                         }
                         count++;
+
                     }
                     else {
                         line = outFileReader.readLine();
                     }
+
                 }
                 else {
                     line = outFileReader.readLine();
                 }
+
             }
             outFileReader.close();
+
+
             report(trees, translateHash.keySet().toArray(new String[translateHash.size()]), taxaHash.keySet().toArray(new String[taxaHash.size()]));
         } catch (IOException e) {
             System.err.println("Error Parsing Input log: " + e.getMessage());
         }
+
     }
+
+    /*
+     * Prints the output
+     */
     private void report(ArrayList<String> trees, String[] translateList, String[] taxaList) {
         Arrays.sort(taxaList);
         Arrays.sort(translateList);
+
         System.out.println("#NEXUS\n\nBegin taxa;");
         System.out.println("\tDimensions ntaxa=" + taxaList.length + ";\n\tTaxlabels");
         for(String taxaName : taxaList) {
@@ -173,7 +272,10 @@ public class MakeAncestralSequenceAnnotatedTree {
             System.out.println(tree);
         }
         System.out.println("End;");
+
     }
+
+
     public static void printTitle() {
         System.out.println();
         centreLine("MakeAncestralSequenceAnnotatedTree " + version.getVersionString() + ", " + version.getDateString(), 60);
@@ -189,6 +291,7 @@ public class MakeAncestralSequenceAnnotatedTree {
         System.out.println();
         System.out.println();
     }
+
     public static void centreLine(String line, int pageWidth) {
         int n = pageWidth - line.length();
         int n1 = n / 2;
@@ -197,21 +300,32 @@ public class MakeAncestralSequenceAnnotatedTree {
         }
         System.out.println(line);
     }
+
+
     public static void printUsage(Arguments arguments) {
+
         arguments.printUsage("makeancestralsequenceannotatedtree", "[<*.out file-name> <*.fastas file-name> <*.trees file-name> [<output-file-name>]]");
         System.out.println();
         System.out.println("  Example: ...");
         System.out.println("  Example: ...");
         System.out.println();
+
     }
+
+    /**
+     * Main method
+     */
     public static void main(String[] args) throws IOException, TraceException {
+
         printTitle();
+
         Arguments arguments = new Arguments(
                 new Arguments.Option[]{
                         new Arguments.IntegerOption("thin", "thin"),
                         new Arguments.IntegerOption("skip", "skip"),
                         new Arguments.Option("help", "option to print this message")
                 });
+
         try {
             arguments.parseArguments(args);
         } catch (Arguments.ArgumentException ae) {
@@ -219,10 +333,12 @@ public class MakeAncestralSequenceAnnotatedTree {
             printUsage(arguments);
             System.exit(1);
         }
+
         if (arguments.hasOption("help")) {
             printUsage(arguments);
             System.exit(0);
         }
+
         int skip = -1;
         if (arguments.hasOption("skip")) {
             skip = arguments.getIntegerOption("skip");
@@ -231,21 +347,26 @@ public class MakeAncestralSequenceAnnotatedTree {
         if (arguments.hasOption("thin")) {
             thin = arguments.getIntegerOption("thin");
         }
+
 //        String discreteVariableName = null;
 //        if (arguments.hasOption("discreteVariable")) {
 //            discreteVariableName = arguments.getStringOption("discreteVariable");
 //        }
+
         String outInputFileName = null;
         String fastasInputFileName = null;
         String treesInputfileName = null;
         String outputFileName = null;
+
         String[] args2 = arguments.getLeftoverArguments();
+
         if (args2.length > 4) {
             System.err.println("Unknown option: " + args2[2]);
             System.err.println();
             printUsage(arguments);
             System.exit(1);
         }
+
         if (args2.length > 0) {
             outInputFileName = args2[0];
         }
@@ -258,18 +379,22 @@ public class MakeAncestralSequenceAnnotatedTree {
         if (args2.length > 3) {
             outputFileName = args2[3];
         }
+
         if (outInputFileName == null) {
             // No input file name was given so throw up a dialog box...
             outInputFileName = Utils.getLoadFileName("MakeAncestralSequenceAnnotatedTree " + version.getVersionString() + " - Select *.out file to analyse");
         }
+
         if (fastasInputFileName == null) {
             // No input file name was given so throw up a dialog box...
             fastasInputFileName = Utils.getLoadFileName("MakeAncestralSequenceAnnotatedTree " + version.getVersionString() + " - Select *.fastas file to analyse");
         }
+
         if (treesInputfileName == null) {
             // No input file name was given so throw up a dialog box...
             treesInputfileName = Utils.getLoadFileName("MakeAncestralSequenceAnnotatedTree " + version.getVersionString() + " - Select *.trees file to analyse");
         }
+
         if(skip==-1) {
             System.out.println("Enter skip: ");
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -285,7 +410,10 @@ public class MakeAncestralSequenceAnnotatedTree {
 //            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 //            discreteVariableName = br.readLine();
 //        }
+
         new MakeAncestralSequenceAnnotatedTree(thin, skip, outInputFileName, fastasInputFileName, treesInputfileName,  outputFileName/*, discreteVariableName, !shortReport, hpds, ess, stdErr, marginalLikelihood*/);
+
         System.exit(0);
     }
 }
+

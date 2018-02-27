@@ -1,12 +1,19 @@
 package dr.evoxml.util;
+
 import dr.evomodel.arg.ARGModel;
 import org.jdom.Attribute;
 import org.jdom.DataConversionException;
 import org.jdom.Element;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+/**
+ * @author Marc Suchard
+ */
 public class GraphMLUtils {
+
 	public static final String GRAPH_NAME = "digraph";
 	public static final String SPACE = " ";
 	public static final String NEW_LINE = "\n";
@@ -17,34 +24,46 @@ public class GraphMLUtils {
 	public static final String NEXT_ATTRIBUTE = ",";
 	public static final String TAB = "\t";
 	public static final String END_LINE = ";\n";
+
 	public static final boolean printLengths = false;
+
 	private static void space(StringBuilder sb) {
 		sb.append(SPACE);
 	}
+
+
 	private static void endLine(StringBuilder sb) {
 		sb.append(END_LINE);
 	}
+
 	private static void newLine(StringBuilder sb) {
 		sb.append(NEW_LINE);
 	}
+
 	private static void tab(StringBuilder sb) {
 		sb.append(TAB);
 	}
+
 	private static void startSection(StringBuilder sb) {
 		sb.append(START_SECTION);
 	}
+
 	private static void endSection(StringBuilder sb) {
 		sb.append(END_SECTION);
 	}
+
 	private static void startAttribute(StringBuilder sb) {
 		sb.append(START_ATTRIBUTE);
 	}
+
 	private static void endAttribute(StringBuilder sb) {
 		sb.append(END_ATTRIBUTE);
 	}
+
 	private static void nextAttribute(StringBuilder sb) {
 		sb.append(NEXT_ATTRIBUTE);
 	}
+
 	public static String dotFormat(Element graphElement) {
 		StringBuilder sb = new StringBuilder();
 		String graphName = graphElement.getAttributeValue(ARGModel.ID_ATTRIBUTE);
@@ -105,6 +124,7 @@ public class GraphMLUtils {
 //							if (cnt < length)
 //								nextAttribute(sb);
 //							else {
+
 //							}
 						}
 					}
@@ -119,9 +139,13 @@ public class GraphMLUtils {
 					nextAttribute(sb);
 				}
 				sb.append("label=\"\",shape=circle,height=0.02,width=0.2,fontsize=1");
+
+
 			}
 			if (started) {
 				endAttribute(sb);
+
+
 			}
 //			if (!isTip) {
 //
@@ -162,14 +186,19 @@ public class GraphMLUtils {
 			endSection(sb);
 			newLine(sb);
 		}
+
 		endSection(sb);
 		return sb.toString();
 	}
+
 	private static class TranslationMap extends HashMap<String, String> {
+
 		TranslationMap() {
 			put("taxonName", "label");
 		}
+
 	}
+
 	private static class IgnoreList extends ArrayList<String> {
 		IgnoreList() {
 			add("nodeHeight");
@@ -177,8 +206,11 @@ public class GraphMLUtils {
 //			add()
 		}
 	}
+
 	private static TranslationMap translation = new TranslationMap();
+
 	private static IgnoreList ignoreList = new IgnoreList();
+
 	private static String translate(String text) {
 		String newText = null;
 		if ((newText = translation.get(text)) == null)
@@ -188,7 +220,9 @@ public class GraphMLUtils {
 //		System.err.println("t size = "+translation.size());
 //		return text;
 	}
+
 	private static boolean ignore(String text) {
 		return ignoreList.contains(text);
 	}
+
 }

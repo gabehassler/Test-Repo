@@ -1,15 +1,36 @@
 package dr.evolution.datatype;
+
+/**
+ * @version 08/01/2010
+ *
+ * @author Marc A. Suchard
+ * @author Yu-Nong Gong
+ */
 public class P2P extends DataType {
+
+    /**
+	 * Name of data type. For XML and human reading of data type.
+	 */
 	public static final String DESCRIPTION = "P2P";
 	public static final int TYPE = 42;
 	public static final P2P INSTANCE = new P2P();
+
 //  public static final int ZERO_STATE = 0;
 //	public static final int ONE_STATE = 1;
+
 //	public static final int UNKNOWN_STATE = 2;
 //	public static final int GAP_STATE = 3;
+
+	/**
+	 * A table to translate state numbers (0-3) into character codes
+	 */
 //	public static final char[] P2P_CHARS =
 //		{ 'A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R',
 //		'S','T','V','W','Y','B','Z','X'};
+
+	/**
+	 * A table to map state numbers (0-3) to their ambiguities
+	 */
 	public static final String[] P2P_AMBIGUITIES = {
 "AA","AR","AN","AD","AC","AQ","AE","AG","AH","AI","AL","AK","AM","AF","AP","AS","AT","AW","AY","AV",
 "RA","RR","RN","RD","RC","RQ","RE","RG","RH","RI","RL","RK","RM","RF","RP","RS","RT","RW","RY","RV",
@@ -32,20 +53,40 @@ public class P2P extends DataType {
 "YA","YR","YN","YD","YC","YQ","YE","YG","YH","YI","YL","YK","YM","YF","YP","YS","YT","YW","YY","YV",
 "VA","VR","VN","VD","VC","VQ","VE","VG","VH","VI","VL","VK","VM","VF","VP","VS","VT","VW","VY","VV"
 	};
+
+	/**
+	 * Private constructor - DEFAULT_INSTANCE provides the only instance
+	 */
 	private P2P() {
 		stateCount = 400;
 //		ambiguousStateCount = 4;
 	}
+
+
     @Override
     public char[] getValidChars() {
         return null;
     }
+
+    /**
+	 * Get character corresponding to a given state
+	 *
+	 * @param state state
+	 *
+	 * return corresponding character
+	 */
     public char getChar(int state) {
         throw new IllegalArgumentException("P2P datatype cannot be expressed as char");
     }
+    
 	public String getCode(int state) {
       return P2P_AMBIGUITIES[state];
 	}
+
+	/**
+	 * returns an array containing the non-ambiguous states
+	 * that this state represents.
+	 */
 //	public int[] getStates(int state) {
 //		String stateString = P2P_AMBIGUITIES[state];
 //        int[] states = new int[stateString.length()];
@@ -54,17 +95,36 @@ public class P2P extends DataType {
 //        }
 //        return states;
 //	}
+
+	/**
+	 * returns an array containing the non-ambiguous states that this state represents.
+	 */
 	public boolean[] getStateSet(int state) {
+
 		boolean[] stateSet = new boolean[stateCount];
 		for(int i=0;i<stateCount;i++){
 			stateSet[i] = true;
 		}
+
 		return stateSet;
 	}
+
+	/**
+	 * description of data type
+	 *
+	 * @return string describing the data type
+	 */
 	public String getDescription() {
 		return DESCRIPTION;
 	}
+
+	/**
+	 * type of data type
+	 *
+	 * @return integer code for the data type
+	 */
 	public int getType() {
 		return TYPE;
 	}
+
 }

@@ -1,25 +1,67 @@
+/*
+ * ParameterParser.java
+ *
+ * Copyright (C) 2002-2006 Alexei Drummond and Andrew Rambaut
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.inference.model;
+
 import dr.xml.AttributeRule;
 import dr.xml.XMLObject;
 import dr.xml.XMLParseException;
 import dr.xml.XMLSyntaxRule;
+
+/**
+ * Parses a multi-dimensional continuous parameter.
+ *
+ * @author Alexei Drummond
+ * @author Andrew Rambaut
+ * @author Walter Xie
+ *
+ * @version $Id: ParameterParser.java,v 1.12 2005/05/24 20:26:00 rambaut Exp $
+ */
 public class ParameterIntegerParser extends dr.xml.AbstractXMLObjectParser {
+
 //    public static final String UPPER = "upper";
 //    public static final String LOWER = "lower";
     public static final String DIMENSION = "dimension";
     public static final String VALUE = "value";
     public static final String PARAMETER = "integerParameter";
 //    public static final String RANDOMIZE = "randomize";
+
     public String getParserName() {
         return PARAMETER;
     }
+
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
         int[] values = null;
 //        double[] uppers;
 //        double[] lowers;
+
 //        if( xo.hasAttribute(DIMENSION) ) {
 //            values = new int[xo.getIntegerAttribute(DIMENSION)];
 //        }
+
         if( xo.hasAttribute(VALUE) ) {
             if( values == null ) {
                 values = xo.getIntegerArrayAttribute(VALUE);
@@ -47,6 +89,7 @@ public class ParameterIntegerParser extends dr.xml.AbstractXMLObjectParser {
                 values[0] = 0;
             }
         }
+
 //        uppers = new double[values.length];
 //        for(int i = 0; i < values.length; i++) {
 //            uppers[i] = Double.POSITIVE_INFINITY;
@@ -56,6 +99,7 @@ public class ParameterIntegerParser extends dr.xml.AbstractXMLObjectParser {
 //        for(int i = 0; i < values.length; i++) {
 //            lowers[i] = Double.NEGATIVE_INFINITY;
 //        }
+
 //        if( xo.hasAttribute(UPPER) ) {
 //            double[] v = xo.getDoubleArrayAttribute(UPPER);
 //            if( v.length == uppers.length ) {
@@ -81,7 +125,9 @@ public class ParameterIntegerParser extends dr.xml.AbstractXMLObjectParser {
 //                throw new XMLParseException("lowers string must have 1 value or dimension values");
 //            }
 //        }
+
         //  assert uppers != null && lowers != null;
+
 //        if( (uppers.length != values.length) ) {
 //            throw new XMLParseException("value and upper limit strings have different dimension, in parameter");
 //        }
@@ -118,13 +164,17 @@ public class ParameterIntegerParser extends dr.xml.AbstractXMLObjectParser {
 //                if (lowers[i] > values[i]) values[i] = lowers[i];
 //            }
 //        }
+
         Variable<Integer> param = new Variable.I(values);
+
         param.addBounds(new Bounds.Staircase(param));
         return param;
     }
+
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
+
     private final XMLSyntaxRule[] rules = {
             AttributeRule.newIntegerArrayRule(VALUE, true),
             AttributeRule.newIntegerRule(DIMENSION, true),
@@ -134,12 +184,16 @@ public class ParameterIntegerParser extends dr.xml.AbstractXMLObjectParser {
 //                    new ElementRule(Distribution.class),
 //            },true),
     };
+
+
     public String getParserDescription() {
         return "An integer-valued parameter only for staircase bound.";
     }
+
     public Class getReturnType() {
         return Variable.class;
     }
+
 //    static public void replaceParameter(XMLObject xo, Parameter newParam) throws XMLParseException {
 //
 //        for (int i = 0; i < xo.getChildCount(); i++) {
@@ -187,6 +241,7 @@ public class ParameterIntegerParser extends dr.xml.AbstractXMLObjectParser {
 //            }
 //        }
 //    }
+
 //    static public Parameter getParameter(XMLObject xo) throws XMLParseException {
 //
 //        int paramCount = 0;

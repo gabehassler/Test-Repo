@@ -1,4 +1,30 @@
+/*
+ * DnDsLogger.java
+ *
+ * Copyright (C) 2002-2012 Alexei Drummond, Andrew Rambaut & Marc A. Suchard
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.app.beagle.evomodel.utilities;
+
 import dr.app.beagle.evomodel.substmodel.CodonLabeling;
 import dr.app.beagle.evomodel.substmodel.CodonPartitionedRobustCounting;
 import dr.evolution.tree.Tree;
@@ -7,7 +33,13 @@ import dr.inference.loggers.LogColumn;
 import dr.inference.loggers.Loggable;
 import dr.inference.loggers.NumberColumn;
 import dr.math.EmpiricalBayesPoissonSmoother;
+
+/**
+ * @author Philippe Lemey
+ * @author Marc A. Suchard
+ */
 public class DnDsLogger implements Loggable {
+
     public DnDsLogger(String name, Tree tree, TreeTrait[] traits, boolean useSmoothing, boolean useDnMinusDs, boolean counts, boolean synonymous) {
         this.tree = tree;
         this.traits = traits;
@@ -17,12 +49,14 @@ public class DnDsLogger implements Loggable {
         this.useDnMinusDs = useDnMinusDs;
         this.counts = counts;
         this.synonymous = synonymous;
+
         for (int i = 0; i < NUM_TRAITS; i++) {
             if (traits[i].getIntent() != TreeTrait.Intent.WHOLE_TREE) {
                 throw new IllegalArgumentException("Only whole tree traits are currently supported in DnDsLogger");
             }
         }
     }
+
 //    public LogColumn[] getColumns() {
 //        LogColumn[] columns;
 ////        if (conditionalCounts) {
@@ -46,6 +80,7 @@ public class DnDsLogger implements Loggable {
 ////        }
 //        return columns;
 //    }
+
     public LogColumn[] getColumns() {
         LogColumn[] columns;
         if (!counts){
@@ -76,14 +111,18 @@ public class DnDsLogger implements Loggable {
                     columns[columnCount] = new ConditionalColumn(unconditionalNon, k, true, false);
                 }
                 columnCount ++;
+
             }
+
         }
         return columns;
     }
+
     private class ConditionalColumn extends NumberColumn {
         private final int index;
         boolean nonsynonymous = false;
         boolean conditional = true;
+
         public ConditionalColumn(String label, int index, boolean N, boolean C) {
             super(label + "[" + (index+1) + "]");
             this.index = index;
@@ -94,6 +133,7 @@ public class DnDsLogger implements Loggable {
                 conditional = false;
             }
         }
+
         @Override
         public double getDoubleValue() {
             if (index == 0) {
@@ -114,12 +154,16 @@ public class DnDsLogger implements Loggable {
             }
         }
     }
+
     private class SmoothedColumn extends NumberColumn {
+
         private final int index;
+
         public SmoothedColumn(String label, int index) {
             super(label + "[" + (index+1) + "]");
             this.index = index;
         }
+
         @Override
         public double getDoubleValue() {
             if (index == 0) { // Assumes that columns are accessed IN ORDER
@@ -128,25 +172,31 @@ public class DnDsLogger implements Loggable {
             return doCalculation(index);
         }
     }
+
     private double doCalculation(int index) {
         double returnValue;
         if (!useDnMinusDs) {
             returnValue = (cachedValues[CN][index] / cachedValues[UN][index]) /
                     (cachedValues[CS][index] / cachedValues[US][index]);
+
         } else {
             returnValue =  (cachedValues[CN][index] / cachedValues[UN][index]) -
                     (cachedValues[CS][index] / cachedValues[US][index]);
         }
         return returnValue;
     }
+
     private int getNumberSites() {
         double[] values = (double[]) traits[0].getTrait(tree, tree.getRoot());
         return values.length;
     }
+
     private void doSmoothing() {
+
         if (cachedValues == null) {
             cachedValues = new double[NUM_TRAITS][];
         }
+
         for (int i = 0; i < NUM_TRAITS; i++) {
             if (useSmoothing) {
                 cachedValues[i] = EmpiricalBayesPoissonSmoother.smooth((double[]) traits[i].getTrait(tree, tree.getRoot()));
@@ -155,6 +205,7 @@ public class DnDsLogger implements Loggable {
             }
         }
     }
+
     private final TreeTrait[] traits;
     private final Tree tree;
     private final int numberSites;
@@ -167,12 +218,15 @@ public class DnDsLogger implements Loggable {
     private final boolean useDnMinusDs;
     private final boolean counts;
     private final boolean synonymous;
+
     private final static int NUM_TRAITS = 4;
     private final static int CS = 0;
     private final static int US = 1;
     private final static int CN = 2;
     private final static int UN = 3;
+
     private double[][] cachedValues;
+
     public static String[] traitNames = new String[] {
             CodonPartitionedRobustCounting.SITE_SPECIFIC_PREFIX + CodonLabeling.SYN.getText(),
             CodonPartitionedRobustCounting.UNCONDITIONED_PREFIX + CodonLabeling.SYN.getText(),
@@ -180,3 +234,5 @@ public class DnDsLogger implements Loggable {
             CodonPartitionedRobustCounting.UNCONDITIONED_PREFIX + CodonLabeling.NON_SYN.getText()
     };
 }
+
+

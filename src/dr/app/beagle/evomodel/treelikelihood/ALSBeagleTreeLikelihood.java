@@ -1,4 +1,30 @@
+/*
+ * ALSBeagleTreeLikelihood.java
+ *
+ * Copyright (c) 2002-2014 Alexei Drummond, Andrew Rambaut and Marc Suchard
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.app.beagle.evomodel.treelikelihood;
+
 import dr.app.beagle.evomodel.branchmodel.BranchModel;
 import dr.app.beagle.evomodel.sitemodel.SiteRateModel;
 import dr.evolution.alignment.PatternList;
@@ -10,10 +36,25 @@ import dr.evomodel.treelikelihood.ScaleFactorsHelper;
 import dr.evomodel.treelikelihood.TipStatesModel;
 import dr.inference.model.Model;
 import dr.inference.model.Parameter;
+
 import java.util.Map;
 import java.util.Set;
+
+/**
+ * Package: ALSTreeLikelihood
+ * Description:
+ * <p/>
+ * <p/>
+ * Created by
+ * Alexander V. Alekseyenko (alexander.alekseyenko@gmail.com)
+ * Date: Feb 13, 2008
+ * Time: 10:13:07 AM
+ */
 public class ALSBeagleTreeLikelihood extends BeagleTreeLikelihood implements LikelihoodPartialsProvider {
+
     protected AbstractObservationProcess observationProcess;
+
+
     public ALSBeagleTreeLikelihood(AbstractObservationProcess observationProcess, PatternList patternList, TreeModel treeModel,
                                    BranchModel branchModel,
                                    SiteRateModel siteRateModel,
@@ -22,6 +63,7 @@ public class ALSBeagleTreeLikelihood extends BeagleTreeLikelihood implements Lik
                                    boolean useAmbiguities,
                                    PartialsRescalingScheme scalingScheme,
                                    Map<Set<String>, Parameter> partialsRestrictions) {
+
         super(patternList, treeModel, branchModel, siteRateModel, branchRateModel, tipStatesModel, useAmbiguities, scalingScheme,
                 partialsRestrictions);
 //    }
@@ -31,8 +73,10 @@ public class ALSBeagleTreeLikelihood extends BeagleTreeLikelihood implements Lik
 //                SiteModel siteModel, BranchRateModel branchRateModel,
 //        boolean useAmbiguities, boolean storePartials) {
 //        super(patternList, treeModel, siteModel, branchRateModel, null, useAmbiguities, false, storePartials, false, false);
+
         this.observationProcess = observationProcess;
         addModel(observationProcess);
+
 //        // TreeLikelihood does not initialize the partials for tips, we'll do it ourselves
 //        int extNodeCount = treeModel.getExternalNodeCount();
 //        for (int i = 0; i < extNodeCount; i++) {
@@ -40,6 +84,8 @@ public class ALSBeagleTreeLikelihood extends BeagleTreeLikelihood implements Lik
 //            int index = patternList.getTaxonIndex(id);
 //            setPartials(likelihoodCore, patternList, categoryCount, index, i);
 //        }
+
+/*        //Examine the tree
         double totalTime=0.0;
         double realTime = 0.0;
         for(int i=0; i<treeModel.getNodeCount();++i){
@@ -55,6 +101,7 @@ public class ALSBeagleTreeLikelihood extends BeagleTreeLikelihood implements Lik
         scaleFactorsHelper = new ScaleFactorsHelper(this, this,
                 treeModel, stateCount, patternCount, categoryCount);
     }
+
     protected double calculateLogLikelihood() {
         // Calculate the partial likelihoods
         super.calculateLogLikelihood();
@@ -64,6 +111,7 @@ public class ALSBeagleTreeLikelihood extends BeagleTreeLikelihood implements Lik
         scaleFactorsHelper.resetScaleFactors();
         return observationProcess.nodePatternLikelihood(freqs, this, scaleFactorsHelper);
     }
+
     protected void handleModelChangedEvent(Model model, Object object, int index) {
         if (model == observationProcess) {
             likelihoodKnown = false;
@@ -71,5 +119,6 @@ public class ALSBeagleTreeLikelihood extends BeagleTreeLikelihood implements Lik
             super.handleModelChangedEvent(model, object, index);
         }
     }
+
     final private ScaleFactorsHelper scaleFactorsHelper;
 }

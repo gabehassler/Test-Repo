@@ -1,56 +1,87 @@
 package test.dr.evomodel.substmodel;
+
 import dr.evolution.datatype.HiddenNucleotides;
 import dr.evomodel.substmodel.*;
 import dr.inference.model.Parameter;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+/**
+ * CovarionHKY Tester.
+ *
+ * @author Alexei Drummond
+ * @version 1.0
+ * @since <pre>08/20/2007</pre>
+ */
 public class CovarionHKYTest extends TestCase {
     public CovarionHKYTest(String name) {
         super(name);
     }
+
     public void setUp() throws Exception {
         super.setUp();
+
         alpha = new Parameter.Default(0.0);
         switchingRate = new Parameter.Default(1.0);
         kappa = new Parameter.Default(2.0);
+
         dataType = new HiddenNucleotides(2);
+
     }
+
     public void tearDown() throws Exception {
         super.tearDown();
     }
+
     public void testK2PTransitionProbabilities() {
+
         double[] frequencies = new double[]
                 {0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125};
+
         transitionProbabilitiesTester(frequencies, matLabPChange_K2P);
     }
+
     public void testHKYTransitionProbabilities() {
+
         double[] baseFrequencies = new double[]{0.15, 0.2, 0.3, 0.35};
+
         double[] frequencies = new double[8];
         for (int i = 0; i < frequencies.length; i++) {
             frequencies[i] = baseFrequencies[i % 4] / 2.0;
         }
+
         transitionProbabilitiesTester(frequencies, matLabPChange_HKY);
     }
+
+
     public void transitionProbabilitiesTester(double[] freqs, double[] expectedP) {
+
         Parameter frequencies = new Parameter.Default(freqs);
         FrequencyModel freqModel = new FrequencyModel(dataType, frequencies);
         model = new CovarionHKY(dataType, kappa, alpha, switchingRate, freqModel);
+
         alpha.setParameterValue(0, 0.0);
         switchingRate.setParameterValue(0, 1.0);
         kappa.setParameterValue(0, 2.0);
+
         model.setupMatrix();
+
         System.out.println(SubstitutionModelUtils.toString(model.getQ(), dataType, 2));
+
         double[] matrix = new double[64];
         double[] pi = model.getFrequencyModel().getFrequencies();
+
         int index = 0;
         for (double distance = 0.01; distance <= 1.005; distance += 0.01) {
             model.getTransitionProbabilities(distance, matrix);
+
             double pChange = 0.0;
             double pNoOrHiddenChange = 0.0;
             int k = 0;
             for (int i = 0; i < 8; i++) {
                 for (int j = 0; j < 8; j++) {
+
                     if ((i % 4) != (j % 4)) {
                         pChange += matrix[k] * pi[i];
                     } else {
@@ -59,58 +90,84 @@ public class CovarionHKYTest extends TestCase {
                     k += 1;
                 }
             }
+
             double totalP = pChange + pNoOrHiddenChange;
+
             assertEquals(1.0, totalP, 1e-10);
+
             System.out.print(distance + "\t" + "\t" + pChange + "\t");
             if (index < 100) System.out.print(expectedP[index]);
             System.out.println();
+
             //assertEquals(expectedP[index], pChange, 1e-14);
+
             index += 1;
         }
     }
+
+
     public void testGetRelativeDNARates() throws Exception {
         //TODO: Test goes here...
     }
+
     public void testSetGetKappa() throws Exception {
         //TODO: Test goes here...
     }
+
     public static Test suite() {
         return new TestSuite(CovarionHKYTest.class);
     }
+
     CovarionHKY model;
     HiddenNucleotides dataType;
     Parameter kappa;
     Parameter switchingRate;
     Parameter alpha;
+
+    /*
      %The following Matlab code provided by David Bryant was used to calculate
      %the probabilities for a covarion K2P model with hidden rates of 0 and 1,
      %kappa of 2 and a switching rate of 1
+
      format long;
      clear all;
+
      r=4;
      k=2;
+
      Q = [-2-k 1 k 1; 1 -2-k 1 k; k 1 -2-k 1; 1 k 1 -2-k];
+
      piQ = diag([0.25 0.25 0.25 0.25]);
+
      %Next step necessary for unequal base cases. Commented out
      %to match Alexei's code.
      %Q = Q*piQ;
+
      G = [-1 1; 1 -1]; %Transition matrix for rate classes
      piG = diag([1/2 1/2]);
      D = diag([0 1]);
      I = eye(r,r);
      R = kron(D,Q) + kron(G,I);
+
      pi = kron(piG,piQ);
+
      %Matrix C is a 0 one matrix. Picks out where bases change
      C = kron(ones(2,2),ones(r,r)-eye(r));
+
      %Normalise
      rate = sum(sum(C.*(pi*R)));
      R = R/rate;
+
+
      for i=1:1:100
          t = i*0.01;
          P = expm(R*t);
          pchange(i) = sum(sum(C.*(pi*P)));
      end
+
      pchange'
+
+    */
     static final double[] matLabPChange_K2P = {
             0.00986400785088,
             0.01946196037798,
@@ -213,6 +270,7 @@ public class CovarionHKYTest extends TestCase {
             0.39859063142581,
             0.40027892219004
     };
+
     static final double[] matLabPChange_HKY = {
             0.00985954695768,
             0.01944735733283,

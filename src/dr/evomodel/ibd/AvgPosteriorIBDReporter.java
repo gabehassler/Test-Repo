@@ -1,4 +1,5 @@
 package dr.evomodel.ibd;
+
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
 import dr.evolution.tree.TreeTrait;
@@ -11,7 +12,20 @@ import dr.evomodel.tree.TreeModel;
 import dr.evomodel.treelikelihood.NodePosteriorTreeLikelihood;
 import dr.inference.model.*;
 import dr.xml.*;
+
+/**
+ * Package: dr.evomodel.ibd
+ * Description:  Computes for each tip the expected number of other tips IBD to it given the tip labels,
+ * averaged over the full length of the alignment
+ * <p/>
+ * <p/>
+ * Created by
+ * avaleks (alexander.alekseyenko@gmail.com)
+ * Date: 04-Aug-2008
+ * Time: 13:46:33
+ */
 public class AvgPosteriorIBDReporter extends AbstractModel implements TreeTraitProvider {
+
     protected double[] ibdweights;
     protected double[][] ibdForward;
     protected double[][] ibdBackward;
@@ -23,6 +37,7 @@ public class AvgPosteriorIBDReporter extends AbstractModel implements TreeTraitP
     protected Parameter mutationParameter;
     protected NodePosteriorTreeLikelihood likelihoodReporter;
     protected double[] probabilities;
+
     AvgPosteriorIBDReporter(NodePosteriorTreeLikelihood likelihoodReporter, Parameter mutationParameter, TreeModel treeModel, BranchRateModel branchRateModel, AbstractSubstitutionModel substitutionModel) {
         super("AvgPosteriorIBDReporter");
         this.substitutionModel = (HKY) substitutionModel;
@@ -36,6 +51,7 @@ public class AvgPosteriorIBDReporter extends AbstractModel implements TreeTraitP
         this.likelihoodReporter = likelihoodReporter;
         this.probabilities = new double[substitutionModel.getStateCount() * substitutionModel.getStateCount()];
     }
+
     public void forwardIBD() {
         int numNodes = treeModel.getNodeCount();
         int stateCount = substitutionModel.getStateCount();
@@ -47,8 +63,10 @@ public class AvgPosteriorIBDReporter extends AbstractModel implements TreeTraitP
             likelihoodReporter.getNodeMatrix(nodeId, probabilities);
             double[] posteriors = likelihoodReporter.getPosteriors(nodeId);
             if (parent == null) { // handle the root
+
             } else if (treeModel.isExternal(node)) { // Handle the tip
                 double branchTime = branchRateModel.getBranchRate(treeModel, node) * (treeModel.getNodeHeight(parent) - treeModel.getNodeHeight(node));
+
                 for (int state = 0; state < stateCount; ++state) {
                     double enorm = Math.exp(-diag[state] * branchTime) / probabilities[state + state * stateCount];
                     for (int pattern = 0; pattern < patternCount; ++pattern) {
@@ -57,13 +75,16 @@ public class AvgPosteriorIBDReporter extends AbstractModel implements TreeTraitP
                 }
             } else { // Handle internal node
                 double branchTime = branchRateModel.getBranchRate(treeModel, node) * (treeModel.getNodeHeight(parent) - treeModel.getNodeHeight(node));
+
                 int childCount = treeModel.getChildCount(node);
                 for (int state = 0; state < stateCount; ++state) {
                     double enorm = Math.exp(-diag[state] * branchTime) / probabilities[state + state * stateCount];
                     for (int pattern = 0; pattern < patternCount; ++pattern) {
                         ibdForward[nodeId][pattern * stateCount + state] = 0;
+
                         for (int child = 0; child < childCount; ++child) {
                             int childNodeId = treeModel.getChild(node, child).getNumber();
+
                             ibdForward[nodeId][pattern * stateCount + state] += ibdForward[childNodeId][pattern * stateCount + state];
                         }
                         ibdForward[nodeId][pattern * stateCount + state] *= posteriors[pattern * stateCount + state] * enorm;
@@ -72,6 +93,7 @@ public class AvgPosteriorIBDReporter extends AbstractModel implements TreeTraitP
             }
         }
     }
+
     public void backwardIBD(NodeRef node) {
         int stateCount = substitutionModel.getStateCount();
         int patternCount = likelihoodReporter.getPatternCount();
@@ -85,6 +107,7 @@ public class AvgPosteriorIBDReporter extends AbstractModel implements TreeTraitP
         getDiagonalRates(diag);
         int childCount = treeModel.getChildCount(node);
         int nodeId = node.getNumber();
+
         double[] posteriors = likelihoodReporter.getPosteriors(nodeId);
         for (int child = 0; child < childCount; ++child) {
             NodeRef childNode = treeModel.getChild(node, child);
@@ -108,7 +131,9 @@ public class AvgPosteriorIBDReporter extends AbstractModel implements TreeTraitP
             NodeRef childNode = treeModel.getChild(node, child);
             backwardIBD(childNode);
         }
+
     }
+
     public void expectedIBD() {
         int stateCount = substitutionModel.getStateCount();
         int nodeCount = treeModel.getNodeCount();
@@ -119,6 +144,8 @@ public class AvgPosteriorIBDReporter extends AbstractModel implements TreeTraitP
             ibdBackward = new double[nodeCount][stateCount * patternCount];
             diag = new double[stateCount];
         }
+
+
         forwardIBD();
         backwardIBD(null);
         int numTips = treeModel.getExternalNodeCount();
@@ -127,8 +154,10 @@ public class AvgPosteriorIBDReporter extends AbstractModel implements TreeTraitP
         for (int i = 0; i < patternCount; ++i) {
             total += patternWeights[i];
         }
+
         for (int i = 0; i < numTips; ++i) {
             double[] posteriors = likelihoodReporter.getPosteriors(i);
+
             ibdweights[i] = 0;
             for (int pattern = 0; pattern < patternCount; ++pattern) {
                 for (int j = 0; j < stateCount; ++j) {
@@ -137,23 +166,28 @@ public class AvgPosteriorIBDReporter extends AbstractModel implements TreeTraitP
             }
         }
     }
+
     protected void getDiagonalRates(double[] diagonalRates) {
         double kappa = substitutionModel.getKappa();
         double[] freq = substitutionModel.getFrequencyModel().getFrequencies();
         double mutationRate = mutationParameter.getParameterValue(0);
         double beta = 0.5 / ((freq[0] + freq[2]) * (freq[1] + freq[3]) + kappa * (freq[0] * freq[2] + freq[1] * freq[3]));
+
         diagonalRates[0] = ((freq[1] + freq[3]) + freq[2] * kappa) * mutationRate * beta;
         diagonalRates[1] = ((freq[0] + freq[2]) + freq[3] * kappa) * mutationRate * beta;
         diagonalRates[2] = ((freq[1] + freq[3]) + freq[0] * kappa) * mutationRate * beta;
         diagonalRates[3] = ((freq[0] + freq[2]) + freq[1] * kappa) * mutationRate * beta;
     }
+
     TreeTrait avgPosteriorIBDWeight = new TreeTrait.D() {
         public String getTraitName() {
             return "AvgPosteriorIBDWeight";
         }
+
         public Intent getIntent() {
             return Intent.NODE;
         }
+
         public Double getTrait(Tree tree, NodeRef node) {
             if (!weightsKnown) {
                 expectedIBD();
@@ -166,42 +200,61 @@ public class AvgPosteriorIBDReporter extends AbstractModel implements TreeTraitP
             return null;
         }
     };
+
     public TreeTrait[] getTreeTraits() {
         return new TreeTrait[] { avgPosteriorIBDWeight };
     }
+
     public TreeTrait getTreeTrait(String key) {
         // ignore the key - it must be the one they wanted, no?
         return avgPosteriorIBDWeight;
     }
+
+    /**
+     * The XML parser
+     */
+
     public static final String IBD_REPORTER_LIKELIHOOD = "avgPosteriorIBDReporter";
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
+
         public String getParserName() {
             return IBD_REPORTER_LIKELIHOOD;
         }
+
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
+
             TreeModel treeModel = (TreeModel) xo.getChild(TreeModel.class);
             Parameter mutationParameter = (Parameter) xo.getChild(Parameter.class);
             AbstractSubstitutionModel substitutionModel =
                     (AbstractSubstitutionModel) xo.getChild(AbstractSubstitutionModel.class);
+
             BranchRateModel branchRateModel = (BranchRateModel) xo.getChild(BranchRateModel.class);
             if (branchRateModel == null) {
                 branchRateModel = new DefaultBranchRateModel();
             }
+
             NodePosteriorTreeLikelihood likelihoodReporter = (NodePosteriorTreeLikelihood) xo.getChild(NodePosteriorTreeLikelihood.class);
+
             return new AvgPosteriorIBDReporter(likelihoodReporter, mutationParameter, treeModel, branchRateModel, substitutionModel);
         }
+
         //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
+
         public String getParserDescription() {
             return "This element represents a reporter for average expected number of tips ibd conditional on observed patterns.";
         }
+
         public Class getReturnType() {
             return Likelihood.class;
         }
+
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
+
         private XMLSyntaxRule[] rules = new XMLSyntaxRule[]{
                 new ElementRule(TreeModel.class),
                 new ElementRule(BranchRateModel.class, true),
@@ -210,6 +263,7 @@ public class AvgPosteriorIBDReporter extends AbstractModel implements TreeTraitP
                 new ElementRule(NodePosteriorTreeLikelihood.class)
         };
     };
+
     protected void handleModelChangedEvent(Model model, Object object, int index) {
         if (model == branchRateModel || model == treeModel || model == substitutionModel || model == likelihoodReporter) {
             weightsKnown = false;
@@ -217,6 +271,7 @@ public class AvgPosteriorIBDReporter extends AbstractModel implements TreeTraitP
             System.err.println("Weird call back to IBDReporter from " + model.getModelName());
         }
     }
+
     protected final void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         if (variable == mutationParameter) {
             weightsKnown = false;
@@ -224,10 +279,13 @@ public class AvgPosteriorIBDReporter extends AbstractModel implements TreeTraitP
             System.err.println("Weird call back to IBDReporter from " + variable.getVariableName());
         }
     }
+
     protected void storeState() {
     }
+
     protected void restoreState() {
     }
+
     protected void acceptState() {
     }
 }

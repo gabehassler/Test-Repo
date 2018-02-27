@@ -1,11 +1,18 @@
 package dr.inferencexml.operators;
+
 import dr.inference.model.Parameter;
 import dr.inference.operators.MCMCOperator;
 import dr.inference.operators.MicrosatelliteModelSelectOperator;
 import dr.xml.*;
+
+/**
+ * Parser for MicrosatelliteModelSelectOperatorParser
+ */
 public class MicrosatelliteModelSelectOperatorParser extends AbstractXMLObjectParser {
+
     public static final String MODEL_INDICATORS = "modelIndicators";
     public static final String MODEL_CHOOSE = "modelChoose";
+
     public String getParserName() {
         return "msatModelSelectOperator";
     }

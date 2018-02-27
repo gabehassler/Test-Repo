@@ -1,24 +1,36 @@
 package dr.inference.model;
+
 import dr.xml.*;
+
 import java.util.StringTokenizer;
 //import org.w3c.dom.Document;
 //import org.w3c.dom.Element;
 //import dr.xml.*;
+
+/**
+ * @author Marc Suchard
+ */
 public class NewMatrixParameter extends Parameter.Default {
+
     public final static String MATRIX_PARAMETER = "matrixParameter";
+
     public NewMatrixParameter(String name) {
         super(name);
     }
+
     public NewMatrixParameter(String name, double[] parameter, int numRows, int numCols) {
         super(parameter);
         this.numRows = numRows;
         this.numCols = numCols;
     }
+
     private int numRows = 0;
     private int numCols = 0;
+
     public double getParameterValue(int row, int col) {
         return getParameterValue(row * numCols + col); // Stores in row-major
     }
+
     public double[][] getParameterAsMatrix() {
 //        final int I = getRowDimension();
 //        final int J = getColumnDimension();
@@ -36,12 +48,15 @@ public class NewMatrixParameter extends Parameter.Default {
         }
         return parameterAsMatris;
     }
+
     public int getColumnDimension() {
         return numCols;
     }
+
     public int getRowDimension() {
         return numRows;
     }
+
     public String toSymmetricString() {
         StringBuffer sb = new StringBuffer("{");
         int dim = getRowDimension();
@@ -57,6 +72,7 @@ public class NewMatrixParameter extends Parameter.Default {
         sb.append("}");
         return sb.toString();
     }
+
     public static NewMatrixParameter parseFromSymmetricString(String string) {
         String clip = string.replace("{", "").replace("}", "").trim();
         StringTokenizer st = new StringTokenizer(clip, ",");
@@ -82,7 +98,9 @@ public class NewMatrixParameter extends Parameter.Default {
         }
         return new NewMatrixParameter(null, data, dim, dim);
     }
+
     public static NewMatrixParameter parseFromSymmetricDoubleArray(Object[] inData) {
+
         int dim = (-1 + (int) Math.sqrt(1 + 8 * inData.length)) / 2;
 //        Parameter[] parameter = new Parameter[dim];
 //        for (int i = 0; i < dim; i++)
@@ -106,21 +124,30 @@ public class NewMatrixParameter extends Parameter.Default {
         }
         return new NewMatrixParameter(null, data, dim, dim);
     }
+
     // **************************************************************
     // XMLElement IMPLEMENTATION
     // **************************************************************
+
 //    public Element createElement(Document d) {
 //        throw new RuntimeException("Not implemented yet!");
 //    }
+
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
+
         public String getParserName() {
             return MATRIX_PARAMETER;
         }
+
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
 //            MatrixParameter matrixParameter = new MatrixParameter(MATRIX_PARAMETER);
+
             int numRows = xo.getChildCount();
             int numCols = 0;
+
             double[] values = null;
+
             for (int i = 0; i < numRows; i++) {
                 Parameter parameter = (Parameter) xo.getChild(i);
                 if (values == null) {
@@ -135,23 +162,32 @@ public class NewMatrixParameter extends Parameter.Default {
                 double[] newValues = parameter.getParameterValues();
                 System.arraycopy(newValues, 0, values, i * numCols, numCols);
             }
+
             String name = (xo.hasId() ? xo.getId() : MATRIX_PARAMETER);
+
             return new NewMatrixParameter(name, values, numRows, numCols);
         }
+
         //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
+
         public String getParserDescription() {
             return "A matrix parameter constructed from its component parameters.";
         }
+
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
+
         private final XMLSyntaxRule[] rules = {
                 new ElementRule(Parameter.class, 1, Integer.MAX_VALUE),
         };
+
         public Class getReturnType() {
             return NewMatrixParameter.class;
         }
     };
+
+
 }

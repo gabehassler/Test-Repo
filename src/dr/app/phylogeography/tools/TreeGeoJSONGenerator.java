@@ -1,17 +1,49 @@
+/*
+ * TreeGeoJSONGenerator.java
+ *
+ * Copyright (C) 2002-2013 Alexei Drummond, Andrew Rambaut and Marc Suchard
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.app.phylogeography.tools;
+
 import dr.app.phylogeography.tools.kml.*;
 import jebl.evolution.graphs.Node;
 import jebl.evolution.io.ImportException;
 import jebl.evolution.io.NexusImporter;
 import jebl.evolution.io.TreeImporter;
 import jebl.evolution.trees.RootedTree;
+
 import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+/**
+ * @author Andrew Rambaut
+ */
 public class TreeGeoJSONGenerator {
+    /*
         { "type": "FeatureCollection",
                 "features": [
             { "type": "Feature",
@@ -45,17 +77,23 @@ public class TreeGeoJSONGenerator {
             }
             ]
         }
+    */
+
+
     private final RootedTree tree;
     private final Map<String, Location> locationMap = new HashMap<String, Location>();
     private final List<GeoPoint> points = new ArrayList<GeoPoint>();
     private final List<GeoLine> lines = new ArrayList<GeoLine>();
+
     public TreeGeoJSONGenerator(RootedTree tree, List<Location> locationList) {
         this.tree = tree;
+
         if (locationList != null) {
             double minLat = Double.MAX_VALUE;
             double maxLat = -Double.MAX_VALUE;
             double minLong = Double.MAX_VALUE;
             double maxLong = -Double.MAX_VALUE;
+
             for (Location location : locationList) {
                 if (location.getLatitude() < minLat)  {
                     minLat = location.getLatitude();
@@ -63,6 +101,7 @@ public class TreeGeoJSONGenerator {
                 if (location.getLatitude() > maxLat)  {
                     maxLat = location.getLatitude();
                 }
+
                 if (location.getLongitude() < minLong)  {
                     minLong = location.getLongitude();
                 }
@@ -71,9 +110,12 @@ public class TreeGeoJSONGenerator {
                 }
                 locationMap.put(location.getState(), location);
             }
+
         }
+
         traverseTree(tree, tree.getRootNode());
     }
+
     private GeoPoint traverseTree(RootedTree tree, Node node) {
         GeoPoint point = new GeoPoint();
         point.time = tree.getHeight(node);
@@ -81,32 +123,46 @@ public class TreeGeoJSONGenerator {
         point.host = (String)node.getAttribute("host");
         point.longitude = locationMap.get(point.location).getLongitude();
         point.latitude = locationMap.get(point.location).getLatitude();
+
         if (tree.isExternal(node)) {
             point.label = tree.getTaxon(node).getName();
             point.probability = 1;
+
         } else {
             point.label = "";
             point.probability = (Double)node.getAttribute("posterior");
+
             for (Node child : tree.getChildren(node)) {
+
                 GeoPoint point1 = traverseTree(tree, child);
+
                 GeoLine line = new GeoLine();
                 line.label = "";
+
                 line.time0 = point.time;
                 line.time1 = point1.time;
+
                 line.location0 = point.location;
                 line.location1 = point1.location;
+
                 line.host0 = point.host;
                 line.host1 = point1.host;
+
                 line.longitude0 = point.longitude;
                 line.longitude1 = point1.longitude;
+
                 line.latitude0 = point.latitude;
                 line.latitude1 = point1.latitude;
+
                 lines.add(line);
             }
         }
+
         points.add(point);
+
         return point;
     }
+
     public void generate(String documentName, PrintWriter writer) {
         writer.println("{ \"type\": \"FeatureCollection\",");
         writer.println("\t\"features\": [");
@@ -122,7 +178,9 @@ public class TreeGeoJSONGenerator {
         }
         writer.println("\t]");
         writer.println("}");
+
     }
+
     public void generatePoint(PrintWriter writer, GeoPoint point) {
         writer.println("\t\t{ \"type\": \"Feature\",");
         writer.println("\t\t\t\"geometry\": {\"type\": \"Point\", \"coordinates\": [" + point.longitude + ", " + point.latitude + "]},");
@@ -130,6 +188,7 @@ public class TreeGeoJSONGenerator {
                 "\", \"location\": \"" + point.location + "\", \"host\": \"" + point.host + "\"}");
         writer.println("},");
     }
+
     public void generateLine(PrintWriter writer, GeoLine line) {
         writer.println("\t\t{ \"type\": \"Feature\",");
         writer.println("\t\t\t\"geometry\": {\"type\": \"LineString\", \"coordinates\": [[" + line.longitude0 + ", " + line.latitude0 + "], [" + line.longitude1 + ", " + line.latitude1 + "]]},");
@@ -138,6 +197,7 @@ public class TreeGeoJSONGenerator {
                 "\", \"host\": \"" + line.host0 + "\", \"host1\": \"" + line.host1 + "\"}");
         writer.println("},");
     }
+
     class GeoPoint {
         String label;
         double time;
@@ -147,6 +207,7 @@ public class TreeGeoJSONGenerator {
         double longitude;
         double latitude;
     }
+
     class GeoLine {
         String label;
         double time0;
@@ -160,9 +221,13 @@ public class TreeGeoJSONGenerator {
         double longitude1;
         double latitude1;
     }
+
     public static void main(String[] args) {
+
+
         String inputTreeFile = args[0];
         RootedTree tree = null;
+
         try {
             TreeImporter importer = new NexusImporter(new FileReader(inputTreeFile));
             tree = (RootedTree)importer.importNextTree();
@@ -173,6 +238,7 @@ public class TreeGeoJSONGenerator {
             e.printStackTrace();
             return;
         }
+
         TreeGeoJSONGenerator generator = new TreeGeoJSONGenerator(tree, null);
         try {
             generator.generate("", new PrintWriter(new File("output.geojson")));
@@ -180,4 +246,5 @@ public class TreeGeoJSONGenerator {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
     }
+
 }

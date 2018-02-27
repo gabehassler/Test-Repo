@@ -1,24 +1,96 @@
+/*
+ * ConjugateGradientSearch.java
+ *
+ * Copyright (C) 2002-2006 Alexei Drummond and Andrew Rambaut
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.math;
+
+
+/**
+ * minimization of a real-valued function of
+ * several variables using a the nonlinear
+ * conjugate gradient method where several variants of the direction
+ * update are available (Fletcher-Reeves, Polak-Ribiere,
+ * Beale-Sorenson, Hestenes-Stiefel) and bounds are respected.
+ * Gradients are computed numerically if they are not supplied by the
+ * user.  The line search is entirely based on derivative
+ * evaluation, similar to the strategy used in macopt (Mackay).
+ *
+ * @version $Id: ConjugateGradientSearch.java,v 1.3 2005/05/24 20:26:00 rambaut Exp $
+ *
+ * @author Korbinian Strimmer
+ */
 public class ConjugateGradientSearch extends MultivariateMinimum
 {
 	//
 	// Public stuff
 	//
+
 	public final static int FLETCHER_REEVES_UPDATE = 0;
 	public final static int POLAK_RIBIERE_UPDATE = 1;
 	public final static int BEALE_SORENSON_HESTENES_STIEFEL_UPDATE = 2;
+
 	// Variables that control aspects of the inner workings of the
 	// minimization algorithm. Setting them is optional, they
 	// are all set to some reasonable default values given below.
+
+	/**
+	 *  controls the printed output from the routine
+	 *  (0 -> no output, 1 -> print only starting and final values,
+	 *   2 -> detailed map of the minimisation process),
+	 *  the default value is 0
+	 */
 	public int prin = 0;
+
+	/**
+	 * defaultStep is a steplength parameter and should be set equal
+	 * to the expected distance from the solution (in a line search)
+	 * exceptionally small or large values of defaultStep lead to
+	 * slower convergence on the first few iterations (the step length
+	 * itself is adapted during search), the default value is 1.0
+	 */
 	public double defaultStep = 1.0;
+
+
+	/**
+	 * conjugateGradientStyle determines the method for the
+	 * conjugate gradient direction update
+	 * update (0 -> Fletcher-Reeves, 1 -> Polak-Ribiere,
+	 * 2 -> Beale-Sorenson, Hestenes-Stiefel), the default is 2.
+	 */
 	public int conjugateGradientStyle = BEALE_SORENSON_HESTENES_STIEFEL_UPDATE;
+
+
 	public ConjugateGradientSearch() {
 	}
+
 	public ConjugateGradientSearch(int conGradStyle) {
 		this.conjugateGradientStyle = conGradStyle;
 	}
+
+
 	// implementation of abstract method
+
 	public void optimize(MultivariateFunction f, double[] x, double tolfx, double tolx)
 	{
 		optimize(f,x,tolfx,tolx,null);
@@ -27,6 +99,7 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 	{
 		xvec = x;
 		numArgs = f.getNumArguments();
+
 		boolean numericalGradient;
 		if (f instanceof MFWithGradient)
 		{
@@ -38,12 +111,16 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 			numericalGradient = true;
 			fgrad = null;
 		}
+
+
 		// line function
 		LineFunction lf = new LineFunction(f);
+
 		// xvec contains current guess for minimum
 		lf.checkPoint(xvec);
 		double[] xold = new double[numArgs];
 		copy(xold, xvec);
+
 		// function value and gradient at current guess
 		numFun = 0;
 		double fx;
@@ -64,22 +141,29 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 		}
 		double[] gold = new double[numArgs];
 		copy(gold, gvec);
+
 		// init stop condition
 		stopCondition(fx, xvec, tolfx, tolx, true);
+
 		// currently active variables
 		boolean[] active = new boolean[numArgs];
 		double numActive = lf.checkVariables(xvec, gvec, active);
+
 		// if no variables are active return
 		if (numActive == 0)
 		{
 			return;
 		}
+
 		// initial search direction (steepest descent)
 		sdir = new double[numArgs];
 		steepestDescentDirection(sdir, gvec, active);
 		lf.update(xvec, sdir);
+
 		// slope at start point in initial direction
 		double slope = gradientProjection(sdir, gvec);
+
+
 		if (prin > 0)
 		{
 			System.out.println("--- starting minimization ---");
@@ -92,6 +176,7 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 			System.out.println();
 			printVec("... start direction ...", sdir);
 		}
+
 		int numLin = 0;
 		lastStep = defaultStep;
 		while(true)
@@ -100,9 +185,12 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 			double step = findStep(lf, fx, slope, numericalGradient);
 			lastStep = step;
 			numLin++;
+
 			// update xvec
 			lf.getPoint(step, xvec);
 			lf.checkPoint(xvec);
+
+
 			// function value at current guess
 			if (numericalGradient)
 			{
@@ -116,42 +204,55 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 				numFun++;
 				numGrad++;
 			}
+
 			// test for for convergence
 			if (stopCondition(fx, xvec, tolfx, tolx, false)
 				|| (maxFun > 0 && numFun > maxFun))
 			{
 				break;
 			}
+
 			// Compute numerical gradient
 			if (numericalGradient)
 			{
 				NumericalDerivative.gradient(f, xvec, gvec);
 				numFun += 2*numArgs;
 			}
+
+
 			numActive = lf.checkVariables(xvec, gvec, active);
+
 			// if all variables are inactive return
 			if (numActive == 0)
 			{
 				break;
 			}
+
 			// determine new search direction
 			conjugateGradientDirection(sdir, gvec, gold, active);
 			lf.checkDirection(xvec, sdir);
+
 			// compute slope in new direction
 			slope = gradientProjection(sdir, gvec);
+
 			if (slope >= 0)
 			{
 				//reset to steepest descent direction
 				steepestDescentDirection(sdir, gvec, active);
+
 				// compute slope in new direction
 				slope = gradientProjection(sdir, gvec);
+
 				// reset to default step length
 				lastStep = defaultStep;
 			}
+
+
 			// other updates
 			lf.update(xvec, sdir);
 			copy(xold, xvec);
 			copy(gold, gvec);
+
 			if (prin > 1)
 			{
 				System.out.println();
@@ -172,7 +273,9 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 			if(monitor!=null) {
 				monitor.newMinimum(f.evaluate(xvec),xvec);
 			}
+
 		}
+
 		if (prin > 0)
 		{
 			System.out.println();
@@ -183,29 +286,40 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 			System.out.println("--- end of minimization ---");
 		}
 	}
+
+
 	//
 	// Private stuff
 	//
+
 	private int numArgs, numGrad;
 	private double lastStep;
 	private double[] xvec, gvec, sdir;
 	private MFWithGradient fgrad;
+
 	private double findStep(LineFunction lf, double f0, double s0, boolean numericalGradient)
 	{
 		// f0 function value at step = 0
 		// s0 slope at step = 0
+
 		double step;
 		double maxStep = lf.getUpperBound();
 		if (maxStep <= 0 || s0 == 0)
 		{
 			return 0.0;
 		}
+
 		//step = Math.abs(lf.findMinimum());
+
+
 		// growing/shrinking factors for bracketing
+
 		double g1 = 2.0;
 		double g2 = 1.25;
 		double g3 = 0.5;
+
 		// x1 and x2 try to bracket the minimum
+
 		double x1 = 0;
 		double s1 = s0;
 		double x2 = lastStep*g2;
@@ -214,6 +328,7 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 			x2 = maxStep*g3;
 		}
 		double s2 = computeDerivative(lf, x2, numericalGradient);
+
 		// we need to go further to bracket minimum
 		boolean boundReached = false;
 		while (s2 <= 0 && !boundReached)
@@ -228,20 +343,25 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 			}
 			s2 = computeDerivative(lf, x2, numericalGradient);
 		}
+
 		// determine step length by quadratic interpolation
 		// for minimum in interval [x1,x2]
+
 		if (s2 <= 0)
 		{
 			// true local minimum could NOT be bracketed
 			// instead we have a local minimum on a boundary
+
 			step = x2;
 		}
 		else
 		{
 			// minimum is bracketed
+
 			step = (x1*s2-x2*s1)/(s2-s1);
 			// note that nominator is always positive
 		}
+
 		// just to be safe - should not be necessary
 		if (step >= maxStep)
 		{
@@ -251,8 +371,10 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 		{
 			step = 0;
 		}
+
 		return step;
 	}
+
 	private double computeDerivative(LineFunction lf, double lambda, boolean numericalGradient)
 	{
 		if (numericalGradient)
@@ -262,12 +384,16 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 		}
 		else
 		{
+			/* lf.getPoint(lambda, xvec);
 			lf.checkPoint(xvec);
 			fgrad.computeGradient(xvec, gvec);
 			numGrad++;
 			return gradientProjection(sdir, gvec);
+			*/
+
 			// the following code prevents overstepping
 			// and is due to Jesse Stone <jessestone@yahoo.com>
+
 			double[] xtmp = new double[numArgs];
 			copy(xtmp, xvec);
 			lf.getPoint(lambda, xtmp);
@@ -275,16 +401,22 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 			fgrad.computeGradient(xtmp, gvec);
 			numGrad++;
 			return gradientProjection(sdir, gvec);
+
 		}
 	}
+	
+/*
 	private void testStep(double f0, double s0, double f1, double s1, double step)
 	{
 		// f0  function value at x=0
 		// s0  slope at x=0
+
 		// f1 function value at x=step
 		// f2 function value at x=step
+
 		double mue = 0.0001;
 		double eta = 0.9;
+
 		// sufficent decrease in function value
 		if (f1 <= mue*s0*step + f0)
 		{
@@ -294,6 +426,7 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 		{
 			System.out.println("<<< NO sufficient decrease in function value");
 		}
+
 		// sufficient decrease in slope
 		if (Math.abs(s1) <= eta*Math.abs(s0))
 		{
@@ -304,6 +437,8 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 			System.out.println("<<< NO sufficient decrease in slope");
 		}
 	}
+*/
+
 	private void conjugateGradientDirection(double[] sdir, double[] gvec, double[] gold,
 		boolean[] active)
 	{
@@ -320,11 +455,13 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 						dgg += gvec[i]*gvec[i];
 						gg += gold[i]*gold[i];
 						break;
+
 					case 1:
 						// Polak-Ribiere
 						dgg += gvec[i]*(gvec[i]-gold[i]);
 						gg += gold[i]*gold[i];
 						break;
+
 					case 2:
 						// Beale-Sorenson
 						// Hestenes-Stiefel
@@ -352,6 +489,7 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 			}
 		}
 	}
+
 	private void steepestDescentDirection(double[] sdir, double[] gvec, boolean[] active)
 	{
 		for (int i = 0; i < numArgs; i++)
@@ -366,6 +504,7 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 			}
 		}
 	}
+
 	private double gradientProjection(double[] sdir, double[] gvec)
 	{
 		double s = 0;
@@ -374,8 +513,10 @@ public class ConjugateGradientSearch extends MultivariateMinimum
 		{
 			s += gvec[i]*sdir[i];
 		}
+
 		return s;
 	}
+
 	private void printVec(String s, double[] x)
 	{
 		System.out.println(s);

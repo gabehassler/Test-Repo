@@ -1,25 +1,37 @@
 package dr.inferencexml.distribution;
+
 import dr.inference.distribution.InverseGaussianDistributionModel;
 import dr.inference.model.Parameter;
 import dr.xml.*;
+
+/**
+ * Reads an inverse gaussian distribution model from a DOM Document element.
+ */
 public class InverseGaussianDistributionModelParser extends AbstractXMLObjectParser {
+
     public static final String INVERSEGAUSSIAN_DISTRIBUTION_MODEL = "inverseGaussianDistributionModel";
     public static final String MEAN = "mean";
     public static final String STDEV = "stdev";
     public static final String SHAPE = "shape";
     public static final String OFFSET = "offset";
+
     public String getParserName() {
         return INVERSEGAUSSIAN_DISTRIBUTION_MODEL;
     }
+
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
         Parameter meanParam;
+
         double offset = xo.getAttribute(OFFSET, 0.0);
+
         XMLObject cxo = xo.getChild(MEAN);
         if (cxo.getChild(0) instanceof Parameter) {
             meanParam = (Parameter) cxo.getChild(Parameter.class);
         } else {
             meanParam = new Parameter.Default(cxo.getDoubleChild(0));
         }
+
         if(xo.hasChildNamed(STDEV) && xo.hasChildNamed(SHAPE)) {
             throw new RuntimeException("XML has both standard deviation and shape for Inverse Gaussian distribution");
         }
@@ -47,12 +59,15 @@ public class InverseGaussianDistributionModelParser extends AbstractXMLObjectPar
             throw new RuntimeException("XML has neither standard deviation nor shape for Inverse Gaussian distribution");
         }
     }
+
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
+
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
+
     private final XMLSyntaxRule[] rules = {
             AttributeRule.newDoubleRule(OFFSET, true),
             new ElementRule(MEAN,
@@ -69,6 +84,7 @@ public class InverseGaussianDistributionModelParser extends AbstractXMLObjectPar
                                     new ElementRule(Double.class)
                             )}
             , true),
+
             new ElementRule(SHAPE,
                 new XMLSyntaxRule[]{
                         new XORRule(
@@ -77,11 +93,14 @@ public class InverseGaussianDistributionModelParser extends AbstractXMLObjectPar
                         )}
             , true)
     };
+
     public String getParserDescription() {
         return "Describes a inverse gaussian distribution with a given mean and shape (or standard deviation) " +
                 "that can be used in a distributionLikelihood element";
     }
+
     public Class getReturnType() {
         return InverseGaussianDistributionModel.class;
     }
+
 }

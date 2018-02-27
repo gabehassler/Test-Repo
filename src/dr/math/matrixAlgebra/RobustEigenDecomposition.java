@@ -1,67 +1,117 @@
 package dr.math.matrixAlgebra;
+
+
 import cern.colt.matrix.DoubleFactory1D;
 import cern.colt.matrix.DoubleFactory2D;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.linalg.Property;
 import dr.math.MathUtils;
+
+/**
+ * Copyright ? 1999 CERN - European Organization for Nuclear Research.
+ *
+ * This code is adapted from COLT 1.2; Eigendecomposition now throws an ArithmeticException if calculations
+ * do not converge within 'maxIterations'
+ *
+ * @author Marc A. Suchard
+ */
+
 public class RobustEigenDecomposition implements java.io.Serializable {
 	static final long serialVersionUID = 1020;
+	/** Row and column dimension (square matrix).
 	@serial matrix dimension.
+	*/
 	private int n;
+
+	/** Symmetry flag.
 	@serial internal symmetry flag.
+	*/
 	private boolean issymmetric;
+
+	/** Arrays for internal storage of eigenvalues.
 	@serial internal storage of eigenvalues.
+	*/
 	private double[] d, e;
+
+	/** Array for internal storage of eigenvectors.
 	@serial internal storage of eigenvectors.
+	*/
 	private double[][] V;
+
+	/** Array for internal storage of nonsymmetric Hessenberg form.
 	@serial internal storage of nonsymmetric Hessenberg form.
+	*/
 	private double[][] H;
+
+	/** Working storage for nonsymmetric algorithm.
 	@serial working storage for nonsymmetric algorithm.
+	*/
 	private double[] ort;
+
 	// Complex scalar division.
+
 	private transient double cdivr, cdivi;
+
+
         private int maxIterations;
+
         static private int maxIterationsDefault = 100000;
         static private String ERROR_STRING = "Eigendecomposition is not converged.";
+
+/**
 Constructs and returns a new eigenvalue decomposition object;
 The decomposed matrices can be retrieved via instance methods of the returned decomposition object.
 Checks for symmetry, then constructs the eigenvalue decomposition.
 @param A    A square matrix.
 @return     A decomposition object to access <tt>D</tt> and <tt>V</tt>.
 @throws IllegalArgumentException if <tt>A</tt> is not square.
+*/
 public RobustEigenDecomposition(DoubleMatrix2D A) throws ArithmeticException {
     this(A,maxIterationsDefault);
 }
+
+
 public RobustEigenDecomposition(DoubleMatrix2D A, int maxIterations) throws ArithmeticException {
+
 	Property.DEFAULT.checkSquare(A);
+
     this.maxIterations = maxIterations;
+
 	n = A.columns();
 	V = new double[n][n];
 	d = new double[n];
 	e = new double[n];
+
 	issymmetric = Property.DEFAULT.isSymmetric(A);
+
 	if (issymmetric) {
 		for (int i = 0; i < n; i++) {
 			for (int j = 0; j < n; j++) {
 				V[i][j] = A.getQuick(i,j);
 			}
 		}
+
 		// Tridiagonalize.
 		tred2();
+
 		// Diagonalize.
 		tql2();
+
 	}
 	else {
 		H = new double[n][n];
 		ort = new double[n];
+
 		for (int j = 0; j < n; j++) {
 			for (int i = 0; i < n; i++) {
 				H[i][j] = A.getQuick(i,j);
 			}
 		}
+
 		// Reduce to Hessenberg form.
 		orthes();
+
 		// Reduce Hessenberg to real Schur form.
 		hqr2();
 	}
@@ -81,8 +131,10 @@ private void cdiv(double xr, double xi, double yr, double yi) {
 		cdivi = (r*xi - xr)/d;
 	}
 }
+/**
 Returns the block diagonal eigenvalue matrix, <tt>D</tt>.
 @return     <tt>D</tt>
+*/
 public DoubleMatrix2D getD() {
 	double[][] D = new double[n][n];
 	for (int i = 0; i < n; i++) {
@@ -99,28 +151,38 @@ public DoubleMatrix2D getD() {
 	}
 	return DoubleFactory2D.dense.make(D);
 }
+/**
 Returns the imaginary parts of the eigenvalues.
 @return     imag(diag(D))
+*/
 public DoubleMatrix1D getImagEigenvalues () {
 	return DoubleFactory1D.dense.make(e);
 }
+/**
 Returns the real parts of the eigenvalues.
 @return     real(diag(D))
+*/
 public DoubleMatrix1D getRealEigenvalues () {
 	return DoubleFactory1D.dense.make(d);
 }
+/**
 Returns the eigenvector matrix, <tt>V</tt>
 @return     <tt>V</tt>
+*/
 public DoubleMatrix2D getV () {
 	return DoubleFactory2D.dense.make(V);
 }
+/**
 Nonsymmetric reduction from Hessenberg to real Schur form.
+*/
 private void hqr2()  throws ArithmeticException {
 	  //  This is derived from the Algol procedure hqr2,
 	  //  by Martin and Wilkinson, Handbook for Auto. Comp.,
 	  //  Vol.ii-Linear Algebra, and the corresponding
 	  //  Fortran subroutine in EISPACK.
+
 	  // Initialize
+
 	  int nn = this.n;
 	  int n = nn-1;
 	  int low = 0;
@@ -128,7 +190,9 @@ private void hqr2()  throws ArithmeticException {
 	  double eps = Math.pow(2.0,-52.0);
 	  double exshift = 0.0;
 	  double p=0,q=0,r=0,s=0,z=0,t,w,x,y;
+
 	  // Store roots isolated by balanc and compute matrix norm
+
 	  double norm = 0.0;
 	  for (int i = 0; i < nn; i++) {
 		 if (i < low | i > high) {
@@ -139,10 +203,14 @@ private void hqr2()  throws ArithmeticException {
 			norm = norm + Math.abs(H[i][j]);
 		 }
 	  }
+
 	  // Outer loop over eigenvalue index
+
 	  int iter = 0;
 	  while (n >= low) {
+
 		 // Look for single small sub-diagonal element
+
 		 int l = n;
 		 while (l > low) {
 			s = Math.abs(H[l-1][l-1]) + Math.abs(H[l][l]);
@@ -154,15 +222,19 @@ private void hqr2()  throws ArithmeticException {
 			}
 			l--;
 		 }
+
 		 // Check for convergence
 		 // One root found
+
 		 if (l == n) {
 			H[n][n] = H[n][n] + exshift;
 			d[n] = H[n][n];
 			e[n] = 0.0;
 			n--;
 			iter = 0;
+
 		 // Two roots found
+
 		 } else if (l == n-1) {
 			w = H[n][n-1] * H[n-1][n];
 			p = (H[n-1][n-1] - H[n][n]) / 2.0;
@@ -171,7 +243,9 @@ private void hqr2()  throws ArithmeticException {
 			H[n][n] = H[n][n] + exshift;
 			H[n-1][n-1] = H[n-1][n-1] + exshift;
 			x = H[n][n];
+
 			// Real pair
+
 			if (q >= 0) {
 			   if (p >= 0) {
 				  z = p + z;
@@ -192,25 +266,33 @@ private void hqr2()  throws ArithmeticException {
 			   r = Math.sqrt(p * p+q * q);
 			   p = p / r;
 			   q = q / r;
+
 			   // Row modification
+
 			   for (int j = n-1; j < nn; j++) {
 				  z = H[n-1][j];
 				  H[n-1][j] = q * z + p * H[n][j];
 				  H[n][j] = q * H[n][j] - p * z;
 			   }
+
 			   // Column modification
+
 			   for (int i = 0; i <= n; i++) {
 				  z = H[i][n-1];
 				  H[i][n-1] = q * z + p * H[i][n];
 				  H[i][n] = q * H[i][n] - p * z;
 			   }
+
 			   // Accumulate transformations
+
 			   for (int i = low; i <= high; i++) {
 				  z = V[i][n-1];
 				  V[i][n-1] = q * z + p * V[i][n];
 				  V[i][n] = q * V[i][n] - p * z;
 			   }
+
 			// Complex pair
+
 			} else {
 			   d[n-1] = x + p;
 			   d[n] = x + p;
@@ -219,9 +301,13 @@ private void hqr2()  throws ArithmeticException {
 			}
 			n = n - 2;
 			iter = 0;
+
 		 // No convergence yet
+
 		 } else {
+
 			// Form shift
+
 			x = H[n][n];
 			y = 0.0;
 			w = 0.0;
@@ -229,7 +315,9 @@ private void hqr2()  throws ArithmeticException {
 			   y = H[n-1][n-1];
 			   w = H[n][n-1] * H[n-1][n];
 			}
+
 			// Wilkinson's original ad hoc shift
+
 			if (iter == 10) {
 			   exshift += x;
 			   for (int i = low; i <= n; i++) {
@@ -239,7 +327,9 @@ private void hqr2()  throws ArithmeticException {
 			   x = y = 0.75 * s;
 			   w = -0.4375 * s * s;
 			}
+
 			// MATLAB's new ad hoc shift
+
 			if (iter == 30) {
 				s = (y - x) / 2.0;
 				s = s * s + w;
@@ -256,10 +346,13 @@ private void hqr2()  throws ArithmeticException {
 					x = y = w = 0.964;
 				}
 			}
+
 			iter = iter + 1;   // (Could check iteration count here.)
                          if(iter > maxIterations)
                                  throw new ArithmeticException(ERROR_STRING);
+
 			// Look for two consecutive small sub-diagonal elements
+
 			int m = n-2;
 			while (m >= l) {
 			   z = H[m][m];
@@ -282,13 +375,16 @@ private void hqr2()  throws ArithmeticException {
 			   }
 			   m--;
 			}
+
 			for (int i = m+2; i <= n; i++) {
 			   H[i][i-2] = 0.0;
 			   if (i > m+2) {
 				  H[i][i-3] = 0.0;
 			   }
 			}
+
 			// Double QR step involving rows l:n and columns m:n
+
 			for (int k = m; k <= n-1; k++) {
 			   boolean notlast = (k != n-1);
 			   if (k != m) {
@@ -321,7 +417,9 @@ private void hqr2()  throws ArithmeticException {
 				  z = r / s;
 				  q = q / p;
 				  r = r / p;
+
 				  // Row modification
+
 				  for (int j = k; j < nn; j++) {
 					 p = H[k][j] + q * H[k+1][j];
 					 if (notlast) {
@@ -331,7 +429,9 @@ private void hqr2()  throws ArithmeticException {
 					 H[k][j] = H[k][j] - p * x;
 					 H[k+1][j] = H[k+1][j] - p * y;
 				  }
+
 				  // Column modification
+
 				  for (int i = 0; i <= Math.min(n,k+3); i++) {
 					 p = x * H[i][k] + y * H[i][k+1];
 					 if (notlast) {
@@ -341,7 +441,9 @@ private void hqr2()  throws ArithmeticException {
 					 H[i][k] = H[i][k] - p;
 					 H[i][k+1] = H[i][k+1] - p * q;
 				  }
+
 				  // Accumulate transformations
+
 				  for (int i = low; i <= high; i++) {
 					 p = x * V[i][k] + y * V[i][k+1];
 					 if (notlast) {
@@ -355,14 +457,19 @@ private void hqr2()  throws ArithmeticException {
 			}  // k loop
 		 }  // check convergence
 	  }  // while (n >= low)
+
 	  // Backsubstitute to find vectors of upper triangular form
+
 	  if (norm == 0.0) {
 		 return;
 	  }
+
 	  for (n = nn-1; n >= 0; n--) {
 		 p = d[n];
 		 q = e[n];
+
 		 // Real vector
+
 		 if (q == 0) {
 			int l = n;
 			H[n][n] = 1.0;
@@ -383,7 +490,9 @@ private void hqr2()  throws ArithmeticException {
 					 } else {
 						H[i][n] = -r / (eps * norm);
 					 }
+
 				  // Solve real equations
+
 				  } else {
 					 x = H[i][i+1];
 					 y = H[i+1][i];
@@ -396,7 +505,9 @@ private void hqr2()  throws ArithmeticException {
 						H[i+1][n] = (-s - y * t) / z;
 					 }
 				  }
+
 				  // Overflow control
+
 				  t = Math.abs(H[i][n]);
 				  if ((eps * t) * t > 1) {
 					 for (int j = i; j <= n; j++) {
@@ -405,10 +516,14 @@ private void hqr2()  throws ArithmeticException {
 				  }
 			   }
 			}
+
 		 // Complex vector
+
 		 } else if (q < 0) {
 			int l = n-1;
+
 			// Last vector component imaginary so matrix is triangular
+
 			if (Math.abs(H[n][n-1]) > Math.abs(H[n-1][n])) {
 			   H[n-1][n-1] = q / H[n][n-1];
 			   H[n-1][n] = -(H[n][n] - p) / H[n][n-1];
@@ -428,6 +543,7 @@ private void hqr2()  throws ArithmeticException {
 				  sa = sa + H[i][j] * H[j][n];
 			   }
 			   w = H[i][i] - p;
+
 			   if (e[i] < 0.0) {
 				  z = w;
 				  r = ra;
@@ -439,7 +555,9 @@ private void hqr2()  throws ArithmeticException {
 					 H[i][n-1] = cdivr;
 					 H[i][n] = cdivi;
 				  } else {
+
 					 // Solve complex equations
+
 					 x = H[i][i+1];
 					 y = H[i+1][i];
 					 vr = (d[i] - p) * (d[i] - p) + e[i] * e[i] - q * q;
@@ -460,7 +578,9 @@ private void hqr2()  throws ArithmeticException {
 						H[i+1][n] = cdivi;
 					 }
 				  }
+
 				  // Overflow control
+
 				  t = Math.max(Math.abs(H[i][n-1]),Math.abs(H[i][n]));
 				  if ((eps * t) * t > 1) {
 					 for (int j = i; j <= n; j++) {
@@ -472,7 +592,9 @@ private void hqr2()  throws ArithmeticException {
 			}
 		 }
 	  }
+
 	  // Vectors of isolated roots
+
 	  for (int i = 0; i < nn; i++) {
 		 if (i < low | i > high) {
 			for (int j = i; j < nn; j++) {
@@ -480,7 +602,9 @@ private void hqr2()  throws ArithmeticException {
 			}
 		 }
 	  }
+
 	  // Back transformation to get eigenvectors of original matrix
+
 	  for (int j = nn-1; j >= low; j--) {
 		 for (int i = low; i <= high; i++) {
 			z = 0.0;
@@ -491,22 +615,30 @@ private void hqr2()  throws ArithmeticException {
 		 }
 	  }
    }
+/**
 Nonsymmetric reduction to Hessenberg form.
+*/
 private void orthes () {
 	  //  This is derived from the Algol procedures orthes and ortran,
 	  //  by Martin and Wilkinson, Handbook for Auto. Comp.,
 	  //  Vol.ii-Linear Algebra, and the corresponding
 	  //  Fortran subroutines in EISPACK.
+
 	  int low = 0;
 	  int high = n-1;
+
 	  for (int m = low+1; m <= high-1; m++) {
+
 		 // Scale column.
+
 		 double scale = 0.0;
 		 for (int i = m; i <= high; i++) {
 			scale = scale + Math.abs(H[i][m-1]);
 		 }
 		 if (scale != 0.0) {
+
 			// Compute Householder transformation.
+
 			double h = 0.0;
 			for (int i = high; i >= m; i--) {
 			   ort[i] = H[i][m-1]/scale;
@@ -518,8 +650,10 @@ private void orthes () {
 			}
 			h = h - ort[m] * g;
 			ort[m] = ort[m] - g;
+
 			// Apply Householder similarity transformation
 			// H = (I-u*u'/h)*H*(I-u*u')/h)
+
 			for (int j = m; j < n; j++) {
 			   double f = 0.0;
 			   for (int i = high; i >= m; i--) {
@@ -530,6 +664,7 @@ private void orthes () {
 				  H[i][j] -= f*ort[i];
 			   }
 		   }
+
 		   for (int i = 0; i <= high; i++) {
 			   double f = 0.0;
 			   for (int j = high; j >= m; j--) {
@@ -544,12 +679,15 @@ private void orthes () {
 			H[m][m-1] = scale*g;
 		 }
 	  }
+
 	  // Accumulate transformations (Algol's ortran).
+
 	  for (int i = 0; i < n; i++) {
 		 for (int j = 0; j < n; j++) {
 			V[i][j] = (i == j ? 1.0 : 0.0);
 		 }
 	  }
+
 	  for (int m = high-1; m >= low+1; m--) {
 		 if (H[m][m-1] != 0.0) {
 			for (int i = m+1; i <= high; i++) {
@@ -569,6 +707,7 @@ private void orthes () {
 		 }
 	  }
    }
+/**
 Returns a String with (propertyName, propertyValue) pairs.
 Useful for debugging or to quickly get the rough picture.
 For example,
@@ -576,41 +715,55 @@ For example,
 rank          : 3
 trace         : 0
 </pre>
+*/
 public String toString() {
 	StringBuffer buf = new StringBuffer();
 	String unknown = "Illegal operation or error: ";
+
 	buf.append("---------------------------------------------------------------------\n");
 	buf.append("EigenvalueDecomposition(A) --> D, V, realEigenvalues, imagEigenvalues\n");
 	buf.append("---------------------------------------------------------------------\n");
+
 	buf.append("realEigenvalues = ");
 	try { buf.append(String.valueOf(this.getRealEigenvalues()));}
 	catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
+
 	buf.append("\nimagEigenvalues = ");
 	try { buf.append(String.valueOf(this.getImagEigenvalues()));}
 	catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
+
 	buf.append("\n\nD = ");
 	try { buf.append(String.valueOf(this.getD()));}
 	catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
+
 	buf.append("\n\nV = ");
 	try { buf.append(String.valueOf(this.getV()));}
 	catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
+
 	return buf.toString();
 }
+/**
 Symmetric tridiagonal QL algorithm.
+*/
 private void tql2 () throws ArithmeticException  {
+
 	//  This is derived from the Algol procedures tql2, by
 	//  Bowdler, Martin, Reinsch, and Wilkinson, Handbook for
 	//  Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
 	//  Fortran subroutine in EISPACK.
+
 	  for (int i = 1; i < n; i++) {
 		 e[i-1] = e[i];
 	  }
 	  e[n-1] = 0.0;
+
 	  double f = 0.0;
 	  double tst1 = 0.0;
 	  double eps = Math.pow(2.0,-52.0);
 	  for (int l = 0; l < n; l++) {
+
 		 // Find small subdiagonal element
+
 		 tst1 = Math.max(tst1,Math.abs(d[l]) + Math.abs(e[l]));
 		 int m = l;
 		 while (m < n) {
@@ -619,15 +772,19 @@ private void tql2 () throws ArithmeticException  {
 			}
 			m++;
 		 }
+
 		 // If m == l, d[l] is an eigenvalue,
 		 // otherwise, iterate.
+
 		 if (m > l) {
 			int iter = 0;
 			do {
 			   iter = iter + 1;  // (Could check iteration count here.)
                                   if( iter > maxIterations)
                                            throw new ArithmeticException(ERROR_STRING);
+
 			   // Compute implicit shift
+
 			   double g = d[l];
 			   double p = (d[l+1] - g) / (2.0 * e[l]);
 			   double r = MathUtils.hypot(p,1.0);
@@ -642,7 +799,9 @@ private void tql2 () throws ArithmeticException  {
 				  d[i] -= h;
 			   }
 			   f = f + h;
+
 			   // Implicit QL transformation.
+
 			   p = d[m];
 			   double c = 1.0;
 			   double c2 = c;
@@ -662,7 +821,9 @@ private void tql2 () throws ArithmeticException  {
 				  c = p / r;
 				  p = c * d[i] - s * g;
 				  d[i+1] = h + s * (c * g + s * d[i]);
+
 				  // Accumulate transformation.
+
 				  for (int k = 0; k < n; k++) {
 					 h = V[k][i+1];
 					 V[k][i+1] = s * V[k][i] + c * h;
@@ -672,13 +833,17 @@ private void tql2 () throws ArithmeticException  {
 			   p = -s * s2 * c3 * el1 * e[l] / dl1;
 			   e[l] = s * p;
 			   d[l] = c * p;
+
 			   // Check for convergence.
+
 			} while (Math.abs(e[l]) > eps*tst1);
 		 }
 		 d[l] = d[l] + f;
 		 e[l] = 0.0;
 	  }
+
 	  // Sort eigenvalues and corresponding vectors.
+
 	  for (int i = 0; i < n-1; i++) {
 		 int k = i;
 		 double p = d[i];
@@ -699,18 +864,27 @@ private void tql2 () throws ArithmeticException  {
 		 }
 	  }
    }
+/**
 Symmetric Householder reduction to tridiagonal form.
+*/
 private void tred2 () {
    //  This is derived from the Algol procedures tred2 by
    //  Bowdler, Martin, Reinsch, and Wilkinson, Handbook for
    //  Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
    //  Fortran subroutine in EISPACK.
+
+
 	  for (int j = 0; j < n; j++) {
 		 d[j] = V[n-1][j];
 	  }
+
+
 	  // Householder reduction to tridiagonal form.
+
 	  for (int i = n-1; i > 0; i--) {
+
 		 // Scale to avoid under/overflow.
+
 		 double scale = 0.0;
 		 double h = 0.0;
 		 for (int k = 0; k < i; k++) {
@@ -724,7 +898,9 @@ private void tred2 () {
 			   V[j][i] = 0.0;
 			}
 		 } else {
+
 			// Generate Householder vector.
+
 			for (int k = 0; k < i; k++) {
 			   d[k] /= scale;
 			   h += d[k] * d[k];
@@ -740,7 +916,9 @@ private void tred2 () {
 			for (int j = 0; j < i; j++) {
 			   e[j] = 0.0;
 			}
+
 			// Apply similarity transformation to remaining columns.
+
 			for (int j = 0; j < i; j++) {
 			   f = d[j];
 			   V[j][i] = f;
@@ -772,7 +950,9 @@ private void tred2 () {
 		 }
 		 d[i] = h;
 	  }
+
 	  // Accumulate transformations.
+
 	  for (int i = 0; i < n-1; i++) {
 		 V[n-1][i] = V[i][i];
 		 V[i][i] = 1.0;
@@ -802,4 +982,5 @@ private void tred2 () {
 	  V[n-1][n-1] = 1.0;
 	  e[0] = 0.0;
    }
+
 }

@@ -1,71 +1,103 @@
 package test.dr.distibutions;
+
 import dr.math.distributions.InverseGaussianDistribution;
 import dr.math.interfaces.OneVariableFunction;
 import dr.math.iterations.BisectionZeroFinder;
 import junit.framework.TestCase;
+
+/**
+ * @author Wai Lok Sibon Li
+ */
 public class InverseGaussianDistributionTest extends TestCase {
+
     InverseGaussianDistribution invGaussian;
+
     public void setUp() {
+
         invGaussian = new InverseGaussianDistribution(1.0, 2.0);
     }
+
     public void testPdf() {
+
         System.out.println("Testing 10000 random pdf calls");
+
         for (int i = 0; i < 10000; i++) {
             double M = Math.random() * 10.0 + 0.1;
             double S = Math.random() * 5.0 + 0.01;
+
             double x = Math.random() * 10;
+
             invGaussian.setMean(M);
             invGaussian.setShape(S);
+
             //double pdf = 1.0 / (x * S * Math.sqrt(2 * Math.PI)) * Math.exp(-Math.pow(Math.log(x) - M, 2) / (2 * S * S));
             double pdf = Math.sqrt(S/(2.0 * Math.PI * x * x * x)) * Math.exp((-1.0 * S * Math.pow((x - M), 2))/(2 * M * M * x));
             assertEquals(pdf, invGaussian.pdf(x), 1e-10);
         }
+
+        /* Test with an example using R */
         invGaussian.setMean(2.835202292812448);
         invGaussian.setShape(3.539139491639669);
         assertEquals(0.1839934, invGaussian.pdf(2.540111), 1e-6);
     }
+
     public void testMean() {
+
         for (int i = 0; i < 1000; i++) {
             double M = Math.random() * 10.0 + 0.1;
             double S = Math.random() * 5.0 + 0.01;
+
             invGaussian.setMean(M);
             invGaussian.setShape(S);
+
             assertEquals(M, invGaussian.mean(), 1e-10);
         }
     }
+
     public void testVariance() {
+
         for (int i = 0; i < 1000; i++) {
             double M = Math.random() * 10.0 + 0.1;
             double S = Math.random() * 5.0 + 0.01;
+
             invGaussian.setMean(M);
             invGaussian.setShape(S);
             double variance = (M * M * M) / S;
             assertEquals(variance, invGaussian.variance(), 1e-8);
         }
     }
+
     public void testShape() {
+
         System.out.println("Testing 10000 random quantile(0.5) calls");
+
         for (int i = 0; i < 10000; i++) {
             double M = Math.random() * 10.0 + 0.1;
             double S = Math.random() * 5.0 + 0.01;
+
             invGaussian.setMean(M);
             invGaussian.setShape(S);
+
             assertEquals(S, invGaussian.getShape(), 1e-10);
         }
     }
+
     public void testCDFAndQuantile() {		
         invGaussian.setMean(1.0);
         invGaussian.setShape(351.7561121947152);
         double q = invGaussian.quantile(0.20811009197062338);
         assertEquals(0.20811009197062338, invGaussian.cdf(q), 3.0e-3);
+
         for (int i = 0; i < 10000; i++) {
             double M = 1.0;
             double S = Math.random() * 1000.0 + 0.01;
             invGaussian.setMean(M);
             invGaussian.setShape(S);
+
             double p = Math.random()*0.98 + 0.01;
             double quantile = invGaussian.quantile(p);
             //System.out.println(quantile + "\t" + p + "\t" + M + "\t" + S);
+
             double cdf = invGaussian.cdf(quantile);
             if(((int)S)==351) {
                 assertEquals(p, cdf, 1.0e-2);
@@ -74,22 +106,28 @@ public class InverseGaussianDistributionTest extends TestCase {
                 assertEquals(p, cdf, 1.0e-3);
             }
         }
+
+        /* Test with examples using R */
         invGaussian.setMean(5);
         invGaussian.setShape(0.5);
         assertEquals(0.75, invGaussian.cdf(3.022232), 1e-5);
+
         invGaussian.setMean(1.0);
         invGaussian.setShape(17.418709855826197);
         double q2 =invGaussian.quantile(0.27959422055126726);
         double p_hat = invGaussian.cdf(q2);
         assertEquals(0.27959422055126726, p_hat, 1.0e-3);
+
         invGaussian.setMean(1.0);
         invGaussian.setShape(0.4078303443934461);
         assertEquals(0.05514379243099207, invGaussian.cdf(invGaussian.quantile(0.05514379243099207)), 1.0e-3);
     }
+
     public void testCDFAndQuantile2() {
         final InverseGaussianDistribution f = new InverseGaussianDistribution(1, 1);
         for (double i = 0.01; i < 0.95; i += 0.01) {
             final double y = i;
+
             BisectionZeroFinder zeroFinder = new BisectionZeroFinder(new OneVariableFunction() {
                 public double value(double x) {
                     return f.cdf(x) - y;
@@ -100,6 +138,7 @@ public class InverseGaussianDistributionTest extends TestCase {
             assertEquals(f.quantile(i), zeroFinder.getResult(), 1e-3);
         }
     }
+
     public void testCDFAndQuantile3() {
         double[] shapes = {0.010051836, 0.011108997, 0.01227734, 0.013568559, 0.014995577,
                 0.016572675, 0.018315639, 0.020241911, 0.022370772, 0.024723526, 0.027323722,

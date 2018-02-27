@@ -1,9 +1,17 @@
 package dr.inference.model;
+
+/**
+ * @author Marc Suchard
+ */
 public class CompoundSymmetricMatrix extends MatrixParameter {
+
     private Parameter diagonalParameter;
     private Parameter offDiagonalParameter;
+
     private boolean asCorrelation = false;
+
     private int dim;
+
     public CompoundSymmetricMatrix(Parameter diagonals, Parameter offDiagonal, boolean asCorrelation) {
         super(MATRIX_PARAMETER);
         diagonalParameter = diagonals;
@@ -13,6 +21,7 @@ public class CompoundSymmetricMatrix extends MatrixParameter {
         dim = diagonalParameter.getDimension();
         this.asCorrelation = asCorrelation;
     }
+
     public double[] getAttributeValue() {
         double[] stats = new double[dim * dim];
         int index = 0;
@@ -24,12 +33,15 @@ public class CompoundSymmetricMatrix extends MatrixParameter {
         }        
         return stats;
     }
+
     public double[] getDiagonals() {
         return diagonalParameter.getParameterValues();
     }
+
     public double getOffDiagonal() {
         return offDiagonalParameter.getParameterValue(0);
     }
+
     public double getParameterValue(int row, int col) {
         if (row != col) {
             if (asCorrelation) {
@@ -40,6 +52,7 @@ public class CompoundSymmetricMatrix extends MatrixParameter {
         }
         return diagonalParameter.getParameterValue(row);
     }
+
     public double[][] getParameterAsMatrix() {
         final int I = dim;
         double[][] parameterAsMatrix = new double[I][I];
@@ -51,10 +64,13 @@ public class CompoundSymmetricMatrix extends MatrixParameter {
         }
         return parameterAsMatrix;
     }
+
     public int getColumnDimension() {
         return diagonalParameter.getDimension();
     }
+
     public int getRowDimension() {
         return diagonalParameter.getDimension();
     }
+
 }

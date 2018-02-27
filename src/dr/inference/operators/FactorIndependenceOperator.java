@@ -1,4 +1,30 @@
+/*
+ * FactorIndependenceOperator.java
+ *
+ * Copyright (c) 2002-2014 Alexei Drummond, Andrew Rambaut and Marc Suchard
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.inference.operators;
+
 import dr.inference.model.DiagonalMatrix;
 import dr.inference.model.LatentFactorModel;
 import dr.inference.model.MatrixParameter;
@@ -6,6 +32,14 @@ import dr.inference.model.Parameter;
 import dr.math.MathUtils;
 import dr.math.distributions.MultivariateNormalDistribution;
 import dr.math.matrixAlgebra.SymmetricMatrix;
+
+/**
+ * Created with IntelliJ IDEA.
+ * User: max
+ * Date: 5/22/14
+ * Time: 12:49 PM
+ * To change this template use File | Settings | File Templates.
+ */
 public class FactorIndependenceOperator extends AbstractCoercableOperator {
     private static final String FACTOR_OPERATOR = "factorOperator";
     private LatentFactorModel LFM;
@@ -16,6 +50,7 @@ public class FactorIndependenceOperator extends AbstractCoercableOperator {
     private int numFactors;
     private boolean randomScan;
     private double scaleFactor;
+
     public FactorIndependenceOperator(LatentFactorModel LFM, double weight, boolean randomScan, DiagonalMatrix diffusionPrecision, double scaleFactor, CoercionMode mode) {
         super(mode);
         this.scaleFactor = scaleFactor;
@@ -24,7 +59,9 @@ public class FactorIndependenceOperator extends AbstractCoercableOperator {
         this.randomScan = randomScan;
         this.diffusionPrecision = diffusionPrecision;
         setupParameters();
+
     }
+
     private void setupParameters() {
         if (numFactors != LFM.getFactorDimension()) {
             numFactors = LFM.getFactorDimension();
@@ -33,6 +70,7 @@ public class FactorIndependenceOperator extends AbstractCoercableOperator {
             precision = new double[numFactors][numFactors];
         }
     }
+
     private void getPrecision(double[][] precision) {
         MatrixParameter Loadings = LFM.getLoadings();
         MatrixParameter Precision = LFM.getColumnPrecision();
@@ -51,8 +89,10 @@ public class FactorIndependenceOperator extends AbstractCoercableOperator {
                     precision[j][i] = sum;
                 }
             }
+
         }
     }
+
     private void getMean(int column, double[][] variance, double[] midMean, double[] mean) {
         MatrixParameter scaledData = LFM.getScaledData();
         MatrixParameter Precision = LFM.getColumnPrecision();
@@ -71,12 +111,14 @@ public class FactorIndependenceOperator extends AbstractCoercableOperator {
             }
             mean[i] = sum;
         }
+
 //        try {
 //            answer=getPrecision().inverse().product(new Matrix(LFM.getLoadings().getParameterAsMatrix())).product(new Matrix(LFM.getColumnPrecision().getParameterAsMatrix())).product(data);
 //        } catch (IllegalDimension illegalDimension) {
 //            illegalDimension.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
 //        }
     }
+
     private void copy(double[] put, int i) {
         Parameter working = LFM.getFactors().getParameter(i);
         for (int j = 0; j < working.getSize(); j++) {
@@ -84,23 +126,30 @@ public class FactorIndependenceOperator extends AbstractCoercableOperator {
         }
         working.fireParameterChangedEvent();
     }
+
     public int getStepCount() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
     @Override
     public String getPerformanceSuggestion() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
     @Override
     public String getOperatorName() {
         return FACTOR_OPERATOR;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
     public void randomDraw(int i, double[][] variance) {
         double[] nextValue;
         getMean(i, variance, midMean, mean);
+
         nextValue = MultivariateNormalDistribution.nextMultivariateNormalVariance(mean, variance, scaleFactor);
+
         copy(nextValue, i);
     }
+
     @Override
     public double doOperation() throws OperatorFailedException {
         setupParameters();
@@ -114,16 +163,21 @@ public class FactorIndependenceOperator extends AbstractCoercableOperator {
             randomDraw(i, variance);
         }
         LFM.getFactors().fireParameterChangedEvent();
+
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
+
     @Override
     public double getCoercableParameter() {
         return Math.log(scaleFactor);
     }
+
     @Override
     public void setCoercableParameter(double value) {
         scaleFactor = Math.exp(value);
     }
+
     @Override
     public double getRawParameter() {
         return scaleFactor;

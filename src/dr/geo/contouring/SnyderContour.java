@@ -1,9 +1,22 @@
 package dr.geo.contouring;
+
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.LinkedList;
 import java.util.List;
+
+
+/* This class provides 2D contouring functionality.  This code is adapted from
+ * ContourPlot.java by David Rand (1997) "Contour Plotting in Java" MacTech, volume 13.
+ * Rand, in turn, ported to Java from Fortan:
+ *
+ *      Snyder WV (1978) "Algorithm 531, Contour Plotting [J6]", ACM Trans. Math. Softw., 4, 290-294.
+ *
+ * @author Marc Suchard
+ */
+
 public class SnyderContour {
+
     // Below, constant data members:
     final static boolean SHOW_NUMBERS = true;
     final static int BLANK = 32,
@@ -18,6 +31,7 @@ public class SnyderContour {
             Z_MIN_MIN = -Z_MAX_MAX;
     final static String EOL =
             System.getProperty("line.separator");
+
     // Below, data members which store the grid steps,
     // the z values, the interpolation flag, the dimensions
     // of the contour plot and the increments in the grid:
@@ -26,6 +40,7 @@ public class SnyderContour {
     boolean logInterpolation = false;
     Dimension d;
     double deltaX, deltaY;
+
     // Below, data members, most of which are adapted from
     // Fortran variables in Snyder's code:
     int ncv = N_CONTOURS;
@@ -44,6 +59,7 @@ public class SnyderContour {
     double prevXY[] = new double[2];
     float cv[] = new float[ncv];
     boolean jump;
+
     //-------------------------------------------------------
     // A constructor method.
     //-------------------------------------------------------
@@ -52,21 +68,27 @@ public class SnyderContour {
         xSteps = x;
         ySteps = y;
     }
+
     public void setDeltas(double xDelta, double yDelta) {
         this.deltaX = xDelta;
         this.deltaY = yDelta;
     }
+
     double offsetX, offsetY;
+
     public void setOffsets(double xOffset, double yOffset) {
         this.offsetX = xOffset;
         this.offsetY = yOffset;
     }
+
+
     //-------------------------------------------------------
     int sign(int a, int b) {
         a = Math.abs(a);
         if (b < 0) return -a;
         else return a;
     }
+
     //-------------------------------------------------------
     // "DrawKernel" is the guts of drawing and is called
     // directly or indirectly by "ContourPlotKernel" in order
@@ -84,9 +106,11 @@ public class SnyderContour {
     // completing a contour ("iflag" == 4 or 5) the contour
     // index is drawn adjacent to where the contour ends.
     //-------------------------------------------------------
+
     void DrawKernel(List<LinkedList<Point2D>> allPaths) {
         double          //prevU,prevV,
                 u, v;
+
         if ((iflag == 1) || (iflag == 4) || (iflag == 5)) {         // continue drawing ...
             if (cntrIndex != prevIndex) { // Must change colour
                 //SetColour(g);
@@ -96,6 +120,7 @@ public class SnyderContour {
 //			prevV = ((prevXY[1] - 1.0) * deltaY);
             u = ((xy[0] - 1.0) * deltaX) + offsetX;
             v = ((xy[1] - 1.0) * deltaY) + offsetY;
+
             // Interchange horizontal & vertical
 //			g.drawLine(PLOT_MARGIN+prevV,PLOT_MARGIN+prevU,
 //				   PLOT_MARGIN+v, PLOT_MARGIN+u);
@@ -121,6 +146,7 @@ public class SnyderContour {
         prevXY[0] = xy[0];
         prevXY[1] = xy[1];
     }
+
     //-------------------------------------------------------
     // "DetectBoundary"
     //-------------------------------------------------------
@@ -147,6 +173,7 @@ public class SnyderContour {
         }
         if (z[ij[0]][ij[1]] >= Z_MAX_MAX) ix = ix + 2;
     }
+
     //-------------------------------------------------------
     // "Routine_label_020" corresponds to a block of code
     // starting at label 20 in Synder's subroutine "GCONTR".
@@ -169,6 +196,7 @@ public class SnyderContour {
         elle = 0;
         return false;
     }
+
     //-------------------------------------------------------
     // "Routine_label_050" corresponds to a block of code
     // starting at label 50 in Synder's subroutine "GCONTR".
@@ -196,6 +224,7 @@ public class SnyderContour {
         jump = false;
         return false;
     }
+
     //-------------------------------------------------------
     // "Routine_label_150" corresponds to a block of code
     // starting at label 150 in Synder's subroutine "GCONTR".
@@ -236,6 +265,7 @@ public class SnyderContour {
                 if (nxidir > 3) nxidir = 0;
                 continue;
             }
+
             if (ibkey != 0) return true;
             ibkey = 1;
             ij[0] = icur;
@@ -244,6 +274,7 @@ public class SnyderContour {
             return false;
         }
     }
+
     //-------------------------------------------------------
     // "Routine_label_200" corresponds to a block of code
     // starting at label 200 in Synder's subroutine "GCONTR".
@@ -272,6 +303,7 @@ public class SnyderContour {
             intersect[iedge - 1] = intersect[ks - 1];
         }
     }
+
     //-------------------------------------------------------
     // "CrossedByContour" is true iff the current segment in
     // the grid is crossed by one of the contour values and
@@ -284,6 +316,7 @@ public class SnyderContour {
         z2 = z[ii - 1][jj - 1];
         for (cntrIndex = 0; cntrIndex < ncv; cntrIndex++) {
             int i = 2 * (xSteps * (ySteps * cntrIndex + ij[1] - 1) + ij[0] - 1) + elle;
+
             if (!workSpace[i]) {
                 float x = cv[cntrIndex];
                 if ((x > Math.min(z1, z2)) && (x <= Math.max(z1, z2))) {
@@ -294,12 +327,14 @@ public class SnyderContour {
         }
         return false;
     }
+
     //-------------------------------------------------------
     // "ContinueContour" continues tracing a contour. Edges
     // are numbered clockwise, the bottom edge being # 1.
     //-------------------------------------------------------
     void ContinueContour() {
         short local_k;
+
         ni = 1;
         if (iedge >= 3) {
             ij[0] = ij[0] - i3[iedge - 1];
@@ -316,6 +351,7 @@ public class SnyderContour {
                 if ((cval > Math.min(z1, z2) && (cval <= Math.max(z1, z2)))) {
                     if ((local_k == 1) || (local_k == 4)) {
                         double zz = z2;
+
                         z2 = z1;
                         z1 = zz;
                     }
@@ -354,19 +390,27 @@ public class SnyderContour {
             elle = ks - 3;
         }
     }
+
+
     void ContourKernel(double[][] data, List<LinkedList<Point2D>> allPaths, double level) {
+
         ncv = 1;
         cv[0] = (float) level;
+
         int workLength = 2 * xSteps * ySteps * ncv;
         boolean workSpace[]; // Allocate below if data valid
+
         z = new float[data.length][data[0].length];
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[i].length; j++)
                 z[i][j] = (float) data[i][j];
         }
+
         workSpace = new boolean[workLength];
         ContourPlotKernel(allPaths, workSpace);
+
     }
+
     //-------------------------------------------------------
     // "ContourPlotKernel" is the guts of this class and
     // corresponds to Synder's subroutine "GCONTR".
@@ -374,6 +418,7 @@ public class SnyderContour {
     void ContourPlotKernel(List<LinkedList<Point2D>> allPaths,
                            boolean workSpace[]) {
         short val_label_200;
+
         l1[0] = xSteps;
         l1[1] = ySteps;
         l1[2] = -1;

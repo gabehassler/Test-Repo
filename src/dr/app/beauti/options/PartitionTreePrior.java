@@ -1,4 +1,30 @@
+/*
+ * PartitionTreePrior.java
+ *
+ * Copyright (c) 2002-2014 Alexei Drummond, Andrew Rambaut and Marc Suchard
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.app.beauti.options;
+
 import dr.app.beauti.types.*;
 import dr.evomodel.coalescent.VariableDemographicModel;
 import dr.evomodel.speciation.CalibrationPoints;
@@ -6,9 +32,18 @@ import dr.evomodelxml.speciation.BirthDeathEpidemiologyModelParser;
 import dr.evomodelxml.speciation.BirthDeathModelParser;
 import dr.evomodelxml.speciation.BirthDeathSerialSamplingModelParser;
 import dr.math.MathUtils;
+
 import java.util.List;
+
+/**
+ * @author Alexei Drummond
+ * @author Andrew Rambaut
+ * @author Walter Xie
+ */
 public class PartitionTreePrior extends PartitionOptions {
+
     private static final long serialVersionUID = 8222609132259262723L;
+
     private TreePriorType nodeHeightPrior = TreePriorType.CONSTANT;
     private TreePriorParameterizationType parameterization = TreePriorParameterizationType.GROWTH_RATE;
     private int skylineGroupCount = 10;
@@ -21,11 +56,21 @@ public class PartitionTreePrior extends PartitionOptions {
     private PopulationSizeModelType populationSizeModel = PopulationSizeModelType.CONTINUOUS_CONSTANT;
     private CalibrationPoints.CorrectionType calibCorrectionType = CalibrationPoints.CorrectionType.EXACT;
     private boolean fixedTree = false;
+
     public PartitionTreePrior(BeautiOptions options, PartitionTreeModel treeModel) {
         super(options, treeModel.getName());
     }
+
+    /**
+     * A copy constructor
+     *
+     * @param options the beauti options
+     * @param name    the name of the new model
+     * @param source  the source model
+     */
     public PartitionTreePrior(BeautiOptions options, String name, PartitionTreePrior source) {
         super(options, name);
+
         this.nodeHeightPrior = source.nodeHeightPrior;
         this.parameterization = source.parameterization;
         this.skylineGroupCount = source.skylineGroupCount;
@@ -37,15 +82,19 @@ public class PartitionTreePrior extends PartitionOptions {
         this.calibCorrectionType = source.calibCorrectionType;
         this.fixedTree = source.fixedTree;
     }
+
     protected void initModelParametersAndOpererators() {
+
         createParameterOneOverXPrior("constant.popSize", "coalescent population size parameter",
                 PriorScaleType.TIME_SCALE, 1.0);
+
         createParameterOneOverXPrior("exponential.popSize", "coalescent population size parameter",
                 PriorScaleType.TIME_SCALE, 1.0);
         createParameterLaplacePrior("exponential.growthRate", "coalescent growth rate parameter",
                 PriorScaleType.GROWTH_RATE_SCALE, 0.0, 0.0, 1.0);
         createParameterGammaPrior("exponential.doublingTime", "coalescent doubling time parameter",
                 PriorScaleType.NONE, 100.0, 0.001, 1000, true);
+
         createParameterOneOverXPrior("logistic.popSize", "coalescent population size parameter",
                 PriorScaleType.TIME_SCALE, 1.0);
         createParameterLaplacePrior("logistic.growthRate", "coalescent logistic growth rate parameter",
@@ -54,6 +103,7 @@ public class PartitionTreePrior extends PartitionOptions {
                 PriorScaleType.NONE, 100.0, 0.001, 1000, true);
         createParameterGammaPrior("logistic.t50", "logistic shape parameter",
                 PriorScaleType.NONE, 1.0, 0.001, 1000, true);
+
         createParameterOneOverXPrior("expansion.popSize", "coalescent population size parameter",
                 PriorScaleType.TIME_SCALE, 1.0);
         createParameterLaplacePrior("expansion.growthRate", "coalescent expansion growth rate parameter",
@@ -61,6 +111,7 @@ public class PartitionTreePrior extends PartitionOptions {
         createParameterGammaPrior("expansion.doublingTime", "coalescent doubling time parameter",
                 PriorScaleType.NONE, 100.0, 0.001, 1000, true);
         createZeroOneParameterUniformPrior("expansion.ancestralProportion", "ancestral population proportion", 0.1);
+
         createNonNegativeParameterUniformPrior("skyline.popSize", "Bayesian Skyline population sizes",
                 PriorScaleType.TIME_SCALE, 1.0, 0.0, Parameter.UNIFORM_MAX_BOUND);
         createParameter("skyline.groupSize", "Bayesian Skyline group sizes");
@@ -70,6 +121,7 @@ public class PartitionTreePrior extends PartitionOptions {
         createParameter("skyride.groupSize", "GMRF Bayesian skyride group sizes (for backward compatibility)");
         createParameterGammaPrior("skyride.precision", "GMRF Bayesian skyride precision",
                 PriorScaleType.NONE, 1.0, 0.001, 1000, true);
+
         createParameterUniformPrior("skygrid.logPopSize", "GMRF Bayesian SkyGrid population sizes (log unit)",
                 PriorScaleType.LOG_TIME_SCALE, 1.0, -Parameter.UNIFORM_MAX_BOUND, Parameter.UNIFORM_MAX_BOUND);
         createParameterGammaPrior("skygrid.precision", "GMRF Bayesian SkyGrid precision",
@@ -78,14 +130,18 @@ public class PartitionTreePrior extends PartitionOptions {
                 PriorScaleType.NONE, 1.0, -Parameter.UNIFORM_MAX_BOUND, Parameter.UNIFORM_MAX_BOUND);
         createParameterUniformPrior("skygrid.cutOff", "GMRF Bayesian SkyGrid cut-off time",
                 PriorScaleType.TIME_SCALE, 1.0, 0.0, Parameter.UNIFORM_MAX_BOUND);
+
         createNonNegativeParameterUniformPrior("demographic.popSize", "Extended Bayesian Skyline population sizes",
                 PriorScaleType.TIME_SCALE, 1.0, 0.0, Parameter.UNIFORM_MAX_BOUND);
         createParameter("demographic.indicators", "Extended Bayesian Skyline population switch", 0.0);
         createParameterOneOverXPrior("demographic.populationMean", "Extended Bayesian Skyline population prior mean",
                 PriorScaleType.TIME_SCALE, 1);
+
         createDiscreteStatistic("demographic.populationSizeChanges", "Average number of population change points"); // POISSON_PRIOR
+
         createNonNegativeParameterUniformPrior("yule.birthRate", "Yule speciation process birth rate",
                 PriorScaleType.BIRTH_RATE_SCALE, 1.0, 0.0, Parameter.UNIFORM_MAX_BOUND);
+
         createNonNegativeParameterUniformPrior(BirthDeathModelParser.MEAN_GROWTH_RATE_PARAM_NAME, "Birth-Death speciation process rate",
                 PriorScaleType.BIRTH_RATE_SCALE, 0.01, 0.0, 100000.0);
         createNonNegativeParameterUniformPrior(BirthDeathModelParser.RELATIVE_DEATH_RATE_PARAM_NAME, "Birth-Death speciation process relative death rate",
@@ -131,6 +187,7 @@ public class PartitionTreePrior extends PartitionOptions {
         createParameterBetaDistributionPrior(BirthDeathEpidemiologyModelParser.SAMPLING_PROBABILITY,
                 "samplingProbability",
                 0.01, 1.0, 1.0, 0.0);
+
         createScaleOperator("constant.popSize", demoTuning, demoWeights);
         createScaleOperator("exponential.popSize", demoTuning, demoWeights);
         createOperator("exponential.growthRate", OperatorType.RANDOM_WALK, 1.0, demoWeights);
@@ -149,6 +206,7 @@ public class PartitionTreePrior extends PartitionOptions {
         createOperator("skyline.groupSize", OperatorType.INTEGER_DELTA_EXCHANGE, 1.0, demoWeights * 2);
         createOperator("demographic.populationMean", OperatorType.SCALE, 0.9, demoWeights);
         createOperator("demographic.indicators", OperatorType.BITFLIP, 1, 2 * treeWeights);
+
         // hack pass distribution in name
         createOperatorUsing2Parameters("demographic.popSize", "demographic.populationMeanDist", "", "demographic.popSize",
                 "demographic.indicators", OperatorType.SAMPLE_NONACTIVE, 1, 5 * demoWeights);
@@ -159,7 +217,9 @@ public class PartitionTreePrior extends PartitionOptions {
         createOperatorUsing2Parameters("gmrfSkyGridGibbsOperator", "gmrfGibbsOperator", "Gibbs sampler for Bayesian SkyGrid", "skygrid.logPopSize",
                 "skygrid.precision", OperatorType.SKY_GRID_GIBBS_OPERATOR, 1.0, 2);
         createScaleOperator("skygrid.precision", "description", 0.75, 1.0);
+
         createScaleOperator("yule.birthRate", demoTuning, demoWeights);
+
         createScaleOperator(BirthDeathModelParser.MEAN_GROWTH_RATE_PARAM_NAME, demoTuning, demoWeights);
         createScaleOperator(BirthDeathModelParser.RELATIVE_DEATH_RATE_PARAM_NAME, demoTuning, demoWeights);
         createScaleOperator(BirthDeathModelParser.BIRTH_DEATH + "." + BirthDeathModelParser.SAMPLE_PROB, demoTuning, demoWeights);
@@ -186,8 +246,15 @@ public class PartitionTreePrior extends PartitionOptions {
         createScaleOperator(BirthDeathEpidemiologyModelParser.RECOVERY_RATE, demoTuning, 1);
         createScaleOperator(BirthDeathEpidemiologyModelParser.SAMPLING_PROBABILITY, demoTuning, 1);
     }
+
+    /**
+     * return a list of parameters that are required
+     *
+     * @param params the parameter list
+     */
     public void selectParameters(List<Parameter> params) {
         setAvgRootAndRate();
+
         if (nodeHeightPrior == TreePriorType.CONSTANT) {
             params.add(getParameter("constant.popSize"));
         } else if (nodeHeightPrior == TreePriorType.EXPONENTIAL) {
@@ -231,6 +298,7 @@ public class PartitionTreePrior extends PartitionOptions {
             params.add(getParameter(BirthDeathModelParser.RELATIVE_DEATH_RATE_PARAM_NAME));
             if (nodeHeightPrior == TreePriorType.BIRTH_DEATH_INCOMPLETE_SAMPLING)
                 params.add(getParameter(BirthDeathModelParser.BIRTH_DEATH + "." + BirthDeathModelParser.SAMPLE_PROB));
+
         } else if (nodeHeightPrior == TreePriorType.BIRTH_DEATH_SERIAL_SAMPLING) {
             params.add(getParameter(BirthDeathSerialSamplingModelParser.BDSS + "."
                     + BirthDeathSerialSamplingModelParser.LAMBDA));
@@ -244,14 +312,24 @@ public class PartitionTreePrior extends PartitionOptions {
                     + BirthDeathSerialSamplingModelParser.ORIGIN));
 //            params.add(getParameter(BirthDeathSerialSamplingModelParser.BDSS + "."
 //                    + BirthDeathSerialSamplingModelParser.SAMPLE_PROBABILITY));
+
         } else if (nodeHeightPrior == TreePriorType.BIRTH_DEATH_BASIC_REPRODUCTIVE_NUMBER) {
             params.add(getParameter(BirthDeathEpidemiologyModelParser.ORIGIN));
             params.add(getParameter(BirthDeathEpidemiologyModelParser.R0));
             params.add(getParameter(BirthDeathEpidemiologyModelParser.RECOVERY_RATE));
             params.add(getParameter(BirthDeathEpidemiologyModelParser.SAMPLING_PROBABILITY));
+
         }
+
     }
+
+    /**
+     * return a list of operators that are required
+     *
+     * @param ops the operator list
+     */
     public void selectOperators(List<Operator> ops) {
+
         if (nodeHeightPrior == TreePriorType.CONSTANT) {
             ops.add(getOperator("constant.popSize"));
         } else if (nodeHeightPrior == TreePriorType.EXPONENTIAL) {
@@ -308,6 +386,7 @@ public class PartitionTreePrior extends PartitionOptions {
                     + BirthDeathSerialSamplingModelParser.ORIGIN));
 //            ops.add(getOperator(BirthDeathSerialSamplingModelParser.BDSS + "."
 //                    + BirthDeathSerialSamplingModelParser.SAMPLE_PROBABILITY));
+
 //            if (nodeHeightPrior == TreePriorType.BIRTH_DEATH_BASIC_REPRODUCTIVE_NUMBER) {
 //                ops.add(getOperator(BirthDeathSerialSamplingModelParser.BDSS + "."
 //                + BirthDeathSerialSamplingModelParser.R));
@@ -321,6 +400,8 @@ public class PartitionTreePrior extends PartitionOptions {
             ops.add(getOperator(BirthDeathEpidemiologyModelParser.SAMPLING_PROBABILITY));
         }
     }
+
+
     //////////////////////////////////////////////////////
     public String getPrefix() {
         String prefix = "";
@@ -330,80 +411,107 @@ public class PartitionTreePrior extends PartitionOptions {
         }
         return prefix;
     }
+
     /////////////////////////////////////////////////////////////////////////
+
     public TreePriorType getNodeHeightPrior() {
         return nodeHeightPrior;
     }
+
     public void setNodeHeightPrior(TreePriorType nodeHeightPrior) {
         this.nodeHeightPrior = nodeHeightPrior;
     }
+
     public TreePriorParameterizationType getParameterization() {
         return parameterization;
     }
+
     public void setParameterization(TreePriorParameterizationType parameterization) {
         this.parameterization = parameterization;
     }
+
     public int getSkylineGroupCount() {
         return skylineGroupCount;
     }
+
     public void setSkylineGroupCount(int skylineGroupCount) {
         this.skylineGroupCount = skylineGroupCount;
     }
+
     public TreePriorParameterizationType getSkylineModel() {
         return skylineModel;
     }
+
     public void setSkylineModel(TreePriorParameterizationType skylineModel) {
         this.skylineModel = skylineModel;
     }
+
     public TreePriorParameterizationType getSkyrideSmoothing() {
         return skyrideSmoothing;
     }
+
     public void setSkyrideSmoothing(TreePriorParameterizationType skyrideSmoothing) {
         this.skyrideSmoothing = skyrideSmoothing;
     }
+
     public int getSkyGridCount() {
         return skyGridCount;
     }
+
     public void setSkyGridCount(int count) {
         this.skyGridCount = count;
     }
+
     public double getSkyGridInterval() {
         return skyGridInterval;
     }
+
     public void setSkyGridInterval(double x) {
         this.skyGridInterval = x;
     }
+
     public double getBirthDeathSamplingProportion() {
         return birthDeathSamplingProportion;
     }
+
     public void setBirthDeathSamplingProportion(double birthDeathSamplingProportion) {
         this.birthDeathSamplingProportion = birthDeathSamplingProportion;
     }
+
     public boolean isFixedTree() {
         return fixedTree;
     }
+
     public void setFixedTree(boolean fixedTree) {
         this.fixedTree = fixedTree;
     }
+
     public void setExtendedSkylineModel(VariableDemographicModel.Type extendedSkylineModel) {
         this.extendedSkylineModel = extendedSkylineModel;
     }
+
     public VariableDemographicModel.Type getExtendedSkylineModel() {
         return extendedSkylineModel;
     }
+
     public PopulationSizeModelType getPopulationSizeModel() {
         return populationSizeModel;
     }
+
     public void setPopulationSizeModel(PopulationSizeModelType populationSizeModel) {
         this.populationSizeModel = populationSizeModel;
     }
+
     public CalibrationPoints.CorrectionType getCalibCorrectionType() {
         return calibCorrectionType;
     }
+
     public void setCalibCorrectionType(CalibrationPoints.CorrectionType calibCorrectionType) {
         this.calibCorrectionType = calibCorrectionType;
     }
+
     public BeautiOptions getOptions() {
         return options;
     }
+
 }

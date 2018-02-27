@@ -1,4 +1,31 @@
+/*
+ * BetterDiscreteTreeToKML.java
+ *
+ * Copyright (C) 2002-2010 BEAST Development Team
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.app.phylogeography.tools;
+
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -8,12 +35,21 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+
 import dr.app.util.Arguments;
 import jebl.evolution.io.ImportException;
 import jebl.evolution.io.NexusImporter;
 import jebl.evolution.io.TreeImporter;
 import jebl.evolution.trees.RootedTree;
+
+/**
+ * @author Philippe Lemey
+ * @author Andrew Rambaut
+ * @author Marc A. Suchard
+ */
+
 public class DiscreteTreeToKML {
+
     public static final String HELP = "help";
     public static final String ANNOTATION = "annotation";
     public static final String COORDINATES = "coordinates";
@@ -40,17 +76,23 @@ public class DiscreteTreeToKML {
     public static final String SLICES = "slices";
     public static final String SLICEBW = "slicebw";
     public static final String SLICEMIDPOINT = "slicemidpoint";
+
+
     public static final String[] use = new String[] {"heights","posteriors"};
     public static final String[] arch = new String[] {"distance","time"};
     public static final String[] falseTrue = new String[] {"false","true"};
     private static final PrintStream progressStream = System.out;
+
     private static final String commandName = "discrete_tree_to_kml";
+
     public static void printUsage(Arguments arguments) {
+
         arguments.printUsage(commandName, "[<inputTree-file-name>] [<output-file-name>]"); //TODO: set this right
         progressStream.println();
         progressStream.println("  Example: " + commandName + " -coordinates coordinates.txt input.tre");
         progressStream.println();
     }
+
     private static int[] countLinesAndTokens(String coordinatesFileString){
         int lineCounter = 0;
         int tokenCounter = 0;
@@ -69,6 +111,7 @@ public class DiscreteTreeToKML {
                 }
                 current1 = reader1.readLine();
             }
+
         } catch (IOException e) {
             System.err.println("Error reading " + coordinatesFileString);
             System.exit(1);
@@ -77,6 +120,7 @@ public class DiscreteTreeToKML {
         container[1] = tokenCounter;
         return container;
     }
+
     private static void readLocationsCoordinates(String coordinatesFileString, String[][] locationsAndCoordinates){
             try {
                 BufferedReader reader2 = new BufferedReader(new FileReader(coordinatesFileString));
@@ -97,7 +141,9 @@ public class DiscreteTreeToKML {
                 return;
             }
     }
+
     public static double[] parseVariableLengthDoubleArray(String inString) throws Arguments.ArgumentException {
+
         List<Double> returnList = new ArrayList<Double>();
         StringTokenizer st = new StringTokenizer(inString,",");
         while(st.hasMoreTokens()) {
@@ -106,7 +152,9 @@ public class DiscreteTreeToKML {
             } catch (NumberFormatException e) {
                 throw new Arguments.ArgumentException();
             }
+
         }
+
         if (returnList.size()>0) {
             double[] doubleArray = new double[returnList.size()];
             for(int i=0; i<doubleArray.length; i++)
@@ -115,7 +163,9 @@ public class DiscreteTreeToKML {
         }
         return null;
     }
+
     private static RootedTree readTree(String inString) throws Arguments.ArgumentException {
+
         RootedTree tree;
         try {
             TreeImporter importer = new NexusImporter(new FileReader(inString));
@@ -129,16 +179,22 @@ public class DiscreteTreeToKML {
         }
         return tree;
     }
+
     public static void main(String[] args) throws Arguments.ArgumentException {
+
         String inputFileName = null;
         String outputFileName = null;
         RootedTree tree = null;
         String[][] locations = null;
+
         String stateAnnotation = "state";
+
         //in case trees are scaled in other time units
         double timeScaler = 1;
+
         double branchWidthConstant = 2.0;   // the width of branches will be stateProbability*branchWidthMultiplier+branchWidthConstant
         double branchWidthMultiplier = 5.0;
+
         double divider = 100; // this is to chop up the branches of the surface tree in 'divider' segments
         boolean useStateProbability = true; // use state probabilities for branch width
         double branchWidth = 10.0; // branch width if posterior probabilities are not used
@@ -151,21 +207,27 @@ public class DiscreteTreeToKML {
         boolean arcTimeHeight = false; // the height of the arcs is proportional to the time the branch spans, by default arch-heights are proportional to the distance between locations
         double altitudeFactor = 100; // this is the factor with which to multiply the time of the branch to get the altitude for that branch in the surface Tree
         boolean temporary = false;
+
         double mostRecentDate = 2010;  // required to convert heights to calendar dates
+
         //circles
         int numberOfIntervals = 100;
         //boolean autoRadius = false;
         double radius = 0;
         String circleOpacity = "8F";
+
         //extra coordinates for some taxa
         boolean coordinatesForTaxa = false;
         String[][] taxaCoordinates = null;
+
         //tree slices for google maps, requires treeHeight in exporterString: e.g., exporterString.writeTreeToKML(0.025);
         //TODO: have this outputed to a different file (what happens now)?
         boolean makeTreeSlices = false;
         double[] sliceTimes = null;
         double treeSliceBranchWidth = 3;
         boolean showBranchAtMidPoint = false; // shows complete branch for slice if time is more recent than the branch's midpoint
+
+
         Arguments arguments = new Arguments(
                 new Arguments.Option[]{
                         new Arguments.StringOption(COORDINATES, "coordinate file", "specifies a tab-delimited file with coordinates for the locations"),
@@ -200,6 +262,7 @@ public class DiscreteTreeToKML {
                         new Arguments.StringOption(SLICEMIDPOINT, falseTrue, false,
                                 "shows complete branch for sliced tree if time is more recent than the branch's midpoint [default=false"),
                 });
+
         try {
             arguments.parseArguments(args);
         } catch (Arguments.ArgumentException ae) {
@@ -207,11 +270,14 @@ public class DiscreteTreeToKML {
             printUsage(arguments);
             System.exit(1);
         }
+
         if (args.length == 0 || arguments.hasOption(HELP)) {
             printUsage(arguments);
             System.exit(0);
         }
+
         try {
+
             String coordinatesFileString = arguments.getStringOption(COORDINATES);
             //System.out.println(coordinatesFileString);
             if (coordinatesFileString != null) {
@@ -225,25 +291,32 @@ public class DiscreteTreeToKML {
                 progressStream.println("no coordinates for taxa??");
                 System.exit(1);
             }
+
             if (arguments.hasOption(MRSD)) {
                 mostRecentDate = arguments.getRealOption(MRSD);
             }
+
             if (arguments.hasOption(TIMESCALER)) {
                 timeScaler = arguments.getRealOption(TIMESCALER);
             }
+
             if (arguments.hasOption(DIVIDER)) {
                 divider = arguments.getRealOption(DIVIDER);
             }
+
             if (arguments.hasOption(ALTITUDE)) {
                 altitudeFactor = arguments.getRealOption(ALTITUDE);
             }
+
             String stateAnnotationString = arguments.getStringOption(ANNOTATION);
             if (stateAnnotationString != null){
                 stateAnnotation = stateAnnotationString;
             }
+
             String useStateProbString = arguments.getStringOption(USP);
             if (useStateProbString != null && useStateProbString.compareToIgnoreCase("posteriors") != 0)
                 useStateProbability = false;
+
             String useColorString = arguments.getStringOption(BCUSE);
             if (useColorString != null && useColorString.compareToIgnoreCase("posteriors") == 0) {
                 usePosterior = true;
@@ -253,47 +326,60 @@ public class DiscreteTreeToKML {
                 useHeights =  true;
                 usePosterior = false;
             }
+
             if (arguments.hasOption(BWC)) {
                 branchWidthConstant = arguments.getRealOption(BWC);
             }
+
             if (arguments.hasOption(BWM)) {
                 branchWidthMultiplier = arguments.getRealOption(BWM);
             }
+
             if (arguments.hasOption(BW)) {
                 branchWidth = arguments.getRealOption(BW);
             }
+
             String color1String = arguments.getStringOption(BSTARTCOLOR);
             if (color1String != null) {
                 startBranchColor = color1String;
             }
+
             String color2String = arguments.getStringOption(BENDCOLOR);
             if (color2String != null) {
                 endBranchColor = color2String;
             }
+
             String colorString = arguments.getStringOption(BCOLOR);
             if (colorString != null) {
                 branchColor = colorString;
             }
+
             String archString = arguments.getStringOption(ARCHBRANCH);
             if (archString != null && archString.compareToIgnoreCase("false") == 0)
                 arcBranches = false;
+
             String archHeightString = arguments.getStringOption(ARCHHEIGHT);
             if (archHeightString != null && archHeightString.compareToIgnoreCase("time") == 0) {
                 arcTimeHeight = true;
             }
+
             String tempString = arguments.getStringOption(TEMP);
             if (tempString != null && tempString.compareToIgnoreCase("true") == 0)
                 temporary = true;
+
             if (arguments.hasOption(CIRCLESEGMENTS)) {
                 numberOfIntervals = arguments.getIntegerOption(CIRCLESEGMENTS);
             }
+
             if (arguments.hasOption(RADIUS)) {
                 radius = arguments.getIntegerOption(RADIUS);
             }
+
             String circleOpacityString = arguments.getStringOption(CIRCLEOP);
             if (circleOpacityString != null) {
                 circleOpacity = circleOpacityString;
             }
+
             //read in extra taxon locations
             String taxaCoordinatesFileString = arguments.getStringOption(COORDSFORTAXA);
             if (taxaCoordinatesFileString != null) {
@@ -305,23 +391,29 @@ public class DiscreteTreeToKML {
                 taxaCoordinates = new String[counts[0]][counts[1]];
                 readLocationsCoordinates(taxaCoordinatesFileString,taxaCoordinates);
             }
+
             String sliceString = arguments.getStringOption(SLICES);
             if (sliceString != null) {
                 makeTreeSlices = true;
                 sliceTimes = parseVariableLengthDoubleArray(sliceString);
             }
+
             if (arguments.hasOption(SLICEBW)) {
                 treeSliceBranchWidth = arguments.getRealOption(SLICEBW);
             }
+
             String midpointString = arguments.getStringOption(SLICEMIDPOINT);
             if (midpointString != null && midpointString.compareToIgnoreCase("true") == 0)
                 showBranchAtMidPoint = true;
+
         } catch (Arguments.ArgumentException e) {
             progressStream.println(e);
             printUsage(arguments);
             System.exit(-1);
         }
+
         final String[] args2 = arguments.getLeftoverArguments();
+
         outputFileName = args2[0]+".kml";
         switch (args2.length) {
             case 0:
@@ -341,10 +433,13 @@ public class DiscreteTreeToKML {
                 System.exit(1);
             }
         }
+
         DiscreteKMLString exporterString = new DiscreteKMLString(tree, stateAnnotation, locations, inputFileName, mostRecentDate, timeScaler, divider, branchWidthConstant, branchWidthMultiplier, useStateProbability, branchWidth, startBranchColor, endBranchColor, branchColor, useHeights, usePosterior, arcBranches, arcTimeHeight, altitudeFactor, temporary, numberOfIntervals, radius, circleOpacity, coordinatesForTaxa, taxaCoordinates, makeTreeSlices);
+
         try {
             BufferedWriter out1 = new BufferedWriter(new FileWriter(outputFileName));
             StringBuffer buffer = new StringBuffer();
+
             if (makeTreeSlices) {
                 for (int i = 0; i < sliceTimes.length; i++)
                 exporterString.writeTreeToKML(sliceTimes[i], treeSliceBranchWidth, showBranchAtMidPoint);
@@ -360,5 +455,7 @@ public class DiscreteTreeToKML {
             e.printStackTrace();
             return;
         }
+
     }
+
 }

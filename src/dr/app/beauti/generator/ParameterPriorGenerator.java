@@ -1,4 +1,30 @@
+/*
+ * TreeModelGenerator.java
+ *
+ * Copyright (C) 2002-2009 Alexei Drummond and Andrew Rambaut
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * BEAST is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.app.beauti.generator;
+
 import dr.app.beauti.components.ComponentFactory;
 import dr.app.beauti.options.*;
 import dr.app.beauti.types.PriorType;
@@ -12,15 +38,32 @@ import dr.inferencexml.distribution.*;
 import dr.inferencexml.model.BooleanLikelihoodParser;
 import dr.inferencexml.model.OneOnXPriorParser;
 import dr.util.Attribute;
+
 import java.util.ArrayList;
 import java.util.Map;
+
+/**
+ * @author Alexei Drummond
+ * @author Andrew Rambaut
+ * @author Walter Xie
+ */
 public class ParameterPriorGenerator extends Generator {
+
     public ParameterPriorGenerator(BeautiOptions options, ComponentFactory[] components) {
         super(options, components);
     }
+
+    /**
+     * Write the priors for each parameter
+     *
+     * @param useStarBEAST
+     * @param writer       the writer
+     */
     public void writeParameterPriors(XMLWriter writer, boolean useStarBEAST) {
         boolean first = true;
+
         Map<Taxa, Boolean> taxonSetsMono = useStarBEAST ? options.speciesSetsMono : options.taxonSetsMono;
+
         for (Map.Entry<Taxa, Boolean> taxaBooleanEntry : taxonSetsMono.entrySet()) {
             if (taxaBooleanEntry.getValue()) {
                 if (first) {
@@ -34,7 +77,9 @@ public class ParameterPriorGenerator extends Generator {
         if (!first) {
             writer.writeCloseTag(BooleanLikelihoodParser.BOOLEAN_LIKELIHOOD);
         }
+
         ArrayList<Parameter> parameters = options.selectParameters();
+
         if (useStarBEAST) {
             for (Parameter parameter : parameters) {
                 if (!(parameter.priorType == PriorType.NONE_TREE_PRIOR || parameter.priorType == PriorType.NONE_STATISTIC)) {
@@ -46,7 +91,9 @@ public class ParameterPriorGenerator extends Generator {
                     }
                 }
             }
+
         } else {
+
             for (Parameter parameter : parameters) {
                 if (!(parameter.priorType == PriorType.NONE_TREE_PRIOR || parameter.priorType == PriorType.NONE_STATISTIC)) {
                     if (parameter.isCached) {
@@ -57,19 +104,32 @@ public class ParameterPriorGenerator extends Generator {
                     }
                 }
             }
+
         }
     }
+
     private void writeCachedParameterPrior(Parameter parameter, XMLWriter writer) {
         writer.writeOpenTag(CachedDistributionLikelihoodParser.CACHED_PRIOR);
+
         writeParameterPrior(parameter, writer);
         writeParameterIdref(writer, parameter);
+
         writer.writeCloseTag(CachedDistributionLikelihoodParser.CACHED_PRIOR);
     }
+
+    /**
+     * Write the priors for each parameter
+     *
+     * @param parameter the parameter
+     * @param writer    the writer
+     */
     public void writeParameterPrior(Parameter parameter, XMLWriter writer) {
         if (parameter.isTruncated) {
             // if there is a truncation then put it at the top so it short-circuits any other prior
             // calculations
+
             // todo: We should switch this to truncatedDistribution so that the density is normalized correctly
+
             writer.writeOpenTag(PriorParsers.UNIFORM_PRIOR,
                     new Attribute[]{
                             new Attribute.Default<String>(PriorParsers.LOWER, "" + parameter.getLowerBound()),
@@ -78,6 +138,7 @@ public class ParameterPriorGenerator extends Generator {
             writeParameterIdref(writer, parameter);
             writer.writeCloseTag(PriorParsers.UNIFORM_PRIOR);
         }
+
         switch (parameter.priorType) {
             case NONE_IMPROPER:
                 writer.writeComment("Improper uniform prior: " + parameter.getName());
@@ -184,6 +245,7 @@ public class ParameterPriorGenerator extends Generator {
                 writeParameterIdref(writer, parameter);
                 writer.writeCloseTag(CTMCScalePriorParser.SCALEPARAMETER);
                 // Find correct tree for this rate parameter
+
                 PartitionTreeModel treeModel = null;
                 for (PartitionClockModel pcm : options.getPartitionClockModels()) {
                     if (pcm.getClockRateParam() == parameter) {
@@ -207,6 +269,7 @@ public class ParameterPriorGenerator extends Generator {
                 throw new IllegalArgumentException("Unknown priorType");
         }
     }
+
     private void writeParameterIdref(XMLWriter writer, Parameter parameter) {
         if (parameter.isStatistic) {
             writer.writeIDref("statistic", parameter.getName());
@@ -214,4 +277,5 @@ public class ParameterPriorGenerator extends Generator {
             writer.writeIDref(ParameterParser.PARAMETER, parameter.getName());
         }
     }
+
 }

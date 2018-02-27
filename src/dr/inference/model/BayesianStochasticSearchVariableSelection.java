@@ -1,10 +1,20 @@
 package dr.inference.model;
+
 import cern.colt.bitvector.BitVector;
 import dr.math.MathUtils;
+
+/**
+ * @author Marc Suchard
+ */
+
 public interface BayesianStochasticSearchVariableSelection {
+
     public Parameter getIndicators();
+
     public boolean validState();
+
     public class Utils {
+
         public static boolean connectedAndWellConditioned(double[] probability,
                                                           dr.app.beagle.evomodel.substmodel.SubstitutionModel substModel) {
             if (probability == null) {
@@ -18,6 +28,7 @@ public interface BayesianStochasticSearchVariableSelection {
                 return false;
             }
         }
+
         public static boolean connectedAndWellConditioned(double[] probability,
                                                           dr.evomodel.substmodel.SubstitutionModel substModel) {
             if (probability == null) {
@@ -31,6 +42,7 @@ public interface BayesianStochasticSearchVariableSelection {
                 return false;
             }
         }
+                
         public static boolean connectedAndWellConditioned(double[] probability) {
             for(double prob : probability) {
                 if(prob < tolerance || prob >= 1.0) {                    
@@ -39,6 +51,7 @@ public interface BayesianStochasticSearchVariableSelection {
             }
             return true;
         }
+
         public static void randomize(Parameter indicators,int dim, boolean reversible) {
             do {
                 for (int i = 0; i < indicators.getDimension(); i++)
@@ -47,18 +60,26 @@ public interface BayesianStochasticSearchVariableSelection {
             } while (!(isStronglyConnected(indicators.getParameterValues(),
                     dim, reversible)));
         }
+
         public static void setTolerance(double newTolerance) {
             tolerance = newTolerance;
         }
+
         public static double getTolerance() {
             return tolerance;
         }
+
         public static void setScalar(double newScalar) {
             defaultExpectedMutations = newScalar;
         }
         public static double getScalar() {
             return defaultExpectedMutations;
         }
+
+        /* Determines if the graph is strongly connected, such that there exists
+        * a directed path from any vertex to any other vertex
+        *
+        */
         public static boolean isStronglyConnected(double[] indicatorValues, int dim, boolean reversible) {
             BitVector visited = new BitVector(dim);
             boolean connected = true;
@@ -69,10 +90,12 @@ public interface BayesianStochasticSearchVariableSelection {
             }
             return connected;
         }
+
         private static boolean hasEdge(int i, int j, double[] indicatorValues,
                                       int dim, boolean reversible) {
             return i != j && indicatorValues[getEntry(i, j, dim, reversible)] == 1;
         }
+
         private static int getEntry(int i, int j, int dim, boolean reversible) {
             if (reversible) {
                 if (j < i) {
@@ -81,11 +104,13 @@ public interface BayesianStochasticSearchVariableSelection {
                 int entry = i * dim - i * (i + 1) / 2 + j - 1 -i;
                 return entry;
             }
+
             int entry = i * (dim - 1) + j;
             if (j > i)
                 entry--;
             return entry;
         }
+
         private static void depthFirstSearch(int node, BitVector visited, double[] indicatorValues,
                                             int dim, boolean reversible) {
             visited.set(node);
@@ -94,6 +119,7 @@ public interface BayesianStochasticSearchVariableSelection {
                     depthFirstSearch(v, visited, indicatorValues, dim, reversible);
             }
         }
+
         private static double defaultExpectedMutations = 1.0;
         private static double tolerance = 1E-20;
     }

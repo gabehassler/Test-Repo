@@ -1,4 +1,5 @@
 package dr.evomodelxml.substmodel;
+
 import dr.evomodel.substmodel.MultivariateOUModel;
 import dr.evomodel.substmodel.SubstitutionModel;
 import dr.inference.distribution.GeneralizedLinearModel;
@@ -7,21 +8,30 @@ import dr.inference.model.MatrixParameter;
 import dr.inference.model.Parameter;
 import dr.inferencexml.distribution.GeneralizedLinearModelParser;
 import dr.xml.*;
+
+/**
+ *
+ */
 public class MultivariateOUModelParser extends AbstractXMLObjectParser {
+
     public static final String MVOU_MODEL = "multivariateOUModel";
     public static final String MVOU_TYPE = "MVOU";
     public static final String DATA = "data";
     public static final String TIME = "times";
     public static final String DESIGN = "design";
+
     public String getParserName() {
         return MVOU_MODEL;
     }
+
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
         SubstitutionModel substitutionModel = (SubstitutionModel) xo.getChild(SubstitutionModel.class);
         Parameter effectParameter = (Parameter) ((XMLObject) xo.getChild(DATA)).getChild(Parameter.class);
         Parameter timesParameter = (Parameter) ((XMLObject) xo.getChild(TIME)).getChild(Parameter.class);
         Parameter designParameter = (Parameter) ((XMLObject) xo.getChild(DESIGN)).getChild(Parameter.class);
         MatrixParameter gammaParameter = (MatrixParameter) xo.getChild(MatrixParameter.class);
+
         if (effectParameter.getDimension() != timesParameter.getDimension() ||
                 effectParameter.getDimension() != designParameter.getDimension()) {
 //				System.err.println("dim(effect) " +effectParameter.getDimension());
@@ -31,16 +41,23 @@ public class MultivariateOUModelParser extends AbstractXMLObjectParser {
                     ") != dim(" + timesParameter.getStatisticName() + ") != dim(" + designParameter.getStatisticName() +
                     ") in " + xo.getName() + " element");
         }
+
         MultivariateOUModel glm = new MultivariateOUModel(substitutionModel, effectParameter, gammaParameter,
                 timesParameter.getParameterValues(), designParameter.getParameterValues());
+
         addIndependentParameters(xo, glm, effectParameter);
+
         // todo Confirm that design vector is consistent with substitution model
         // todo Confirm that design vector is ordered 1,\ldots,K,1,\ldots,K, etc.
+
         return glm;
+
     }
+
     public void addIndependentParameters(XMLObject xo, GeneralizedLinearModel glm,
                                          Parameter dependentParam) throws XMLParseException {
         int totalCount = xo.getChildCount();
+
         for (int i = 0; i < totalCount; i++) {
             if (xo.getChildName(i).compareTo(GeneralizedLinearModelParser.INDEPENDENT_VARIABLES) == 0) {
                 XMLObject cxo = (XMLObject) xo.getChild(i);
@@ -51,6 +68,7 @@ public class MultivariateOUModelParser extends AbstractXMLObjectParser {
             }
         }
     }
+
     private void checkDimensions(Parameter independentParam, Parameter dependentParam, DesignMatrix designMatrix)
             throws XMLParseException {
         if ((dependentParam.getDimension() != designMatrix.getRowDimension()) ||
@@ -64,12 +82,15 @@ public class MultivariateOUModelParser extends AbstractXMLObjectParser {
             );
         }
     }
+
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
+
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
+
     private XMLSyntaxRule[] rules = new XMLSyntaxRule[]{
             new ElementRule(SubstitutionModel.class),
             new ElementRule(MatrixParameter.class),
@@ -82,9 +103,11 @@ public class MultivariateOUModelParser extends AbstractXMLObjectParser {
             new ElementRule(GeneralizedLinearModelParser.INDEPENDENT_VARIABLES,
                     new XMLSyntaxRule[]{new ElementRule(MatrixParameter.class)}, 0, 3),
     };
+
     public String getParserDescription() {
         return "Describes a multivariate OU process";
     }
+
     public Class getReturnType() {
         return MultivariateOUModel.class;
     }

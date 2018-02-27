@@ -1,41 +1,69 @@
 package dr.app.tools;
+
 import dr.app.beauti.util.XMLWriter;
+
 import java.io.*;
+
+/**
+ * Given data file format is
+ * 1st line : anything which is ignored
+ * 2nd line : one taxon name    separator (e.g. space or tab)    its sequence data
+ * 3rd line : ...
+ *
+ * @author Walter Xie
+ */
 public class GenerateRelaxedClockXMLByData {
+
     static final String path = "/Users/local/EC/dxie004/Documents/BEAST1Release/RR_Datasets/";
     static final String startingTree = "(((((Ssc:65,Bta:65):16,((Cfa:46,Fca:46):28,Eca:74):7):11," +
             "(((Rno:20,Mmu:20):65,Ocu:85):5,(((Hsa:5,Ptr:5):5,Ppy:10):13,Mml:23):67):2):81,Tvu1:173):137,Gga:310);";
     static final double rescaleHeight = 0.5;
+
     static public void main(String[] args) {
         int taxonNum = 14;
+
         for (int c = 1; c <= 100; c++) {
+
             String inputFileName = "geneRRNP" + c + ".phy";
             String[][] data = new String[taxonNum][2];
+
             try {
                 System.out.println("Input data from " + path + inputFileName + "\n\n");
                 FileReader fileReader = new FileReader(path + inputFileName);
+
                 LineNumberReader lineNumberReader = new LineNumberReader(fileReader);
+
                 String line = "";
                 int lineNum = 0;
                 while ((line = lineNumberReader.readLine()) != null) {
                     lineNum = lineNumberReader.getLineNumber();
                     System.out.println("Line:  " + lineNum + ": " + line);
+
                     if (lineNumberReader.getLineNumber() > 1) {  // not need 1st row
+
                         String[] d = line.split("\\s+");
+
                         if (d.length != 2) throw new IOException("d " + d.length);
+
                         data[lineNum - 2][0] = d[0]; // taxon name
                         data[lineNum - 2][1] = d[1]; // alignment
                     }
                 }
                 if (lineNum != 15) throw new IOException("not have 15 line " + lineNum);
+
                 fileReader.close();
+
                 String outputFileName = "geneRRNP" + c + ".xml";
                 System.out.println("\n\nCreating xml : " + path + outputFileName);
                 XMLWriter w = new XMLWriter(new BufferedWriter(new FileWriter(new File(path + outputFileName))));
+
                 writeData(w, data);
+
                 writeRestXML(w, outputFileName);
+
                 w.close();
                 System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++\n\n");
+
             } catch (FileNotFoundException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             } catch (IOException e) {
@@ -43,7 +71,10 @@ public class GenerateRelaxedClockXMLByData {
             }
         }
     }
+
+
     private static void writeRestXML(XMLWriter w, String outputFileName) throws IOException {
+
         w.writeText("\n\t<!-- a Birth-Death speciation process (Gernhard 2008).                       -->\n" +
                 "\t<birthDeathModel id=\"birthDeath\" units=\"substitutions\">\n" +
                 "\t\t<birthMinusDeathRate>\n" +
@@ -53,17 +84,20 @@ public class GenerateRelaxedClockXMLByData {
                 "\t\t\t<parameter id=\"relativeDeathRate\" value=\"0.5\" lower=\"0.0\" upper=\"1.0\"/>\n" +
                 "\t\t</relativeDeathRate>\n" +
                 "\t</birthDeathModel>\n");
+
 //        w.writeText("\n\t<constantSize id=\"constant\" units=\"substitutions\">\n" +
 //                "\t\t<populationSize>\n" +
 //                "\t\t\t<parameter id=\"popSize\" value=\"0.077\" lower=\"0.0\" upper=\"Infinity\"/>\n" +
 //                "\t\t</populationSize>\n" +
 //                "\t</constantSize>\n");
+
         w.flush();
         w.writeText("\n" +
                 "\t<!-- Generate a random starting tree under the coalescent process      -->\n" +
                 "\t<newick id=\"startingTree\" rescaleHeight=\"" + rescaleHeight + "\">\n");
         w.writeText(startingTree);
         w.writeText("\n" + "\t</newick>\n");
+
 //        w.writeText("\n<!-- Construct a rough-and-ready UPGMA tree as an starting tree              -->\n" +
 //                "\t<upgmaTree id=\"startingTree\">\n" +
 //                "\t\t<distanceMatrix correction=\"JC\">\n" +
@@ -72,7 +106,9 @@ public class GenerateRelaxedClockXMLByData {
 //                "\t\t\t</patterns>\n" +
 //                "\t\t</distanceMatrix>\n" +
 //                "\t</upgmaTree>\n");
+
         w.flush();
+
         w.writeText("\n" +
                 "\t<!-- Generate a tree model                                                   -->\n" +
                 "\t<treeModel id=\"treeModel\">\n" +
@@ -87,6 +123,7 @@ public class GenerateRelaxedClockXMLByData {
                 "\t\t\t<parameter id=\"treeModel.allInternalNodeHeights\"/>\n" +
                 "\t\t</nodeHeights>\n" +
                 "\t</treeModel>\n");
+
         w.flush();
 //        w.writeText("\n<!-- Generate a coalescent likelihood                                        -->\n" +
 //                "\t<coalescentLikelihood id=\"coalescent\">\n" +
@@ -97,6 +134,7 @@ public class GenerateRelaxedClockXMLByData {
 //                "\t\t\t<treeModel idref=\"treeModel\"/>\n" +
 //                "\t\t</populationTree>\n" +
 //                "\t</coalescentLikelihood>\n");
+
         w.writeText("\n" +
                 "\t<!-- Generate a speciation likelihood for Yule or Birth Death                -->\n" +
                 "\t<speciationLikelihood id=\"speciation\">\n" +
@@ -107,6 +145,7 @@ public class GenerateRelaxedClockXMLByData {
                 "\t\t\t<treeModel idref=\"treeModel\"/>\n" +
                 "\t\t</speciesTree>\n" +
                 "\t</speciationLikelihood>\n");
+
         w.writeText("\n<!-- The uncorrelated relaxed clock (Drummond, Ho, Phillips & Rambaut (2006) PLoS Biology 4, e88 )-->\n" +
                 "\t<discretizedBranchRates id=\"branchRates\">\n" +
                 "\t\t<treeModel idref=\"treeModel\"/>\n" +
@@ -124,6 +163,7 @@ public class GenerateRelaxedClockXMLByData {
                 "\t\t\t<parameter id=\"branchRates.categories\" dimension=\"10\"/>\n" +
                 "\t\t</rateCategories>\n" +
                 "\t</discretizedBranchRates>\n");
+
 //        w.writeText("\n\t<rateStatistic id=\"meanRate\" name=\"meanRate\" mode=\"mean\" internal=\"true\" external=\"true\">\n" +
 //                "\t\t<treeModel idref=\"treeModel\"/>\n" +
 //                "\t\t<discretizedBranchRates idref=\"branchRates\"/>\n" +
@@ -136,6 +176,8 @@ public class GenerateRelaxedClockXMLByData {
 //                "\t\t<treeModel idref=\"treeModel\"/>\n" +
 //                "\t\t<discretizedBranchRates idref=\"branchRates\"/>\n" +
 //                "\t</rateCovarianceStatistic>\n");
+
+
         w.writeText("\t<!-- The HKY substitution model (Hasegawa, Kishino & Yano, 1985)             -->\n" +
                 "\t<HKYModel id=\"hky\">\n" +
                 "\t\t<frequencies>\n" +
@@ -156,6 +198,7 @@ public class GenerateRelaxedClockXMLByData {
                 "\t\t\t<HKYModel idref=\"hky\"/>\n" +
                 "\t\t</substitutionModel>\n" +
                 "\t</siteModel>\n");
+
         w.writeText("\t<!-- Likelihood for tree given sequence data                                 -->\n" +
                 "\t<treeLikelihood id=\"treeLikelihood\" useAmbiguities=\"false\">\n" +
                 "\t\t<patterns idref=\"patterns\"/>\n" +
@@ -163,9 +206,12 @@ public class GenerateRelaxedClockXMLByData {
                 "\t\t<siteModel idref=\"siteModel\"/>\n" +
                 "\t\t<discretizedBranchRates idref=\"branchRates\"/> \n" +
                 "\t</treeLikelihood>\n");
+
         w.flush();
+
         w.writeText("\n" + "\t<!-- Define operators                                                        -->\n" +
                 "\t<operators id=\"operators\">\n");
+
         w.writeText("\t\t<scaleOperator scaleFactor=\"0.75\" weight=\"0.1\">\n" +
                 "\t\t\t<parameter idref=\"hky.kappa\"/>\n" +
                 "\t\t</scaleOperator>\n" +
@@ -199,6 +245,7 @@ public class GenerateRelaxedClockXMLByData {
                 "\t\t<scaleOperator scaleFactor=\"0.75\" weight=\"0.1\">\n" +
                 "\t\t\t<parameter idref=\"relativeDeathRate\"/>\n" +
                 "\t\t</scaleOperator>\n" +
+
                 "\t\t<upDownOperator scaleFactor=\"0.75\" weight=\"13\">\n" +
                 "\t\t\t<up>\n" +
                 "\t\t\t</up>\n" +
@@ -215,7 +262,9 @@ public class GenerateRelaxedClockXMLByData {
                 "\t\t<swapOperator size=\"1\" weight=\"13\" autoOptimize=\"false\">\n" +
                 "\t\t\t<parameter idref=\"branchRates.categories\"/>\n" +
                 "\t\t</swapOperator>\n");
+
         w.writeText("\t</operators>");
+
         w.flush();
         w.writeText("\n" +
                 "\t<!-- Define MCMC                                                             -->\n" +
@@ -237,6 +286,7 @@ public class GenerateRelaxedClockXMLByData {
 //                "\t\t\t\t</oneOnXPrior> \n" +
 //                "\t\t\t\t<coalescentLikelihood idref=\"coalescent\"/>\n");
                 "\t\t\t<speciationLikelihood idref=\"speciation\"/>\n");
+
         w.writeText("\n" +
                 "\t\t\t</prior>\n" +
                 "\t\t\t<likelihood id=\"likelihood\">\n" +
@@ -244,7 +294,9 @@ public class GenerateRelaxedClockXMLByData {
                 "\t\t\t</likelihood>\n" +
                 "\t\t</posterior>\n" +
                 "\t\t<operators idref=\"operators\"/>\n");
+
         w.flush();
+
         w.writeText("\n" +
                 "\t\t<!-- write log to screen                                                     -->\n" +
                 "\t\t<log id=\"screenLog\" logEvery=\"100000\">\n" +
@@ -263,6 +315,8 @@ public class GenerateRelaxedClockXMLByData {
 //                "\t\t\t<parameter idref=\"ucld.mean\"/>\n" +
                 "\t\t</log>\n"
         );
+
+
         w.writeText("\t\t<!-- write log to file                          -->\n" +
                 "\t\t<log id=\"fileLog\" logEvery=\"100\" fileName=\"" + outputFileName + ".log\">\n" +
                 "\t\t\t<posterior idref=\"posterior\"/>\n" +
@@ -280,12 +334,14 @@ public class GenerateRelaxedClockXMLByData {
                 "\t\t\t<parameter idref=\"ucld.stdev\"/>\n" +
                 "\t\t\t<parameter idref=\"branchRates.categories\"/> \n");
         w.writeText("\t\t</log>\n");
+
         w.writeText("\t\t<logTree id=\"treeFileLog\" logEvery=\"10000\" nexusFormat=\"true\" " +
                 "fileName=\"" + outputFileName + ".trees\" sortTranslationTable=\"true\">\n" +
                 "\t\t\t<treeModel idref=\"treeModel\"/>\n" +
                 "\t\t\t<discretizedBranchRates idref=\"branchRates\"/> \n" +
                 "\t\t\t<posterior idref=\"posterior\"/>\n" +
                 "\t\t</logTree>\n");
+
         w.writeText("\t</mcmc>\n" +
                 "\t<report>\n" +
                 "\t\t<property name=\"timer\">\n" +
@@ -293,8 +349,10 @@ public class GenerateRelaxedClockXMLByData {
                 "\t\t</property>\n" +
                 "\t</report>\n" +
                 "</beast>\n");
+
         w.flush();
     }
+
     private static void writeData(XMLWriter w, String[][] tips) throws IOException {
         w.writeText("<?xml version=\"1.0\" standalone=\"yes\"?>\n" + "\n" +
                 "<!--       Generated by BEAUTi v1.6.2                                        -->\n" +
@@ -305,12 +363,14 @@ public class GenerateRelaxedClockXMLByData {
                 "<beast>\n" + "\n" +
                 "\t<!-- The list of taxa to be analysed (can also include dates/ages).          -->\n" +
                 "\t<!-- ntax=" + tips.length + "                                             -->\n");
+
         w.writeText("\t<taxa id=\"taxa\">\n");
         for (int n = 0; n < tips.length; n++) {
             w.writeText("\t\t<taxon id=\"" + tips[n][0] + "\"/>\n");
         }
         w.writeText("\t</taxa>\n");
         w.flush();
+
         w.writeText("\t<alignment id=\"alignment\" dataType=\"nucleotide\">\n");
         for (int n = 0; n < tips.length; n++) {
             w.writeText("\t\t<sequence>\n");
@@ -320,8 +380,11 @@ public class GenerateRelaxedClockXMLByData {
             w.flush();
         }
         w.writeText("\t</alignment>\n");
+
         w.writeText("\n\t<patterns id=\"patterns\" from=\"1\">\n" +
                 "\t\t<alignment idref=\"alignment\"/>\n" +
                 "\t</patterns>");
+
     }
+
 }

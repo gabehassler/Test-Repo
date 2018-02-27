@@ -1,4 +1,30 @@
+/*
+ * AbstractMultivariateTraitLikelihood.java
+ *
+ * Copyright (c) 2002-2013 Alexei Drummond, Andrew Rambaut and Marc Suchard
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.evomodel.continuous;
+
 import dr.evolution.tree.*;
 import dr.evolution.util.Taxon;
 import dr.evomodel.branchratemodel.BranchRateModel;
@@ -8,20 +34,30 @@ import dr.inference.distribution.MultivariateDistributionLikelihood;
 import dr.inference.loggers.LogColumn;
 import dr.inference.loggers.NumberColumn;
 import dr.inference.model.*;
+import dr.math.MathUtils;
 import dr.math.distributions.MultivariateDistribution;
 import dr.math.distributions.MultivariateNormalDistribution;
+import dr.stats.DiscreteStatistics;
 import dr.util.Author;
 import dr.util.Citable;
 import dr.util.Citation;
 import dr.util.CommonCitations;
 import dr.xml.*;
+import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+
+/**
+ * @author Marc Suchard
+ */
+
 public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelLikelihood
         implements TreeTraitProvider, Citable {
+
     public static final String TRAIT_LIKELIHOOD = "multivariateTraitLikelihood";
     public static final String CONJUGATE_ROOT_PRIOR = "conjugateRootPrior";
     public static final String MODEL = "diffusionModel";
@@ -34,6 +70,7 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
     public static final String SUBSTITUTIONS = "substitutions";
     public static final String SAMPLING_DENSITY = "samplingDensity";
     public static final String INTEGRATE = "integrateInternalTraits";
+    public static final String STANDARDIZE_TRAITS = "standardizeTraits";
     public static final String RECIPROCAL_RATES = "reciprocalRates";
     public static final String PRIOR_SAMPLE_SIZE = "priorSampleSize";
     public static final String RANDOM_SAMPLE = "randomSample";
@@ -44,6 +81,7 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
     private BranchRateModel branchRateModel;
     public static final String STRENGTH_OF_SELECTION = "strengthOfSelection";
     public static final String OPTIMAL_TRAITS = "optimalTraits";
+
     public AbstractMultivariateTraitLikelihood(String traitName,
                                                MultivariateTraitTree treeModel,
                                                MultivariateDiffusionModel diffusionModel,
@@ -59,6 +97,7 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
         this(traitName, treeModel, diffusionModel, traitParameter, null, missingIndices, cacheBranches,
                 scaleByTime, useTreeLength, rateModel, null, samplingDensity, reportAsMultivariate, reciprocalRates);
     }
+
     public AbstractMultivariateTraitLikelihood(String traitName,
                                                MultivariateTraitTree treeModel,
                                                MultivariateDiffusionModel diffusionModel,
@@ -73,7 +112,9 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
                                                Model samplingDensity,
                                                boolean reportAsMultivariate,
                                                boolean reciprocalRates) {
+
         super(TRAIT_LIKELIHOOD);
+
         this.traitName = traitName;
         this.treeModel = treeModel;
         this.branchRateModel = rateModel;
@@ -83,25 +124,32 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
         this.missingIndices = missingIndices;
         addModel(treeModel);
         addModel(diffusionModel);
+
         this.deltaParameter = deltaParameter;
         if (deltaParameter != null) {
             addVariable(deltaParameter);
         }
+
         if (rateModel != null) {
             hasBranchRateModel = true;
             addModel(rateModel);
         }
+
         if (driftModels != null) {
             for (BranchRateModel drift : driftModels) {
                 addModel(drift);
             }
         }
+
         if (samplingDensity != null) {
             addModel(samplingDensity);
         }
+
         if (traitParameter != null)
             addVariable(traitParameter);
+
         this.reportAsMultivariate = reportAsMultivariate;
+
         this.cacheBranches = cacheBranches;
         if (cacheBranches) {
             cachedLogLikelihoods = new double[treeModel.getNodeCount()];
@@ -109,17 +157,23 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
             validLogLikelihoods = new boolean[treeModel.getNodeCount()];
             storedValidLogLikelihoods = new boolean[treeModel.getNodeCount()];
         }
+
         this.scaleByTime = scaleByTime;
         this.useTreeLength = useTreeLength;
         this.reciprocalRates = reciprocalRates;
+
         dimTrait = diffusionModel.getPrecisionmatrix().length;
         dim = traitParameter != null ? traitParameter.getParameter(0).getDimension() : 0;
         numData = dim / dimTrait;
+
         if (dim % dimTrait != 0)
             throw new RuntimeException("dim is not divisible by dimTrait");
+
         recalculateTreeLength();
         printInformtion();
+
     }
+
     public AbstractMultivariateTraitLikelihood(String traitName,
                                                MultivariateTraitTree treeModel,
                                                MultivariateDiffusionModel diffusionModel,
@@ -135,7 +189,9 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
                                                Model samplingDensity,
                                                boolean reportAsMultivariate,
                                                boolean reciprocalRates) {
+
         super(TRAIT_LIKELIHOOD);
+
         this.traitName = traitName;
         this.treeModel = treeModel;
         this.branchRateModel = rateModel;
@@ -146,28 +202,37 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
         this.missingIndices = missingIndices;
         addModel(treeModel);
         addModel(diffusionModel);
+
         this.deltaParameter = deltaParameter;
         if (deltaParameter != null) {
             addVariable(deltaParameter);
         }
+
+
         if (rateModel != null) {
             hasBranchRateModel = true;
             addModel(rateModel);
         }
+
         if (optimalValues != null) {
             for (BranchRateModel optVal : optimalValues) {
                 addModel(optVal);
             }
         }
+
         if (strengthOfSelection != null) {
             addModel(strengthOfSelection);
         }
+
         if (samplingDensity != null) {
             addModel(samplingDensity);
         }
+
         if (traitParameter != null)
             addVariable(traitParameter);
+
         this.reportAsMultivariate = reportAsMultivariate;
+
         this.cacheBranches = cacheBranches;
         if (cacheBranches) {
             cachedLogLikelihoods = new double[treeModel.getNodeCount()];
@@ -175,17 +240,24 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
             validLogLikelihoods = new boolean[treeModel.getNodeCount()];
             storedValidLogLikelihoods = new boolean[treeModel.getNodeCount()];
         }
+
         this.scaleByTime = scaleByTime;
         this.useTreeLength = useTreeLength;
         this.reciprocalRates = reciprocalRates;
+
         dimTrait = diffusionModel.getPrecisionmatrix().length;
         dim = traitParameter != null ? traitParameter.getParameter(0).getDimension() : 0;
         numData = dim / dimTrait;
+
         if (dim % dimTrait != 0)
             throw new RuntimeException("dim is not divisible by dimTrait");
+
         recalculateTreeLength();
         printInformtion();
+
     }
+
+
     protected void printInformtion() {
         StringBuffer sb = new StringBuffer("Creating multivariate diffusion model:\n");
         sb.append("\tTrait: ").append(traitName).append("\n");
@@ -204,11 +276,15 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
         sb.append(extraInfo());
         sb.append("\tPlease cite:\n");
         sb.append(Citable.Utils.getCitationString(this));
+
+
         sb.append("\n\tDiffusion dimension   : ").append(dimTrait).append("\n");
         sb.append("\tNumber of observations: ").append(numData).append("\n");
         Logger.getLogger("dr.evomodel").info(sb.toString());
     }
+
     private static Citable TraitAscertainmentCitation = new Citable() {//} implements Citable {
+
         public List<Citation> getCitations() {
             List<Citation> list = new ArrayList<Citation>();
             list.add(
@@ -225,6 +301,7 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
             return list;
         }
     };
+
     public List<Citation> getCitations() {
         List<Citation> citations = new ArrayList<Citation>();
         citations.add(
@@ -232,10 +309,13 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
         );
         return citations;
     }
+
     protected abstract String extraInfo();
+
     public CompoundParameter getTraitParameter() {
         return traitParameter;
     }
+
     public void setAscertainedTaxon(Taxon taxon) {
         ascertainedTaxonIndex = treeModel.getTaxonIndex(taxon);
         if (ascertainedTaxonIndex == -1) {
@@ -249,6 +329,7 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
         sb.append(Citable.Utils.getCitationString(TraitAscertainmentCitation));
         Logger.getLogger("dr.evomodel").info(sb.toString());
     }
+
     public double[] getShiftForBranchLength(NodeRef node) {
         if (driftModels != null) {
             final int dim = driftModels.size();
@@ -263,6 +344,7 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
         }
         // But really should get values from driftModel.getBranchRate(treeModel, node);
     }
+
     public double[] getOptimalValue(NodeRef node) {
         if (optimalValues != null) {
             final int dim = optimalValues.size();
@@ -275,6 +357,8 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
             throw new RuntimeException("getOptimalValue should not be called.");
         }
     }
+
+
     public double getTimeScaledSelection(NodeRef node) {
         if (strengthOfSelection != null) {
             double selection;
@@ -285,8 +369,11 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
             throw new RuntimeException("getTimeScaledSelection should not be called.");
         }
     }
+
     public double getRescaledBranchLengthForPrecision(NodeRef node) {
+
         double length = treeModel.getBranchLength(node);
+
         if (hasBranchRateModel) {
             if (reciprocalRates) {
                 length /= branchRateModel.getBranchRate(treeModel, node); // branch rate scales as precision (inv-time)
@@ -294,36 +381,46 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
                 length *= branchRateModel.getBranchRate(treeModel, node); // branch rate scales as variance (time)
             }
         }
+
         if (scaleByTime) {
             length /= treeLength;
         }
+
         if (deltaParameter != null && treeModel.isExternal(node)) {
             length += deltaParameter.getParameterValue(0);
         }
         //System.err.println("Node Number: " + node.getNumber());
+
         //System.err.println("Trait value" + traitParameter.getParameterValue(0));
         //System.err.println("Trait value" + traitParameter.getParameterValue(1));
         // System.err.println("Trait value" + traitParameter.getParameterValue(2));
         // System.err.println("Trait value" + traitParameter.getParameterValue(3));
+
         // System.err.println("branch length: " + treeModel.getBranchLength(node));
         // System.err.println("rate: " + branchRateModel.getBranchRate(treeModel,node));
         return length;
     }
+
     // **************************************************************
     // ModelListener IMPLEMENTATION
     // **************************************************************
+
     protected void handleModelChangedEvent(Model model, Object object, int index) {
+
         if (!cacheBranches) {
             likelihoodKnown = false;
             if (model == treeModel)
                 recalculateTreeLength();
             return;
         }
+
         if (model == diffusionModel) {
             updateAllNodes();
         }
+
         // fireTreeEvents sends two events here when a node trait is changed,
         // ignoring object instance Parameter case
+
         else if (model == treeModel) {
             if (object instanceof TreeModel.TreeChangedEvent) {
                 TreeModel.TreeChangedEvent event = (TreeModel.TreeChangedEvent) object;
@@ -367,21 +464,25 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
             throw new RuntimeException("Unknown componentChangedEvent");
         }
     }
+
     protected void updateAllNodes() {
         for (int i = 0; i < treeModel.getNodeCount(); i++)
             validLogLikelihoods[i] = false;
         likelihoodKnown = false;
     }
+
     private void updateNode(NodeRef node) {
         validLogLikelihoods[node.getNumber()] = false;
         likelihoodKnown = false;
     }
+
     private void updateNodeAndChildren(NodeRef node) {
         validLogLikelihoods[node.getNumber()] = false;
         for (int i = 0; i < treeModel.getChildCount(node); i++)
             validLogLikelihoods[treeModel.getChild(node, i).getNumber()] = false;
         likelihoodKnown = false;
     }
+
     protected double getTreeLength() {
         double treeLength = 0;
         for (int i = 0; i < treeModel.getNodeCount(); i++) {
@@ -391,48 +492,67 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
         }
         return treeLength;
     }
+
     public void recalculateTreeLength() {
+
         if (!scaleByTime)
             return;
+
         if (useTreeLength) {
             treeLength = getTreeLength();
         } else { // Normalizing by tree height.
             treeLength = treeModel.getNodeHeight(treeModel.getRoot());
         }
     }
+
     public BranchRateModel getBranchRateModel() {
         return branchRateModel;
     }
+
     // **************************************************************
     // VariableListener IMPLEMENTATION
     // **************************************************************
+
     protected void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         if (variable == deltaParameter) {
             likelihoodKnown = false;
         }
+
         if (variable == traitParameter) {
             likelihoodKnown = false;
         }
+
         // All parameter changes are handled first by the treeModel
         if (!cacheBranches)
             likelihoodKnown = false;
     }
+
     // **************************************************************
     // Model IMPLEMENTATION
     // **************************************************************
+
+    /**
+     * Stores the precalculated state: in this case the intervals
+     */
     protected void storeState() {
         storedLikelihoodKnown = likelihoodKnown;
         storedLogLikelihood = logLikelihood;
         storedTreeLength = treeLength;
+
         if (cacheBranches) {
             System.arraycopy(cachedLogLikelihoods, 0, storedCachedLogLikelihood, 0, treeModel.getNodeCount());
             System.arraycopy(validLogLikelihoods, 0, storedValidLogLikelihoods, 0, treeModel.getNodeCount());
         }
     }
+
+    /**
+     * Restores the precalculated state: that is the intervals of the tree.
+     */
     protected void restoreState() {
         likelihoodKnown = storedLikelihoodKnown;
         logLikelihood = storedLogLikelihood;
         treeLength = storedTreeLength;
+
         if (cacheBranches) {
             double[] tmp = storedCachedLogLikelihood;
             storedCachedLogLikelihood = cachedLogLikelihoods;
@@ -442,29 +562,39 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
             validLogLikelihoods = tmp2;
         }
     }
+
     protected void acceptState() {
     } // nothing to do
+
     public MultivariateTraitTree getTreeModel() {
         return treeModel;
     }
+
     public String getTraitName() {
         return traitName;
     }
+
     public MultivariateDiffusionModel getDiffusionModel() {
         return diffusionModel;
     }
+
 //	public boolean getInSubstitutionTime() {
 //		return inSubstitutionTime;
 //	}
+
     // **************************************************************
     // Likelihood IMPLEMENTATION
     // **************************************************************
+
     public Model getModel() {
         return this;
     }
+
     public String toString() {
         return getClass().getName() + "(" + getLogLikelihood() + ")";
+
     }
+
     public final double getLogLikelihood() {
         if (!likelihoodKnown) {
             logLikelihood = calculateLogLikelihood();
@@ -477,13 +607,17 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
         }
         return logLikelihood;
     }
+
     protected abstract double calculateAscertainmentCorrection(int taxonIndex);
+
     public abstract double getLogDataLikelihood();
+
     public void makeDirty() {
         likelihoodKnown = false;
         if (cacheBranches)
             updateAllNodes();
     }
+
     public LogColumn[] getColumns() {
         return new LogColumn[]{
                 new LikelihoodColumn(getId() + ".joint"),
@@ -494,14 +628,20 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
                 }
         };
     }
+
     public abstract double calculateLogLikelihood();
+
 //    public double getMaxLogLikelihood() {
 //        return maxLogLikelihood;
 //    }
+
+
     // **************************************************************
     // Loggable IMPLEMENTATION
     // **************************************************************
+
     private TreeTrait[] treeTraits = null;
+
     public TreeTrait[] getTreeTraits() {
         if (treeTraits == null) {
             final double[] trait = getRootNodeTrait();
@@ -511,12 +651,15 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
                             public String getTraitName() {
                                 return traitName;
                             }
+
                             public Intent getIntent() {
                                 return Intent.NODE;
                             }
+
                             public Class getTraitClass() {
                                 return Double.class;
                             }
+
                             public double[] getTrait(Tree tree, NodeRef node) {
                                 return getTraitForNode(tree, node, traitName);
                             }
@@ -528,6 +671,7 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
         }
         return treeTraits;
     }
+
     public TreeTrait getTreeTrait(String key) {
         TreeTrait[] tts = getTreeTraits();
         for (TreeTrait tt : tts) {
@@ -537,42 +681,58 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
         }
         return null;
     }
+
     public final int getNumData() {
         return numData;
     }
+
     public final int getDimTrait() {
         return dimTrait;
     }
+
     protected double[] getRootNodeTrait() {
         return treeModel.getMultivariateNodeTrait(treeModel.getRoot(), traitName);
     }
+
     public abstract double[] getTraitForNode(Tree tree, NodeRef node, String traitName);
+
     public void check(Parameter trait) throws XMLParseException {
         diffusionModel.check(trait);
     }
+
     // **************************************************************
     // XMLElement IMPLEMENTATION
     // **************************************************************
+
     public Element createElement(Document d) {
         throw new RuntimeException("Not implemented yet!");
     }
+
     // **************************************************************
     // XMLObjectParser
     // **************************************************************
+
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
+
         public String getParserName() {
             return TRAIT_LIKELIHOOD;
         }
+
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
             MultivariateDiffusionModel diffusionModel = (MultivariateDiffusionModel) xo.getChild(MultivariateDiffusionModel.class);
             MultivariateTraitTree treeModel = (MultivariateTraitTree) xo.getChild(MultivariateTraitTree.class);
+
             boolean cacheBranches = xo.getAttribute(CACHE_BRANCHES, false);
             boolean integrate = xo.getAttribute(INTEGRATE, false);
             boolean useTreeLength = xo.getAttribute(USE_TREE_LENGTH, false);
             boolean scaleByTime = xo.getAttribute(SCALE_BY_TIME, false);
             boolean reciprocalRates = xo.getAttribute(RECIPROCAL_RATES, false);
             boolean reportAsMultivariate = xo.getAttribute(REPORT_MULTIVARIATE, true);
+            boolean standardizeTraits = xo.getAttribute(STANDARDIZE_TRAITS, false);
+
             BranchRateModel rateModel = (BranchRateModel) xo.getChild(BranchRateModel.class);
+
             List<BranchRateModel> driftModels = null;
             if (xo.hasChildNamed(DRIFT_MODELS)) {
                 driftModels = new ArrayList<BranchRateModel>();
@@ -587,8 +747,10 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
                     driftModels.add((BranchRateModel) cxo.getChild(i));
                 }
             }
+
             List<BranchRateModel> optimalValues = null;
             BranchRateModel strengthOfSelection = null;
+
             if (xo.hasChildNamed(OPTIMAL_TRAITS)) {
                 optimalValues = new ArrayList<BranchRateModel>();
                 XMLObject cxo = xo.getChild(OPTIMAL_TRAITS);
@@ -602,40 +764,89 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
                     optimalValues.add((BranchRateModel) cxo.getChild(i));
                 }
             }
+
             if (xo.hasChildNamed(STRENGTH_OF_SELECTION)) {
                 XMLObject cxo = xo.getChild(STRENGTH_OF_SELECTION);
                 strengthOfSelection = (BranchRateModel) cxo.getChild(BranchRateModel.class);
             }
+
             TreeTraitParserUtilities utilities = new TreeTraitParserUtilities();
             String traitName = TreeTraitParserUtilities.DEFAULT_TRAIT_NAME;
+
             TreeTraitParserUtilities.TraitsAndMissingIndices returnValue =
                     utilities.parseTraitsFromTaxonAttributes(xo, traitName, treeModel, integrate);
             CompoundParameter traitParameter = returnValue.traitParameter;
             List<Integer> missingIndices = returnValue.missingIndices;
             traitName = returnValue.traitName;
+
             Model samplingDensity = null;
+
             if (xo.hasChildNamed(SAMPLING_DENSITY)) {
                 XMLObject cxo = xo.getChild(SAMPLING_DENSITY);
                 samplingDensity = (Model) cxo.getChild(Model.class);
             }
+
             Parameter deltaParameter = null;
             if (xo.hasChildNamed("delta")) {
                 XMLObject cxo = xo.getChild("delta");
                 deltaParameter = (Parameter) cxo.getChild(Parameter.class);
             }
+
+            if (standardizeTraits) {
+//                standardize(traitParameter);
+//                dimTrait = diffusionModel.getPrecisionmatrix().length;
+//                        dim = traitParameter != null ? traitParameter.getParameter(0).getDimension() : 0;
+//                        numData = dim / dimTrait;
+
+//                System.err.println(traitParameter.getDimension());
+//                System.err.println(traitParameter.getParameterCount());
+//                System.err.println(traitParameter.getParameter(0).getDimension());
+//                System.exit(-1);
+                int numTraits = traitParameter.getParameter(0).getDimension();
+                int numObservations = traitParameter.getParameterCount();
+
+                StringBuilder sb = new StringBuilder();
+                sb.append("Traits have been standardized.  Use following to transform values back to original scale.\n");
+                for (int trait = 0; trait < numTraits; ++trait) {
+                    double[] values = new double[numObservations];
+                    for (int obs = 0; obs < numObservations; ++obs) {
+                        values[obs] = traitParameter.getParameter(obs).getParameterValue(trait);
+                    }
+
+                    double traitMean = DiscreteStatistics.mean(values);
+                    double traitSD = Math.sqrt(DiscreteStatistics.variance(values, traitMean));
+
+                    sb.append("\tDimension " + (trait + 1) + ": multiply by " + traitSD + " then add " + traitMean + "\n");
+
+                    for (int obs = 0; obs < numObservations; ++obs) {
+                        traitParameter.getParameter(obs).setParameterValue(trait,
+                                (values[obs] - traitMean) / traitSD);
+                    }
+                }
+
+                Logger.getLogger("dr.evomodel").info(sb.toString());
+
+            }
+
             AbstractMultivariateTraitLikelihood like;
+
             if (integrate) {
+
                 MultivariateDistributionLikelihood rootPrior =
                         (MultivariateDistributionLikelihood) xo.getChild(MultivariateDistributionLikelihood.class);
                 if (rootPrior != null) {
+
                     if (!(rootPrior.getDistribution() instanceof MultivariateDistribution))
                         throw new XMLParseException("Only multivariate normal priors allowed for Gibbs sampling the root trait");
+
                     MultivariateNormalDistribution rootDistribution =
                             (MultivariateNormalDistribution) rootPrior.getDistribution();
+
                     like = new SemiConjugateMultivariateTraitLikelihood(traitName, treeModel, diffusionModel,
                             traitParameter, missingIndices, cacheBranches,
                             scaleByTime, useTreeLength, rateModel, samplingDensity, reportAsMultivariate,
                             rootDistribution, reciprocalRates);
+
 //                    like = new DebugableIntegratedMultivariateTraitLikelihood(traitName, treeModel, diffusionModel,
 //                            traitParameter, missingIndices, cacheBranches,
 //                            scaleByTime, useTreeLength, rateModel, samplingDensity, reportAsMultivariate,
@@ -645,17 +856,24 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
                     if (cxo == null) {
                         throw new XMLParseException("Must specify a conjugate or multivariate normal root prior");
                     }
+
                     boolean ignorePhylogeny = xo.getAttribute(IGNORE_PHYLOGENY, false);
+
                     Parameter meanParameter = (Parameter) cxo.getChild(MultivariateDistributionLikelihood.MVN_MEAN)
                             .getChild(Parameter.class);
+
                     if (meanParameter.getDimension() != diffusionModel.getPrecisionmatrix().length) {
                         throw new XMLParseException("Root prior mean dimension does not match trait diffusion dimension");
                     }
+
                     Parameter sampleSizeParameter = (Parameter) cxo.getChild(PRIOR_SAMPLE_SIZE).getChild(Parameter.class);
+
                     double[] mean = meanParameter.getParameterValues();
                     double pseudoObservations = sampleSizeParameter.getParameterValue(0);
+
                     if (ignorePhylogeny) {
                         boolean exchangeableTips = xo.getAttribute(EXCHANGEABLE_TIPS, true);
+
                         like = new NonPhylogeneticMultivariateTraitLikelihood(traitName, treeModel, diffusionModel,
                                 traitParameter, deltaParameter, missingIndices, cacheBranches,
                                 scaleByTime, useTreeLength, rateModel, samplingDensity, reportAsMultivariate,
@@ -682,27 +900,33 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
                     }
                 }
             } else {
+
                 like = new SampledMultivariateTraitLikelihood(traitName, treeModel, diffusionModel,
                         traitParameter, missingIndices, cacheBranches,
                         scaleByTime, useTreeLength, rateModel, samplingDensity, reportAsMultivariate,
                         reciprocalRates);
             }
+
             if (!integrate && xo.hasChildNamed(TreeTraitParserUtilities.RANDOMIZE)) {
                 utilities.randomize(xo);
             }
+
             if (xo.hasChildNamed(TreeTraitParserUtilities.JITTER)) {
                 utilities.jitter(xo, diffusionModel.getPrecisionmatrix().length, missingIndices);
             }
+
             if (xo.hasChildNamed(CHECK)) {
                 XMLObject cxo = xo.getChild(CHECK);
                 Parameter check = (Parameter) cxo.getChild(Parameter.class);
                 like.check(check);
             }
+
             if (!xo.hasAttribute(TreeTraitParserUtilities.ALLOW_IDENTICAL) &&
                     utilities.hasIdenticalTraits(traitParameter, missingIndices, diffusionModel.getPrecisionmatrix().length)) {
                 throw new XMLParseException("For multivariate trait analyses, all trait values should be unique.\n" +
                         "Check data or add random noise using 'jitter' option.");
             }
+
             if (xo.hasChildNamed(ASCERTAINMENT)) {
                 XMLObject cxo = xo.getChild(ASCERTAINMENT);
                 Taxon taxon = (Taxon) cxo.getChild(Taxon.class);
@@ -712,18 +936,23 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
                 }
                 like.setAscertainedTaxon(taxon);
             }
+
             return like;
         }
+
         //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
+
         public String getParserDescription() {
             return "Provides the likelihood of a continuous trait evolving on a tree by a " +
                     "given diffusion model.";
         }
+
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
+
         private final XMLSyntaxRule[] rules = {
                 new StringAttributeRule(TreeTraitParserUtilities.TRAIT_NAME, "The name of the trait for which a likelihood should be calculated"),
                 new ElementRule(TreeTraitParserUtilities.TRAIT_PARAMETER, new XMLSyntaxRule[]{
@@ -753,6 +982,7 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
                 AttributeRule.newBooleanRule(USE_TREE_LENGTH, true),
                 AttributeRule.newBooleanRule(SCALE_BY_TIME, true),
                 AttributeRule.newBooleanRule(RECIPROCAL_RATES, true),
+                AttributeRule.newBooleanRule(STANDARDIZE_TRAITS, true),
                 AttributeRule.newBooleanRule(CACHE_BRANCHES, true),
                 AttributeRule.newIntegerRule(RANDOM_SAMPLE, true),
                 AttributeRule.newBooleanRule(IGNORE_PHYLOGENY, true),
@@ -767,15 +997,19 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
                         new ElementRule(BranchRateModel.class, 1, Integer.MAX_VALUE),
                 }, true),
         };
+
+
         public Class getReturnType() {
             return AbstractMultivariateTraitLikelihood.class;
         }
     };
+
     MultivariateTraitTree treeModel = null;
     MultivariateDiffusionModel diffusionModel = null;
     String traitName = null;
     CompoundParameter traitParameter;
     List<Integer> missingIndices;
+
     protected double logLikelihood;
     protected double maxLogLikelihood = Double.NEGATIVE_INFINITY;
     private double storedLogLikelihood;
@@ -785,21 +1019,30 @@ public abstract class AbstractMultivariateTraitLikelihood extends AbstractModelL
     protected List<BranchRateModel> optimalValues = null;
     protected BranchRateModel strengthOfSelection = null;
     private boolean hasBranchRateModel = false;
+
     private double treeLength;
     private double storedTreeLength;
+
     private final boolean reportAsMultivariate;
+
     private final boolean scaleByTime;
     private final boolean useTreeLength;
     private final boolean reciprocalRates;
+
     protected boolean cacheBranches;
     protected double[] cachedLogLikelihoods;
     protected double[] storedCachedLogLikelihood;
     protected boolean[] validLogLikelihoods;
     protected boolean[] storedValidLogLikelihoods;
+
     private final Parameter deltaParameter;
+
     private boolean doAscertainmentCorrect = false;
     private int ascertainedTaxonIndex;
+
     protected int numData;
     protected int dimTrait;
     protected int dim;
+
 }
+

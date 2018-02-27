@@ -1,18 +1,78 @@
+/*
+ * DrMath.java
+ *
+ * Copyright (C) 2002-2006 Alexei Drummond and Andrew Rambaut
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.math.functionEval;
+
 import java.io.PrintStream;
+/**
+ * This class implements additional mathematical functions
+ * and determines the parameters of the floating point representation.
+ *
+ * @author Didier H. Besset
+ */
 public final class DrMath
 {
+	/**
+	 * Typical meaningful precision for numerical calculations.
+	 */
 	static private double defaultNumericalPrecision = 0;
+	/**
+	 * Typical meaningful small number for numerical calculations.
+	 */
 	static private double smallNumber = 0;
+	/**
+	 * Radix used by floating-point numbers.
+	 */
 	static private int radix = 0;
+	/**
+	 * Largest positive value which, when added to 1.0, yields 0.
+	 */
 	static private double machinePrecision = 0;
+	/**
+	 * Largest positive value which, when subtracted to 1.0, yields 0.
+	 */
 	static private double negativeMachinePrecision = 0;
+	/**
+	 * Smallest number different from zero.
+	 */
 	static private double smallestNumber = 0;
+	/**
+	 * Largest possible number
+	 */
 	static private double largestNumber = 0;
+	/**
+	 * Largest argument for the exponential
+	 */
 	static private double largestExponentialArgument = 0;
+	/**
+	 * Values used to compute human readable scales.
+	 */
 	private static final double scales[] = {1.25, 2, 2.5, 4, 5, 7.5, 8, 10};
 	private static final double semiIntegerScales[] = {2, 2.5, 4, 5, 7.5, 8, 10};
 	private static final double integerScales[] = {2, 4, 5, 8, 10};
+
 private static void computeLargestNumber()
 {
 	double floatingRadix = getRadix();
@@ -81,10 +141,23 @@ public static double defaultNumericalPrecision()
 		defaultNumericalPrecision = Math.sqrt( getMachinePrecision()); 
 	return defaultNumericalPrecision;
 }
+/**
+ * @return boolean	true if the difference between a and b is
+ * less than the default numerical precision
+ * @param a double
+ * @param b double
+ */
 public static boolean equal( double a, double b)
 {
 	return equal( a, b, defaultNumericalPrecision());
 }
+/**
+ * @return boolean	true if the relative difference between a and b
+ * is less than precision
+ * @param a double
+ * @param b double
+ * @param precision double
+ */
 public static boolean equal( double a, double b, double precision)
 {
 	double norm = Math.max( Math.abs(a), Math.abs( b));
@@ -96,6 +169,9 @@ public static double getLargestExponentialArgument()
 		largestExponentialArgument = Math.log(getLargestNumber());
 	return largestExponentialArgument;
 }
+/**
+ * (c) Copyrights Didier BESSET, 1999, all rights reserved.
+ */
 public static double getLargestNumber()
 {
 	if ( largestNumber == 0 )
@@ -150,10 +226,24 @@ public static void reset()
 	smallestNumber = 0;
 	largestNumber = 0;
 }
+/**
+ * This method returns the specified value rounded to
+ * the nearest integer multiple of the specified scale.
+ *
+ * @param value number to be rounded
+ * @param scale defining the rounding scale
+ * @return rounded value
+ */
 public static double roundTo(  double value, double scale)
 {
 	return Math.round( value / scale) * scale;
 }
+	/**
+	 * Round the specified value upward to the next scale value.
+	 * @param the value to be rounded.
+	 * @param a fag specified whether integer scale are used, otherwise double scale is used.
+	 * @return a number rounded upward to the next scale value.
+	 */
 	public static double roundToScale( double value, boolean integerValued)
 	{
 		double[] scaleValues;
@@ -179,6 +269,10 @@ public static double roundTo(  double value, double scale)
 		}
 		return exponent;	// Should never reach here
 	}
+/**
+ * (c) Copyrights Didier BESSET, 1999, all rights reserved.
+ * @return double
+ */
 public static double smallNumber()
 {
 	if ( smallNumber == 0 )

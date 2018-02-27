@@ -1,4 +1,5 @@
 package dr.evomodelxml.branchratemodel;
+
 import dr.evolution.tree.Tree;
 import dr.evolution.util.Taxa;
 import dr.evolution.util.TaxonList;
@@ -7,7 +8,11 @@ import dr.evomodel.branchratemodel.LocalClockModel;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.model.Parameter;
 import dr.xml.*;
+
+/**
+ */
 public class LocalClockModelParser extends AbstractXMLObjectParser {
+
     public static final String LOCAL_CLOCK_MODEL = "localClockModel";
     public static final String RATE = BranchRateModel.RATE;
     public static final String RELATIVE = "relative";
@@ -18,85 +23,119 @@ public class LocalClockModelParser extends AbstractXMLObjectParser {
     public static final String EXTERNAL_BRANCHES = "externalBranches";
     public static final String TRUNK = "trunk";
     public static final String INDEX = "index";
+
+
     public String getParserName() {
         return LOCAL_CLOCK_MODEL;
     }
+
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
         TreeModel tree = (TreeModel) xo.getChild(TreeModel.class);
+
         Parameter globalRateParameter = (Parameter) xo.getElementFirstChild(RATE);
         LocalClockModel localClockModel = new LocalClockModel(tree, globalRateParameter);
+
         for (int i = 0; i < xo.getChildCount(); i++) {
             if (xo.getChild(i) instanceof XMLObject) {
+
                 XMLObject xoc = (XMLObject) xo.getChild(i);
                 if (xoc.getName().equals(CLADE)) {
+
                     boolean relative = xoc.getAttribute(RELATIVE, false);
+
                     Parameter rateParameter = (Parameter) xoc.getChild(Parameter.class);
                     TaxonList taxonList = (TaxonList) xoc.getChild(TaxonList.class);
+
                     if (taxonList.getTaxonCount() == 1) {
                         throw new XMLParseException("A local clock for a clade must be defined by at least two taxa");
                     }
+
                     boolean includeStem = false;
                     boolean excludeClade = false;
                     double stemProportion = 0.0;
+
                     if (xoc.hasAttribute(INCLUDE_STEM)) {
                         includeStem = xoc.getBooleanAttribute(INCLUDE_STEM);
                         // if includeStem=true then assume it is the whole stem
                         stemProportion = 1.0;
                     }
+
                     if (xoc.hasAttribute(STEM_PROPORTION)) {
                         stemProportion = xoc.getDoubleAttribute(STEM_PROPORTION);
                         if (stemProportion < 0.0 || stemProportion > 1.0) {
                             throw new XMLParseException("A stem proportion should be between 0, 1");
                         }
                     }
+
                     if (xoc.hasAttribute(EXCLUDE_CLADE)) {
                         excludeClade = xoc.getBooleanAttribute(EXCLUDE_CLADE);
                     }
+
                     try {
                         localClockModel.addCladeClock(taxonList, rateParameter, relative, stemProportion, excludeClade);
+
                     } catch (Tree.MissingTaxonException mte) {
                         throw new XMLParseException("Taxon, " + mte + ", in " + getParserName() + " was not found in the tree.");
                     }
                 } else if (xoc.getName().equals(EXTERNAL_BRANCHES)) {
+
                     boolean relative = xoc.getAttribute(RELATIVE, false);
+
                     Parameter rateParameter = (Parameter) xoc.getChild(Parameter.class);
                     TaxonList taxonList = (TaxonList) xoc.getChild(TaxonList.class);
+
+
                     try {
                         localClockModel.addExternalBranchClock(taxonList, rateParameter, relative);
+
                     } catch (Tree.MissingTaxonException mte) {
                         throw new XMLParseException("Taxon, " + mte + ", in " + getParserName() + " was not found in the tree.");
                     }
                 } else if (xoc.getName().equals(TRUNK)) {
+
                     boolean relative = xoc.getAttribute(RELATIVE, false);
+
                     Parameter indexParameter = null;
                     if (xoc.hasChildNamed(INDEX)) {
                         indexParameter = (Parameter) xoc.getElementFirstChild(INDEX);
                     }
                     Parameter rateParameter = (Parameter) xoc.getChild(Parameter.class);
                     TaxonList taxonList = (TaxonList) xoc.getChild(TaxonList.class);
+
+
                     try {
                         localClockModel.addTrunkClock(taxonList, rateParameter, indexParameter, relative);
+
                     } catch (Tree.MissingTaxonException mte) {
                         throw new XMLParseException("Taxon, " + mte + ", in " + getParserName() + " was not found in the tree.");
                     }
                 }
+
             }
         }
+
         System.out.println("Using local clock branch rate model.");
+
         return localClockModel;
     }
+
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
+
     public String getParserDescription() {
         return "This element returns a branch rate model that adds a delta to each terminal branch length.";
     }
+
     public Class getReturnType() {
         return LocalClockModel.class;
     }
+
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
+
     private XMLSyntaxRule[] rules = new XMLSyntaxRule[]{
             new ElementRule(TreeModel.class),
             new ElementRule(RATE, Parameter.class, "The molecular evolutionary rate parameter", false),

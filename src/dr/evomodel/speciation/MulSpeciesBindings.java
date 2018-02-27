@@ -1,4 +1,30 @@
+/*
+ * SpeciesBindings.java
+ *
+ * Copyright (C) 2002-2009 Alexei Drummond and Andrew Rambaut
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * BEAST is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.evomodel.speciation;
+
 import dr.evolution.tree.MutableTree;
 import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
@@ -11,39 +37,63 @@ import dr.inference.model.*;
 import dr.math.MathUtils;
 import dr.util.HeapSort;
 import jebl.util.FixedBitSet;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+/**
+ * Binds taxa in gene trees to multiply labelled species.
+ * 
+ * Extension of Joseph Heled's SpeciesBindings to deal with multiply labelled trees.
+ * It combines the SpeciesBindings code with functions from AlloppSpeciesBindings.
+ *
+ * @author Joseph Heled, Graham Jones
+ *         Date: 21/12/2011
+ */
+
+
+
 public class MulSpeciesBindings extends AbstractModel  implements Loggable {
     // grj all gene trees
     private final GeneTreeInfo[] geneTreeInfos;
+
     // grj Species definition    
     private final AlloppSpeciesBindings.ApSpInfo[] apspecies;
     private final Taxon[] taxa;
     private final Map<Taxon, Integer> taxon2index = new HashMap<Taxon, Integer>();
 	private final int spsq[][];
 	private final int numberOfSpSeqs;
+
+    
 	// jh
     private final double[][] popTimesPair;
     private boolean dirty_pp;
+
     private final double[][] popTimesSingle;
     private boolean dirty_sg;
     private final boolean verbose = false;
+    
     // grj
 	private class SpeciesIndivPair {
 		public int spIndex;
 		public int ivIndex;
+		
 		public SpeciesIndivPair(int spIndex, int ivIndex) {
 			this.spIndex = spIndex;
 			this.ivIndex = ivIndex;    
 		}
 	}
+
+
 	// mostly grj
     public MulSpeciesBindings(AlloppSpeciesBindings.ApSpInfo[] apspecies, TreeModel[] geneTrees, double[] popFactors) {
         super(MulSpeciesBindingsParser.MUL_SPECIES);
+
         this.apspecies = apspecies;
+        
         // make the flattened arrays
         int n = 0;
         for (AlloppSpeciesBindings.ApSpInfo apspi : apspecies) {
@@ -80,18 +130,21 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
         	}
         }
         numberOfSpSeqs = spsqindex;
+
         geneTreeInfos = new GeneTreeInfo[geneTrees.length];
         for (int i = 0; i < geneTrees.length; i++) {
         	final TreeModel gtm = geneTrees[i];
         	addModel(gtm);
         	geneTreeInfos[i] = new GeneTreeInfo(gtm, popFactors[i]);
         }
+        
         // like SpeciesBindings but using number of species-sequence pairs, not number of species
         popTimesSingle = new double[numberOfSpSeqs][];
         for (int ns = 0; ns < popTimesSingle.length; ++ns) {
             popTimesSingle[ns] = new double[allCoalPointsCount(ns)];
         }
         dirty_sg = true;
+
         popTimesPair = new double[(numberOfSpSeqs * (numberOfSpSeqs - 1)) / 2][];
         {
             final int nps = allPairCoalPointsCount();
@@ -99,29 +152,46 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
                 popTimesPair[ns] = new double[nps];
             }
         }
+
         dirty_pp = true;
+
         addStatistic(new SpeciesLimits());
     }
+
+
+
+
+    
+    
     // grj
 	public int numberOfGeneTrees() {
 		return geneTreeInfos.length;
 	}	
+
+    
     // grj
     public int nSpSeqs() {
         return numberOfSpSeqs;
     }
+    
     // grj
 	public String apspeciesName(int i) {
 		return apspecies[i].name;
 	}
+	
+	
 	//grj
 	public int spseqindex2sp(int spsqindex) {
 		return spseqindex2spandseq(spsqindex)[0];
 	}
+	
 	//grj
 	public int spseqindex2seq(int spsqindex) {
 		return spseqindex2spandseq(spsqindex)[1];
 	}
+	
+
+    
     // grj
 	public SpeciesIndivPair apspeciesId2speciesindiv(String apspId) {
 		int sp = -1;
@@ -139,28 +209,44 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
 		}
 		assert sp != -1;
 		SpeciesIndivPair x = new SpeciesIndivPair(sp, iv);
+
 		return x;
 	}
+	
 	// grj
 	public void permuteOneSpeciesOneIndivForOneGene() {
 		int i = MathUtils.nextInt(geneTreeInfos.length);
 		geneTreeInfos[i].permuteOneSpeciesOneIndiv();
 		geneTreeInfos[i].wasChanged();
 	}
+	
+	
 	// grj
 	public void permuteSetOfIndivsForOneGene() {
 		int i = MathUtils.nextInt(geneTreeInfos.length);
 		geneTreeInfos[i].permuteSetOfIndivs();
 		geneTreeInfos[i].wasChanged();
 	}
+
+	
 	// grj
 	public String seqassignsAsText(int g) {
 		return geneTreeInfos[g].seqassignsAsText();
 	}
+
 	// grj
 	public String genetreeAsText(int g) {
 		return geneTreeInfos[g].genetreeAsText();
 	}
+	
+	
+   /**
+     * Per species coalecent times.
+     * <p/>
+     * Indexed by sp index, a list of coalescent times of taxa of this sp from all gene trees.
+     *
+     * @return Per species coalecent times
+     */
 	// jh
     public double[][] getPopTimesSingle() {
         if (dirty_sg) {
@@ -171,12 +257,14 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
         }
         return popTimesSingle;
     }
+
     // jh
     public double[][] getPopTimesPair() {
         if (dirty_pp) {
             final int nsp = nSpSeqs();
             for (int ns1 = 0; ns1 < nsp - 1; ++ns1) {
                 final int z = (ns1 * (2 * nsp - ns1 - 3)) / 2 - 1;
+
                 for (int ns2 = ns1 + 1; ns2 < nsp; ++ns2) {
                     getAllPairCoalPoints(ns1, ns2, popTimesPair[z + ns2]);
                 }
@@ -184,8 +272,11 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
         }
         return popTimesPair;
     }
+
+    
     // jh
     private void getAllPairCoalPoints(int ns1, int ns2, double[] popTimes) {
+
         for (int i = 0; i < geneTreeInfos.length; i++) {
             for (CoalInfo ci : geneTreeInfos[i].getCoalInfo()) {
                 if ((ci.sinfo[0].contains(ns1) && ci.sinfo[1].contains(ns2)) ||
@@ -197,6 +288,8 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
         }
         HeapSort.sort(popTimes);
     }
+
+    
     // jh
     private int allCoalPointsCount(int spseqIndex) {
         int tot = 0;
@@ -207,9 +300,12 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
         }
         return tot;
     }
+
+    
     // length of points must be right
     // jh
     void getAllCoalPoints(int spseqIndex, double[] points) {
+
         int k = 0;
         for (GeneTreeInfo t : geneTreeInfos) {
             final int totCoalEvents = t.nLineages(spseqIndex) - 1;
@@ -231,14 +327,19 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
         assert k == points.length;
         HeapSort.sort(points);
     }
+
+    
     // jh
     private int allPairCoalPointsCount() {
         return geneTreeInfos.length;
     }
+
+    
     // jh
     public double speciationUpperBound(FixedBitSet sub1, FixedBitSet sub2) {
         //Determined by the last time any pair of sp's in sub1 x sub2 have been seen
         // together in any of the gene trees."""
+
         double bound = Double.MAX_VALUE;
         for (GeneTreeInfo g : getGeneTrees()) {
             for (CoalInfo ci : g.getCoalInfo()) {
@@ -256,10 +357,14 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
         }
         return bound;
     }
+
+    
     // jh
     public void makeCompatible(double rootHeight) {
         for( GeneTreeInfo t : getGeneTrees() ) {
+
             MutableTree tree = t.tree;
+
             for (int i = 0; i < tree.getExternalNodeCount(); i++) {
                 final NodeRef node = tree.getExternalNode(i);
                 final NodeRef p = tree.getParent(node);
@@ -273,19 +378,28 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
             //t.wasChanged();
        }
     }
+
+
     // jh
     class CoalInfo implements Comparable<CoalInfo> {
         // zero based, 0 is taxa time, i.e. in tree branch units
         final double ctime;
         // sp info for each subtree
         final FixedBitSet[] sinfo;
+
         CoalInfo(double t, int nc) {
             ctime = t;
             sinfo = new FixedBitSet[nc];
         }
+
         public int compareTo(CoalInfo o) {
             return o.ctime < ctime ? +1 : (o.ctime > ctime ? -1 : 0);
         }
+
+        /**
+         * @param s
+         * @return true if all children have at least one taxa from sp 's'
+         */
         public boolean allHas(int s) {
             for (FixedBitSet b : sinfo) {
                 if (!b.contains(s)) {
@@ -295,19 +409,34 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
             return true;
         }
     }
+    
+    
     // jh + grj
+    /**
+     * Collect coalescence information for sub-tree rooted at 'node'.
+     *
+     * @param tree
+     * @param node
+     * @param loc  Place node data in loc, sub-tree info before that.
+     * @param info array to fill
+     * @return location of next available location
+     */
     private int collectCoalInfo(Tree tree, NodeRef node, 
     		GeneTreeInfo.SequenceAssignment[] seqassigns, int loc, CoalInfo[] info) {
+
         info[loc] = new CoalInfo(tree.getNodeHeight(node), tree.getChildCount(node));
+
         int newLoc = loc - 1;
         for (int i = 0; i < 2; i++) {
             NodeRef child = tree.getChild(node, i);
             info[loc].sinfo[i] = new FixedBitSet(nSpSeqs());
+
             if (tree.isExternal(child)) {
             	Taxon taxon = tree.getNodeTaxon(child);
                 int ti = taxon2index.get(taxon);
 				int spseq = spsq[seqassigns[ti].spIndex][seqassigns[ti].seqIndex];
                 info[loc].sinfo[i].set(spseq);
+                
                 assert tree.getNodeHeight(child) == 0;
             } else {
                 final int used = collectCoalInfo(tree, child, seqassigns, newLoc, info);
@@ -319,6 +448,8 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
         }
         return newLoc;
     }
+
+    
     // mostly grj
     public class GeneTreeInfo {
         public final TreeModel tree;
@@ -330,24 +461,45 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
         private boolean dirty;
         private boolean wasBacked;
         private final double popFactor;
+        
+        
+    	/* class GeneTreeInfo.SequenceAssignments
+    	 * 
+    	 * spIndex is an index for an allopolyploid species. For example, it identifies
+    	 * a bit in a FixedBitSet (union) in a MulLabTree
+    	 * 
+    	 * seqIndex identifies a sequence copy for this gene and for each individual.
+    	 * seqIndex is 0 or 1 for tetraploids and it is these that get flipped to change
+    	 * assignments of sequence copies to legs in AlloppSpeciesNetworkModel (or
+    	 * equivalently to tips in a MulLabTree).
+    	 * 
+    	 * 2011-06-23 spIndex is the same for all gene trees. Maybe
+    	 * allow non-rectangular data later.
+    	 */
     	private class SequenceAssignment {
      		public int spIndex;
     		public int seqIndex;
+    		
     		public SequenceAssignment(int spIndex, int seqIndex) {
     			this.spIndex = spIndex;
     			this.seqIndex = seqIndex;
     		}
+    		
     		public String toString() {
     			String s = "" + seqIndex;
     			return s;
     		}
     	} 	
+
+    	
+    	
     	// grj
         GeneTreeInfo(TreeModel tree, double popFactor) {
             this.tree = tree;
             this.popFactor = popFactor;
             seqassigns = new SequenceAssignment[taxa.length];
             oldseqassigns = new SequenceAssignment[taxa.length];      
+            
             // This uses taxa list for *all* gene trees, not this gene tree.
             for (int s = 0; s < apspecies.length; s++) {
             	for (int i = 0; i < apspecies[s].individuals.length; i++) {
@@ -366,6 +518,7 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
             }
             lineagesCount = new int[nSpSeqs()];
             Arrays.fill(lineagesCount, 0);
+
             for (int nl = 0; nl < lineagesCount.length; ++nl) {
             	int sp = spseqindex2sp(nl);            	
                 for (AlloppSpeciesBindings.Individual indiv : apspecies[sp].individuals) {
@@ -384,6 +537,7 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
                 	}                	
                 }
             }
+            
             // this bit jh
             cList = new CoalInfo[tree.getExternalNodeCount() - 1];
             savedcList = new CoalInfo[cList.length];
@@ -391,6 +545,8 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
             getCoalInfo();
             wasBacked = false;
         }
+        
+        
         // grj
         public String seqassignsAsText() {
         	String s = "Sequence assignments" + System.getProperty("line.separator");
@@ -406,32 +562,59 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
         	}
         	return s;
         }
+        
         // grj
          public String genetreeAsText() {
         	 return tree.getNewick();
          }
+        
         // grj
         public SequenceAssignment getSeqassigns(int tx) {
         	return seqassigns[tx];
         }
+        
+        
         // grj
 		public void storeSequenceAssignments() {
 			for (int i = 0; i < seqassigns.length; i++) {
 				oldseqassigns[i].seqIndex = seqassigns[i].seqIndex;
 			}
 		}
+        
         // grj
 		public void restoreSequenceAssignments() {
 			for (int i = 0; i < seqassigns.length; i++) {
 				seqassigns[i].seqIndex = oldseqassigns[i].seqIndex;
 			}
 		}
+
+        
         // grj
     	public void permuteOneSpeciesOneIndiv() {
     		int sp = MathUtils.nextInt(apspecies.length);
     		int iv = MathUtils.nextInt(apspecies[sp].individuals.length);
     		permuteOneAssignment(sp, iv);
     	}       
+
+        
+    	/* grjtodo-oneday
+    	 * This is a bit odd. It collects individuals as (sp, iv) indices
+    	 * that `belong' to a node in the sense that any taxon (sequence)
+    	 * of an individual belongs to the clade of the node.
+    	 * I've used a set but not made SpeciesIndivPair's comparable
+    	 * so that if both sequences of an individual occurs in clade it appears
+    	 * twice. Then permuteOneAssignment() flips everything so that those
+    	 * occurring twice get flipped twice and so not changed.
+    	 * 
+    	 * Result is that individuals with one but not two sequences in
+    	 * the clade of the node get flipped. Sometimes all individuals
+    	 * are flipped, sometimes none, sometimes just one, the last is the 
+    	 * same as permuteOneSpeciesOneIndiv().
+    	 * 
+    	 * 2011-07-29 it appears to work OK on minimal testing and I
+    	 * don't have a good idea for a more rational or efficient version. 
+    	 * 
+    	 */
     	public void permuteSetOfIndivs() {
     		int num = tree.getInternalNodeCount();
     		int i = MathUtils.nextInt(num);	
@@ -442,19 +625,25 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
     			permuteOneAssignment(spiv.spIndex, spiv.ivIndex);
     		}
     	}        
+    	
+
     	// jh
         int nLineages(int spseqIndex) {
             return lineagesCount[spseqIndex];
         }
+
         // jh
         public CoalInfo[] getCoalInfo() {
             if (dirty) {
                 swap();
+
                 collectCoalInfo(tree, tree.getRoot(), seqassigns, cList.length - 1, cList);
                 HeapSort.sort(cList);
                 dirty = false;
                 wasBacked = true;
             }
+            
+            /*
             CoalInfo check[] = new CoalInfo[cList.length];
             collectCoalInfo(tree, tree.getRoot(), seqassigns, check.length - 1, check);
             HeapSort.sort(check);
@@ -471,17 +660,20 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
             }*/
             return cList;
         }
+
         // jh
         private void swap() {
             CoalInfo[] tmp = cList;
             cList = savedcList;
             savedcList = tmp;
         }
+
         // jh
         void wasChanged() {
             dirty = true;
             wasBacked = false;
         }
+
         // jh
         boolean restore() {
             if (verbose) System.out.println(" SP binding: restore " + tree.getId() + " (" + wasBacked + ")");
@@ -503,15 +695,22 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
             }
             return false;
         }
+
+        
         // jh
         void accept() {
             if (verbose) System.out.println(" SP binding: accept " + tree.getId());
+
             wasBacked = false;
         }
+
+        
         // jh
         public double popFactor() {
             return popFactor;
         }
+        
+        
         // grj
 		private void collectIndivsOfNode(NodeRef node, Set<SpeciesIndivPair> spivs) {
 			if (tree.isExternal(node)) {
@@ -522,6 +721,8 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
 				collectIndivsOfNode(tree.getChild(node, 1), spivs);
 			}
 		}
+		
+        
         // grj
 		private void permuteOneAssignment(int sp, int iv) {
 			// grjtodo-tetraonly
@@ -533,16 +734,23 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
 				seqassigns[tx].seqIndex = 1 - seqassigns[tx].seqIndex;
 			}
 		}
+
     }  // end of GeneTreeInfo
+
+    
     // jh
     public GeneTreeInfo[] getGeneTrees() {
         return geneTreeInfos;
     }
+
+    
     // jh + grj
     protected void handleModelChangedEvent(Model model, Object object, int index) {
         if (verbose) System.out.println(" SP binding: model changed " + model.getId());
+
         dirty_sg = true;
         dirty_pp = true;
+
         for (GeneTreeInfo g : geneTreeInfos) {
             if (g.tree == model) {
                 g.wasChanged();
@@ -551,10 +759,12 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
         }
         fireModelChanged(object, index);
     }
+
     // jh
     protected final void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         assert false;
     }
+
      // grj
     // jh comment was 'do on a per need basis'. I hope its ok to mix with doing always.
    protected void storeState() {
@@ -564,6 +774,10 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
 	if (MulSpeciesTreeModel.DBUGTUNE)
 		System.err.println("MulSpeciesBindings.storeState()");
     }
+
+   
+
+   
     // jh + grj
     protected void restoreState() {
     	for (GeneTreeInfo gti : geneTreeInfos) {
@@ -578,12 +792,16 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
     	if (MulSpeciesTreeModel.DBUGTUNE)
     		System.err.println("MulSpeciesBindings.restoreState()");
     }
+
+    
     // jh + grj
     protected void acceptState() {
         for (GeneTreeInfo g : geneTreeInfos) {
             g.accept();
         }
     }
+    
+    
     // grj
 	public LogColumn[] getColumns() {
 		int ncols = geneTreeInfos.length * taxa.length;
@@ -594,17 +812,24 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
 				String header = "Gene" + g + "taxon" + tx; 
 				columns[i] = new LogColumn.Default(header, sqa);
 			}
+				
 		}
+		
 		return columns;
 	}
+
     // jh
     public class SpeciesLimits extends Statistic.Abstract {
         int nDim;
         int c[][];
+
         SpeciesLimits() {
             super("SpeciationBounds");
+
             nDim = 0;
+
             final int nsp = nSpSeqs();
+
             c = new int[nsp + 1][nsp + 1];
             for(int k = 0; k < nsp + 1; ++k) {
                 c[k][0] = 1;
@@ -615,14 +840,18 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
                     c[k][j] = c[k - 1][j - 1] + c[k - 1][j];
                 }
             }
+
             for(int k = 0; k <= (int) (nsp / 2); ++k) {
                 nDim += c[nsp][k];
             }
+
         }
+
         // jh
         public int getDimension() {
             return nDim;
         }
+
         // jh
         private double boundOnRoot() {
             double bound = Double.MAX_VALUE;
@@ -637,11 +866,13 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
             }
             return bound;
         }
+
         // jh
         public double getStatisticValue(int dim) {
             if( dim == 0 ) {
                 return boundOnRoot();
             }
+
             final int nsp = nSpSeqs();
             int r = 0;
             int k;
@@ -652,7 +883,9 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
                 }
                 r += i;
             }
+
             // Classic index -> select k of nsp subset
+
             // number of species in set is k
             int n = dim - r;
             FixedBitSet in = new FixedBitSet(nsp),
@@ -675,6 +908,9 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
             return speciationUpperBound(in, out);
         }
     }
+    
+    
+    
     // grj
 	private int[] spseqindex2spandseq(int spsqindex) {
 		int indexp = -1;
@@ -696,4 +932,5 @@ public class MulSpeciesBindings extends AbstractModel  implements Loggable {
 		pq[1] = indexq;
 		return pq;
 	}	
+
 }

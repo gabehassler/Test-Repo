@@ -1,52 +1,192 @@
+/*
+ * UnivariateMinimum.java
+ *
+ * Copyright (C) 2002-2006 Alexei Drummond and Andrew Rambaut
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.math;
+
+
+/**
+ * minimization of a real-valued function of one variable
+ * without using derivatives.
+ *
+ * <p>algorithm: Brent's golden section method
+ * (Richard P. Brent.  1973.   Algorithms for finding zeros and extrema
+ *  of functions without calculating derivatives.  Prentice-Hall.)
+ *
+ * @version $Id: UnivariateMinimum.java,v 1.3 2005/05/24 20:26:01 rambaut Exp $
+ *
+ * @author Korbinian Strimmer
+ */
 public class UnivariateMinimum
 {
 	//
 	// Public stuff
 	//
+
+	/** last minimum */
 	public double minx;
+
+	/** function value at minimum */
 	public double fminx;
+
+	/** curvature at minimum */
 	public double f2minx;
+
+	/** total number of function evaluations neccessary */
 	public int numFun;
+
+	/**
+	 * maximum number of function evaluations
+	 * (default 0 indicates no limit on calls)
+	 */
 	public int maxFun = 0;
+
+	/**
+	 * Find minimum
+	 * (first estimate given)
+	 *
+	 * @param x   first estimate
+	 * @param f   function
+	 *
+	 * @return position of minimum
+	 */
 	public double findMinimum(double x, UnivariateFunction f)
 	{
 		double tol = MachineAccuracy.EPSILON;
+
 		return optimize(x, f, tol);
 	}
+
+	/**
+	 * Find minimum
+	 * (first estimate given, desired number of fractional digits specified)
+	 *
+	 * @param x   first estimate
+	 * @param f   function
+	 * @param fracDigits desired fractional digits
+	 *
+	 * @return position of minimum
+	 */
 	public double findMinimum(double x, UnivariateFunction f, int fracDigits)
 	{
 		double tol = Math.pow(10, -1-fracDigits);
+
 		final double optx = optimize(x, f, tol);
+
 		//return trim(optx, fracDigits);
 		return optx;
 	}
+
+	/**
+	 * Find minimum
+	 * (no first estimate given)
+	 *
+	 * @param f   function
+	 *
+	 * @return position of minimum
+	 */
 	public double findMinimum(UnivariateFunction f)
 	{
 		double tol = MachineAccuracy.EPSILON;
+
 		return optimize(f, tol);
 	}
+
+	/**
+	 * Find minimum
+	 * (no first estimate given, desired number of fractional digits specified)
+	 *
+	 * @param f   function
+	 * @param fracDigits desired fractional digits
+	 *
+	 * @return position of minimum
+	 */
 	public double findMinimum(UnivariateFunction f, int fracDigits)
 	{
 		double tol = Math.pow(10, -1-fracDigits);
+
 		final double optx = optimize(f, tol);
+
 		//return trim(optx, fracDigits);
 		return optx;
 	}
+
+	/**
+	 * The actual optimization routine (Brent's golden section method)
+	 *
+	 * @param f univariate function
+	 * @param tol absolute tolerance of each parameter
+	 * @param lowerBound the lower bound of input
+	 * @param upperBound the upper bound of input
+	 *
+	 * @return  position of minimum
+	 */
 	public double optimize(UnivariateFunction f, double tol, double lowerBound, double upperBound)
 	{
 		numFun = 2;
 		return minin(lowerBound, upperBound, f.evaluate(lowerBound), f.evaluate(upperBound), f, tol);
 	}
+	/**
+	 * The actual optimization routine (Brent's golden section method)
+	 *
+	 * @param f univariate function
+	 * @param tol absolute tolerance of each parameter
+	 *
+	 * @return  position of minimum
+	 */
 	public double optimize(UnivariateFunction f, double tol)
 	{
 		return optimize(f,tol,f.getLowerBound(), f.getUpperBound());
 	}
+
+	/**
+	 * The actual optimization routine (Brent's golden section method)
+	 *
+	 * @param x initial guess
+	 * @param f univariate function
+	 * @param tol absolute tolerance of each parameter
+	 * @param lowerBound the lower bound of input
+	 * @param upperBound the upper bound of input
+	 *
+	 * @return  position of minimum
+	 */
 	public double optimize(double x, UnivariateFunction f, double tol, double lowerBound, double upperBound)
 	{
 		double[] range = bracketize(lowerBound, x, upperBound, f);
+
 		return minin(range[0], range[1], range[2], range[3], f, tol);
 	}
+	/**
+	 * The actual optimization routine (Brent's golden section method)
+	 *
+	 * @param x initial guess
+	 * @param f univariate function
+	 * @param tol absolute tolerance of each parameter
+	 * @note bounded by the given bounds of the function f
+	 *
+	 * @return  position of minimum
+	 */
 	public double optimize(double x, UnivariateFunction f, double tol)
 	{
 		return optimize(x,f,tol,f.getLowerBound(),f.getUpperBound());
@@ -54,14 +194,19 @@ public class UnivariateMinimum
 	//
 	// Private stuff
 	//
+
 	private static final double C = (3.0- Math.sqrt(5.0))/2.0; // = 0.38197
 	private static final double GOLD = (Math.sqrt(5.0) + 1.0)/2.0; // = 1.61803
 	private static final double delta = 0.01; // Determines second trial point
+
 	// trim x to have a specified number of fractional digits
+	/*private double trim(double x, int fracDigits)
 	{
 		double m = Math.pow(10, fracDigits);
+
 		return Math.round(x*m)/m;
 	}*/
+
 	private double constrain(double x, boolean toMax, double min, double max)
 	{
 		if (toMax)
@@ -87,6 +232,7 @@ public class UnivariateMinimum
 			}
 		}
 	}
+
 	private double[] bracketize(double min, double a, double max, UnivariateFunction f)
 	{
 		if (min > max)
@@ -94,6 +240,7 @@ public class UnivariateMinimum
 			throw new IllegalArgumentException("Argument min (" + min +
 			") larger than argument max (" + max + ")");
 		}
+
 		if (a < min)
 		{
 			a = min;
@@ -102,11 +249,15 @@ public class UnivariateMinimum
 		{
 			a = max;
 		}
+
+
 		if (a < min || a > max)
 		{
 			throw new IllegalArgumentException("Starting point not in given range ("
 			+ min + ", " + a + ", " + max + ")");
 		}
+
+
 		// Get second point
 		double b;
 		if (a - min < max - a)
@@ -117,17 +268,22 @@ public class UnivariateMinimum
 		{
 			b = a - delta*(a - min);
 		}
+
 		numFun = 0;
+
 		double fa = f.evaluate(a); numFun++;
 		double fb = f.evaluate(b); numFun++;
+
 		double tmp;
 		if (fb > fa)
 		{
 			tmp = a; a = b; b = tmp;
 			tmp = fa; fa = fb; fb = tmp;
 		}
+
 		// From here on we always have fa >= fb
 		// Our aims is to determine a new point c with fc >= fb
+
 		// Direction of search (towards min or towards max)
 		boolean searchToMax;
 		double ulim;
@@ -141,10 +297,12 @@ public class UnivariateMinimum
 			searchToMax = false;
 			ulim = min;
 		}
+
 		// First guess: default magnification
 		double c = b + GOLD * (b - a);
 		c = constrain(c, searchToMax, min, max);
 		double fc = f.evaluate(c); numFun++;
+
 		while (fb > fc)
 		{
 			// Compute u as minimum of a parabola through a, b, c
@@ -157,17 +315,22 @@ public class UnivariateMinimum
 			double u = b - ((b - c) * q - (b - a) * r) / 2.0 / (q - r);
 			u = constrain(u, searchToMax, min, max);
 			double fu = 0; // Don't evaluate now
+
 			boolean magnify = false;
+
 			// Check out all possibilities
+
 			// u is between b and c
 			if ((b - u) * (u - c) > 0)
 			{
 				fu = f.evaluate(u); numFun++;
+
 				// minimum between b and c
 				if (fu < fc)
 				{
 					a = b; b = u;
 					fa = fb; fb = fu;
+
 					break;
 				}
 				// minimum between a and u
@@ -175,19 +338,23 @@ public class UnivariateMinimum
 				{
 					c = u;
 					fc = fu;
+
 					break;
 				}
+
 				magnify = true;
 								}
 			// u is between c and limit
 			else if ((c - u) * (u - ulim) > 0)
 			{
 				fu = f.evaluate(u); numFun++;
+
 				// u is not a minimum
 				if (fu < fc)
 				{
 					b = c; c = u;
 					fb = fc; fc = fu;
+
 					magnify = true;
 				}
 								}
@@ -201,6 +368,7 @@ public class UnivariateMinimum
 			{
 				magnify = true;
 			}
+
 			if (magnify)
 			{
 				// Next guess: default magnification
@@ -208,9 +376,11 @@ public class UnivariateMinimum
 				u = constrain(u, searchToMax, min, max);
 				fu = f.evaluate(u); numFun++;
 			}
+
 			a = b; b = c; c = u;
 			fa = fb; fb = fc; fc = fu;
 		}
+
 		// Once we are here be have a minimum in [a, c]
 		double[] result = new double[4];
 		result[0] = a;
@@ -219,26 +389,35 @@ public class UnivariateMinimum
 		result[3] = fc;
 		return result;
 	}
+
+
 	private double minin(double a, double b, double fa , double fb, UnivariateFunction f, double tol)
 	{
 		double z, d = 0, e, m, p, q, r, u, v, w, fu, fv, fw, fz, tmp;
+
 		if (tol <= 0)
 		{
 			throw new IllegalArgumentException("Nonpositive absolute tolerance tol");
 		}
+
 		if (a == b)
 		{
 			minx = a;
 			fminx = fa;
+
 			f2minx = NumericalDerivative.secondDerivative(f, minx);
+
 			return  minx;
+
 			//throw new IllegalArgumentException("Borders of range not distinct");
 		}
+
 		if (b < a)
 		{
 			tmp = a; a = b; b = tmp;
 			tmp = fa; fa = fb; fb = tmp;
 		}
+
 		w = a; fw = fa;
 		z = b; fz = fb;
 		if (fz > fw) // Exchange z and w
@@ -334,7 +513,9 @@ public class UnivariateMinimum
 		}
 		minx = z;
 		fminx = fz;
+
 		f2minx = NumericalDerivative.secondDerivative(f, minx);
+
 		return  z;
 	}
 }

@@ -1,7 +1,15 @@
 package dr.evomodel.sitemodel;
+
 import dr.inference.model.*;
 import dr.inference.distribution.ParametricDistributionModel;
+
+/**
+ * @author Chieh-Hsi Wu
+ *
+ * This class models the relative loci rates using the given discritized parametric distribution. 
+ */
 public class DiscretizedLociRates extends AbstractModel {
+
     private CompoundParameter lociRates;
     private Parameter rateCategoryParameter;
     private ParametricDistributionModel distrModel;
@@ -11,6 +19,8 @@ public class DiscretizedLociRates extends AbstractModel {
     private int categoryCount;
     private double scaleFactor;
     private boolean completeSetup;
+
+
     public DiscretizedLociRates(
             CompoundParameter lociRates,
             Parameter rateCategoryParameter,
@@ -20,10 +30,12 @@ public class DiscretizedLociRates extends AbstractModel {
             int categoryCount) {
         super("DiscretizedLociRatesModel");
         this.lociRates = lociRates;
+
         this.rateCategoryParameter = rateCategoryParameter;
         //Force the boundaries of rateCategoryParameter to match the category count
         Parameter.DefaultBounds bound = new Parameter.DefaultBounds(categoryCount - 1, 0, rateCategoryParameter.getDimension());
         this.rateCategoryParameter.addBounds(bound);
+        
         this.distrModel = model;
         this.normalizeRateTo = normalizeLociRateTo;
         this.normalize = normalize;
@@ -31,11 +43,16 @@ public class DiscretizedLociRates extends AbstractModel {
         rates = new double[categoryCount];
         completeSetup = true;
         setupRates();
+
+
         addModel(distrModel);
         addVariable(this.rateCategoryParameter);
+
     }
+
     private void setupRates(){
         if(completeSetup){
+
             double categoryIntervalSize = 1.0/categoryCount;
             for(int i = 0; i < categoryCount; i++){
                 rates[i]= distrModel.quantile((i+0.5)*categoryIntervalSize);
@@ -44,11 +61,13 @@ public class DiscretizedLociRates extends AbstractModel {
         if(normalize){
            computeFactor();
         }
+
         completeSetup = false;
         int lociCount = rateCategoryParameter.getDimension();
         for(int i = 0; i < lociCount; i ++){
             lociRates.setParameterValue(i,rates[(int)rateCategoryParameter.getParameterValue(i)]*scaleFactor);
         }
+
     }
     public void handleModelChangedEvent(Model model, Object object, int index) {
         if (model == distrModel) {
@@ -62,11 +81,13 @@ public class DiscretizedLociRates extends AbstractModel {
             fireModelChanged(null, index);
         }
     }
+
     protected final void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         //System.out.println("speed investigation 3");
         setupRates();
         fireModelChanged(null, index);
     }
+
     protected void storeState() {
     }
     protected void acceptState() {
@@ -82,4 +103,5 @@ public class DiscretizedLociRates extends AbstractModel {
         }
         scaleFactor = normalizeRateTo/(sumRates/lociCount);
     }
+
 }

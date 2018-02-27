@@ -1,12 +1,17 @@
 package dr.inference.distribution;
+
+
 import dr.inference.model.*;
 import dr.inference.model.Parameter;
 import dr.inferencexml.distribution.MomentDistributionModelParser;
 import dr.math.distributions.RandomGenerator;
+
 //@author Max Tolkoff
 public class MomentDistributionModel extends AbstractModelLikelihood implements ParametricMultivariateDistributionModel, RandomGenerator {
+
     public MomentDistributionModel(Parameter mean, Parameter precision, Parameter cutoff, Parameter data) {
         super(MomentDistributionModelParser.MOMENT_DISTRIBUTION_MODEL);
+
         this.mean=mean;
         this.precision=precision;
 //        this.mean = new DuplicatedParameter(mean);
@@ -27,6 +32,7 @@ public class MomentDistributionModel extends AbstractModelLikelihood implements 
         sumKnown=false;
         untruncatedKnown=false;
     }
+
     private final Parameter mean;
     private final Parameter precision;
 //    private final DuplicatedParameter mean;
@@ -35,12 +41,14 @@ public class MomentDistributionModel extends AbstractModelLikelihood implements 
     private NormalDistributionModel untruncated;
     private double sum;
     private boolean sumKnown;
+
     private boolean storedSumKnown;
     private double storedSum;
     private boolean untruncatedKnown;
     private boolean storedUntruncatedKnown;
     private NormalDistributionModel storedUntruncated;
     private Parameter data;
+
     public double logPdf(Parameter data) {
 //        untruncatedKnown=false;
 //        sumKnown=false;
@@ -65,11 +73,14 @@ public class MomentDistributionModel extends AbstractModelLikelihood implements 
         sumKnown=true;
         return sum;
         //}
+
     }
+
     @Override
     public double logPdf(double[] x) {
         return 0;
     }
+
     @Override
     public double[][] getScaleMatrix() {
         double[][] temp=new double[1][1];
@@ -77,23 +88,30 @@ public class MomentDistributionModel extends AbstractModelLikelihood implements 
         return temp;
 //        return precision.getParameterAsMatrix();
     }
+
     @Override
     public double[] getMean() {
         return mean.getParameterValues();
     }
+
     @Override
     public String getType() {
         return "Moment Distribution Model";
     }
+
     @Override
     protected void handleModelChangedEvent(Model model, Object object, int index) {
+
     }
+
     @Override
     protected void handleVariableChangedEvent(Variable variable, int index, Parameter.ChangeType type) {
         sumKnown=false;
         if(variable==mean || variable==precision)
         {untruncatedKnown=false;}
+
     }
+
     @Override
     protected void storeState() {
         storedSumKnown=sumKnown;
@@ -101,30 +119,38 @@ public class MomentDistributionModel extends AbstractModelLikelihood implements 
         storedUntruncated=untruncated;
         storedUntruncatedKnown=untruncatedKnown;
     }
+
     @Override
     protected void restoreState() {
         sumKnown=storedSumKnown;
         sum=storedSum;
         untruncated=storedUntruncated;
         untruncatedKnown=storedUntruncatedKnown;
+
     }
+
     @Override
     protected void acceptState() {
+
     }
+
     private NormalDistributionModel createNewDistribution() {
         return new NormalDistributionModel(mean, precision, true);
 //        return new NormalDistributionModel(new Parameter.Default(mean.getParameterValue(0)), new Parameter.Default(precision.getParameterValue(0)), true);
     }
+
     private void checkDistribution() {
         if (!untruncatedKnown) {
             untruncated = createNewDistribution();
             untruncatedKnown = true;
         }
     }
+
     @Override
     public double[] nextRandom() {
         return new double[0];
     }
+
     @Override
     public double logPdf(Object x) {
         if(x instanceof Parameter)
@@ -132,17 +158,21 @@ public class MomentDistributionModel extends AbstractModelLikelihood implements 
         else
             return 0;
     }
+
     @Override
     public Model getModel() {
         return this;
     }
+
     @Override
     public double getLogLikelihood() {
         return logPdf(data);
     }
+
     @Override
     public void makeDirty() {
         sumKnown=false;
         untruncatedKnown=false;
+
     }
 }

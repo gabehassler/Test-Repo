@@ -1,9 +1,14 @@
 package dr.inferencexml.model;
+
 import dr.inference.model.CompoundParameter;
 import dr.inference.model.MatrixMatrixProduct;
 import dr.inference.model.MatrixParameter;
 import dr.inference.model.Parameter;
 import dr.xml.*;
+
+/**
+ * Created by max on 10/22/14.
+ */
 public class MatrixMatrixProductParser extends AbstractXMLObjectParser {
     final static String MATRIX_MATRIX_PRODUCT = "MatrixMatrixProduct";
     final static String LEFT="left";
@@ -16,6 +21,7 @@ public class MatrixMatrixProductParser extends AbstractXMLObjectParser {
             new ElementRule(COLUMN_MASK, Parameter.class, "Only some columns need to be multiplied", true),
             new ElementRule(IN_PLACE, MatrixParameter.class, "Matrix values that are returned", true)
     };
+
     @Override
     public Object parseXMLObject (XMLObject xo)throws XMLParseException {
         MatrixParameter[] temp=new MatrixParameter[3];
@@ -40,18 +46,22 @@ public class MatrixMatrixProductParser extends AbstractXMLObjectParser {
             ColumnMask=new Parameter.Default(null, temp[1].getColumnDimension(), 1);
         return new MatrixMatrixProduct(temp, ColumnMask);
     }
+
     @Override
     public XMLSyntaxRule[] getSyntaxRules () {
         return rules;
     }
+
     @Override
     public String getParserDescription () {
         return "Gets Latent Factor Model to return data with residuals computed";
     }
+
     @Override
     public Class getReturnType () {
         return MatrixMatrixProduct.class;
     }
+
     @Override
     public String getParserName () {
         return MATRIX_MATRIX_PRODUCT;

@@ -1,23 +1,60 @@
+/*
+ * GTRParser.java
+ *
+ * Copyright (C) 2002-2012 Alexei Drummond, Andrew Rambaut & Marc A. Suchard
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.app.beagle.evomodel.parsers;
+
 import dr.app.beagle.evomodel.substmodel.FrequencyModel;
 import dr.app.beagle.evomodel.substmodel.GTR;
 import dr.inference.model.Variable;
 import dr.xml.*;
+
+/**
+ * @author Alexei Drummond
+ * @author Andrew Rambaut
+ */
 public class GTRParser extends AbstractXMLObjectParser {
     public static final String GTR_MODEL = "gtrModel";
+
     public static final String A_TO_C = "rateAC";
     public static final String A_TO_G = "rateAG";
     public static final String A_TO_T = "rateAT";
     public static final String C_TO_G = "rateCG";
     public static final String C_TO_T = "rateCT";
     public static final String G_TO_T = "rateGT";
+
     public static final String FREQUENCIES = "frequencies";
+
     public String getParserName() {
         return GTR_MODEL;
     }
+
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
         XMLObject cxo = xo.getChild(FREQUENCIES);
         FrequencyModel freqModel = (FrequencyModel) cxo.getChild(FrequencyModel.class);
+
         Variable<Double> rateACVariable = null;
         if (xo.hasChildNamed(A_TO_C)) {
             rateACVariable = (Variable<Double>) xo.getElementFirstChild(A_TO_C);
@@ -49,17 +86,22 @@ public class GTRParser extends AbstractXMLObjectParser {
         if (rateCGVariable == null) countNull++;
         if (rateCTVariable == null) countNull++;
         if (rateGTVariable == null) countNull++;
+
         if (countNull != 1)
             throw new XMLParseException("Only five parameters may be specified in GTR, leave exactly one out, the others will be specifed relative to the one left out.");
         return new GTR(rateACVariable, rateAGVariable, rateATVariable, rateCGVariable, rateCTVariable, rateGTVariable, freqModel);
     }
+
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
+
     public String getParserDescription() {
         return "A general reversible model of nucleotide sequence substitution.";
     }
+
     public String getExample() {
+
         return
                 "<!-- A general time reversible model for DNA.                                          -->\n" +
                         "<!-- This element must have parameters for exactly five of the six rates               -->\n" +
@@ -74,12 +116,15 @@ public class GTRParser extends AbstractXMLObjectParser {
                         "	<" + G_TO_T + "> <parameter id=\"rateGT\" value=\"1.0\"/> </" + G_TO_T + ">\n" +
                         "</" + getParserName() + ">\n";
     }
+
     public Class getReturnType() {
         return GTR.class;
     }
+
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
+
     private final XMLSyntaxRule[] rules = {
             new ElementRule(FREQUENCIES,
                     new XMLSyntaxRule[]{new ElementRule(FrequencyModel.class)}),

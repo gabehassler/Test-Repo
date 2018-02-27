@@ -1,4 +1,5 @@
 package dr.app.beauti.components.sequenceerror;
+
 import dr.app.beauti.generator.BaseComponentGenerator;
 import dr.app.beauti.options.AbstractPartitionData;
 import dr.app.beauti.options.BeautiOptions;
@@ -13,15 +14,25 @@ import dr.inference.model.StatisticParser;
 import dr.inferencexml.model.SumStatisticParser;
 import dr.util.Attribute;
 import dr.xml.XMLParser;
+
+/**
+ * @author Andrew Rambaut
+ * @version $Id$
+ */
 public class SequenceErrorModelComponentGenerator extends BaseComponentGenerator {
+
     SequenceErrorModelComponentGenerator(final BeautiOptions options) {
         super(options);
     }
+
     public boolean usesInsertionPoint(final InsertionPoint point) {
         SequenceErrorModelComponentOptions comp = (SequenceErrorModelComponentOptions) options.getComponentOptions(SequenceErrorModelComponentOptions.class);
+
+
         if (!comp.usingSequenceErrorModel()) {
             return false;
         }
+
         switch (point) {
             case AFTER_PATTERNS:
             case AFTER_SITE_MODEL:
@@ -31,8 +42,10 @@ public class SequenceErrorModelComponentGenerator extends BaseComponentGenerator
         }
         return false;
     }
+
     protected void generate(final InsertionPoint point, final Object item, final String prefix, final XMLWriter writer) {
         SequenceErrorModelComponentOptions component = (SequenceErrorModelComponentOptions) options.getComponentOptions(SequenceErrorModelComponentOptions.class);
+
         switch (point) {
             case AFTER_PATTERNS:
                 writeHypermutationAlignments(writer, component);
@@ -53,15 +66,20 @@ public class SequenceErrorModelComponentGenerator extends BaseComponentGenerator
             default:
                 throw new IllegalArgumentException("This insertion point is not implemented for " + this.getClass().getName());
         }
+
     }
+
     protected String getCommentLabel() {
         return "Sequence Error Model";
     }
+
     private void writeHypermutationAlignments(XMLWriter writer, SequenceErrorModelComponentOptions component) {
         for (AbstractPartitionData partition : options.getDataPartitions()) {
             String prefix = partition.getPrefix();//partition.getName() + ".";
+
             if (component.isHypermutation(partition)) {
                 SequenceErrorType errorType = component.getSequenceErrorType(partition);
+
                 final String errorTypeName;
                 switch (errorType) {
                     case HYPERMUTATION_ALL:
@@ -86,14 +104,18 @@ public class SequenceErrorModelComponentGenerator extends BaseComponentGenerator
                                 new Attribute.Default<String>("type", errorTypeName)
                         }
                 );
+
                 writer.writeIDref("alignment", partition.getTaxonList().getId());
+
                 writer.writeCloseTag(HypermutantAlignmentParser.HYPERMUTANT_ALIGNMENT);
             }
         }
     }
+
     private void writeErrorModels(XMLWriter writer, SequenceErrorModelComponentOptions component) {
         for (AbstractPartitionData partition : options.getDataPartitions()) {
             String prefix = partition.getPrefix();//partition.getName() + ".";
+
             SequenceErrorType errorType = component.getSequenceErrorType(partition);
             if (component.isHypermutation(partition)) {
                 writer.writeOpenTag(
@@ -102,10 +124,14 @@ public class SequenceErrorModelComponentGenerator extends BaseComponentGenerator
                                 new Attribute.Default<String>(XMLParser.ID, prefix + SequenceErrorModelComponentOptions.ERROR_MODEL)
                         }
                 );
+
                 writer.writeIDref(HypermutantAlignmentParser.HYPERMUTANT_ALIGNMENT, prefix + "hypermutants");
+
                 writeParameter(HypermutantErrorModel.HYPERMUTATION_RATE, prefix + SequenceErrorModelComponentOptions.HYPERMUTION_RATE_PARAMETER, 1, writer);
                 writeParameter(HypermutantErrorModel.HYPERMUTATION_INDICATORS, prefix + SequenceErrorModelComponentOptions.HYPERMUTANT_INDICATOR_PARAMETER, 1, writer);
+
                 writer.writeCloseTag(HypermutantErrorModel.HYPERMUTANT_ERROR_MODEL);
+
                 writer.writeOpenTag(SumStatisticParser.SUM_STATISTIC, new Attribute[]{
                         new Attribute.Default<String>(XMLParser.ID, prefix + SequenceErrorModelComponentOptions.HYPERMUTANT_COUNT_STATISTIC),
                         new Attribute.Default<Boolean>(SumStatisticParser.ELEMENTWISE, true)});
@@ -115,6 +141,7 @@ public class SequenceErrorModelComponentGenerator extends BaseComponentGenerator
                 final String errorTypeName = (errorType == SequenceErrorType.AGE_TRANSITIONS ||
                         errorType == SequenceErrorType.BASE_TRANSITIONS ?
                         "transitions" : "all");
+
                 writer.writeOpenTag(
                         SequenceErrorModelParser.SEQUENCE_ERROR_MODEL,
                         new Attribute[]{
@@ -122,19 +149,23 @@ public class SequenceErrorModelComponentGenerator extends BaseComponentGenerator
                                 new Attribute.Default<String>("type", errorTypeName)
                         }
                 );
+
                 if (component.hasAgeDependentRate(partition)) {
                     writeParameter(SequenceErrorModelComponentOptions.AGE_RATE, prefix + SequenceErrorModelComponentOptions.AGE_RATE_PARAMETER, 1, writer);
                 }
                 if (component.hasBaseRate(partition)) {
                     writeParameter(SequenceErrorModelComponentOptions.BASE_RATE, prefix + SequenceErrorModelComponentOptions.BASE_RATE_PARAMETER, 1, writer);
                 }
+
                 writer.writeCloseTag(SequenceErrorModelParser.SEQUENCE_ERROR_MODEL);
             }
         }
     }
+
     private void writeLogParameters(final XMLWriter writer, final SequenceErrorModelComponentOptions component) {
         for (AbstractPartitionData partition : options.getDataPartitions()) {
             String prefix = partition.getPrefix();//partition.getName() + ".";
+
             SequenceErrorType errorType = component.getSequenceErrorType(partition);
             if (errorType != SequenceErrorType.NO_ERROR) {
                 if (component.isHypermutation(partition)) {
@@ -146,6 +177,7 @@ public class SequenceErrorModelComponentGenerator extends BaseComponentGenerator
                             prefix + SequenceErrorModelComponentOptions.ERROR_MODEL);
                     writer.writeCloseTag(StatisticParser.STATISTIC);
                 }
+
                 if (component.hasAgeDependentRate(partition)) {
                     writer.writeIDref(ParameterParser.PARAMETER, prefix + SequenceErrorModelComponentOptions.AGE_RATE_PARAMETER);
                 }

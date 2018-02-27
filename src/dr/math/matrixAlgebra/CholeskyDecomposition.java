@@ -1,15 +1,36 @@
 package dr.math.matrixAlgebra;
+
+/**
+ * Created by IntelliJ IDEA.
+ * User: msuchard
+ * Date: Jan 12, 2007
+ * Time: 9:05:44 PM
+ * To change this template use File | Settings | File Templates.
+ */
 public class CholeskyDecomposition {
+
+	/**
+	 * Dimension of square matrix
+	 */
 	private int n;
+
 	public boolean isSPD() {
 		return isspd;
 	}
+
+	/**
+	 * Symmetric and positive definite flag.
+	 */
 	private boolean isspd;
+
 	public double[][] getL() {
 		return L;
 	}
+
 	private double[][] L;
+
 	public CholeskyDecomposition(double[][] A) throws IllegalDimension {
+
 		n = A.length;
 		L = new double[n][n];
 		isspd = (A[0].length == n);
@@ -32,8 +53,11 @@ public class CholeskyDecomposition {
 			d = A[j][j] - d;
 			isspd = isspd & (d > 0.0);
 			L[j][j] = Math.sqrt(Math.max(d, 0.0));
+			/*for (int k = j+1; k < n; k++) {
 						L[j][k] = 0.0;
 					 }*/
 		}
+
 	}
+
 }

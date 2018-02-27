@@ -1,5 +1,18 @@
+/*
+ * Base class for demographic models based on numerically-integrated ODEs
+ * 
+*/
 package dr.evomodel.epidemiology;
+
 import dr.evolution.coalescent.*;
+
+
+/**
+ * This interface provides methods that describe a demographic function.
+ * @author Daniel Wilson
+ */
+
+/*public interface ODEDemographicFunction extends DemographicFunction {
 	public abstract class Abstract implements ODEDemographicFunction {
 		public Abstract(Type units) {
 			setUnits(units);
@@ -11,36 +24,79 @@ import dr.evolution.coalescent.*;
 		{
 			return getIntensity(finish) - getIntensity(start);
 		}
+
 	}
 }*/
+
 public abstract class ODEDemographicFunction extends DemographicFunction.Abstract {
 	public ODEDemographicFunction(Type units) {
 		super(units);
 	}
+	
 	// Implement abstract types from base class
+	
+	/**
+     * Default implementation
+     * @param t
+     * @return log(demographic at t)
+     */
+    /*public double getLogDemographic(double t) {
         return Math.log(getDemographic(t));
     }*/
+
+    /**
+	 * Calculates the integral 1/N(x) dx between start and finish.
+	 */
+	/*public double getIntegral(double start, double finish)
 	{
 		return getIntensity(finish) - getIntensity(start);
 	}*/
+
+    /**
+     * Returns the integral of 1/N(x) between start and finish, calling either the getAnalyticalIntegral or
+     * getNumericalIntegral function as appropriate.
+     */
 	public double getNumericalIntegral(double start, double finish) {
 		throw new RuntimeException("not implemented");
 	}
+	
 	public double getDemographic(double t) {
 		Evaluate(t);
 		if(RKfail) return 0.0;
 		return getDemographicFromPrevalence(Ynow,t);
 	}
+	
 	public double getIntensity(double t) {
 		Evaluate(t);
 		if(RKfail) return Math.log(0.0);
 		return Ynow[0];
 	}
+	
 	// Implement the following abstract functions:
+	
+	/**
+	 * Calculate the derivatives and store in dydt
+	 */
 	abstract void derivs(double t, double[] y, double[] dydt);
+	
+	/**
+	 * Set initial values of y
+	 * for(i=0;i<nvar;i++) Y[i][0] = ...;
+	 */
 	abstract void setInit();
+	
+	/**
+	 * Calculate the effective population size from the prevalence, contained in y
+	 * @return
+	 */
 	abstract double getDemographicFromPrevalence(double[] y, double t);
+	
 	// Implemented base functions
+	
+	/**
+	 * Evaluate the demographic functions at time Tnow.
+	 * Store results in Ynow for immediate use by getDemographic or getIntensity
+	 */
 	void Evaluate(double t) {
 		if(RKfail) return;
 		// if (t==Tnow) ???
@@ -99,6 +155,10 @@ public abstract class ODEDemographicFunction extends DemographicFunction.Abstrac
 		}
 		Tnow = t;		
 	}
+
+	/**
+	 * Initialize RK integration
+	 */
 	void RKinit() {
 		klast = -1;
 		RKwarning = false;
@@ -121,6 +181,10 @@ public abstract class ODEDemographicFunction extends DemographicFunction.Abstrac
 		}
 		nok = nbad = 0;
 	}
+	
+	/**
+	 * Increase kmax by kinc on the hoof
+	 */
 	void RKresize() {
 		if(Y==null) throw new RuntimeException("Y not yet allocated");
 		if(T==null) throw new RuntimeException("T not yet allocated");
@@ -143,9 +207,18 @@ public abstract class ODEDemographicFunction extends DemographicFunction.Abstrac
 			T[i] = oldT[i];
 		}
 	}
+
+	/**
+	 * Flag if kmax is exceeded
+	 * @return
+	 */
 	public boolean RKwarn() {
 		return RKwarning;
 	}
+	
+	/**
+	 * Driving routine for RungeKutta integration
+	 */
 	void RungeKutta(double t2) {
 //		if(h1<0) throw new RuntimeException("h1 must be positive");
 		if(klast==kmax-1) throw new RuntimeException("storage space is exceeded");
@@ -155,6 +228,7 @@ public abstract class ODEDemographicFunction extends DemographicFunction.Abstrac
 			++klast;
 		}
 		if(t2==0.0) return;
+
 		int i,nstp;
 		double t1 = T[klast];		// beginning of time range
 		double t = t1; 				// current time
@@ -163,6 +237,7 @@ public abstract class ODEDemographicFunction extends DemographicFunction.Abstrac
 		for (i=0;i<nvar;i++) y[i]=Y[i][klast];
 		// Step size
 		double h=hinit; // NB h must be positive
+			
 		for(nstp=0;nstp<MAXSTP;nstp++) {
 			double tmp = nstp;
 			if(nstp>MAXSTP/2) {
@@ -203,10 +278,17 @@ public abstract class ODEDemographicFunction extends DemographicFunction.Abstrac
 		}
 		throw new RuntimeException("Too many steps in routine odeint");
 	}
+		
+	/**
+	 * Take an adaptive step
+	 *  
+	 *  @return New time
+	 */
 	// Cannot output primitive scalars by modifying arguments. So hdid and hnext become member variables and t is returned.
 	double rkqs(double[] y, double[] dydt, double t, double htry, double[] yscal) {
 		int i;
 		double errmax,h,htemp,tnew;
+
 		h=htry;
 		for(;;) {
 			rkck(y,dydt,t,h);
@@ -233,10 +315,15 @@ public abstract class ODEDemographicFunction extends DemographicFunction.Abstrac
 		for(i=0;i<nvar;i++) y[i]=Ytemp[i];
 		return t;
 	}
+
+	/**
+	 * Take one RK5 step
+	 */
 	// NB: Arrays such as ak2 and yerr are objects. Pointers to these objects are passed by
 	// value into rkck. The whole array is not copied. So this should work...
 	void rkck(double[] y, double[] dydt, double t, double h) {
 		int i;
+
 		for(i=0;i<nvar;i++)
 			Ytemp[i]=y[i]+b21*h*dydt[i];
 		derivs(t+a2*h,Ytemp,ak2);
@@ -257,8 +344,12 @@ public abstract class ODEDemographicFunction extends DemographicFunction.Abstrac
 		for(i=0;i<nvar;i++)
 			Yerr[i]=h*(dc1*dydt[i]+dc3*ak3[i]+dc4*ak4[i]+dc5*ak5[i]+dc6*ak6[i]);
 	}
+	
+	
 	// Member variables
+	
 	protected int nvar = 0;	//	Default to zero
+	
 	// Runge-Kutta integration variables
 	protected int kmax=200;			//	Maximum storage capacity for integration
 	protected int kinc=200;			//	Increment size for kmax when it is exceeded
@@ -268,9 +359,11 @@ public abstract class ODEDemographicFunction extends DemographicFunction.Abstrac
 	protected double[][] Y;		//	Storage for integration results. Y[0] must always contain Lambda, the integrated intensity function
 	protected double[] T;			//	Storage for evaluated time points: interpolate between
 	protected boolean RKwarning;	//	Warn if kmax is exceeded
+	
 	// Temporary variables
 	protected double[] Ynow;		//	Instead of passing and returning vectors, store immediate value of Y
 	protected double Tnow;		//	Immediate value of T
+	
 	// Static constants and storage used by rkck
 	static final double a2=0.2, a3=0.3, a4=0.6, a5=1.0, a6=0.875,
 	b21=0.2, b31=3.0/40.0, b32=9.0/40.0, b41=0.3, b42 = -0.9,
@@ -281,12 +374,16 @@ public abstract class ODEDemographicFunction extends DemographicFunction.Abstrac
 	dc1=c1-2825.0/27648.0, dc3=c3-18575.0/48384.0,
 	dc4=c4-13525.0/55296.0, dc5 = -277.00/14336.0, dc6=c6-0.25;
 	private double[] ak2, ak3, ak4, ak5, ak6;
+	
 	// Static constants used by rkqs
 	static final double SAFETY=0.9, PGROW=-0.2, PSHRNK=-0.25, ERRCON=1.89e-4;
+
 	// Storage used by rkqs and RungeKutta
 	protected double hdid, hnext;
+	
 	// Storage used by rkqs and rkck
 	protected double[] Ytemp, Yerr;
+	
 	// Storage for RungeKutta
 	protected int MAXSTP=10000;
 	protected double TINY=1.0e-30;
@@ -297,3 +394,4 @@ public abstract class ODEDemographicFunction extends DemographicFunction.Abstrac
 	protected double eps = 1e-4;
 	protected boolean RKfail = false;
 }
+

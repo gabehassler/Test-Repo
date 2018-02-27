@@ -1,26 +1,35 @@
 package dr.evomodel.continuous.plink;
+
 import dr.evolution.util.Taxa;
 import dr.evolution.util.Taxon;
 import dr.evolution.util.TaxonList;
 import dr.util.*;
 import dr.xml.*;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.*;
 import java.util.logging.Logger;
+
+/**
+ * @author Marc A. Suchard
+ */
 public class PlinkImporter implements Citable {
+
     private TaxonList taxonList = null;
     private Map<String, List<Double>> taxonHash;
     private Map<String, Integer> taxonCounts;
     private List<Integer> remove;
+
     public PlinkImporter(Reader reader) throws IOException {
         taxonHash = new HashMap<String, List<Double>>();
         taxonCounts = new HashMap<String, Integer>();
         remove = new ArrayList<Integer>();
         parse(reader);
     }
+
     public List<Citation> getCitations() {
         List<Citation> citations = new ArrayList<Citation>();
         citations.add(
@@ -33,9 +42,11 @@ public class PlinkImporter implements Citable {
         );
         return citations;
     }
+
     private String formatTransformedValue(double value) {
         return String.format("%+4.3e", value);
     }
+
     private String makeStringAttribute(List<Double> valueList) {
         StringBuffer sb = new StringBuffer();
 //        sb.append(formatTransformedValue(valueList.get(0)));
@@ -52,6 +63,7 @@ public class PlinkImporter implements Citable {
         }
         return sb.toString();
     }
+
     private void transformRow(String line, Map<String, List<Double>> taxonHash, Map<String, Integer> taxonCounts, List<Integer> remove) {
         StringTokenizer token = new StringTokenizer(line);
         token.nextToken();
@@ -95,6 +107,7 @@ public class PlinkImporter implements Citable {
         valueList.add(value);
 //        sb.append(formatTransformedValue(value));
     }
+
     public String toStatisticsString() {
         StringBuffer sb = new StringBuffer();
         sb.append("PLINK importer read ");
@@ -108,20 +121,25 @@ public class PlinkImporter implements Citable {
         sb.append(Citable.Utils.getCitationString(this));
         return sb.toString();
     }
+
     public String toString() {
         return toTaxonBlockString();
     }
+
     public void parse(Reader source) throws IOException {
         BufferedReader reader = new BufferedReader(source);
+
         String line = reader.readLine();
         if (line == null) {
             throw new IllegalArgumentException("Empty file");
         }
+
         line = reader.readLine();
         while (line != null) {
             transformRow(line, taxonHash, taxonCounts, remove);
             line = reader.readLine();
         }
+
         if (remove.size() > 0) {
             Logger.getLogger("dr.evomodel.continuous").warning("Removing " + remove.size() + " loci from analysis...");
 //            for (int i : remove) {
@@ -132,10 +150,13 @@ public class PlinkImporter implements Citable {
 //            }
         }
     }
+
     public void addTaxonAttribute(TaxonList inTaxonList, String traitName) {
+
         taxonList = new Taxa();
         for (Taxon taxon : inTaxonList) {
             List<Double> valueList = taxonHash.get(taxon.getId());
+
             if (valueList == null) {
                 Logger.getLogger("dr.evolution").warning("Taxon " + taxon.getId() + " not found in PLINK data");
             } else {
@@ -148,6 +169,7 @@ public class PlinkImporter implements Citable {
             }
         }
     }
+
     public String toTaxonBlockString() {
         StringBuffer sb = new StringBuffer();
         if (taxonList != null) {
@@ -165,12 +187,15 @@ public class PlinkImporter implements Citable {
         }
         return sb.toString();
     }
+
     private double innerTransform(double p) {
         return Math.log(p / (1.0 - p));
     }
+
     private double defaultMissingValue() {
         return 0.0;
     }
+
 //    private double innerTransform(double p) {
 //        return Math.asin(Math.sqrt(p));
 //    }
@@ -178,6 +203,7 @@ public class PlinkImporter implements Citable {
 //    private double defaultMissingValue() {
 //        return Math.asin(Math.sqrt(0.5));
 //    }
+
     private double transform(int count1, int count2) {
         int total = count1 + count2;
         double halfFreq = 0.5 / total;
@@ -191,17 +217,24 @@ public class PlinkImporter implements Citable {
         }
         return innerTransform(obsFreq);
     }
+
     // **************************************************************
     // XMLObjectParser
     // **************************************************************
+
     public static XMLObjectParser PARSER = new AbstractXMLObjectParser() {
+
         public static final String PLINK_IMPORT = "plinkImport";        
+
         public final static String INPUT_FILE_NAME = FileHelpers.FILE_NAME;
         public static final String TRAIT_NAME = "traitName";
+
         public String getParserName() {
             return PLINK_IMPORT;
         }
+
         public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
             FileReader fileReader = XMLParser.getFileReader(xo, INPUT_FILE_NAME);
             Logger.getLogger("dr.evomodel.continuous").info("Attempting to read PLINK file...\n");
             PlinkImporter importer;
@@ -211,7 +244,10 @@ public class PlinkImporter implements Citable {
             } catch (IOException e) {
                 throw new XMLParseException("Unable to read plink data from file, " + fileReader.getEncoding());
             }
+
+
             Taxa taxonList = new Taxa();
+
             for (int i = 0; i < xo.getChildCount(); i++) {
                 Object child = xo.getChild(i);
                 if (child instanceof Taxon) {
@@ -226,19 +262,24 @@ public class PlinkImporter implements Citable {
                     throwUnrecognizedElement(xo);
                 }
             }
+
             importer.addTaxonAttribute(taxonList, xo.getAttribute(TRAIT_NAME, "null"));
             return importer;
         }
+
         //************************************************************************
         // AbstractXMLObjectParser implementation
         //************************************************************************
+
         public String getParserDescription() {
             return "Provides the likelihood of pairwise distance given vectors of coordinates" +
                     "for points according to the multidimensional scaling scheme of XXX & Rafferty (xxxx).";
         }
+
         public XMLSyntaxRule[] getSyntaxRules() {
             return rules;
         }
+
         private final XMLSyntaxRule[] rules = {
                 AttributeRule.newStringRule(INPUT_FILE_NAME, false, "The name of the file containing the plink table"),
         new OrRule(
@@ -247,10 +288,15 @@ public class PlinkImporter implements Citable {
                 ),        
                 AttributeRule.newStringRule(TRAIT_NAME),
         };
+
         public Class getReturnType() {
             return PlinkImporter.class;
         }
     };
+
+
     private static final boolean DEBUG = false;
     private boolean removeMissingLoci = true;
+
+
 }

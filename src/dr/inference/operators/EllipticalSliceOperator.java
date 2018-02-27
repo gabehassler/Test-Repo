@@ -1,4 +1,30 @@
+/*
+ * EllipticalSliceOperator.java
+ *
+ * Copyright (c) 2002-2015 Alexei Drummond, Andrew Rambaut and Marc Suchard
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.inference.operators;
+
 import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.distribution.MultivariateDistributionLikelihood;
 import dr.inference.distribution.NormalDistributionModel;
@@ -11,41 +37,82 @@ import dr.math.distributions.GaussianProcessRandomGenerator;
 import dr.math.distributions.MultivariateNormalDistribution;
 import dr.util.Attribute;
 import dr.util.Transform;
+
 import java.util.ArrayList;
 import java.util.List;
+
+/**
+ * Implements a generic multivariate slice sampler for a Gaussian prior
+ * <p/>
+ * See: Murray, Adams, et al.
+ *
+ * @author Marc A. Suchard
+ */
+
 public class EllipticalSliceOperator extends SimpleMetropolizedGibbsOperator implements GibbsOperator {
+
     private final GaussianProcessRandomGenerator gaussianProcess;
-    public EllipticalSliceOperator(Parameter variable, GaussianProcessRandomGenerator gaussianProcess, boolean drawByRow) {
+
+    public EllipticalSliceOperator(Parameter variable, GaussianProcessRandomGenerator gaussianProcess,
+                                   boolean drawByRow, boolean signal) {
         this.variable = variable;
         this.gaussianProcess = gaussianProcess;
         this.drawByRow = drawByRow; // TODO Fix!
+        this.signalConstituentParameters = signal;
+
+        // TODO Must set priorMean if guassianProcess does not have a 0-mean.
     }
+
     public Variable<Double> getVariable() {
         return variable;
     }
+
+    private double getLogGaussianPrior() {
+        return (gaussianProcess.getLikelihood() == null) ?
+                gaussianProcess.logPdf(variable.getParameterValues()) :
+                gaussianProcess.getLikelihood().getLogLikelihood();
+    }
+
     public double doOperation(Prior prior, Likelihood likelihood) throws OperatorFailedException {
         double logPosterior = evaluate(likelihood, prior, pathParameter);
-        double cutoffDensity = logPosterior + MathUtils.randomLogDouble(); // TODO Gaussian contribution should stay constant, check!
+        double logGaussianPrior = getLogGaussianPrior();
+
+        // Cut-off depends only on non-GP contribution to posterior
+        double cutoffDensity = logPosterior - logGaussianPrior + MathUtils.randomLogDouble();
         drawFromSlice(prior, likelihood, cutoffDensity);
+
         // No need to set variable, as SliceInterval has already done this (and recomputed posterior)
         return 0;
     }
-    private double[] pointOnEllipse(double[] x, double[] y, double phi) {
+
+    private double[] pointOnEllipse(double[] x, double[] y, double phi, double[] priorMean) {
         final int dim = x.length;
         final double cos = Math.cos(phi);
         final double sin = Math.sin(phi);
+
         double[] r = new double[dim];
-        for (int i = 0; i < dim; ++i) {
-            r[i] = x[i] * cos + y[i] * sin;
+
+        if (priorMean == null) {
+            for (int i = 0; i < dim; ++i) {
+                r[i] = x[i] * cos + y[i] * sin;
+            }
+        } else {  // Non-0 prior mean
+            for (int i = 0; i < dim; ++i) {
+                r[i] = (x[i] - priorMean[i]) * cos + (y[i] - priorMean[i]) * sin + priorMean[i];
+            }
         }
         return r;
     }
+
     private void setVariable(double[] x) {
-//        variable.setParameterValueNotifyChangedAll(0, x[0]);
         for (int i = 0; i < x.length; ++i) {
             variable.setParameterValueQuietly(i, x[i]);
         }
-        variable.fireParameterChangedEvent();
+        if (signalConstituentParameters) {
+            variable.fireParameterChangedEvent();
+        } else {
+            ((CompoundParameter)variable).fireParameterChangedEvent(-1, Variable.ChangeType.ALL_VALUES_CHANGED);
+        }
     }
 //
 //        if(!(variable instanceof CompoundParameter))
@@ -66,10 +133,13 @@ public class EllipticalSliceOperator extends SimpleMetropolizedGibbsOperator imp
 //                }
 //            }
 //        }
+
+
     private void drawFromSlice(Prior prior, Likelihood likelihood, double cutoffDensity) {
         // Do nothing
         double[] x = variable.getParameterValues();
         double[] nu = (double[]) gaussianProcess.nextRandom();
+
 //        double[] x;
 //        if(!(variable instanceof CompoundParameter))
 //            x = variable.getParameterValues();
@@ -87,18 +157,23 @@ public class EllipticalSliceOperator extends SimpleMetropolizedGibbsOperator imp
 //            }
 //
 //        }
+
 //        double[] nu;
 //        if(normalPrior!=null)
 //            nu = normalPrior.nextMultivariateNormal();
 //        else
 //            nu = treePrior.nextRandomFast(0);
+
         double phi = MathUtils.nextDouble() * 2.0 * Math.PI;
         Interval phiInterval = new Interval(phi - 2.0 * Math.PI, phi);
+
         boolean done = false;
         while (!done) {
-            double[] xx = pointOnEllipse(x, nu, phi);
+            double[] xx = pointOnEllipse(x, nu, phi, priorMean);
             setVariable(xx);
             double density = evaluate(likelihood, prior, pathParameter);
+            density -= getLogGaussianPrior(); // Depends only on non-GP contribution to posterior
+
             if (density > cutoffDensity) {
                 done = true;
             } else {
@@ -107,13 +182,16 @@ public class EllipticalSliceOperator extends SimpleMetropolizedGibbsOperator imp
             }
         }
     }
+
     private class Interval {
         double lower;
         double upper;
+
         Interval(double lower, double upper) {
             this.lower = lower;
             this.upper = upper;
         }
+
         void adjust(double phi) {
             if (phi > 0) {
                 upper = phi;
@@ -123,21 +201,31 @@ public class EllipticalSliceOperator extends SimpleMetropolizedGibbsOperator imp
                 throw new RuntimeException("Shrunk to current position; bad.");
             }
         }
+
         double draw() {
             return MathUtils.nextDouble() * (upper - lower) + lower;
         }
+
     }
+
     public int getStepCount() {
         return 1;
     }
+
+    /**
+     * Set the path parameter for sampling from power-posterior
+     */
     @Override
     public void setPathParameter(double beta) {
         pathParameter=beta;
     }
+
     public String getOperatorName() {
         return EllipticalSliceOperatorParser.ELLIPTICAL_SLICE_SAMPLER;
     }
+
     public static void main(String[] arg) {
+
         // Define normal model
         Parameter thetaParameter = new Parameter.Default(new double[]{1.0, 0.0});  // Starting values
         MaskedParameter meanParameter = new MaskedParameter(thetaParameter,
@@ -148,11 +236,14 @@ public class EllipticalSliceOperator extends SimpleMetropolizedGibbsOperator imp
                 new Transform.LogTransform(),
                 true
         );
+
 //        System.err.println(thetaParameter);
 //        System.err.println(meanParameter);
 //        System.err.println(precParameter);
+
         ParametricDistributionModel densityModel = new NormalDistributionModel(meanParameter, precParameter, true);
         DistributionLikelihood likelihood = new DistributionLikelihood(densityModel);
+
         // Define prior
         MultivariateNormalDistribution priorDistribution = new MultivariateNormalDistribution(
                 new double[]{0.0, 0.0},
@@ -160,14 +251,19 @@ public class EllipticalSliceOperator extends SimpleMetropolizedGibbsOperator imp
         );
         MultivariateDistributionLikelihood prior = new MultivariateDistributionLikelihood(priorDistribution);
         prior.addData(thetaParameter);
+
         // Define data
 //        likelihood.addData(new Attribute.Default<double[]>("Data", new double[] {0.0, 2.0, 4.0}));
         likelihood.addData(new Attribute.Default<double[]>("Data", new double[]{1, 2, 3, 4, 5, 6, 7, 8, 9}));
+
         List<Likelihood> list = new ArrayList<Likelihood>();
         list.add(likelihood);
         list.add(prior);
         CompoundLikelihood posterior = new CompoundLikelihood(0, list);
-        EllipticalSliceOperator sliceSampler = new EllipticalSliceOperator(thetaParameter, priorDistribution, drawByRow);
+        EllipticalSliceOperator sliceSampler = new EllipticalSliceOperator(thetaParameter, priorDistribution,
+                false, true);
+
+
         final int dim = thetaParameter.getDimension();
         final int length = 100000;
         double[] mean = new double[dim];
@@ -175,6 +271,7 @@ public class EllipticalSliceOperator extends SimpleMetropolizedGibbsOperator imp
         Parameter[] log = new Parameter[dim];
         log[0] = meanParameter;
         log[1] = precParameter;
+
         for (int i = 0; i < length; i++) {
             try {
                 sliceSampler.doOperation(null, posterior);
@@ -197,10 +294,16 @@ public class EllipticalSliceOperator extends SimpleMetropolizedGibbsOperator imp
             System.out.println(mean[j] + " " + Math.sqrt(variance[j]));
         }
     }
+
+
     private double pathParameter=1.0;
     private final Parameter variable;
     private int current;
-    private static boolean drawByRow;
+    private boolean drawByRow;
+    private boolean signalConstituentParameters;
+    private double[] priorMean = null;
+
+/*
 function [xx, cur_log_like] = elliptical_slice(xx, prior, log_like_fn, cur_log_like, angle_range, varargin)
 %ELLIPTICAL_SLICE Markov chain update for a distribution with a Gaussian "prior" factored out
 %
@@ -237,13 +340,16 @@ function [xx, cur_log_like] = elliptical_slice(xx, prior, log_like_fn, cur_log_l
 % Outputs:
 %              xx Dx1 (size matches input) perturbed vector
 %    cur_log_like 1x1 log_like_fn(xx, varargin{:}) of final vector
+
 % Iain Murray, September 2009
 % Tweak to interface and documentation, September 2010
+
 % Reference:
 % Elliptical slice sampling
 % Iain Murray, Ryan Prescott Adams and David J.C. MacKay.
 % The Proceedings of the 13th International Conference on Artificial
 % Intelligence and Statistics (AISTATS), JMLR W&CP 9:541-548, 2010.
+
 D = numel(xx);
 if (nargin < 4) || isempty(cur_log_like)
     cur_log_like = log_like_fn(xx, varargin{:});
@@ -251,6 +357,7 @@ end
 if (nargin < 5) || isempty(angle_range)
     angle_range = 0;
 end
+
 % Set up the ellipse and the slice threshold
 if numel(prior) == D
     % User provided a prior sample:
@@ -263,6 +370,7 @@ else
     nu = reshape(prior'*randn(D, 1), size(xx));
 end
 hh = log(rand) + cur_log_like;
+
 % Set up a bracket of angles and pick a first proposal.
 % "phi = (theta'-theta)" is a change in angle.
 if angle_range <= 0
@@ -276,6 +384,7 @@ else
     phi_max = phi_min + angle_range;
     phi = rand*(phi_max - phi_min) + phi_min;
 end
+
 % Slice sampling loop
 while true
     % Compute xx for proposed angle difference and check if it's on the slice
@@ -297,4 +406,6 @@ while true
     phi = rand*(phi_max - phi_min) + phi_min;
 end
 xx = xx_prop;
+*/
+
 }

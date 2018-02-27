@@ -1,14 +1,21 @@
 package dr.inference.trace;
+
+/**
+ * @author Walter Xie
+ */
 public class Filter {
+
 //    public boolean[] selected; // a mark, length = trace.values.size() = valueCount, all must be true initially
     final protected TraceFactory.TraceType traceType; // for consistency matter
     protected String[] in; // bound of double or integer filter, values of string filter
+
     public Filter(String[] in, TraceFactory.TraceType traceType) {
         if (traceType != TraceFactory.TraceType.STRING && in.length != 2)
             throw new IllegalArgumentException("Double or integer filter should have 2 bounds ! trace type = " + traceType);
         setIn(in);
         this.traceType = traceType;
     }
+
     public boolean isIn(Object value) {
         if (traceType == TraceFactory.TraceType.DOUBLE) {
             // double or integer
@@ -24,6 +31,7 @@ public class Filter {
         }
         return false;
     }
+
     public String[] getIn() {
 //        String[] inString = new String[in.length];
 //        for (int i = 0; i < in.length; i++) {
@@ -31,9 +39,11 @@ public class Filter {
 //        }
         return this.in;
     }
+
     public void setIn(String[] in) {
         this.in = in;
     }
+
     public String getStatusMessage() {
         String message = /*traceName +*/ " is filtered";
 //        if (traceType == TraceFactory.TraceType.DOUBLE) {

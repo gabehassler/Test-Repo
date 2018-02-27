@@ -1,4 +1,10 @@
 package dr.app.beauti.types;
+
+/**
+ * @author Andrew Rambaut
+ * @author Marc Suchard
+ * @version $Id$
+ */
 public enum ParameterFlavour {
     COUNTING,
     CONTINUOUS,

@@ -1,4 +1,30 @@
+/*
+ * BranchCategoryProviderParser.java
+ *
+ * Copyright (C) 2002-2014 Alexei Drummond, Andrew Rambaut and Marc Suchard
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.evomodelxml.branchratemodel;
+
 import dr.evolution.tree.Tree;
 import dr.evolution.util.Taxa;
 import dr.evolution.util.TaxonList;
@@ -9,21 +35,31 @@ import dr.evomodel.branchratemodel.CountableModelMixtureBranchRates;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.model.Parameter;
 import dr.xml.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+
+/**
+ */
 public class BranchCategoriesParser extends AbstractXMLObjectParser {
+
     public static final String BRANCH_CATEGORIES = "branchCategories";
     public static final String CATEGORY = "category";
     public static final String ALLOCATION = "rateCategories";
+
     public static final String RANDOMIZE = "randomize";
+
     public String getParserName() {
         return BRANCH_CATEGORIES;
     }
+
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
         Parameter allocationParameter = (Parameter) xo.getElementFirstChild(ALLOCATION);
         CountableBranchCategoryProvider cladeModel;
         TreeModel treeModel = (TreeModel) xo.getChild(TreeModel.class);
+
         if (!xo.getAttribute(RANDOMIZE, true)) {
             CountableBranchCategoryProvider.CladeBranchCategoryModel cm = new
                     CountableBranchCategoryProvider.CladeBranchCategoryModel(treeModel, allocationParameter);
@@ -32,6 +68,7 @@ public class BranchCategoriesParser extends AbstractXMLObjectParser {
                     XMLObject xoc = (XMLObject) xo.getChild(i);
                     if (xoc.getName().equals(LocalClockModelParser.CLADE)) {
                         TaxonList taxonList = (TaxonList) xoc.getChild(TaxonList.class);
+
                         boolean includeStem = xoc.getAttribute(LocalClockModelParser.INCLUDE_STEM, false);
                         boolean excludeClade = xoc.getAttribute(LocalClockModelParser.EXCLUDE_CLADE, false);
                         int rateCategory = xoc.getIntegerAttribute(CATEGORY) - 1; // XML index-start = 1 not 0
@@ -42,6 +79,7 @@ public class BranchCategoriesParser extends AbstractXMLObjectParser {
                         }
                     }  else if (xoc.getName().equals(LocalClockModelParser.TRUNK)) {
                         TaxonList taxonList = (TaxonList) xoc.getChild(TaxonList.class);
+
                         boolean includeStem = xoc.getAttribute(LocalClockModelParser.INCLUDE_STEM, false);
                         boolean excludeClade = xoc.getAttribute(LocalClockModelParser.EXCLUDE_CLADE, false);
                         int rateCategory = xoc.getIntegerAttribute(CATEGORY) - 1; // XML index-start = 1 not 0
@@ -59,21 +97,27 @@ public class BranchCategoriesParser extends AbstractXMLObjectParser {
             cm.randomize();
             cladeModel = cm;
         }
+
         return cladeModel;
     }
+
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
+
     public String getParserDescription() {
         return
                 "This element provides a set of branch categories.";
     }
+
     public Class getReturnType() {
         return CountableBranchCategoryProvider.class;
     }
+
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
+
     private final XMLSyntaxRule[] rules = {
             new ElementRule(TreeModel.class),
             new ElementRule(ALLOCATION, Parameter.class, "Allocation parameter", false),

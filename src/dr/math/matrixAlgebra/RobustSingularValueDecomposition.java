@@ -1,32 +1,63 @@
 package dr.math.matrixAlgebra;
+
+/**
+ * Copyright ? 1999 CERN - European Organization for Nuclear Research.
+ *
+ * This code is adapted from COLT 1.2; SVD now throws an ArithmeticException if calculations
+ * do not converge within 'maxIterations'
+ *
+ * @author Marc A. Suchard
+ *
+ */
+
 import cern.colt.matrix.DoubleFactory2D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.linalg.Property;
 import dr.math.MathUtils;
+
+
 public class RobustSingularValueDecomposition implements java.io.Serializable {
+
             static final long serialVersionUID = 1020;
+            /** Arrays for internal storage of U and V.
             @serial internal storage of U.
             @serial internal storage of V.
+            */
             private double[][] U, V;
+
+            /** Array for internal storage of singular values.
             @serial internal storage of singular values.
+            */
             private double[] s;
+
+            /** Row and column dimensions.
             @serial row dimension.
             @serial column dimension.
+            */
             private int m, n;
+
 //    private int maxIterations;
+
     static private int maxIterationsDefault = 100000;
+
     private static final String ERROR_STRING = "SVD is not converged.";
+
+    /**
     Constructs and returns a new singular value decomposition object;
     The decomposed matrices can be retrieved via instance methods of the returned decomposition object.
     @param A    A rectangular matrix.
     @return     A decomposition object to access <tt>U</tt>, <tt>S</tt> and <tt>V</tt>.
     @throws IllegalArgumentException if <tt>A.rows() < A.columns()</tt>.
+    */
     public RobustSingularValueDecomposition(DoubleMatrix2D Arg) throws ArithmeticException {
         this(Arg,maxIterationsDefault);
     }
+
     public RobustSingularValueDecomposition(DoubleMatrix2D Arg, int maxIterations) throws ArithmeticException {
             Property.DEFAULT.checkRectangular(Arg);
+
 //            this.maxIterations = maxIterations;
+
               // Derived from LINPACK code.
               // Initialize.
               double[][] A = Arg.toArray();
@@ -40,12 +71,15 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
               double[] work = new double [m];
               boolean wantu = true;
               boolean wantv = true;
+
               // Reduce A to bidiagonal form, storing the diagonal elements
               // in s and the super-diagonal elements in e.
+
               int nct = Math.min(m-1,n);
               int nrt = Math.max(0,Math.min(n-2,m));
               for (int k = 0; k < Math.max(nct,nrt); k++) {
                          if (k < nct) {
+
                                 // Compute the transformation for the k-th column and
                                 // place the k-th diagonal in s[k].
                                 // Compute 2-norm of k-th column without under/overflow.
@@ -66,7 +100,9 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
                          }
                          for (int j = k+1; j < n; j++) {
                                 if ((k < nct) & (s[k] != 0.0))  {
+
                                 // Apply the transformation.
+
                                    double t = 0;
                                    for (int i = k; i < m; i++) {
                                               t += A[i][k]*A[i][j];
@@ -76,18 +112,23 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
                                               A[i][j] += t*A[i][k];
                                    }
                                 }
+
                                 // Place the k-th row of A into e for the
                                 // subsequent calculation of the row transformation.
+
                                 e[j] = A[k][j];
                          }
                          if (wantu & (k < nct)) {
+
                                 // Place the transformation in U for subsequent back
                                 // multiplication.
+
                                 for (int i = k; i < m; i++) {
                                    U[i][k] = A[i][k];
                                 }
                          }
                          if (k < nrt) {
+
                                 // Compute the k-th row transformation and place the
                                 // k-th super-diagonal in e[k].
                                 // Compute 2-norm without under/overflow.
@@ -106,7 +147,9 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
                                 }
                                 e[k] = -e[k];
                                 if ((k+1 < m) & (e[k] != 0.0)) {
+
                                 // Apply the transformation.
+
                                    for (int i = k+1; i < m; i++) {
                                               work[i] = 0.0;
                                    }
@@ -123,15 +166,19 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
                                    }
                                 }
                                 if (wantv) {
+
                                 // Place the transformation in V for subsequent
                                 // back multiplication.
+
                                    for (int i = k+1; i < n; i++) {
                                               V[i][k] = e[i];
                                    }
                                 }
                          }
               }
+
               // Set up the final bidiagonal matrix or order p.
+
               int p = Math.min(n,m+1);
               if (nct < n) {
                          s[nct] = A[nct][nct];
@@ -143,7 +190,9 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
                          e[nrt] = A[nrt][p-1];
               }
               e[p-1] = 0.0;
+
               // If required, generate U.
+
               if (wantu) {
                          for (int j = nct; j < nu; j++) {
                                 for (int i = 0; i < m; i++) {
@@ -178,7 +227,9 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
                                 }
                          }
               }
+
               // If required, generate V.
+
               if (wantv) {
                          for (int k = n-1; k >= 0; k--) {
                                 if ((k < nrt) & (e[k] != 0.0)) {
@@ -199,23 +250,29 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
                                 V[k][k] = 1.0;
                          }
               }
+
               // Main iteration loop for the singular values.
+
               int pp = p-1;
               int iter = 0;
               double eps = Math.pow(2.0,-52.0);
               while (p > 0) {
                          int k,kase;
+
                          // Here is where a test for too many iterations would go.
                   if (iter > maxIterations)
                           throw new ArithmeticException(ERROR_STRING);
+
                          // This section of the program inspects for
                          // negligible elements in the s and e arrays.  On
                          // completion the variables kase and k are set as follows.
+
                          // kase = 1     if s(p) and e[k-1] are negligible and k<p
                          // kase = 2     if s(k) is negligible and k<p
                          // kase = 3     if e[k-1] is negligible, k<p, and
                          //              s(k), ..., s(p) are not negligible (qr step).
                          // kase = 4     if e(p-1) is negligible (convergence).
+
                          for (k = p-2; k >= -1; k--) {
                                 if (k == -1) {
                                    break;
@@ -250,9 +307,13 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
                                 }
                          }
                          k++;
+
                          // Perform the task indicated by kase.
+
                          switch (kase) {
+
                                 // Deflate negligible s(p).
+
                                 case 1: {
                                    double f = e[p-2];
                                    e[p-2] = 0.0;
@@ -275,7 +336,9 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
                                    }
                                 }
                                 break;
+
                                 // Split at negligible s(k).
+
                                 case 2: {
                                    double f = e[k-1];
                                    e[k-1] = 0.0;
@@ -296,9 +359,13 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
                                    }
                                 }
                                 break;
+
                                 // Perform one qr step.
+
                                 case 3: {
+
                                    // Calculate the shift.
+
                                    double scale = Math.max(Math.max(Math.max(Math.max(
                                                        Math.abs(s[p-1]),Math.abs(s[p-2])),Math.abs(e[p-2])),
                                                        Math.abs(s[k])),Math.abs(e[k]));
@@ -319,7 +386,9 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
                                    }
                                    double f = (sk + sp)*(sk - sp) + shift;
                                    double g = sk*ek;
+
                                    // Chase zeros.
+
                                    for (int j = k; j < p-1; j++) {
                                               double t = MathUtils.hypot(f,g);
                                               double cs = f/t;
@@ -358,9 +427,13 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
                                    iter = iter + 1;
                                 }
                                 break;
+
                                 // Convergence.
+
                                 case 4: {
+
                                    // Make the singular values positive.
+
                                    if (s[k] <= 0.0) {
                                               s[k] = (s[k] < 0.0 ? -s[k] : 0.0);
                                               if (wantv) {
@@ -369,7 +442,9 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
                                                      }
                                               }
                                    }
+
                                    // Order the singular values.
+
                                    while (k < pp) {
                                               if (s[k] >= s[k+1]) {
                                                      break;
@@ -396,12 +471,16 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
                          }
               }
        }
+    /**
     Returns the two norm condition number, which is <tt>max(S) / min(S)</tt>.
+    */
     public double cond() {
             return s[0]/s[Math.min(m,n)-1];
     }
+    /**
     Returns the diagonal matrix of singular values.
     @return     S
+    */
     public DoubleMatrix2D getS() {
             double[][] S = new double[n][n];
             for (int i = 0; i < n; i++) {
@@ -412,27 +491,37 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
             }
             return DoubleFactory2D.dense.make(S);
     }
+    /**
     Returns the diagonal of <tt>S</tt>, which is a one-dimensional array of singular values
     @return     diagonal of <tt>S</tt>.
+    */
     public double[] getSingularValues() {
             return s;
     }
+    /**
     Returns the left singular vectors <tt>U</tt>.
     @return     <tt>U</tt>
+    */
     public DoubleMatrix2D getU() {
             //return new DoubleMatrix2D(U,m,Math.min(m+1,n));
             return DoubleFactory2D.dense.make(U).viewPart(0,0,m,Math.min(m+1,n));
     }
+    /**
     Returns the right singular vectors <tt>V</tt>.
     @return     <tt>V</tt>
+    */
     public DoubleMatrix2D getV() {
             return DoubleFactory2D.dense.make(V);
     }
+    /**
     Returns the two norm, which is <tt>max(S)</tt>.
+    */
     public double norm2() {
             return s[0];
     }
+    /**
     Returns the effective numerical matrix rank, which is the number of nonnegligible singular values.
+    */
     public int rank() {
             double eps = Math.pow(2.0,-52.0);
             double tol = Math.max(m,n)*s[0]*eps;
@@ -444,6 +533,7 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
             }
             return r;
     }
+    /**
     Returns a String with (propertyName, propertyValue) pairs.
     Useful for debugging or to quickly get the rough picture.
     For example,
@@ -451,30 +541,42 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
     rank          : 3
     trace         : 0
     </pre>
+    */
     public String toString() {
             StringBuffer buf = new StringBuffer();
             String unknown = "Illegal operation or error: ";
+
             buf.append("---------------------------------------------------------------------\n");
             buf.append("SingularValueDecomposition(A) --> cond(A), rank(A), norm2(A), U, S, V\n");
             buf.append("---------------------------------------------------------------------\n");
+
             buf.append("cond = ");
             try { buf.append(String.valueOf(this.cond()));}
             catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
+
             buf.append("\nrank = ");
             try { buf.append(String.valueOf(this.rank()));}
             catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
+
             buf.append("\nnorm2 = ");
             try { buf.append(String.valueOf(this.norm2()));}
             catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
+
             buf.append("\n\nU = ");
             try { buf.append(String.valueOf(this.getU()));}
             catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
+
             buf.append("\n\nS = ");
             try { buf.append(String.valueOf(this.getS()));}
             catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
+
             buf.append("\n\nV = ");
             try { buf.append(String.valueOf(this.getV()));}
             catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
+
             return buf.toString();
     }
     }
+
+
+

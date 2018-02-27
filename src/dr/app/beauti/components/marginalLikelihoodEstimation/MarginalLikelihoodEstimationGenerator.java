@@ -1,4 +1,30 @@
+/*
+ * MarginalLikelihoodEstimationGenerator.java
+ *
+ * Copyright (C) 2002-2013 Alexei Drummond, Andrew Rambaut and Marc Suchard
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.app.beauti.components.marginalLikelihoodEstimation;
+
 import dr.app.beauti.generator.BaseComponentGenerator;
 import dr.app.beauti.options.*;
 import dr.app.beauti.types.*;
@@ -18,28 +44,43 @@ import dr.inferencexml.distribution.WorkingPriorParsers;
 import dr.inferencexml.model.CompoundLikelihoodParser;
 import dr.util.Attribute;
 import dr.xml.XMLParser;
+
 import java.util.ArrayList;
 import java.util.List;
+
+/**
+ * @author Andrew Rambaut
+ * @author Guy Baele
+ * @version $Id$
+ */
 public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerator {
+
     public static final boolean DEBUG = true;
+
     private BeautiOptions beautiOptions = null;
+
     MarginalLikelihoodEstimationGenerator(final BeautiOptions options) {
         super(options);
         this.beautiOptions = options;
     }
+
     public boolean usesInsertionPoint(final InsertionPoint point) {
         MarginalLikelihoodEstimationOptions component = (MarginalLikelihoodEstimationOptions) options.getComponentOptions(MarginalLikelihoodEstimationOptions.class);
+
         if (!component.performMLE && !component.performMLEGSS) {
             return false;
         }
+
         switch (point) {
             case AFTER_MCMC:
                 return true;
         }
         return false;
     }
+
     protected void generate(final InsertionPoint point, final Object item, final String prefix, final XMLWriter writer) {
         MarginalLikelihoodEstimationOptions component = (MarginalLikelihoodEstimationOptions) options.getComponentOptions(MarginalLikelihoodEstimationOptions.class);
+
         switch (point) {
             case AFTER_MCMC:
                 writeMLE(writer, component);
@@ -47,13 +88,24 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
             default:
                 throw new IllegalArgumentException("This insertion point is not implemented for " + this.getClass().getName());
         }
+
     }
+
     protected String getCommentLabel() {
         return "Marginal Likelihood Estimator";
     }
+
+    /**
+     * Write the marginalLikelihoodEstimator, pathSamplingAnalysis and steppingStoneSamplingAnalysis blocks.
+     *
+     * @param writer XMLWriter
+     */
     public void writeMLE(XMLWriter writer, MarginalLikelihoodEstimationOptions options) {
+
         if (options.performMLE) {
+
             writer.writeComment("Define marginal likelihood estimator (PS/SS) settings");
+
             List<Attribute> attributes = new ArrayList<Attribute>();
             //attributes.add(new Attribute.Default<String>(XMLParser.ID, "mcmc"));
             attributes.add(new Attribute.Default<Integer>(MarginalLikelihoodEstimator.CHAIN_LENGTH, options.mleChainLength));
@@ -65,10 +117,13 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
             if (options.printOperatorAnalysis) {
                 attributes.add(new Attribute.Default<Boolean>(MarginalLikelihoodEstimator.PRINT_OPERATOR_ANALYSIS, true));
             }
+
             writer.writeOpenTag(MarginalLikelihoodEstimator.MARGINAL_LIKELIHOOD_ESTIMATOR, attributes);
+
             writer.writeOpenTag("samplers");
             writer.writeIDref("mcmc", "mcmc");
             writer.writeCloseTag("samplers");
+
             attributes = new ArrayList<Attribute>();
             attributes.add(new Attribute.Default<String>(XMLParser.ID, "pathLikelihood"));
             writer.writeOpenTag(PathLikelihood.PATH_LIKELIHOOD, attributes);
@@ -79,6 +134,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
             writer.writeIDref(CompoundLikelihoodParser.PRIOR, CompoundLikelihoodParser.PRIOR);
             writer.writeCloseTag(PathLikelihood.DESTINATION);
             writer.writeCloseTag(PathLikelihood.PATH_LIKELIHOOD);
+
             attributes = new ArrayList<Attribute>();
             attributes.add(new Attribute.Default<String>(XMLParser.ID, "MLELog"));
             attributes.add(new Attribute.Default<Integer>("logEvery", options.mleLogEvery));
@@ -86,7 +142,9 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
             writer.writeOpenTag("log", attributes);
             writer.writeIDref("pathLikelihood", "pathLikelihood");
             writer.writeCloseTag("log");
+
             writer.writeCloseTag(MarginalLikelihoodEstimator.MARGINAL_LIKELIHOOD_ESTIMATOR);
+
             writer.writeComment("Path sampling estimator from collected samples");
             attributes = new ArrayList<Attribute>();
             attributes.add(new Attribute.Default<String>("fileName", options.mleFileName));
@@ -94,6 +152,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
             writer.writeTag("likelihoodColumn", new Attribute.Default<String>("name", "pathLikelihood.delta"), true);
             writer.writeTag("thetaColumn", new Attribute.Default<String>("name", "pathLikelihood.theta"), true);
             writer.writeCloseTag(PathSamplingAnalysis.PATH_SAMPLING_ANALYSIS);
+
             writer.writeComment("Stepping-stone sampling estimator from collected samples");
             attributes = new ArrayList<Attribute>();
             attributes.add(new Attribute.Default<String>("fileName", options.mleFileName));
@@ -101,22 +160,28 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
             writer.writeTag("likelihoodColumn", new Attribute.Default<String>("name", "pathLikelihood.delta"), true);
             writer.writeTag("thetaColumn", new Attribute.Default<String>("name", "pathLikelihood.theta"), true);
             writer.writeCloseTag(SteppingStoneSamplingAnalysis.STEPPING_STONE_SAMPLING_ANALYSIS);
+
         } else if (options.performMLEGSS) {
+
             //First define necessary components for the tree working prior
             if (options.choiceTreeWorkingPrior.equals("Product of exponential distributions")) {
                 //more general product of exponentials needs to be constructed
+
                 if (DEBUG) {
                     System.err.println("productOfExponentials selected: " + options.choiceTreeWorkingPrior);
                 }
+
                 List<Attribute> attributes = new ArrayList<Attribute>();
                 attributes.add(new Attribute.Default<String>(XMLParser.ID, "exponentials"));
                 attributes.add(new Attribute.Default<String>("fileName", beautiOptions.logFileName));
                 attributes.add(new Attribute.Default<String>("burnin", "" + beautiOptions.chainLength*0.10));
                 attributes.add(new Attribute.Default<String>("parameterColumn", "coalescentEventsStatistic"));
                 attributes.add(new Attribute.Default<String>("dimension", "" + (beautiOptions.taxonList.getTaxonCount()-1)));
+
                 writer.writeOpenTag(TreeWorkingPriorParsers.PRODUCT_OF_EXPONENTIALS_POSTERIOR_MEANS_LOESS, attributes);
                 writer.writeTag(TreeModel.TREE_MODEL, new Attribute.Default<String>(XMLParser.ID, TreeModel.TREE_MODEL), true);
                 writer.writeCloseTag(TreeWorkingPriorParsers.PRODUCT_OF_EXPONENTIALS_POSTERIOR_MEANS_LOESS);
+
             } else {
                 //matching coalescent model has to be constructed
                 //getting the coalescent model
@@ -124,13 +189,16 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                     System.err.println("matching coalescent model selected: " + options.choiceTreeWorkingPrior);
                     System.err.println(beautiOptions.getPartitionTreePriors().get(0).getNodeHeightPrior());
                 }
+                /*for (PartitionTreePrior prior : options.getPartitionTreePriors()) {
                     treePriorGenerator.writeTreePriorModel(prior, writer);
                     writer.writeText("");
                 }*/
                 //TODO: extend for more than 1 coalescent model?
                 TreePriorType nodeHeightPrior = beautiOptions.getPartitionTreePriors().get(0).getNodeHeightPrior();
+
                 switch (nodeHeightPrior) {
                     case CONSTANT:
+
                         writer.writeComment("A working prior for the constant population size model.");
                         writer.writeOpenTag(
                                 ConstantPopulationModelParser.CONSTANT_POPULATION_MODEL,
@@ -139,10 +207,12 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                                         new Attribute.Default<String>("units", Units.Utils.getDefaultUnitName(beautiOptions.units))
                                 }
                         );
+
                         writer.writeOpenTag(ConstantPopulationModelParser.POPULATION_SIZE);
                         writeParameter("constantReference.popSize", "constant.popSize", beautiOptions.logFileName, (int) (options.mleChainLength * 0.10), writer);
                         writer.writeCloseTag(ConstantPopulationModelParser.POPULATION_SIZE);
                         writer.writeCloseTag(ConstantPopulationModelParser.CONSTANT_POPULATION_MODEL);
+
                         writer.writeComment("A working prior for the coalescent.");
                         writer.writeOpenTag(
                                 CoalescentLikelihoodParser.COALESCENT_LIKELIHOOD,
@@ -157,8 +227,11 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                         writer.writeIDref(TreeModel.TREE_MODEL, modelPrefix + TreeModel.TREE_MODEL);
                         writer.writeCloseTag(CoalescentLikelihoodParser.POPULATION_TREE);
                         writer.writeCloseTag(CoalescentLikelihoodParser.COALESCENT_LIKELIHOOD);
+
                         break;
+
                     case EXPONENTIAL:
+
                         writer.writeComment("A working prior for the exponential growth model.");
                         writer.writeOpenTag(
                                 ExponentialGrowthModelParser.EXPONENTIAL_GROWTH_MODEL,
@@ -167,6 +240,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                                         new Attribute.Default<String>("units", Units.Utils.getDefaultUnitName(beautiOptions.units))
                                 }
                         );
+
                         writer.writeOpenTag(ExponentialGrowthModelParser.POPULATION_SIZE);
                         writeParameter("exponentialReference.popSize", "exponential.popSize", beautiOptions.logFileName, (int) (options.mleChainLength * 0.10), writer);
                         writer.writeCloseTag(ExponentialGrowthModelParser.POPULATION_SIZE);
@@ -174,6 +248,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                         writeParameter("exponentialReference.growthRate", "exponential.growthRate", beautiOptions.logFileName, (int) (options.mleChainLength * 0.10), writer);
                         writer.writeCloseTag(ExponentialGrowthModelParser.GROWTH_RATE);
                         writer.writeCloseTag(ExponentialGrowthModelParser.EXPONENTIAL_GROWTH_MODEL);
+
                         writer.writeComment("A working prior for the coalescent.");
                         writer.writeOpenTag(
                                 CoalescentLikelihoodParser.COALESCENT_LIKELIHOOD,
@@ -188,8 +263,11 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                         writer.writeIDref(TreeModel.TREE_MODEL, modelPrefix + TreeModel.TREE_MODEL);
                         writer.writeCloseTag(CoalescentLikelihoodParser.POPULATION_TREE);
                         writer.writeCloseTag(CoalescentLikelihoodParser.COALESCENT_LIKELIHOOD);
+
                         break;
+
                     case LOGISTIC:
+
                         writer.writeComment("A working prior for the logistic growth model.");
                         writer.writeOpenTag(
                                 LogisticGrowthModelParser.LOGISTIC_GROWTH_MODEL,
@@ -198,6 +276,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                                         new Attribute.Default<String>("units", Units.Utils.getDefaultUnitName(beautiOptions.units))
                                 }
                         );
+
                         writer.writeOpenTag(LogisticGrowthModelParser.POPULATION_SIZE);
                         writeParameter("logisticReference.popSize", "logistic.popSize", beautiOptions.logFileName, (int) (options.mleChainLength * 0.10), writer);
                         writer.writeCloseTag(LogisticGrowthModelParser.POPULATION_SIZE);
@@ -208,6 +287,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                         writeParameter("logisticReference.t50", "logistic.t50", beautiOptions.logFileName, (int) (options.mleChainLength * 0.10), writer);
                         writer.writeCloseTag(LogisticGrowthModelParser.TIME_50);
                         writer.writeCloseTag(LogisticGrowthModelParser.LOGISTIC_GROWTH_MODEL);
+
                         writer.writeComment("A working prior for the coalescent.");
                         writer.writeOpenTag(
                                 CoalescentLikelihoodParser.COALESCENT_LIKELIHOOD,
@@ -222,8 +302,11 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                         writer.writeIDref(TreeModel.TREE_MODEL, modelPrefix + TreeModel.TREE_MODEL);
                         writer.writeCloseTag(CoalescentLikelihoodParser.POPULATION_TREE);
                         writer.writeCloseTag(CoalescentLikelihoodParser.COALESCENT_LIKELIHOOD);
+
                         break;
+
                     case EXPANSION:
+
                         writer.writeComment("A working prior for the expansion growth model.");
                         writer.writeOpenTag(
                                 ExpansionModelParser.EXPANSION_MODEL,
@@ -232,6 +315,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                                         new Attribute.Default<String>("units", Units.Utils.getDefaultUnitName(beautiOptions.units))
                                 }
                         );
+
                         writer.writeOpenTag(ExpansionModelParser.POPULATION_SIZE);
                         writeParameter("expansionReference.popSize", "expansion.popSize", beautiOptions.logFileName, (int) (options.mleChainLength * 0.10), writer);
                         writer.writeCloseTag(ExpansionModelParser.POPULATION_SIZE);
@@ -242,6 +326,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                         writeParameter("expansionReference.ancestralProportion", "expansion.ancestralProportion", beautiOptions.logFileName, (int) (options.mleChainLength * 0.10), writer);
                         writer.writeCloseTag(ExpansionModelParser.ANCESTRAL_POPULATION_PROPORTION);
                         writer.writeCloseTag(ExpansionModelParser.EXPANSION_MODEL);
+
                         writer.writeComment("A working prior for the coalescent.");
                         writer.writeOpenTag(
                                 CoalescentLikelihoodParser.COALESCENT_LIKELIHOOD,
@@ -256,14 +341,21 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                         writer.writeIDref(TreeModel.TREE_MODEL, modelPrefix + TreeModel.TREE_MODEL);
                         writer.writeCloseTag(CoalescentLikelihoodParser.POPULATION_TREE);
                         writer.writeCloseTag(CoalescentLikelihoodParser.COALESCENT_LIKELIHOOD);
+
                         break;
+
                     default:
+
                         //Do not switch to product of exponentials as the coalescentEventsStatistic has not been logged
                         //TODO: show menu that explains mismatch between prior and working prior?
                         //TODO: but show it when the MCM option is wrongfully being selected, don't do anything here
+
                 }
+
             }
+
             writer.writeComment("Define marginal likelihood estimator (GSS) settings");
+
             List<Attribute> attributes = new ArrayList<Attribute>();
             attributes.add(new Attribute.Default<Integer>(MarginalLikelihoodEstimator.CHAIN_LENGTH, options.mleChainLength));
             attributes.add(new Attribute.Default<Integer>(MarginalLikelihoodEstimator.PATH_STEPS, options.pathSteps));
@@ -274,10 +366,13 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
             if (options.printOperatorAnalysis) {
                 attributes.add(new Attribute.Default<Boolean>(MarginalLikelihoodEstimator.PRINT_OPERATOR_ANALYSIS, true));
             }
+
             writer.writeOpenTag(MarginalLikelihoodEstimator.MARGINAL_LIKELIHOOD_ESTIMATOR, attributes);
+
             writer.writeOpenTag("samplers");
             writer.writeIDref("mcmc", "mcmc");
             writer.writeCloseTag("samplers");
+
             attributes = new ArrayList<Attribute>();
             attributes.add(new Attribute.Default<String>(XMLParser.ID, "pathLikelihood"));
             writer.writeOpenTag(PathLikelihood.PATH_LIKELIHOOD, attributes);
@@ -286,12 +381,16 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
             writer.writeCloseTag(PathLikelihood.SOURCE);
             writer.writeOpenTag(PathLikelihood.DESTINATION);
             writer.writeOpenTag(CompoundLikelihoodParser.WORKING_PRIOR);
+
             //Start with providing working priors for the substitution model(s)
             for (PartitionSubstitutionModel model : beautiOptions.getPartitionSubstitutionModels()) {
                 int codonPartitionCount = model.getCodonPartitionCount();
+
                 switch (model.getDataType().getType()) {
                     case DataType.NUCLEOTIDES:
+
                         switch (model.getNucSubstitutionModel()) {
+
                             case HKY:
                                 if (codonPartitionCount > 1 && model.isUnlinkedSubstitutionModel()) {
                                     for (int i = 1; i <= codonPartitionCount; i++) {
@@ -315,6 +414,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                                     writer.writeCloseTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR);
                                 }
                                 break;
+
                             case TN93:
                                 if (codonPartitionCount > 1 && model.isUnlinkedSubstitutionModel()) {
                                     for (int i = 1; i <= codonPartitionCount; i++) {
@@ -354,6 +454,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                                     writer.writeCloseTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR);
                                 }
                                 break;
+
                             case GTR:
                                 if (codonPartitionCount > 1 && model.isUnlinkedSubstitutionModel()) {
                                     for (int i = 1; i <= codonPartitionCount; i++) {
@@ -381,7 +482,9 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                                     }
                                 }
                                 break;
+
                         }
+
                         if (model.getFrequencyPolicy() == FrequencyPolicyType.ESTIMATED) {
                             if (codonPartitionCount > 1 && model.isUnlinkedSubstitutionModel() && model.isUnlinkedFrequencyModel()) {
                                 for (int i = 1; i <= codonPartitionCount; i++) {
@@ -407,10 +510,13 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                                 writer.writeCloseTag(WorkingPriorParsers.LOGIT_TRANSFORMED_NORMAL_REFERENCE_PRIOR);
                             }
                         }
+
                         break;//NUCLEOTIDES
+
                     default:
                         throw new IllegalArgumentException("Unknown data type");
                 }
+
                 if (model.isGammaHetero()) {
                     if (codonPartitionCount > 1 && model.isUnlinkedHeterogeneityModel()) {
                         for (int i = 1; i <= codonPartitionCount; i++) {
@@ -434,6 +540,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                         writer.writeCloseTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR);
                     }
                 }
+
                 if (model.isInvarHetero()) {
                     if (codonPartitionCount > 1 && model.isUnlinkedHeterogeneityModel()) {
                         for (int i = 1; i <= codonPartitionCount; i++) {
@@ -458,6 +565,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                     }
                 }
             }
+
             //Continue with providing working priors for the clock model(s)
             for (PartitionClockModel model : beautiOptions.getPartitionClockModels()) {
                 switch(model.getClockType()) {
@@ -471,6 +579,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                         writer.writeIDref(ParameterParser.PARAMETER, model.getPrefix() + "clock.rate");
                         writer.writeCloseTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR);
                         break;
+
                     case UNCORRELATED:
                         switch (model.getClockDistributionType()) {
                             case LOGNORMAL:
@@ -510,6 +619,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                                     writer.writeCloseTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR);
                                 }
                                 break;
+
                             case EXPONENTIAL:
                                 writer.writeOpenTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR,
                                         new Attribute[]{
@@ -522,14 +632,17 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                                 break;
                         }
                         break;
+
                     default:
                         throw new IllegalArgumentException("Unknown clock model");
                 }
             }
+
             //Provide working priors for the coalescent model(s)
             for (PartitionTreePrior model : beautiOptions.getPartitionTreePriors()) {
                 TreePriorType nodeHeightPrior = model.getNodeHeightPrior();
                 TreePriorParameterizationType parameterization = model.getParameterization();
+
                 switch (nodeHeightPrior) {
                     case CONSTANT:
                         writer.writeOpenTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR,
@@ -541,6 +654,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                         writer.writeIDref(ParameterParser.PARAMETER, "constant.popSize");
                         writer.writeCloseTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR);
                         break;
+
                     case EXPONENTIAL:
                         writer.writeOpenTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR,
                                 new Attribute[]{
@@ -550,6 +664,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                                 });
                         writer.writeIDref(ParameterParser.PARAMETER, "exponential.popSize");
                         writer.writeCloseTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR);
+
                         if (parameterization == TreePriorParameterizationType.GROWTH_RATE) {
                             writer.writeOpenTag(WorkingPriorParsers.NORMAL_REFERENCE_PRIOR,
                                     new Attribute[]{
@@ -569,7 +684,9 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                             writer.writeIDref(ParameterParser.PARAMETER, "exponential.doublingTime");
                             writer.writeCloseTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR);
                         }
+
                         break;
+
                     case LOGISTIC:
                         writer.writeOpenTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR,
                                 new Attribute[]{
@@ -579,6 +696,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                                 });
                         writer.writeIDref(ParameterParser.PARAMETER, "logistic.popSize");
                         writer.writeCloseTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR);
+
                         if (parameterization == TreePriorParameterizationType.GROWTH_RATE) {
                             writer.writeOpenTag(WorkingPriorParsers.NORMAL_REFERENCE_PRIOR,
                                     new Attribute[]{
@@ -598,6 +716,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                             writer.writeIDref(ParameterParser.PARAMETER, "logistic.doublingTime");
                             writer.writeCloseTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR);
                         }
+
                         writer.writeOpenTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR,
                                 new Attribute[]{
                                         new Attribute.Default<String>("fileName", beautiOptions.logFileName),
@@ -606,7 +725,9 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                                 });
                         writer.writeIDref(ParameterParser.PARAMETER, "logistic.t50");
                         writer.writeCloseTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR);
+
                         break;
+
                     case EXPANSION:
                         writer.writeOpenTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR,
                                 new Attribute[]{
@@ -616,6 +737,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                                 });
                         writer.writeIDref(ParameterParser.PARAMETER, "expansion.popSize");
                         writer.writeCloseTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR);
+
                         if (parameterization == TreePriorParameterizationType.GROWTH_RATE) {
                             writer.writeOpenTag(WorkingPriorParsers.NORMAL_REFERENCE_PRIOR,
                                     new Attribute[]{
@@ -635,6 +757,7 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                             writer.writeIDref(ParameterParser.PARAMETER, "expansion.doublingTime");
                             writer.writeCloseTag(WorkingPriorParsers.LOG_TRANSFORMED_NORMAL_REFERENCE_PRIOR);
                         }
+
                         writer.writeOpenTag(WorkingPriorParsers.LOGIT_TRANSFORMED_NORMAL_REFERENCE_PRIOR,
                                 new Attribute[]{
                                         new Attribute.Default<String>("fileName", beautiOptions.logFileName),
@@ -643,18 +766,25 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
                                 });
                         writer.writeIDref(ParameterParser.PARAMETER, "expansion.ancestralProportion");
                         writer.writeCloseTag(WorkingPriorParsers.LOGIT_TRANSFORMED_NORMAL_REFERENCE_PRIOR);
+
                         break;
                 }
             }
+
             //TODO: take care of anything else I missed
+
+
+
             if (options.choiceTreeWorkingPrior.equals("Product of exponential distributions")) {
                 writer.writeIDref("productOfExponentialsPosteriorMeansLoess", "exponentials");
             } else {
                 writer.writeIDref(CoalescentLikelihoodParser.COALESCENT_LIKELIHOOD, "coalescentReference");
             }
+
             writer.writeCloseTag(CompoundLikelihoodParser.WORKING_PRIOR);
             writer.writeCloseTag(PathLikelihood.DESTINATION);
             writer.writeCloseTag(PathLikelihood.PATH_LIKELIHOOD);
+
             attributes = new ArrayList<Attribute>();
             attributes.add(new Attribute.Default<String>(XMLParser.ID, "MLELog"));
             attributes.add(new Attribute.Default<Integer>("logEvery", options.mleLogEvery));
@@ -662,7 +792,9 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
             writer.writeOpenTag("log", attributes);
             writer.writeIDref("pathLikelihood", "pathLikelihood");
             writer.writeCloseTag("log");
+
             writer.writeCloseTag(MarginalLikelihoodEstimator.MARGINAL_LIKELIHOOD_ESTIMATOR);
+
             writer.writeComment("Generalized stepping-stone sampling estimator from collected samples");
             attributes = new ArrayList<Attribute>();
             attributes.add(new Attribute.Default<String>("fileName", options.mleFileName));
@@ -671,8 +803,11 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
             writer.writeTag("destinationColumn", new Attribute.Default<String>("name", "pathLikelihood.destination"), true);
             writer.writeTag("thetaColumn", new Attribute.Default<String>("name", "pathLikelihood.theta"), true);
             writer.writeCloseTag(GeneralizedSteppingStoneSamplingAnalysis.GENERALIZED_STEPPING_STONE_SAMPLING_ANALYSIS);
+
         }
+
     }
+
     private void writeParameterIdref(XMLWriter writer, Parameter parameter) {
         if (parameter.isStatistic) {
             writer.writeIDref("statistic", parameter.getName());
@@ -680,4 +815,5 @@ public class MarginalLikelihoodEstimationGenerator extends BaseComponentGenerato
             writer.writeIDref(ParameterParser.PARAMETER, parameter.getName());
         }
     }
+
 }

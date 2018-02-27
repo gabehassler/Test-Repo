@@ -1,5 +1,11 @@
 package dr.util;
+
+/**
+ * @author Alexei Drummond
+ * @author Marc A. Suchard
+ */
 public class Citation {
+
     Author[] authors;
     String title;
     int year;
@@ -8,14 +14,17 @@ public class Citation {
     int startpage;
     int endpage;
     Status status;
+
     public Citation() {
     }
+
     public Citation(Author[] authors, Status status) {
         this(authors, null, -1, null, -1, -1, -1, status);
         if (status != Status.IN_PREPARATION) {
             throw new CitationException("Only citations in preparation may not contain titles or journals");
         }
     }
+
     public Citation(Author[] authors, String title, String journal,
                    Status status) {
         this(authors, title, -1, journal, -1, -1, -1, status);
@@ -23,6 +32,7 @@ public class Citation {
             throw new CitationException("Published citations must have years, volumes and pages");
         }
     }
+
     public Citation(Author[] authors, String title, int year, String journal, int volume, int startpage, int endpage,
                    Status status) {
         this.authors = authors;
@@ -34,6 +44,7 @@ public class Citation {
         this.endpage = endpage;
         this.status = status;
     }
+
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append(authors[0].toString());
@@ -63,7 +74,9 @@ public class Citation {
         }
         return builder.toString();
     }
+
     public String toHTML() {
+
         StringBuilder builder = new StringBuilder();
         builder.append("<html>");
         builder.append(authors[0].toString());
@@ -78,23 +91,30 @@ public class Citation {
         builder.append(startpage);
         if (endpage > 0) builder.append("-").append(endpage);
         builder.append("</html>");
+
         return builder.toString();
     }
+
     public enum Status {
         IN_PREPARATION("in preparation"),
         IN_SUBMISSION("in submission"),
         IN_PRESS("in press"),
         ACCEPTED("accepted"),
         PUBLISHED("published");
+
         Status(String text) {
             this.text = text;
         }
+
         public String getText() {
             return text;
         }
+
         private final String text;
     }
+
     class CitationException extends RuntimeException {
+
         CitationException(String message) {
             super(message);
         }

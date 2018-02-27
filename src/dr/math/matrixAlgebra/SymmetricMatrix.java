@@ -1,19 +1,86 @@
+/*
+ * SymmetricMatrix.java
+ *
+ * Copyright (C) 2002-2006 Alexei Drummond and Andrew Rambaut
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.math.matrixAlgebra;
+
+/**
+ * Symmetric matrix
+ *
+ * @author Didier H. Besset
+ */
 public class SymmetricMatrix extends Matrix {
+
 	private static int lupCRLCriticalDimension = 36;
+
+	/**
+	 * Creates a symmetric matrix with given components.
+	 *
+	 * @param a double[][]
+	 */
 	public SymmetricMatrix(double[][] a) {
 		super(a);
 	}
+
+	/**
+	 * @param n int
+	 * @throws java.lang.NegativeArraySizeException
+	 *          if n <= 0
+	 */
 	public SymmetricMatrix(int n) throws NegativeArraySizeException {
 		super(n, n);
 	}
+
+	/**
+	 * Constructor method.
+	 *
+	 * @param n int
+	 * @param m int
+	 * @throws java.lang.NegativeArraySizeException
+	 *          if n,m <= 0
+	 */
 	public SymmetricMatrix(int n, int m) throws NegativeArraySizeException {
 		super(n, m);
 	}
+
+	/**
+	 * @param a Matrix
+	 * @return SymmetricMatrix	sum of the matrix with the supplied matrix.
+	 * @throws IllegalDimension if the supplied matrix does not
+	 *                          have the same dimensions.
+	 */
 	public SymmetricMatrix add(SymmetricMatrix a)
 			throws IllegalDimension {
 		return new SymmetricMatrix(addComponents(a));
 	}
+
+	/**
+	 * Answers the inverse of the receiver computed via the CRL algorithm.
+	 *
+	 * @return MatrixAlgebra.SymmetricMatrix
+	 * @throws java.lang.ArithmeticException if the matrix is singular.
+	 */
 	private SymmetricMatrix crlInverse() throws ArithmeticException {
 		if (rows() == 1)
 			return inverse1By1();
@@ -31,6 +98,14 @@ public class SymmetricMatrix extends Matrix {
 				cb1.transposedProductComponents(splitMatrices[2])));
 		return SymmetricMatrix.join(splitMatrices);
 	}
+
+	/**
+	 * @return MatrixAlgebra.SymmetricMatrix
+	 * @throws matrixAlgebra.IllegalDimension The supplied components are not those of a square matrix.
+	 * @throws matrixAlgebra.NonSymmetricComponents
+	 *                                        The supplied components are not symmetric.
+	 * @param	comp double[][]	components of the matrix
+	 */
 	public static SymmetricMatrix fromComponents(double[][] comp)
 			throws IllegalDimension, NonSymmetricComponents {
 		if (comp.length != comp[0].length)
@@ -48,6 +123,11 @@ public class SymmetricMatrix extends Matrix {
 		}
 		return new SymmetricMatrix(comp);
 	}
+
+	/**
+	 * @param n int
+	 * @return SymmetricMatrix	an identity matrix of size n
+	 */
 	public static SymmetricMatrix identityMatrix(int n) {
 		double[][] a = new double[n][n];
 		for (int i = 0; i < n; i++) {
@@ -56,17 +136,37 @@ public class SymmetricMatrix extends Matrix {
 		}
 		return new SymmetricMatrix(a);
 	}
+
+	/**
+	 * @return Matrix		inverse of the receiver.
+	 * @throws java.lang.ArithmeticException if the receiver is
+	 *                                       a singular matrix.
+	 */
 	public Matrix inverse() throws ArithmeticException {
 		return rows() < lupCRLCriticalDimension
 				? new SymmetricMatrix(
 				(new LUPDecomposition(this)).inverseMatrixComponents())
 				: crlInverse();
 	}
+
+	/**
+	 * Compute the inverse of the receiver in the case of a 1 by 1 matrix.
+	 * Internal use only: no check is made.
+	 *
+	 * @return MatrixAlgebra.SymmetricMatrix
+	 */
 	private SymmetricMatrix inverse1By1() {
 		double[][] newComponents = new double[1][1];
 		newComponents[0][0] = 1 / components[0][0];
 		return new SymmetricMatrix(newComponents);
 	}
+
+	/**
+	 * Compute the inverse of the receiver in the case of a 2 by 2 matrix.
+	 * Internal use only: no check is made.
+	 *
+	 * @return MatrixAlgebra.SymmetricMatrix
+	 */
 	private SymmetricMatrix inverse2By2() {
 		double[][] newComponents = new double[2][2];
 		double inverseDeterminant = 1 / (components[0][0] * components[1][1]
@@ -77,6 +177,13 @@ public class SymmetricMatrix extends Matrix {
 				-inverseDeterminant * components[1][0];
 		return new SymmetricMatrix(newComponents);
 	}
+
+	/**
+	 * Build a matrix from 3 parts (inverse of split).
+	 *
+	 * @param a MatrixAlgebra.Matrix[]
+	 * @return MatrixAlgebra.SymmetricMatrix
+	 */
 	private static SymmetricMatrix join(Matrix[] a) {
 		int p = a[0].rows();
 		int n = p + a[1].rows();
@@ -94,6 +201,11 @@ public class SymmetricMatrix extends Matrix {
 		}
 		return new SymmetricMatrix(newComponents);
 	}
+
+	/**
+	 * @param n int
+	 * @return int
+	 */
 	private int largestPowerOf2SmallerThan(int n) {
 		int m = 2;
 		int m2;
@@ -104,12 +216,34 @@ public class SymmetricMatrix extends Matrix {
 			m = m2;
 		}
 	}
+
+	/**
+	 * @param a double
+	 * @return MatrixAlgebra.SymmetricMatrix
+	 */
 	public Matrix product(double a) {
 		return new SymmetricMatrix(productComponents(a));
 	}
+
+	/**
+	 * @param a Matrix
+	 * @return Matrix		product of the receiver with the supplied matrix
+	 * @throws IllegalDimension If the number of columns of
+	 *                          the receivers are not equal to the number of rows
+	 *                          of the supplied matrix.
+	 */
 	public SymmetricMatrix product(SymmetricMatrix a) throws IllegalDimension {
 		return new SymmetricMatrix(productComponents(a));
 	}
+
+	/**
+	 * @param a MatrixAlgebra.Matrix
+	 * @return MatrixAlgebra.Matrix	product of the receiver with
+	 *         the transpose of the supplied matrix
+	 * @throws MatrixAlgebra.IllegalDimension If the number of
+	 *                                        columns of the receiver are not equal to the number of
+	 *                                        columns of the supplied matrix.
+	 */
 	public SymmetricMatrix productWithTransposed(SymmetricMatrix a)
 			throws IllegalDimension {
 		if (a.columns() != columns())
@@ -120,15 +254,42 @@ public class SymmetricMatrix extends Matrix {
 							+ a.rows() + " by " + a.columns() + " matrix");
 		return new SymmetricMatrix(productWithTransposedComponents(a));
 	}
+
+	/**
+	 * Same as add ( SymmetricMatrix a), but without dimension checking.
+	 *
+	 * @param a MatrixAlgebra.SymmetricMatrix
+	 * @return MatrixAlgebra.SymmetricMatrix
+	 */
 	protected SymmetricMatrix secureAdd(SymmetricMatrix a) {
 		return new SymmetricMatrix(addComponents(a));
 	}
+
+	/**
+	 * Same as product(SymmetricMatrix a), but without dimension checking.
+	 *
+	 * @param a MatrixAlgebra.SymmetricMatrix
+	 * @return MatrixAlgebra.SymmetricMatrix
+	 */
 	protected SymmetricMatrix secureProduct(SymmetricMatrix a) {
 		return new SymmetricMatrix(productComponents(a));
 	}
+
+	/**
+	 * Same as subtract ( SymmetricMatrix a), but without dimension checking.
+	 *
+	 * @param a MatrixAlgebra.SymmetricMatrix
+	 * @return MatrixAlgebra.SymmetricMatrix
+	 */
 	protected SymmetricMatrix secureSubtract(SymmetricMatrix a) {
 		return new SymmetricMatrix(subtractComponents(a));
 	}
+
+	/**
+	 * Divide the receiver into 3 matrices of approximately equal dimension.
+	 *
+	 * @return MatrixAlgebra.Matrix[]	Array of splitted matrices
+	 */
 	private Matrix[] split() {
 		int n = rows();
 		int p = largestPowerOf2SmallerThan(n);
@@ -152,13 +313,32 @@ public class SymmetricMatrix extends Matrix {
 		answer[2] = new Matrix(c);
 		return answer;
 	}
+
+	/**
+	 * @param a matrixAlgebra.SymmetricMatrix
+	 * @return matrixAlgebra.SymmetricMatrix
+	 * @throws matrixAlgebra.IllegalDimension (from constructor).
+	 */
 	public SymmetricMatrix subtract(SymmetricMatrix a)
 			throws IllegalDimension {
 		return new SymmetricMatrix(subtractComponents(a));
 	}
+
+	/**
+	 * @return matrixAlgebra.Matrix		the same matrix
+	 */
 	public Matrix transpose() {
 		return this;
 	}
+
+	/**
+	 * @param a MatrixAlgebra.SymmetricMatrix
+	 * @return MatrixAlgebra.SymmetricMatrix	product of the tranpose
+	 *         of the receiver with the supplied matrix
+	 * @throws MatrixAlgebra.IllegalDimension If the number of
+	 *                                        rows of the receiver are not equal to
+	 *                                        the number of rows of the supplied matrix.
+	 */
 	public SymmetricMatrix transposedProduct(SymmetricMatrix a)
 			throws IllegalDimension {
 		if (a.rows() != rows())

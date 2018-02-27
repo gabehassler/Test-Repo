@@ -1,8 +1,16 @@
 package dr.app.beauti.alignmentviewer;
+
 import jebl.evolution.sequences.AminoAcids;
+
 import java.awt.*;
+
+/**
+ * @author Andrew Rambaut
+ * @version $Id: AminoAcidDecorator.java,v 1.1 2005/11/11 16:40:41 rambaut Exp $
+ */
 public class AminoAcidDecorator implements StateDecorator {
     Paint[] paints = new Paint[AminoAcids.getStateCount()];
+
     public AminoAcidDecorator() {
         paints[AminoAcids.A_STATE.getIndex()] = new Color(204, 255, 255);
         paints[AminoAcids.C_STATE.getIndex()] = new Color(0, 255, 255);
@@ -31,6 +39,7 @@ public class AminoAcidDecorator implements StateDecorator {
         paints[AminoAcids.STOP_STATE.getIndex()] = Color.GRAY;
         paints[AminoAcids.GAP_STATE.getIndex()] = Color.GRAY;
     };
+
     public Paint getStatePaint(int stateIndex) {
         return paints[stateIndex];
     }

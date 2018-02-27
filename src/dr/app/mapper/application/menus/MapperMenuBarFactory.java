@@ -1,8 +1,16 @@
 package dr.app.mapper.application.menus;
+
 import jam.framework.*;
 import jam.mac.*;
+
 import dr.app.util.OSType;
+
+/**
+ * @author Andrew Rambaut
+ * @version $Id$
+ */
 public class MapperMenuBarFactory extends DefaultMenuBarFactory {
+
     public MapperMenuBarFactory() {
         if (OSType.isMac()) {
             registerMenuFactory(new MapperMacFileMenuFactory());
@@ -14,5 +22,7 @@ public class MapperMenuBarFactory extends DefaultMenuBarFactory {
             registerMenuFactory(new DefaultEditMenuFactory());
             registerMenuFactory(new DefaultHelpMenuFactory());
         }
+
     }
 }
+

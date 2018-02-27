@@ -1,8 +1,25 @@
 package dr.evomodel.speciation;
+
+
+
 import java.util.Stack;
+
 import dr.evolution.tree.SimpleNode;
 import dr.evolution.util.Taxon;
+
 import jebl.util.FixedBitSet;
+
+
+/**
+ * An AlloppNode is an interface implemented by DipHistNode in AlloppDiploidHistory, 
+ * and MulLabNode in AlloppMulLabTree.
+ * The ABC AlloppNode.Abstract contains some common functionality.
+ * 
+ * @author Graham Jones
+ *         Date: 20/03/2012
+ */
+
+
 public interface AlloppNode {
 	int nofChildren();
 	AlloppNode getChild(int ch);
@@ -10,16 +27,23 @@ public interface AlloppNode {
 	Taxon getTaxon();
 	double getHeight();
 	FixedBitSet getUnion();
+	
 	void setChild(int ch, AlloppNode newchild);
 	void setAnc(AlloppNode anc);
 	void setTaxon(String name);
 	void setHeight(double height);
 	void setUnion(FixedBitSet union);
 	void addChildren(AlloppNode c0, AlloppNode c1);
+
     String asText(int indentlen);
+	
 	void fillinUnionsInSubtree(int unionsize);
 	AlloppNode nodeOfUnionInSubtree(FixedBitSet x);
+
+
     public abstract class Abstract implements AlloppNode {
+		 
+
 		public void fillinUnionsInSubtree(int unionsize) {
 			if (nofChildren() > 0) {
 				getChild(0).fillinUnionsInSubtree(unionsize);
@@ -30,6 +54,14 @@ public interface AlloppNode {
 				setUnion(union);
 			}
 		}	
+		
+		
+		/* 
+		 * For constructor of AlloppDiploidHistory, AlloppMulLabTree.
+		 * Searches subtree rooted at node for most tipward node 
+		 * whose union contains x. If x is known to be a union of one of the nodes,
+		 * it finds that node, so acts as a map union -> node
+		 */
 		public AlloppNode nodeOfUnionInSubtree(FixedBitSet x) {
 			if (nofChildren() == 0) {
 				return this;
@@ -42,6 +74,12 @@ public interface AlloppNode {
 				return this;
 			}
 		}
+
+
+
+
+
+
         public static String subtreeAsText(AlloppNode node, String s, Stack<Integer> x, int depth, String b) {
             Integer[] y = x.toArray(new Integer[x.size()]);
             StringBuffer indent = new StringBuffer();
@@ -66,6 +104,14 @@ public interface AlloppNode {
             }
             return s + subs;
         }
+
+
+
+        /* For PopsIOSpeciesTreeModel, to restore state after MCMC move
+           * Recursively copies the topology from subtree rooted at node into
+           * tree implemented as array nodes[]. Fills in the unions at the tips:
+           * using piosb which converts species name into union.
+           */
         static int simpletree2piotree(PopsIOSpeciesBindings piosb, AlloppNode[] nodes, int nextn,
                                          SimpleNode snode) {
             if (snode.isExternal()) {
@@ -84,5 +130,8 @@ public interface AlloppNode {
             nextn++;
             return nextn;
         }
+		
 	}
+
+
 }

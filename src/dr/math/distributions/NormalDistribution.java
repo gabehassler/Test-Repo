@@ -1,85 +1,208 @@
+/*
+ * NormalDistribution.java
+ *
+ * Copyright (c) 2002-2013 Alexei Drummond, Andrew Rambaut and Marc Suchard
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.math.distributions;
+
 import dr.math.ErrorFunction;
 import dr.math.MathUtils;
 import dr.math.UnivariateFunction;
+
+/**
+ * normal distribution (pdf, cdf, quantile)
+ *
+ * @author Korbinian Strimmer
+ * @version $Id: NormalDistribution.java,v 1.7 2005/05/24 20:26:01 rambaut Exp $
+ */
 public class NormalDistribution implements Distribution, RandomGenerator {
     //
     // Public stuff
     //
+
+    /**
+     * Constructor
+     */
     public NormalDistribution(double mean, double sd) {
         this.m = mean;
         this.sd = sd;
     }
+
     public double getMean() {
         return m;
     }
+
     public void setMean(double value) {
         m = value;
     }
+
     public double getSD() {
         return sd;
     }
+
     public void setSD(double value) {
         sd = value;
     }
+
     public double pdf(double x) {
         return pdf(x, m, sd);
     }
+
     public double logPdf(double x) {
         return logPdf(x, m, sd);
     }
+
     public double cdf(double x) {
         return cdf(x, m, sd);
     }
+
     public double quantile(double y) {
         return quantile(y, m, sd);
     }
+
     public double mean() {
         return mean(m, sd);
     }
+
     public double variance() {
         return variance(m, sd);
     }
+
     public final UnivariateFunction getProbabilityDensityFunction() {
         return pdfFunction;
     }
+
     private final UnivariateFunction pdfFunction = new UnivariateFunction() {
         public final double evaluate(double x) {
             return pdf(x);
         }
+
         public final double getLowerBound() {
             return Double.NEGATIVE_INFINITY;
         }
+
         public final double getUpperBound() {
             return Double.POSITIVE_INFINITY;
         }
     };
+
+    /**
+     * probability density function
+     *
+     * @param x  argument
+     * @param m  mean
+     * @param sd standard deviation
+     * @return pdf at x
+     */
     public static double pdf(double x, double m, double sd) {
         double a = 1.0 / (Math.sqrt(2.0 * Math.PI) * sd);
         double b = -(x - m) * (x - m) / (2.0 * sd * sd);
+
         return a * Math.exp(b);
     }
+
+    /**
+     * the natural log of the probability density function of the distribution
+     *
+     * @param x  argument
+     * @param m  mean
+     * @param sd standard deviation
+     * @return log pdf at x
+     */
     public static double logPdf(double x, double m, double sd) {
         double a = 1.0 / (Math.sqrt(2.0 * Math.PI) * sd);
         double b = -(x - m) * (x - m) / (2.0 * sd * sd);
+
         return Math.log(a) + b;
     }
+
+    /**
+     * cumulative density function
+     *
+     * @param x  argument
+     * @param m  mean
+     * @param sd standard deviation
+     * @return cdf at x
+     */
     public static double cdf(double x, double m, double sd) {
         return cdf(x, m, sd, false);
 //        double a = (x - m) / (Math.sqrt(2.0) * sd);
 //
 //        return 0.5 * (1.0 + ErrorFunction.erf(a));
     }
+
+    /**
+     * quantiles (=inverse cumulative density function)
+     *
+     * @param z  argument
+     * @param m  mean
+     * @param sd standard deviation
+     * @return icdf at z
+     */
     public static double quantile(double z, double m, double sd) {
         return m + Math.sqrt(2.0) * sd * ErrorFunction.inverseErf(2.0 * z - 1.0);
     }
+
+    /**
+     * mean
+     *
+     * @param m  mean
+     * @param sd standard deviation
+     * @return mean
+     */
     public static double mean(double m, double sd) {
         return m;
     }
+
+    /**
+     * variance
+     *
+     * @param m  mean
+     * @param sd standard deviation
+     * @return variance
+     */
     public static double variance(double m, double sd) {
         return sd * sd;
     }
+
+
+    /**
+     * A more accurate and faster implementation of the cdf (taken from function pnorm in the R statistical language)
+     * This implementation has discrepancies depending on the programming language and system architecture
+     * In Java, returned values become zero once z reaches -37.5193 exactly on the machine tested
+     * In the other implementation, the returned value 0 at about z = -8
+     * In C, this 0 value is reached approximately z = -37.51938
+     * <p/>
+     * Will later need to be optimised for BEAST
+     *
+     * @param x     argument
+     * @param mu    mean
+     * @param sigma standard deviation
+     * @param log_p is p logged
+     * @return cdf at x
+     */
     public static double cdf(double x, double mu, double sigma, boolean log_p) {
+
         if (Double.isNaN(x) || Double.isNaN(mu) || Double.isNaN(sigma)) {
             return Double.NaN;
         }
@@ -98,11 +221,26 @@ public class NormalDistribution implements Distribution, RandomGenerator {
         }
         return standardCDF(p, log_p);
     }
+
+    /**
+     * A more accurate and faster implementation of the cdf (taken from function pnorm in the R statistical language)
+     * This implementation has discrepancies depending on the programming language and system architecture
+     * In Java, returned values become zero once z reaches -37.5193 exactly on the machine tested
+     * In the other implementation, the returned value 0 at about z = -8
+     * In C, this 0 value is reached approximately z = -37.51938
+     * <p/>
+     * Will later need to be optimised for BEAST
+     *
+     * @param x     argument
+     * @param log_p is p logged
+     * @return cdf at x
+     */
     public static double standardCDF(double x, boolean log_p) {
         boolean i_tail = false;
         if (Double.isNaN(x)) {
             return Double.NaN;
         }
+
         double xden, xnum, temp, del, eps, xsq, y;
         int i;
         double p = x, cp = Double.NaN;
@@ -110,6 +248,7 @@ public class NormalDistribution implements Distribution, RandomGenerator {
         eps = DBL_EPSILON * 0.5;
         lower = !i_tail;
         upper = i_tail;
+
         y = Math.abs(x);
         if (y <= 0.67448975) { /* Normal.quantile(3/4, 1, 0) = 0.67448975 */
             if (y > eps) {
@@ -139,6 +278,8 @@ public class NormalDistribution implements Distribution, RandomGenerator {
                 }
             }
         } else if (y <= M_SQRT_32) {
+            /* Evaluate pnorm for 0.67448975 = Normal.quantile(3/4, 1, 0) < |x| <= sqrt(32) ~= 5.657 */
+
             xnum = c[8] * y;
             xden = y;
             for (i = 0; i < 7; i++) {
@@ -146,6 +287,7 @@ public class NormalDistribution implements Distribution, RandomGenerator {
                 xden = (xden + d[i]) * y;
             }
             temp = (xnum + c[7]) / (xden + d[7]);
+
             //do_del(y);
             //swap_tail;
             //#define do_del(X)							\
@@ -169,8 +311,16 @@ public class NormalDistribution implements Distribution, RandomGenerator {
                 cp = temp;
             }
         }
+        /* else	  |x| > sqrt(32) = 5.657 :
+         * the next two case differentiations were really for lower=T, log=F
+         * Particularly	 *not*	for  log_p !
+         * Cody had (-37.5193 < x  &&  x < 8.2924) ; R originally had y < 50
+         * Note that we do want symmetry(0), lower/upper -> hence use y
+         */
         else if (log_p || (lower && -37.5193 < x && x < 8.2924)
                 || (upper && -8.2924 < x && x < 37.5193)) {
+
+            /* Evaluate pnorm for x in (-37.5, -5.657) union (5.657, 37.5) */
             xsq = 1.0 / (x * x);
             xnum = p_[5] * xsq;
             xden = xsq;
@@ -180,6 +330,7 @@ public class NormalDistribution implements Distribution, RandomGenerator {
             }
             temp = xsq * (xnum + p_[4]) / (xden + q[4]);
             temp = (M_1_SQRT_2PI - temp) / y;
+
             //do_del(x);
             xsq = ((int) (x * CUTOFF)) * 1.0 / CUTOFF;
             del = (x - xsq) * (x + xsq);
@@ -210,9 +361,13 @@ public class NormalDistribution implements Distribution, RandomGenerator {
             }
         }
         return p;
+
     }
+
     // Private
+
     protected double m, sd;
+
     private static final double[] a = {
             2.2352520354606839287,
             161.02823106855587881,
@@ -262,10 +417,13 @@ public class NormalDistribution implements Distribution, RandomGenerator {
             0.00378239633202758244,
             7.29751555083966205e-5
     };
+
     private static final int CUTOFF = 16; /* Cutoff allowing exact "*" and "/" */
+
     private static final double M_SQRT_32 = 5.656854249492380195206754896838; /* The square root of 32 */
     private static final double M_1_SQRT_2PI = 0.398942280401432677939946059934;
     private static final double DBL_EPSILON = 2.2204460492503131e-016;
+
     public static double standardTail(double x, boolean isUpper) {
         if (x < 0.0D) {
             isUpper = !isUpper;
@@ -287,26 +445,33 @@ public class NormalDistribution implements Distribution, RandomGenerator {
         }
         return d1;
     }
+
     public static double tailCDF(double x, double mu, double sigma) {
         return standardTail((x - mu) / sigma, true);
     }
+
     public static double tailCDF(double x, double mu, double sigma, boolean isUpper) {
         return standardTail((x - mu) / sigma, isUpper);
     }
+
+
     public double tailCDF(double x) {
         return standardTail((x - this.m) / this.sd, true);
     }
+
     static void testTail(double x, double mu, double sigma) {
         double cdf1 = NormalDistribution.cdf(x, mu, sigma);
         double tail1 = 1.0 - cdf1;
         double cdf2 = NormalDistribution.cdf(x, mu, sigma, false);
         double tail2 = 1.0 - cdf2;
         double tail3 = NormalDistribution.tailCDF(x, mu, sigma);
+
         System.out.println(">" + x + " N(" + mu + ", " + sigma + ")");
         System.out.println("Original CDF: " + tail1);
         System.out.println("     New CDF: " + tail2);
         System.out.println("     tailCDF: " + tail3);
     }
+
     public static void main(String[] args) {
         testTail(0.1, 0.0, 1.0);
         System.out.println();
@@ -322,6 +487,7 @@ public class NormalDistribution implements Distribution, RandomGenerator {
         System.out.println();
         testTail(10, 0.0, 1.0);
     }
+
     // RandomGenerator interface
     public Object nextRandom() {
         double eps = MathUtils.nextGaussian();
@@ -329,6 +495,7 @@ public class NormalDistribution implements Distribution, RandomGenerator {
         eps += getMean();
         return eps;
     }
+
     public double logPdf(Object x) {
         double v = (Double) x;
         return logPdf(x);

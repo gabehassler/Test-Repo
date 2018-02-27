@@ -1,21 +1,58 @@
+/*
+ * DiscreteKMLString.java
+ *
+ * Copyright (C) 2002-2010 BEAST Development Team
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.app.phylogeography.tools;
+
 import jebl.evolution.trees.RootedTree;
 import jebl.evolution.graphs.Node;
 import jebl.evolution.taxa.Taxon;
+
 import java.io.PrintWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
+
+/**
+ * @author Philippe Lemey
+ * @author Andrew Rambaut
+ * @author Marc A. Suchard
+ */
 public class DiscreteKMLString {
+
     String annotation = "state";
+
     //input related variables
     RootedTree treeToExport;
     String documentName;
     String[] stateNames;
     double[][] stateCoordinates;
     double timeScaler = 1;
+
     double branchWidthConstant = 2.0;   // the width of branches will be stateProbability*branchWidthMultiplier+branchWidthConstant
     double branchWidthMultiplier = 5.0;
+
     double divider = 50; // this is to chop up the branches of the surface tree in 'divider' segments
     //divider = (2*(int)(distance/25)); --> this is further down overriding the usual divider
     boolean useStateProbability = true; // use state probabilities for branch width
@@ -29,32 +66,41 @@ public class DiscreteKMLString {
     boolean arcTimeHeight = false; // the height of the arcs is proportional to the time the branch spans, by default archeights are proportional to the distance between locations
     double altitudeFactor = 1000; // this is the factor with which to multiply the time of the branch to get the altitude for that branch in the surface Tree
     boolean temporary = false;
+
     double mostRecentDate;  // required to convert heights to calendar dates
     boolean ancient = false;
+
     double[] posteriorMinAndMax = new double[2];  // used to calibrate the color range for branches
     double[] heightMinAndMax = new double[2];   // used to calibrate the color range for branches
+
     //circles
     int numberOfIntervals = 100;
     boolean autoRadius = false;
     double radius = 40000;
     String circleOpacity = "8F";
+
     //some taxa may have different coordinates than its state
     boolean coordinatesForTaxa = false;
     String[] taxaNames;
     double[][] taxaCoordinates;
+
     //treeSlices
     //String treeSliceBranchColor = "FFFF00"; //red: 0000FF green: 00FF00 magenta: FF00FF white: FFFFFF yellow: 00FFFF cyan: FFFF00
     double treeSliceBranchWidth = 3.5;
     boolean showBranchAtMidPoint = false; // shows complete branch for slice if time is more recent than the branch's midpoint
+
     //everything is written to separate buffers, and than collected in structured KML document by compileBuffer
     StringBuffer branchesBuffer = new StringBuffer();
     StringBuffer circleBuffer = new StringBuffer();
     StringBuffer locationsBuffer = new StringBuffer();
     StringBuffer styleBuffer = new StringBuffer();
     StringBuffer treeSliceBuffer = new StringBuffer();
+
     private static final PrintStream progressStream = System.out;
+
     public DiscreteKMLString(){
     }
+
     public DiscreteKMLString(RootedTree tree, String annotation, String name, double date, String[][] locations){
         treeToExport = tree;
         this.annotation = annotation;
@@ -62,21 +108,26 @@ public class DiscreteKMLString {
         mostRecentDate = date;
         double[][] locationCoordinates = new double[locations.length][2];
         String[] locationNames = new String[locations.length];
+
         double minLat = Double.MAX_VALUE;
         double maxLat = -Double.MAX_VALUE;
         double minLong = Double.MAX_VALUE;
         double maxLong = -Double.MAX_VALUE;
+
         getTaxaNamesCoordinates(locations, locationNames,locationCoordinates);
 //        overides default radius
 //        if (autoRadius) {
 //            radius = 100*Math.abs(maxLat-minLat)*Math.abs(maxLong-minLong);
 //       }
+
         stateCoordinates = locationCoordinates;
         stateNames = locationNames;
+
         if (mostRecentDate - (treeToExport.getHeight(treeToExport.getRootNode())*timeScaler) < 0) {
             ancient = true;
         }
     }
+
     public DiscreteKMLString(RootedTree tree, String annotation, String name, double date, String[][] stateLocations, String startBranchColor, String endBranchColor, double timeScaler){
         treeToExport = tree;
         this.annotation = annotation;
@@ -85,26 +136,32 @@ public class DiscreteKMLString {
         double[][] stateLocationCoordinates = new double[stateLocations.length][2];
         String[] stateLocationNames = new String[stateLocations.length];
         //extra arrays for taxa coordinates
+
         double minLat = Double.MAX_VALUE;
         double maxLat = -Double.MAX_VALUE;
         double minLong = Double.MAX_VALUE;
         double maxLong = -Double.MAX_VALUE;
+
         getTaxaNamesCoordinates(stateLocations, stateLocationNames,stateLocationCoordinates);
 //        get taxa coordinates and names, and turn the boolean to true
         coordinatesForTaxa = false;
+
         //overides default radius
         if (autoRadius) {
             radius = 100*Math.abs(maxLat-minLat)*Math.abs(maxLong-minLong);
         }
+
         stateCoordinates = stateLocationCoordinates;
         stateNames = stateLocationNames;
         this.startBranchColor = startBranchColor;
         this.endBranchColor = endBranchColor;
         this.timeScaler = timeScaler;
+
         if (mostRecentDate - (treeToExport.getHeight(treeToExport.getRootNode())*timeScaler) < 0) {
             ancient = true;
         }
     }
+
     public DiscreteKMLString(RootedTree tree, String annotation, String name, double date, String[][] stateLocations, String startBranchColor, String endBranchColor, double timeScaler, String[][] taxaLocations){
         treeToExport = tree;
         this.annotation = annotation;
@@ -115,17 +172,21 @@ public class DiscreteKMLString {
         //extra arrays for taxa coordinates
         double[][] taxaLocationCoordinates = new double[taxaLocations.length][2];
         String[] taxaLocationNames = new String[taxaLocations.length];
+
         double minLat = Double.MAX_VALUE;
         double maxLat = -Double.MAX_VALUE;
         double minLong = Double.MAX_VALUE;
         double maxLong = -Double.MAX_VALUE;
+
         //get taxa coordinates and names, and turn the boolean to true
         getTaxaNamesCoordinates(taxaLocations, taxaLocationNames,taxaLocationCoordinates);
         coordinatesForTaxa = true;
+
         //overides default radius
 //        if (autoRadius) {
 //            radius = 100*Math.abs(maxLat-minLat)*Math.abs(maxLong-minLong);
 //        }
+
         stateCoordinates = stateLocationCoordinates;
         stateNames = stateLocationNames;
         taxaCoordinates = taxaLocationCoordinates;
@@ -136,10 +197,12 @@ public class DiscreteKMLString {
         //System.out.println(timeScaler);
         //System.out.println(startBranchColor);
         //System.out.println(endBranchColor);
+
         if (mostRecentDate - (treeToExport.getHeight(treeToExport.getRootNode())*timeScaler) < 0) {
             ancient = true;
         }
     }
+
     public DiscreteKMLString(RootedTree tree, String annotation, String[][] stateLocations, String name, double date, double timeScaler, double divider, double branchWidthConstant, double branchWidthMultiplier, boolean useStateProbability, double branchWidth, String startBranchColor, String endBranchColor, String branchColor, boolean useHeights, boolean usePosterior, boolean arcBranches, boolean arcTimeHeight, double altitudeFactor, boolean temporary, int numberOfIntervals, double radius, String circleOpacity, boolean coordinatesForTaxa, String[][] taxaCoordinates, boolean makeTreeSlices) {
         treeToExport = tree;
         this.annotation = annotation;
@@ -154,12 +217,14 @@ public class DiscreteKMLString {
             taxaLocationCoordinates = new double[taxaCoordinates.length][2];
             taxaLocationNames = new String[taxaCoordinates.length];
         }
+
         double[] minMaxLatLong = getMinMaxLatLong(stateLocations, stateLocationNames,stateLocationCoordinates);
         getTaxaNamesCoordinates(stateLocations, stateLocationNames,stateLocationCoordinates);
         //get taxa coordinates and names, and turn the boolean to true
         if (coordinatesForTaxa) {
             getTaxaNamesCoordinates(taxaCoordinates, taxaLocationNames,taxaLocationCoordinates);
         }
+
         stateCoordinates = stateLocationCoordinates;
         stateNames = stateLocationNames;
         this.taxaCoordinates = taxaLocationCoordinates;
@@ -167,9 +232,11 @@ public class DiscreteKMLString {
         this.startBranchColor = startBranchColor;
         this.endBranchColor = endBranchColor;
         this.timeScaler = timeScaler;
+
         if (mostRecentDate - (treeToExport.getHeight(treeToExport.getRootNode())*timeScaler) < 0) {
             ancient = true;
         }
+
         this.divider = divider;
         this.branchWidthConstant = branchWidthConstant;
         this.branchWidthMultiplier = branchWidthMultiplier;
@@ -191,10 +258,13 @@ public class DiscreteKMLString {
             this.radius = radius;
         }
         this.circleOpacity = circleOpacity;
+
         //System.out.println(useHeights+"\t"+startBranchColor+"\t"+endBranchColor);
+
         if (!makeTreeSlices) {
             progressStream.println("\rtime attributes:");
             String[] yearMonthDay = convertToYearMonthDay(mostRecentDate);
+
             progressStream.println("\tmost recent sampling date = "+mostRecentDate+" ("+yearMonthDay[0]+"-"+yearMonthDay[1]+"-"+yearMonthDay[2]+"), timeScaler = "+timeScaler);
             progressStream.println("\rbranch attributes:" );
             progressStream.println("\tbranch segments = "+this.divider);
@@ -222,6 +292,7 @@ public class DiscreteKMLString {
                     progressStream.println("\t\tarch height proportional to the time elapsed the branch");
                 } else {
                     progressStream.println("\t\tarch height proportional to the distance represented by the state change along the branch");
+
                 }
                 progressStream.println("\t\t arch height mulitplier = "+altitudeFactor);
             }
@@ -234,12 +305,17 @@ public class DiscreteKMLString {
             progressStream.println("\tnumber of segments to represent the circle = "+ this.numberOfIntervals);
         }
     }
+
+
     public void writeTreeToKML() {
+
         int nodeNumber = 0;
+
         posteriorMinAndMax[1] = 1;
         posteriorMinAndMax[0] = getPosteriorMin(treeToExport);
         heightMinAndMax[0] = 0;
         heightMinAndMax[1] = treeToExport.getHeight(treeToExport.getRootNode());
+
         for (Node node : treeToExport.getNodes()) {
             nodeNumber++;
             String state = ((((String)node.getAttribute(annotation)).replaceAll("\"","")).replaceAll(" ","")).trim();
@@ -247,17 +323,24 @@ public class DiscreteKMLString {
             if (state.contains("+")) {
                 state = state.substring(0,state.indexOf("+"));
             }
+
+
             if (!treeToExport.isRoot(node)) {
+
                 Node parentNode = treeToExport.getParent(node);
+
                 // test to see node has the attribute
                 Object testAttribute = parentNode.getAttribute(annotation);
                 if (testAttribute == null) {
                     System.err.print("An internal node has no state attribute; make sure to set the posterior probability limit to 0 when annotating an MCC tree in TreeAnnotator!");        
                 }
+
                 String parentState = ((((String)parentNode.getAttribute(annotation)).replaceAll("\"","")).replaceAll(" ","")).trim();
+
                 if (parentState.contains("+")) {
                     parentState = parentState.substring(0,parentState.indexOf('+'));
                 }
+
                 boolean considerTaxonCoordinateForThisNode = false;
                 if (coordinatesForTaxa) {
                     if (treeToExport.isExternal(node)) {
@@ -266,7 +349,9 @@ public class DiscreteKMLString {
                         }
                     }
                 }
+
                 if (!(state.toLowerCase()).equals(parentState.toLowerCase()) || considerTaxonCoordinateForThisNode) {
+
                     double stateProbability = (Double)node.getAttribute(annotation+".prob");
                     double latitude = getCoordinate(state, stateNames, stateCoordinates, 0);
                     double longitude = getCoordinate(state, stateNames, stateCoordinates, 1);
@@ -279,13 +364,17 @@ public class DiscreteKMLString {
                             longitude  = getTaxaCoordinate(treeToExport.getTaxon(node), taxaNames, taxaCoordinates, 1);
                         }
                     }
+
                     if ((latitude == 0) && (longitude == 0)) {
                         System.err.println(state+" has no coordinate??");
                     }
+
                     double parentStateProbability = (Double)parentNode.getAttribute(annotation+".prob");
                     double parentLatitude = getCoordinate(parentState, stateNames, stateCoordinates, 0);
                     double parentLongitude = getCoordinate(parentState, stateNames, stateCoordinates, 1);
+
                     //System.out.println(latitude+"\t"+parentLatitude+"\t"+longitude+"\t"+parentLongitude);
+
                     // distance used for chopping up and altitude
                     double distance = (3958*Math.PI*Math.sqrt((parentLatitude-latitude)*(parentLatitude-latitude)+Math.cos(parentLatitude/57.29578)*Math.cos(latitude/57.29578)*(parentLongitude-longitude)*(parentLongitude-longitude))/180);
                     double maxAltitude;
@@ -307,16 +396,23 @@ public class DiscreteKMLString {
                             longitudeDifference = (180-parentLongitude) + (180+longitude);
                         }                       
                     }
+
                     branchesBuffer.append("\t<Folder>\r");
+
                     branchesBuffer.append("\t\t\t<name>branch"+ nodeNumber +"</name>\r");
                     //System.out.println("branch "+nodeNumber+"\t+state+"+"\t"+latitude+"\t"+longitude+"\t"+parentLatitude+"\t"+parentLongitude);
+
                     //divider dependent on distance
                     //divider = (2*(int)(distance/25));
+
                     double currentLongitude1 = 0;
                     double currentLongitude2 = 0;
                     for (int a = 0; a < divider; a ++) {
+
                         branchesBuffer.append("\t\t<Placemark>\r");
+
                         branchesBuffer.append("\t\t\t<name>branch"+ nodeNumber +"_part"+(a+1)+"</name>\r");
+
                         branchesBuffer.append("\t\t\t<TimeSpan>\r");
                         //convert height of the branch segment to a real date (based on th date for the most recent sample)
                         double date = mostRecentDate - ((treeToExport.getHeight(node)*timeScaler) + (a + 1) *
@@ -335,6 +431,7 @@ public class DiscreteKMLString {
                         } else {
                             branchesBuffer.append("\t\t\t\t<begin>"+yearMonthDay[0]+"-"+yearMonthDay[1]+"-"+yearMonthDay[2]+"</begin>\r");
                         }
+
                         if (temporary) {
                             if (ancient) {
                                 branchesBuffer.append("\t\t\t\t<end>"+Math.round(endDate)+"</end>\r");
@@ -343,28 +440,36 @@ public class DiscreteKMLString {
                             }
                         }
                         branchesBuffer.append("\t\t\t</TimeSpan>\r");
+
                         branchesBuffer.append("\t\t\t<styleUrl>#branch"+ nodeNumber +"_part"+(a+1)+"_style</styleUrl>\r");
                         // branchesBuffer.append("\t\t\t<styleUrl>#surfaceTreeBranch"+nodeNumber+"_style</styleUrl>\r");
                         branchesBuffer.append("\t\t\t<LineString>\r");
+
                         if (arcBranches) {
                             branchesBuffer.append("\t\t\t\t<altitudeMode>absolute</altitudeMode>\r");
                             branchesBuffer.append("\t\t\t\t<tessellate>1</tessellate>\r");
                         } else {
                             branchesBuffer.append("\t\t\t\t<altitudeMode>clampToGround</altitudeMode>\r");
                         }
+
                         branchesBuffer.append("\t\t\t\t<coordinates>\r");
+
                         if (longitudeBreak) {
+
                             if (longitude > 0) {
                                 currentLongitude1 = longitude+a*(longitudeDifference/divider);
+
                                 if (currentLongitude1 < 180) {
                                    branchesBuffer.append("\t\t\t\t\t"+currentLongitude1+",");
                                    //System.out.println("1 currentLongitude1 < 180\t"+currentLongitude1+"\t"+longitude);
+
                                 } else {
                                    branchesBuffer.append("\t\t\t\t\t"+(-180-(180-currentLongitude1))+",");
                                    //System.out.println("2 currentLongitude1 > 180\t"+currentLongitude1+"\t"+(-180-(180-currentLongitude1))+"\t"+longitude);
                                 }
                             } else {
                                 currentLongitude1 = longitude-a*(longitudeDifference/divider);
+
                                 if (currentLongitude1 > (-180)) {
                                     branchesBuffer.append("\t\t\t\t\t"+currentLongitude1+",");
                                     //System.out.println("currentLongitude1 > -180\t"+currentLongitude1+"\t"+longitude);
@@ -373,14 +478,18 @@ public class DiscreteKMLString {
                                     //System.out.println("currentLongitude1 > -180\t"+(180+(currentLongitude1+180))+"\t"+longitude);
                                  }
                             }
+
                         } else {
                             branchesBuffer.append("\t\t\t\t\t"+(longitude+a*(longitudeDifference/divider))+",");
                         }
                         branchesBuffer.append((latitude+a*(latitudeDifference/divider))+",");
                         branchesBuffer.append((maxAltitude*Math.sin(Math.acos(1 - a*(1.0/(divider/2.0)))))+"\r");
+
                         if (longitudeBreak) {
+
                             if (longitude > 0) {
                                 currentLongitude2 = longitude+(a+1)*(longitudeDifference/divider);
+
                                 if (currentLongitude2 < 180) {
                                    branchesBuffer.append("\t\t\t\t\t"+(currentLongitude2)+",");
                                 } else {
@@ -388,20 +497,25 @@ public class DiscreteKMLString {
                                 }
                             } else {
                                 currentLongitude2 = longitude-(a+1)*(longitudeDifference/divider);
+
                                 if (currentLongitude2 > (-180)) {
                                     branchesBuffer.append("\t\t\t\t\t"+currentLongitude2+",");
                                  } else {
                                     branchesBuffer.append("\t\t\t\t\t"+(180+(currentLongitude2+180))+",");
                                  }
                             }
+
                         } else {
                             branchesBuffer.append("\t\t\t\t\t"+(longitude+(a+1)*(longitudeDifference/divider))+",");
                         }
                         branchesBuffer.append((latitude+(a+1)*(latitudeDifference/divider))+",");
                         branchesBuffer.append((maxAltitude*Math.sin(Math.acos(1 - (a+1)*(1.0/(divider/2.0)))))+"\r");
+
                         branchesBuffer.append("\t\t\t\t</coordinates>\r");
+
                         branchesBuffer.append("\t\t\t</LineString>\r");
                         branchesBuffer.append("\t\t</Placemark>\r");
+
                         styleBuffer.append("\t<Style id=\"branch"+ nodeNumber +"_part"+(a+1)+"_style\">\r");
                         styleBuffer.append("\t\t<LineStyle>\r");
                         if (useStateProbability) {
@@ -422,34 +536,48 @@ public class DiscreteKMLString {
                         }
                         styleBuffer.append("\t\t</LineStyle>\r");
                         styleBuffer.append("\t</Style>\r");
+
                     }
                     branchesBuffer.append("\t</Folder>\r");
                 }
+
             }
         }
     }
+
     public void writeTreeToKML(double time, double treeSliceBranchWidth, boolean showBranchAtMidPoint) {
+
         treeSliceBuffer.append("\t<Folder>\r");
         treeSliceBuffer.append("\t\t\t<name>tree"+ time +"</name>\r");
+
         int nodeNumber = 0;
+
         posteriorMinAndMax[1] = 1;
         posteriorMinAndMax[0] = getPosteriorMin(treeToExport);
         heightMinAndMax[0] = 0;
         heightMinAndMax[1] = treeToExport.getHeight(treeToExport.getRootNode());
+
         for (Node node : treeToExport.getNodes()) {
             nodeNumber++;
             String state = ((((String)node.getAttribute(annotation)).replaceAll("\"","")).replaceAll(" ","")).trim();
+
             //in case the location state is a concatenation of other states (occurs when they get the same posterior prob)
             if (state.contains("+")) {
                 state = state.substring(0,state.indexOf("+"));
             }
+
+
             if (!treeToExport.isRoot(node)) {
+
                 Node parentNode = treeToExport.getParent(node);
                 String parentState = ((((String)parentNode.getAttribute(annotation)).replaceAll("\"","")).replaceAll(" ","")).trim();
+
                 if (parentState.contains("+")) {
                     parentState = parentState.substring(0,parentState.indexOf('+'));
                 }
+
                 if (!(state.toLowerCase()).equals(parentState.toLowerCase())) {
+
                     double latitude = getCoordinate(state, stateNames, stateCoordinates, 0);
                     double longitude = getCoordinate(state, stateNames, stateCoordinates, 1);
                     //System.out.println(latitude+"\t"+longitude);
@@ -457,19 +585,26 @@ public class DiscreteKMLString {
                         System.err.println(state+" has no coordinate??");
                     }
                     double nodeHeight = treeToExport.getHeight(node);
+
                     double parentLatitude = getCoordinate(parentState, stateNames, stateCoordinates, 0);
                     double parentLongitude = getCoordinate(parentState, stateNames, stateCoordinates, 1);
                     double parentHeight = treeToExport.getHeight(treeToExport.getParent(node))
                             ;
+
                     boolean longitudeBreak = longitudeBreak(longitude,parentLongitude);
                     //System.out.println(latitude+"\t"+parentLatitude+"\t"+longitude+"\t"+parentLongitude);
+
                     if ((parentHeight > time) && (nodeHeight <= time)) {
                         //extrapolate lat/long
+
                         if (!showBranchAtMidPoint) {
+
                             latitude = parentLatitude + (latitude-parentLatitude)*((parentHeight-time)/(parentHeight-nodeHeight));
+
                             if (longitudeBreak) {
                                 if (longitude > 0) {
                                     double currentLongitude = parentLongitude - ((180-longitude)+(180+parentLongitude))*((parentHeight-time)/(parentHeight-nodeHeight));
+
                                     if (currentLongitude < -180) {
                                        longitude = (180+(180+currentLongitude));
                                        //System.out.print("break1"+currentLongitude+"\t"+longitude);
@@ -493,6 +628,7 @@ public class DiscreteKMLString {
                             }
                         }
                     }
+
                     if (((parentHeight*timeScaler > time) && !(showBranchAtMidPoint)) || (showBranchAtMidPoint && (time < ((nodeHeight+((parentHeight-nodeHeight)/2.0))*timeScaler)))) {
                         treeSliceBuffer.append("\t\t<Placemark>\r");
                         treeSliceBuffer.append("\t\t\t<name>branch"+ nodeNumber +"_"+parentState+"_"+state+"</name>\r");
@@ -506,6 +642,7 @@ public class DiscreteKMLString {
                         treeSliceBuffer.append("\t\t\t\t\t"+parentLongitude+","+parentLatitude+",0\r");
                         treeSliceBuffer.append("\t\t\t\t</coordinates>\r");
                         treeSliceBuffer.append("\t\t\t</LineString>\r");
+
                         treeSliceBuffer.append("\t\t</Placemark>\r");
                         styleBuffer.append("\t<Style id=\"tree"+ time +"branch"+ nodeNumber +"_style\">\r");
                         styleBuffer.append("\t\t<LineStyle>\r");
@@ -516,55 +653,85 @@ public class DiscreteKMLString {
                         styleBuffer.append("\t</Style>\r");
                     }
                 }
+
             }
         }
         treeSliceBuffer.append("\t</Folder>\r");
     }
+
     public void writeLocationsKML() {
+
         for (int i = 0; i < stateNames.length; i++) {
+
             locationsBuffer.append("\t\t\t<Placemark>\r");
             locationsBuffer.append("\t\t\t\t<name>"+stateNames[i]+"</name>\r");
+
             locationsBuffer.append("\t\t\t\t<Point>\r");
             locationsBuffer.append("\t\t\t\t\t<altitudeMode>relativeToGround</altitudeMode>\r");
             locationsBuffer.append("\t\t\t\t\t<coordinates>"+stateCoordinates[i][1]+","+stateCoordinates[i][0]+","+"0</coordinates>\r");
             locationsBuffer.append("\t\t\t\t</Point>\r");
+
             locationsBuffer.append("\t\t\t</Placemark>\r");
+
         }
     }
+
     public void writeLineagesToCircles() {
+
         String rootState = null;
+
         double rootHeight = (treeToExport.getHeight(treeToExport.getRootNode()));
         double delta = rootHeight/numberOfIntervals;
+
         double[][] numberOflineages = new double[(numberOfIntervals - 1)][stateNames.length + 1];
+
         for (int i = 0; i < (numberOfIntervals - 1); i ++ ) {
+
             numberOflineages[i][0] = rootHeight-((i+1)*delta);
+
         }
+
         for (int j = 0; j < (numberOfIntervals - 1); j ++ ) {
             for (int k = 0; k < (stateNames.length); k ++ ) {
+
                 int numberOfLineagesOfState = 0;
+
                 int nodeNumber = 0;
                 for (Node node : treeToExport.getNodes()) {
                     nodeNumber ++;
+
                     if (!treeToExport.isRoot(node)) {
+
                          Node parentNode = treeToExport.getParent(node);
                          String state = (((String)node.getAttribute(annotation)).replaceAll("\"","")).trim();
                          String parentState = (((String)parentNode.getAttribute(annotation)).replaceAll("\"","")).trim();
+
+
                          if ((treeToExport.getHeight(node) <= numberOflineages[j][0]) && (treeToExport.getHeight(parentNode) > numberOflineages[j][0])) {
+
                             if ((state.equals(parentState)) && (parentState.equals(stateNames[k]))) {
+
                                 numberOfLineagesOfState ++;
+
                             }
+
                          }
+
+
                     } else {
                         rootState = (((String)node.getAttribute(annotation)).replaceAll("\"","")).trim();
                     }
                 }
+
                 numberOflineages[j][k+1] = numberOfLineagesOfState;
             }
         }
+
         //print2DArray(numberOflineages, "numberOflineages.txt");
         // write the circle for the root
         double rootLat = 0;
         double rootLong = 0;
+
         for (int a = 0; a < stateCoordinates.length; a++ ) {
             if (rootState.equals(stateNames[a])) {
                 rootLat =  stateCoordinates[a][0];
@@ -580,11 +747,14 @@ public class DiscreteKMLString {
         styleBuffer.append("\t\t\t<outline>0</outline>\r");
         styleBuffer.append("\t\t</PolyStyle>\r");
         styleBuffer.append("\t</Style>\r");
+
         //write all other circles
         for (int o = 0; o < (numberOfIntervals - 1); o ++ ) {
             for (int p = 0; p < (stateNames.length); p ++ ) {
+
                 if (numberOflineages[o][p+1] > 0) {
                     writeCircle(stateCoordinates[p][0], stateCoordinates[p][1], 36, radius*Math.sqrt(numberOflineages[o][p+1]), stateNames[p], numberOflineages[o][0]*timeScaler, (numberOflineages[o][0]-delta)*timeScaler, circleBuffer);
+
                 }
             }
             styleBuffer.append("\t<Style id=\"circle_"+numberOflineages[o][0]*timeScaler+"_style\">\r");
@@ -595,47 +765,65 @@ public class DiscreteKMLString {
             styleBuffer.append("\t\t\t<outline>0</outline>\r");
             styleBuffer.append("\t\t</PolyStyle>\r");
             styleBuffer.append("\t</Style>\r");
+
         }
+
     }
+
     public void compileBuffer(StringBuffer buffer) {
+
         buffer.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r");
         buffer.append("<kml xmlns=\"http://earth.google.com/kml/2.2\">\r");
+
         buffer.append("<Document>\r");
+
         buffer.append("\t<name>"+documentName+"</name>\r");
         buffer.append(styleBuffer);
+
         buffer.append("\t<Folder>\r");
         buffer.append("\t<name>branches</name>\r");
         buffer.append("\t<description>branches on which the state changes</description>\r");
         buffer.append(branchesBuffer);
         buffer.append("\t</Folder>\r");
+
         buffer.append("\t<Folder>\r");
         buffer.append("\t\t<name>Locations</name>\r");
         buffer.append("\t\t<description>Location states</description>\r");
         buffer.append(locationsBuffer);
         buffer.append("\t</Folder>\r");
+
         buffer.append("\t<Folder>\r");
         buffer.append("\t\t<name>circles</name>\r");
         buffer.append("\t\t<description>circles representing the number of lineages maintaining that state at any moment</description>\r");
         buffer.append(circleBuffer);
         buffer.append("\t</Folder>\r");
+
         buffer.append("\t<Folder>\r");
         buffer.append("\t\t<name>treeSlices</name>\r");
         buffer.append("\t\t<description>tree slices for particular times</description>\r");
         buffer.append(treeSliceBuffer);
         buffer.append("\t</Folder>\r");
+
         buffer.append("</Document>\r");
+
         buffer.append("</kml>");
+
     }
+
     private static String[] convertToYearMonthDay(double fractionalDate) {
+
         String[] yearMonthDay = new String[3];
+
         int year = (int) fractionalDate;
         String yearString;
+
         if (year < 0) {
            yearMonthDay[0] = ""+year;
            yearMonthDay[1] = ""+0;
            yearMonthDay[2] = ""+0;
            return yearMonthDay;
         }
+
         else if (year < 10) {
             yearString = "000"+year;
         } else if (year < 100) {
@@ -645,37 +833,55 @@ public class DiscreteKMLString {
         } else {
             yearString = ""+year;
         }
+
         yearMonthDay[0]  = yearString;
+
         double fractionalMonth = fractionalDate - year;
+
         int month = ((int) (12.0 * fractionalMonth)) + 1;
         String monthString;
+
         if (month < 10) {
             monthString = "0"+month;
         } else {
             monthString = ""+month;
         }
+
         yearMonthDay[1] = monthString;
+
         int day = ((int) Math.round(30*((12*fractionalMonth +1)- month)) + 1);
         String dayString;
+
         if (day < 10) {
             dayString = "0"+day;
         } else {
             dayString = ""+day;
         }
+
         yearMonthDay[2] = dayString;
+
         return yearMonthDay;
+
     }
+
     private static double getCoordinate(String state, String[] locations, double[][] stateCoordinates, int latlong) {
+
         double coordinate = 0;
+
         for(int i = 0; i<locations.length; i++) {
         	if (locations[i].equals(state)) {
                 coordinate = stateCoordinates[i][latlong];
             }
         }
+
         return coordinate;
     }
+
+
     private static double getPosteriorMin(RootedTree tree) {
+
         double min = 1;
+
         for (Node node : tree.getNodes()) {
             if (!(tree.isRoot(node) || tree.isExternal(node))) {
                 if ((Double)node.getAttribute("posterior") < min) {
@@ -683,26 +889,34 @@ public class DiscreteKMLString {
                 }
              }
         }
+
         return min;
+
     }
     //http://bbs.keyhole.com/ubb/showflat.php/Cat/0/Number/23634/page/vc/fpart/all/vc/1
     private void writeCircle(double centerLat, double centerLong, int numberOfPoints, double radius, String centerState, double beginDate, double endDate, StringBuffer buffer) {
+
         double lat1, long1, lat2, long2;
         double dlat, dlong, d_rad;
         double a, c, d;
         double delta_pts;
         double radial, lat_rad, dlon_rad, lon_rad;
+
         double degreeToRadian = Math.PI/180.0;
+
         String[] begin = convertToYearMonthDay(mostRecentDate - beginDate);
         String[] end = convertToYearMonthDay(mostRecentDate - endDate);
+
         // convert coordinates to radians
         lat1 = Math.toRadians(centerLat);
         long1 = Math.toRadians(centerLong);
+
         //Earth measures
         //Year Name	 a (meters) b (meters) 1/f Where Used
         //1980 International 6,378,137 6,356,752 298.257 Worldwide
         d = radius;
         d_rad = d/6378137;
+
         buffer.append("\t\t\t<Placemark>\r" +
                         "\t\t\t\t<name>"+centerState+"_"+beginDate+"_"+endDate+"</name>\r" +
                //         "<Style>\r" +
@@ -727,28 +941,36 @@ public class DiscreteKMLString {
                         "\t\t\t\t\t<outerBoundaryIs>\r" +
                         "\t\t\t\t\t\t<LinearRing>\r" +
                         "\t\t\t\t\t\t\t<coordinates>\r");
+
         // loop through the array and write path linestrings
+
         for(int i=0; i<=numberOfPoints; i++) {
             delta_pts = 360/(double)numberOfPoints;
             radial = Math.toRadians((double)i*delta_pts);
+
             //This algorithm is limited to distances such that dlon <pi/2
             lat_rad = Math.asin(Math.sin(lat1)* Math.cos(d_rad) + Math.cos(lat1)* Math.sin(d_rad)* Math.cos(radial));
             dlon_rad = Math.atan2(Math.sin(radial)* Math.sin(d_rad)* Math.cos(lat1), Math.cos(d_rad)- Math.sin(lat1)* Math.sin(lat_rad));
             lon_rad = ((long1 + dlon_rad + Math.PI) % (2*Math.PI)) - Math.PI;
+
             buffer.append("\t\t\t\t\t\t\t\t");
             buffer.append(Math.toDegrees(lon_rad) + ", ");
             buffer.append(Math.toDegrees(lat_rad) + ", 0");
             buffer.append('\r');
+
         }
         buffer.append("\t\t\t\t\t\t\t</coordinates>\r" +
                         "\t\t\t\t\t\t</LinearRing>\r" +
                         "\t\t\t\t\t</outerBoundaryIs>\r" +
                         "\t\t\t\t</Polygon>\r" +
                         "\t\t\t</Placemark>\r");
+
+
     }
     private static void print2DArray(double[][] array, String name) {
         try {
             PrintWriter outFile = new PrintWriter(new FileWriter(name), true);
+
             for (int i = 0; i < array.length; i++) {
                 for (int j = 0; j < array[0].length; j++) {
                     outFile.print(array[i][j]+"\t");
@@ -756,16 +978,21 @@ public class DiscreteKMLString {
             outFile.println("");
             }
             outFile.close();
+
         } catch(IOException io) {
            System.err.print("Error writing to file: " + name);
         }
     }
+
     private double[] getMinMaxLatLong( String[][] locations, String[] locationNames, double[][] locationCoordinates) {
+
         double[] minMaxLatLong =  new double[4];
         minMaxLatLong[0] = Double.MAX_VALUE;
         minMaxLatLong[1] = -Double.MAX_VALUE;
         minMaxLatLong[2] = Double.MAX_VALUE;
         minMaxLatLong[3] = -Double.MAX_VALUE;
+
+
         for (int i = 0; i < locations.length; i++) {
             locationCoordinates[i][0] = Double.parseDouble(locations[i][(locations[0].length - 2)]);
             if (locationCoordinates[i][0] < minMaxLatLong[0])  {
@@ -781,27 +1008,37 @@ public class DiscreteKMLString {
             if (locationCoordinates[i][1] > minMaxLatLong[3])  {
                 minMaxLatLong[3] = locationCoordinates[i][1];
             }
+
         }
         return minMaxLatLong;
     }
+
     private void getTaxaNamesCoordinates(String[][] locations, String[] locationNames, double[][] locationCoordinates) {
+
         for (int i = 0; i < locations.length; i++) {
             locationNames[i] = locations[i][(locations[0].length - 3)];  //in a three column file, the name is the first element, so length -3
             locationCoordinates[i][0] = Double.parseDouble(locations[i][(locations[0].length - 2)]);
             locationCoordinates[i][1] = Double.parseDouble(locations[i][(locations[0].length - 1)]);
         }
     }
+
     private static double getTaxaCoordinate(Taxon taxon, String[] locations, double[][] coordinates, int latOrLong) {
+
         double coordinate = 0;
+
         for(int i = 0; i<locations.length; i++) {
         	if ((locations[i].toLowerCase()).equals((taxon.getName()).toLowerCase())) {
                 coordinate = coordinates[i][latOrLong];
             }
         }
+
         return coordinate;
     }
+
     private static boolean taxonHasSeparateCoordinate(Taxon taxon, String[] locations){
+
         boolean hasCoordinate = false;
+
         for(int i = 0; i<locations.length; i++) {
         	if ((locations[i].toLowerCase()).equals((taxon.getName()).toLowerCase())) {
                 hasCoordinate = true;
@@ -810,9 +1047,11 @@ public class DiscreteKMLString {
         return hasCoordinate;
     }
     private static boolean longitudeBreak(double longitude, double parentLongitude){
+
         boolean longitudeBreak = false;
         double trialDistance = 0;
         double longitudeDifference = parentLongitude - longitude;
+
         if (longitude < 0) {
             trialDistance += (longitude + 180);
             trialDistance += (180 - parentLongitude);
@@ -822,6 +1061,7 @@ public class DiscreteKMLString {
             trialDistance += (180 - longitude);
             //System.out.println(parentLongitude+"\t"+longitude+"\t"+trialDistance+"\t"+longitudeDifference);
          }
+
         if (trialDistance < Math.abs(longitudeDifference)) {
             longitudeDifference = trialDistance;
             longitudeBreak = true;

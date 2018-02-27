@@ -1,28 +1,40 @@
 package dr.app.tools;
+
 import dr.evolution.io.Importer;
 import dr.evolution.io.NexusImporter;
 import dr.evolution.tree.FlexibleNode;
 import dr.evolution.tree.FlexibleTree;
 import dr.evolution.tree.NodeRef;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+
+/**
+ * Takes trees from BranchJumpPlotter and a text file listing taxaNames; assumes that the sets of these that have the same
+ * discrete trait form clades. Gives the posterior distribution of the trait that was the origin of the
+ */
 public class TaxaOriginTrait {
+
     private FlexibleTree[] trees;
     private String[] taxaNames;
     private String traitName;
     private String attributeName;
     private String fileNameRoot;
+
     private TaxaOriginTrait(String[] taxa, FlexibleTree[] trees,
                             String attributeName, String fileNameRoot){
         this.taxaNames = taxa;
         this.trees = trees;
         this.attributeName = attributeName;
         this.fileNameRoot = fileNameRoot;
+
         traitName = getTraitName();
     }
+
+
     private FlexibleNode findCommonAncestor(FlexibleTree tree, FlexibleNode[] nodes){
         HashSet<FlexibleNode> doneNodes = new HashSet<FlexibleNode>();
         FlexibleNode currentParent = nodes[0];
@@ -42,29 +54,46 @@ public class TaxaOriginTrait {
         }
         return currentParent;
     }
+
     private String getTraitName(){
         FlexibleTree tree = trees[0];
+
         String traitName = null;
+
         for(int i=0; i<tree.getExternalNodeCount(); i++){
             NodeRef node = tree.getExternalNode(i);
+
             for(String taxaName : taxaNames){
                 if(tree.getNodeTaxon(node).getId().equals(taxaName)){
                     String attributeValue = (String)tree.getNodeAttribute(node, attributeName);
+
                     if(traitName!=null && !traitName.equals(attributeValue)){
                         throw new RuntimeException("Not all taxa given have the same trait value");
                     } else {
                         traitName = attributeValue;
                     }
+
                 }
+
             }
+
         }
+
         return  traitName;
+
     }
+
+
+
     private boolean branchNode(FlexibleTree tree, FlexibleNode node){
         return tree.getChildCount(node)==2;
     }
+
+
+
     private FlexibleNode[] getTipsOfInterest(FlexibleTree tree){
         HashSet<FlexibleNode> tempSet = new HashSet<FlexibleNode>();
+
         for(String taxonName: taxaNames){
             for(int i=0; i<tree.getExternalNodeCount(); i++){
                 if(tree.getNodeTaxon(tree.getExternalNode(i)).toString().equals(taxonName)){
@@ -74,8 +103,10 @@ public class TaxaOriginTrait {
         }
         return tempSet.toArray(new FlexibleNode[tempSet.size()]);
     }
+
     private HashMap<String,String> getIncomingJumpOrigins(FlexibleTree tree){
         HashMap<String,String> out = new HashMap<String, String>();
+
         FlexibleNode[] tips = getTipsOfInterest(tree);
         FlexibleNode mrca = findCommonAncestor(tree, tips);
         HashSet<FlexibleNode> taxaSet = new HashSet<FlexibleNode>(Arrays.asList(tips));
@@ -102,9 +133,13 @@ public class TaxaOriginTrait {
                     }
                 }
             }
+
+
         }
         return out;
     }
+
+
     private HashSet<FlexibleNode> getTipSet(FlexibleTree tree, FlexibleNode node){
         HashSet<FlexibleNode> out = new HashSet<FlexibleNode>();
         if(tree.isExternal(node)){
@@ -117,8 +152,11 @@ public class TaxaOriginTrait {
         }
         return out;
     }
+
     private void tabulateOrigins(){
+
         HashMap<String,Integer> countsMap = new HashMap<String, Integer>();
+
         int count = 0;
         for(FlexibleTree currentTree: trees){
             if(count % 1 == 0){
@@ -131,16 +169,29 @@ public class TaxaOriginTrait {
             }
             count++;
         }
+
         try{
+
                 BufferedWriter outWriter = new BufferedWriter(new FileWriter(fileNameRoot+".csv"));
                 for(String key: countsMap.keySet()){
                     outWriter.write(key+","+countsMap.get(key)+"\n");
                 }
                 outWriter.flush();
+
         } catch(IOException e){
             System.out.println("Failed to write to file");
         }
     }
+
+
+    /*
+    * Arguments:
+    * 0: Trait name
+    * 1: File name for list of taxaNames of interest
+    * 2: File name for trees (output from BranchJumpPlotter)
+    * 3: Output file name root
+    * */
+
     public static void main(String[] args){
         try{
             BufferedReader taxonReader = new BufferedReader(new FileReader(args[1]));
@@ -150,6 +201,7 @@ public class TaxaOriginTrait {
                 tempTaxa.add(line);
             }
             String[] taxa = tempTaxa.toArray(new String[tempTaxa.size()]);
+
             NexusImporter importer = new NexusImporter(new FileReader(args[2]));
             importer.setSuppressWarnings(true);
             ArrayList<FlexibleTree> tempTrees = new ArrayList<FlexibleTree>();
@@ -171,4 +223,6 @@ public class TaxaOriginTrait {
             System.out.println("Failed to import trees");
         }
     }
+
+
 }

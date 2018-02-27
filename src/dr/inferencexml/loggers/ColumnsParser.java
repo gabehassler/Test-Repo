@@ -1,8 +1,14 @@
 package dr.inferencexml.loggers;
+
 import dr.inference.loggers.*;
 import dr.util.Identifiable;
 import dr.xml.*;
+
 import java.util.ArrayList;
+
+/**
+ *
+ */
 public class ColumnsParser extends AbstractXMLObjectParser {
     public static final String COLUMN = "column";
     public static final String LABEL = "label";
@@ -12,19 +18,27 @@ public class ColumnsParser extends AbstractXMLObjectParser {
     public static final String FORMAT = "format";
     public static final String PERCENT = "percent";
     public static final String BOOL = "boolean";
+
     public String getParserName() {
         return COLUMN;
     }
+
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
         String label = xo.getAttribute(LABEL, "");
         final int sf = xo.getAttribute(SIGNIFICANT_FIGURES, -1);
         final int dp = xo.getAttribute(DECIMAL_PLACES, -1);
         final int width = xo.getAttribute(WIDTH, -1);
+
         String format = xo.getAttribute(FORMAT, "");
+
         ArrayList colList = new ArrayList();
+
         for (int i = 0; i < xo.getChildCount(); i++) {
+
             Object child = xo.getChild(i);
             LogColumn[] cols;
+
             if (child instanceof Loggable) {
                 cols = ((Loggable) child).getColumns();
             } else if (child instanceof Identifiable) {
@@ -32,6 +46,7 @@ public class ColumnsParser extends AbstractXMLObjectParser {
             } else {
                 cols = new LogColumn[]{new LogColumn.Default(child.getClass().toString(), child)};
             }
+
             if (format.equals(PERCENT)) {
                 for (int k = 0; k < cols.length; ++k) {
                     if (cols[k] instanceof NumberColumn) {
@@ -45,7 +60,9 @@ public class ColumnsParser extends AbstractXMLObjectParser {
                     }
                 }
             }
+
             for (int j = 0; j < cols.length; j++) {
+
                 if (!label.equals("")) {
                     if (cols.length > 1) {
                         cols[j].setLabel(label + Integer.toString(j + 1));
@@ -53,6 +70,7 @@ public class ColumnsParser extends AbstractXMLObjectParser {
                         cols[j].setLabel(label);
                     }
                 }
+
                 if (cols[j] instanceof NumberColumn) {
                     if (sf != -1) {
                         ((NumberColumn) cols[j]).setSignificantFigures(sf);
@@ -61,28 +79,37 @@ public class ColumnsParser extends AbstractXMLObjectParser {
                         ((NumberColumn) cols[j]).setDecimalPlaces(dp);
                     }
                 }
+
                 if (width > 0) {
                     cols[j].setMinimumWidth(width);
                 }
+
                 colList.add(cols[j]);
             }
         }
+
         LogColumn[] columns = new LogColumn[colList.size()];
         colList.toArray(columns);
+
         return new Columns(columns);
     }
+
     //************************************************************************
     // AbstractXMLObjectParser implementation
     //************************************************************************
+
     public String getParserDescription() {
         return "Specifies formating options for one or more columns in a log file.";
     }
+
     public Class getReturnType() {
         return Columns.class;
     }
+
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
+
     private XMLSyntaxRule[] rules = new XMLSyntaxRule[]{
             new StringAttributeRule(LABEL,
                     "The label of the column. " +
@@ -95,4 +122,5 @@ public class ColumnsParser extends AbstractXMLObjectParser {
             // Anything goes???
             new ElementRule(Object.class, 1, Integer.MAX_VALUE),
     };
+
 }

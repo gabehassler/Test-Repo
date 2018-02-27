@@ -1,4 +1,5 @@
 package dr.geo;
+
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
 import dr.math.distributions.NormalDistribution;
@@ -9,8 +10,17 @@ import dr.geo.contouring.ContourGenerator;
 import dr.geo.contouring.ContourAttrib;
 import dr.geo.contouring.ContourPath;
 import dr.geo.contouring.ContourMaker;
+
 import java.util.Arrays;
+
+/**
+ * KernelDensityEstimator2D creates a bi-variate kernel density smoother for data
+ * @author Marc A. Suchard
+ * @author Philippe Lemey
+ */
+
 public class KernelDensityEstimator2D implements ContourMaker {
+
 //    kde2d =
 //    function (x, y, h, n = 25, lims = c(range(x), range(y)))
 //    {
@@ -32,38 +42,56 @@ public class KernelDensityEstimator2D implements ContourMaker {
 //            nx))/(nx * h[1] * h[2])
 //        return(list(x = gx, y = gy, z = z))
 //    }
+
+    /*
+     * @param x x-coordinates of observations
+     * @param y y-coordinates of observations
+     * @param h bi-variate smoothing bandwidths
+     * @param n smoothed grid size
+     * @param lims bi-variate min/max for grid
+     */
     public KernelDensityEstimator2D(final double[] x, final double[] y, final double[] h, final int n, final double[] lims) {
         this(x, y, h, n, lims, false);
     }
+
     public KernelDensityEstimator2D(final double[] x, final double[] y, final double[] h, final int n, final double[] lims, boolean bandwdithLimited) {
         this.x = x;
         this.y = y;
         if (x.length != y.length)
             throw new RuntimeException("data vectors must be the same length");
+
         this.nx = x.length;
+
         if (n <= 0)
             throw new RuntimeException("must have a positive number of grid points");
         this.n = n;
+
         if (lims != null)
             this.lims = lims;
         else
             setupLims();
+
         this.limitBandwidth = bandwdithLimited;
         if (h != null)
             this.h = h;
         else
             setupH();
+
         doKDE2D();
     }
+    
     public KernelDensityEstimator2D(final double[] x, final double[] y, boolean limitBandwidth) {
         this(x,y,null,50,null,limitBandwidth);
     }
+
     public KernelDensityEstimator2D(final double[] x, final double[] y) {
         this(x,y,null,50,null);
     }
+
     public KernelDensityEstimator2D(final double[] x, final double[] y, final int n) {
         this(x,y,null,n,null);
     }
+
     public void doKDE2D() {
         gx = makeSequence(lims[0], lims[1], n);
         gy = makeSequence(lims[2], lims[3], n);
@@ -83,6 +111,7 @@ public class KernelDensityEstimator2D implements ContourMaker {
             }
         }
     }
+
     public double findLevelCorrespondingToMass(double probabilityMass) {
         double level = 0;
         double[] sz = new double[n*n];
@@ -109,10 +138,13 @@ public class KernelDensityEstimator2D implements ContourMaker {
         }
         return level;
     }
+
     public ContourPath[] getContourPaths(double hpdValue) {
+
         double thresholdDensity = findLevelCorrespondingToMass(hpdValue);
         ContourGenerator contour = new ContourGenerator(getXGrid(), getYGrid(), getKDE(),
                 new ContourAttrib[]{new ContourAttrib(thresholdDensity)});
+
         ContourPath[] paths = null;
         try {
             paths = contour.getContours();
@@ -121,21 +153,26 @@ public class KernelDensityEstimator2D implements ContourMaker {
         }
         return paths;
     }
+
     public double[][] getKDE() {
         return z;
     }
+
     public double[] getXGrid() {
         return gx;
     }
+
     public double[] getYGrid() {
         return gy;
     }
+
     public void normalize(double[][] X) {
         for (int i = 0; i < X.length; i++) {
             for (int j = 0; j < X[0].length; j++)
                 X[i][j] = NormalDistribution.pdf(X[i][j], 0, 1);
         }
     }
+
     public double[][] outerMinusScaled(double[] X, double[] Y, double scale) {
         double[][] A = new double[X.length][Y.length];
         for (int indexX = 0; indexX < X.length; indexX++) {
@@ -144,6 +181,7 @@ public class KernelDensityEstimator2D implements ContourMaker {
         }
         return A;
     }
+
     public double[] makeSequence(double start, double end, int length) {
         double[] seq = new double[length];
         double by = (end - start) / (length - 1);
@@ -153,13 +191,16 @@ public class KernelDensityEstimator2D implements ContourMaker {
         }
         return seq;
     }
+
     private double margin = 0.1;
+
     private void setupLims() {
         lims = new double[4];
         lims[0] = DiscreteStatistics.min(x);
         lims[1] = DiscreteStatistics.max(x);
         lims[2] = DiscreteStatistics.min(y);
         lims[3] = DiscreteStatistics.max(y);
+
         double xDelta = (lims[1] - lims[0]) * margin;
         double yDelta = (lims[3] - lims[2]) * margin;
         lims[0] -= xDelta;
@@ -167,10 +208,12 @@ public class KernelDensityEstimator2D implements ContourMaker {
         lims[2] -= yDelta;
         lims[3] += yDelta;
     }
+
     private void setupH() {
         h = new double[2];
         h[0] = bandwidthNRD(x) / 4;
         h[1] = bandwidthNRD(y) / 4;
+
         if (limitBandwidth) {
             if (h[0] >  0.5) {
                 h[0] = 0.5;
@@ -180,33 +223,46 @@ public class KernelDensityEstimator2D implements ContourMaker {
             }
         }
     }
+
+
 //   bandwidth.nrd =
 //   function (x)
 //   {
 //       r <- quantile(x, c(0.25, 0.75))
 //       h <- (r[2] - r[1])/1.34
 //       4 * 1.06 * min(sqrt(var(x)), h) * length(x)^(-1/5)
+
     //   }
     public double bandwidthNRD(double[] in) {
+
         DoubleArrayList inList = new DoubleArrayList(in.length);
         for (double d : in)
             inList.add(d);
         inList.sort();
+
         final double h = (Descriptive.quantile(inList, 0.75) - Descriptive.quantile(inList, 0.25)) / 1.34;
+
         return 4 * 1.06 *
                 Math.min(Math.sqrt(DiscreteStatistics.variance(in)), h) *
                 Math.pow(in.length, -0.2);
     }
+
     public static void main(String[] arg) {
+
         double[] x = {3.4, 1.2, 5.6, 2.2, 3.1};
         double[] y = {1.0, 2.0, 1.0, 2.0, 1.0};
+
         KernelDensityEstimator2D kde = new KernelDensityEstimator2D(x, y, 4);
+
         System.out.println(new Vector(kde.getXGrid()));
         System.out.println(new Vector(kde.getYGrid()));
         System.out.println(new Matrix(kde.getKDE()));
         System.exit(-1);
+
     }
+
     public double[] getLims() { return lims; }
+
     private final double[] x; // x coordinates
     private final double[] y; // y coordinates
     private double[] h; // h[0] x-bandwidth, h[1] y-bandwidth
@@ -216,5 +272,7 @@ public class KernelDensityEstimator2D implements ContourMaker {
     private double[] gx; // x-grid points
     private double[] gy; // y-grid points
     private double[][] z; // KDE estimate;
+
     private final boolean limitBandwidth;
+
 }

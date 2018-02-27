@@ -1,8 +1,15 @@
 package dr.app.beauti.types;
+
 import dr.app.beauti.options.Parameter;
 import dr.app.beauti.util.NumberUtil;
 import dr.math.distributions.*;
+
+/**
+ * @author Alexei Drummond
+ * @author Andrew Rambaut
+ */
 public enum PriorType {
+
     UNDEFINED("undefined", false, false, false),
     NONE_TREE_PRIOR("None (Tree Prior Only)", false, false, false),
     NONE_STATISTIC("None (Statistic)", false, false, false),
@@ -21,15 +28,18 @@ public enum PriorType {
     NORMAL_HPM_PRIOR("Normal HPM", true, false, false),
     LINKED_PARAMETER("Linked Parameter", false, false, false),
     POISSON_PRIOR("Poisson", true, false, false);
+
     PriorType(final String name, final boolean isInitializable, final boolean isTruncatable, final boolean isPlottable) {
         this.name = name;
         this.isInitializable = isInitializable;
         this.isTruncatable = isTruncatable;
         this.isPlottable = isPlottable;
     }
+
     public String toString() {
         return name;
     }
+
     public Distribution getDistributionInstance(Parameter parameter) {
         Distribution dist = null;
         switch (this) {
@@ -85,9 +95,12 @@ public enum PriorType {
         }
         return dist;
     }
+
     public String getPriorString(Parameter parameter) {
+
 //        NumberFormat formatter = NumberFormat.getNumberInstance();
         StringBuffer buffer = new StringBuffer();
+
         if (parameter.priorType == PriorType.UNDEFINED) {
             buffer.append("? ");
         } else if (parameter.isPriorImproper()) {
@@ -97,8 +110,10 @@ public enum PriorType {
         } else {
             buffer.append("  ");
         }
+
         double lower = parameter.getLowerBound();
         double upper = parameter.getUpperBound();
+
         switch (parameter.priorType) {
             case NONE_IMPROPER:
                 buffer.append("Uniform infinite bounds");
@@ -207,17 +222,24 @@ public enum PriorType {
             buffer.append(NumberUtil.formatDecimal(parameter.truncationUpper, 10, 6));
             buffer.append("]");
         }
+
+
         if (parameter.priorType.isInitializable && parameter.initial != Double.NaN) {
             buffer.append(", initial=").append(NumberUtil.formatDecimal(parameter.initial, 10, 6));
         }
+
         return buffer.toString();
     }
+
     public String getPriorBoundString(Parameter parameter) {
+
         if (parameter.isStatistic) {
             return "n/a";
         }
+
         double lower = parameter.getLowerBound();
         double upper = parameter.getUpperBound();
+
 //        NumberFormat formatter = NumberFormat.getNumberInstance();
         StringBuffer buffer = new StringBuffer();
         buffer.append("[");
@@ -225,8 +247,10 @@ public enum PriorType {
         buffer.append(", ");
         buffer.append(NumberUtil.formatDecimal(upper, 10, 6));
         buffer.append("]");
+
         return buffer.toString();
     }
+
     public static PriorType[] getPriorTypes(Parameter parameter) {
         if (parameter.isDiscrete) {
             return new PriorType[]{
@@ -316,6 +340,7 @@ public enum PriorType {
                     INVERSE_GAMMA_PRIOR,
                     ONE_OVER_X_PRIOR};
         }
+
         // just a continuous parameter
         return new PriorType[]{
                 NONE_IMPROPER,
@@ -326,18 +351,24 @@ public enum PriorType {
                 LOGNORMAL_PRIOR,
                 GAMMA_PRIOR,
                 INVERSE_GAMMA_PRIOR};
+
     }
+
     public String getName() {
         return name;
     }
+
     public boolean isTruncatable() {
         return isTruncatable;
     }
+
     public boolean isPlottable() {
         return isPlottable;
     }
+
     private final String name;
     public final boolean isInitializable;
     public final boolean isTruncatable;
     public final boolean isPlottable;
+
 }

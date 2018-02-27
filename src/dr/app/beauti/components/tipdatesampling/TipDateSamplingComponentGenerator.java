@@ -1,4 +1,5 @@
 package dr.app.beauti.components.tipdatesampling;
+
 import dr.app.beauti.options.AbstractPartitionData;
 import dr.app.beauti.options.PartitionTreeModel;
 import dr.app.beauti.util.XMLWriter;
@@ -13,17 +14,27 @@ import dr.evoxml.TaxonParser;
 import dr.inference.model.ParameterParser;
 import dr.util.Attribute;
 import dr.xml.XMLParser;
+
 import java.util.HashSet;
 import java.util.Set;
+
+/**
+ * @author Andrew Rambaut
+ * @version $Id$
+ */
 public class TipDateSamplingComponentGenerator extends BaseComponentGenerator {
+
     public TipDateSamplingComponentGenerator(final BeautiOptions options) {
         super(options);
     }
+
     public boolean usesInsertionPoint(final InsertionPoint point) {
         TipDateSamplingComponentOptions comp = (TipDateSamplingComponentOptions)options.getComponentOptions(TipDateSamplingComponentOptions.class);
+
         if (comp.tipDateSamplingType == TipDateSamplingType.NO_SAMPLING) {
             return false;
         }
+
         switch (point) {
             case IN_TREE_MODEL:
             case IN_FILE_LOG_PARAMETERS:
@@ -36,9 +47,12 @@ public class TipDateSamplingComponentGenerator extends BaseComponentGenerator {
                 return false;
         }
     }
+
     protected void generate(final InsertionPoint point, final Object item, final String prefix, final XMLWriter writer) {
         TipDateSamplingComponentOptions comp = (TipDateSamplingComponentOptions)options.getComponentOptions(TipDateSamplingComponentOptions.class);
+
         TaxonList taxa = comp.getTaxonSet();
+
         switch (point) {
             case IN_TREE_MODEL: {
                 writeLeafHeightParameters(writer, (PartitionTreeModel)item, taxa);
@@ -46,8 +60,10 @@ public class TipDateSamplingComponentGenerator extends BaseComponentGenerator {
             case AFTER_TREE_MODEL:
                 if (options.getPartitionTreeModels().size() > 1) {
                     // we have multiple treeModels with some or all the same taxa - create a JointParameter for each...
+
                     writeJointParameters(writer, taxa);
                 }
+
                 if (comp.tipDateSamplingType == TipDateSamplingType.SAMPLE_JOINT) {
                     writer.writeOpenTag("compoundParameter",
                             new Attribute[]{
@@ -58,6 +74,7 @@ public class TipDateSamplingComponentGenerator extends BaseComponentGenerator {
                         Taxon taxon = taxa.getTaxon(i);
                         writer.writeIDref(ParameterParser.PARAMETER, "age(" + taxon.getId() + ")");
                     }
+
                     writer.writeCloseTag("compoundParameter");
                 }
                 break;
@@ -66,6 +83,7 @@ public class TipDateSamplingComponentGenerator extends BaseComponentGenerator {
                         comp.tipDateSamplingType == TipDateSamplingType.SAMPLE_PRECISION) {
                     // nothing to do - individual parameter priors are written automatically
                 } else if (comp.tipDateSamplingType == TipDateSamplingType.SAMPLE_JOINT) {
+
                 }
                 break;
             case IN_FILE_LOG_PARAMETERS:
@@ -82,10 +100,13 @@ public class TipDateSamplingComponentGenerator extends BaseComponentGenerator {
             default:
                 throw new IllegalArgumentException("This insertion point is not implemented for " + this.getClass().getName());
         }
+
     }
+
     private void writeJointParameters(XMLWriter writer, TaxonList taxa) {
         for (int i = 0; i < taxa.getTaxonCount(); i++) {
             Taxon taxon = taxa.getTaxon(i);
+
             Set<PartitionTreeModel> treeModels = new HashSet<PartitionTreeModel>();
             for (PartitionTreeModel treeModel : options.getPartitionTreeModels()) {
                 for (AbstractPartitionData data : options.getDataPartitions(treeModel)) {
@@ -94,6 +115,7 @@ public class TipDateSamplingComponentGenerator extends BaseComponentGenerator {
                     }
                 }
             }
+
             // if we are sampling within precisions then only include this leaf if precision > 0
             if (treeModels.size() > 0) {
                 writer.writeOpenTag("jointParameter",
@@ -101,16 +123,21 @@ public class TipDateSamplingComponentGenerator extends BaseComponentGenerator {
                                 new Attribute.Default<String>(XMLParser.ID, "age(" + taxon.getId() + ")")
                         }
                 );
+
                 for (PartitionTreeModel treeModel : treeModels) {
                     writer.writeTag(ParameterParser.PARAMETER, new Attribute.Default<String>(XMLParser.IDREF, treeModel.getPrefix() + "age(" + taxon.getId() + ")"), true);
                 }
+
                 writer.writeCloseTag("jointParameter");
             }
         }
     }
+
+
     private void writeLeafHeightParameters(XMLWriter writer, PartitionTreeModel item, TaxonList taxa) {
         // only include this taxon as a leaf height if it found in this partition.
         PartitionTreeModel treeModel = (PartitionTreeModel)item;
+
         Set<Taxon> taxonSet = new HashSet<Taxon>();
         for (AbstractPartitionData data : options.getDataPartitions(treeModel)) {
             if (data.getTaxonList() != null) {
@@ -119,10 +146,13 @@ public class TipDateSamplingComponentGenerator extends BaseComponentGenerator {
                 }
             }
         }
+
         for (int i = 0; i < taxa.getTaxonCount(); i++) {
             Taxon taxon = taxa.getTaxon(i);
+
             if (taxonSet.contains(taxon)) {
                 // if we are sampling within precisions then only include this leaf if precision > 0
+
                 writer.writeOpenTag("leafHeight",
                         new Attribute[]{
                                 new Attribute.Default<String>(TaxonParser.TAXON, taxon.getId()),
@@ -133,7 +163,9 @@ public class TipDateSamplingComponentGenerator extends BaseComponentGenerator {
             }
         }
     }
+
     protected String getCommentLabel() {
         return "Tip date sampling";
     }
+
 }

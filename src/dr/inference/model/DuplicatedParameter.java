@@ -1,5 +1,10 @@
 package dr.inference.model;
+
+/**
+ * @author Marc Suchard
+ */
 public class DuplicatedParameter extends Parameter.Abstract implements VariableListener {
+
     public DuplicatedParameter(Parameter parameter) {
         this.parameter = parameter;
         parameter.addVariableListener(this);
@@ -7,11 +12,13 @@ public class DuplicatedParameter extends Parameter.Abstract implements VariableL
         originalBounds = parameter.getBounds();
         bounds = originalBounds;
     }
+
     public void addDuplicationParameter(Parameter dupParameter) {
         this.dupParameter = dupParameter;
         dupParameter.addParameterListener(this);
         updateDuplication();
     }
+
     private void updateDuplication() {
         copies = (int) dupParameter.getParameterValue(0);
         final int originalLength = originalBounds.getBoundsDimension();
@@ -27,51 +34,66 @@ public class DuplicatedParameter extends Parameter.Abstract implements VariableL
         }
         bounds = new DefaultBounds(uppers,lowers);
     }
+
     public int getDimension() {
         return parameter.getDimension() * copies;
     }
+
     protected void storeValues() {
         parameter.storeParameterValues();
     }
+
     protected void restoreValues() {
         parameter.restoreParameterValues();
     }
+
     protected void acceptValues() {
         parameter.acceptParameterValues();
     }
+
     protected void adoptValues(Parameter source) {
         parameter.adoptParameterValues(source);
     }
+
     public double getParameterValue(int dim) {
         return parameter.getParameterValue(dim % parameter.getDimension());
     }
+
     public void setParameterValue(int dim, double value) {
         parameter.setParameterValue(dim % parameter.getDimension(), value);
         fireParameterChangedEvent(dim, Parameter.ChangeType.VALUE_CHANGED);
     }
+
     public void setParameterValueQuietly(int dim, double value) {
         parameter.setParameterValueQuietly(dim % parameter.getDimension(), value);
     }
+
     public void setParameterValueNotifyChangedAll(int dim, double value){
         parameter.setParameterValueNotifyChangedAll(dim % parameter.getDimension(), value);
     }
+
     public String getParameterName() {
         if (getId() == null)
             return "duplicated" + parameter.getParameterName();
         return getId();
     }
+
     public void addBounds(Bounds bounds) {
         throw new RuntimeException("Not yet implemented.");
     }
+
     public Bounds<Double> getBounds() {
         return bounds;
     }
+
     public void addDimension(int index, double value) {
         throw new RuntimeException("Not yet implemented.");
     }
+
     public double removeDimension(int index) {
         throw new RuntimeException("Not yet implemented.");
     }
+
     public void variableChangedEvent(Variable variable, int index, ChangeType type) {
         if (variable == dupParameter) {
             updateDuplication();
@@ -82,9 +104,11 @@ public class DuplicatedParameter extends Parameter.Abstract implements VariableL
             fireParameterChangedEvent(index + i * parameter.getDimension(), Parameter.ChangeType.VALUE_CHANGED);
         }
     }
+
     private final Parameter parameter;
     private Parameter dupParameter;
     private int copies;
     private Bounds<Double> bounds;
     private final Bounds<Double> originalBounds;
+
 }

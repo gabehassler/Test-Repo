@@ -1,11 +1,20 @@
 package dr.evomodelxml.substmodel;
+
 import dr.xml.*;
 import dr.evolution.datatype.Microsatellite;
 import dr.inference.model.Parameter;
 import dr.evomodel.substmodel.MsatBMA;
+
 import java.util.HashMap;
 import java.util.ArrayList;
+
+/**
+ * @author Chieh-Hsi Wu
+ *
+ * Parser of MsatAveragingSubsetModel
+ */
 public class MsatBMAParser extends AbstractXMLObjectParser{
+
     public static final String MODELS = "models";
     public static final String MODEL = "model";
     public static final String BINARY = "binary";
@@ -31,25 +40,40 @@ public class MsatBMAParser extends AbstractXMLObjectParser{
     public static final int BIAS_CONST_MAX_COUNT = 8;
     public static final int BIAS_LIN_MAX_COUNT = 4;
     public static final int GEO_MAX_COUNT = 6;
+
+
+
     public String getParserName(){
         return MSAT_BMA;
     }
+
+
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
         //get microsatellite data type
         Microsatellite dataType = (Microsatellite)xo.getChild(Microsatellite.class);
+
         //whether mutational bias is in logit space
         boolean logit = xo.getAttribute(LOGIT,true);
+
         XMLObject modelsXO = xo.getChild(MODELS);
         int modelCount = modelsXO.getChildCount();
+
         HashMap<Integer, Integer> modelBitIndMap = new HashMap<Integer, Integer>(modelCount);
         for(int i = 0; i < modelCount; i++){
+
             XMLObject modelXO = (XMLObject)modelsXO.getChild(i);
             String bitVec = modelXO.getStringAttribute(BINARY);
             int bitVecVal = Integer.parseInt(bitVec,2);
             int modelCode = modelXO.getIntegerAttribute(CODE);
             modelBitIndMap.put(bitVecVal,modelCode);
+
         }
+
         Parameter[][] paramModelMap = new Parameter[6][modelCount];
+
+
+
         XMLObject propRatesXO = xo.getChild(RATE_PROPS);
         ArrayList<Parameter> rateProps =
                 processParameters(
@@ -57,6 +81,7 @@ public class MsatBMAParser extends AbstractXMLObjectParser{
                         paramModelMap,
                         MsatBMA.PROP_INDEX
                 );
+
         XMLObject quadRatesXO = xo.getChild(RATE_QUADS);
         ArrayList<Parameter> rateQuads =
                 processParameters(
@@ -64,6 +89,7 @@ public class MsatBMAParser extends AbstractXMLObjectParser{
                         paramModelMap,
                         MsatBMA.QUAD_INDEX
                 );
+
         XMLObject biasConstsXO = xo.getChild(BIAS_CONSTS);
         ArrayList<Parameter> biasConsts =
                 processParameters(
@@ -71,6 +97,7 @@ public class MsatBMAParser extends AbstractXMLObjectParser{
                         paramModelMap,
                         MsatBMA.BIAS_CONST_INDEX
                 );
+
         XMLObject biasLinsXO = xo.getChild(BIAS_LINS);
         ArrayList<Parameter> biasLins =
                 processParameters(
@@ -78,6 +105,7 @@ public class MsatBMAParser extends AbstractXMLObjectParser{
                         paramModelMap,
                         MsatBMA.BIAS_LIN_INDEX
                 );
+
         XMLObject geosXO = xo.getChild(GEOS);
         ArrayList<Parameter> geos =
                 processParameters(
@@ -85,6 +113,7 @@ public class MsatBMAParser extends AbstractXMLObjectParser{
                         paramModelMap,
                         MsatBMA.GEO_INDEX
                 );
+
         XMLObject phaseProbXO = xo.getChild(PHASE_PROBS);
         ArrayList<Parameter> phaseProbs =
                 processParameters(
@@ -92,8 +121,10 @@ public class MsatBMAParser extends AbstractXMLObjectParser{
                         paramModelMap,
                         MsatBMA.PHASE_PROB_INDEX
                 );
+
         Parameter modelChoose = (Parameter) xo.getElementFirstChild(MODEL_CHOOSE);
         Parameter modelIndicator = (Parameter) xo.getElementFirstChild(MODEL_INDICATOR);
+
         printParameters(paramModelMap);
         return new MsatBMA(
                 dataType,
@@ -110,16 +141,21 @@ public class MsatBMAParser extends AbstractXMLObjectParser{
                 modelBitIndMap
         );
     }
+
     public ArrayList<Parameter> processParameters(
             XMLObject paramsXO,
             Parameter[][] paramModelMap,
             int paramIndex)throws XMLParseException{
+
         ArrayList<Parameter> paramList = new ArrayList<Parameter>();
         int paramsCount = paramsXO.getChildCount();
+
         for(int i = 0; i < paramsCount; i++){
+
             XMLObject paramXO = (XMLObject) paramsXO.getChild(i);
             int[] inModels = paramXO.getIntegerArrayAttribute(IN_MODELS);
             Parameter param = (Parameter)paramXO.getChild(Parameter.class);
+
             for(int j = 0; j < inModels.length; j++){
                 if(paramModelMap[paramIndex][inModels[j]] == null){
                     paramModelMap[paramIndex][inModels[j]] = param;
@@ -127,10 +163,13 @@ public class MsatBMAParser extends AbstractXMLObjectParser{
                     throw new RuntimeException("Different objects cannot be assigned to the same parameter in a model");
                 }
             }
+
             paramList.add(param);
+
         }
         return paramList;
     }
+
     public void printParameters(Parameter[][] paramModelMap){
         for(int i = 0; i < paramModelMap.length; i++){
             for(int j = 0; j < paramModelMap[i].length; j++){
@@ -139,9 +178,14 @@ public class MsatBMAParser extends AbstractXMLObjectParser{
             System.out.println();
         }
     }
+
+
+
+
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
+
     private XMLSyntaxRule[] rules = new XMLSyntaxRule[]{
             new ElementRule(Microsatellite.class),
             AttributeRule.newBooleanRule(LOGIT,true),
@@ -245,10 +289,13 @@ public class MsatBMAParser extends AbstractXMLObjectParser{
             ),
             new ElementRule(MODEL_CHOOSE, new XMLSyntaxRule[]{new ElementRule(Parameter.class)}),
             new ElementRule(MODEL_INDICATOR, new XMLSyntaxRule[]{new ElementRule(Parameter.class)})
+
     };
+
     public String getParserDescription() {
         return "This element represents an instance of the Microsatellite Averaging Model of microsatellite evolution.";
     }
+
     public Class getReturnType(){
         return MsatBMA.class;
     }

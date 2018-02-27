@@ -1,13 +1,20 @@
 package dr.evomodel.tree;
+
 import dr.inference.loggers.LogFormatter;
 import dr.inference.loggers.MCLogger;
+
+/**
+ * @author Aaron Darling
+ */
 public class HiddenLinkageLogger extends MCLogger {
+
 	HiddenLinkageModel hlm;
 	public HiddenLinkageLogger(HiddenLinkageModel hlm, LogFormatter formatter, int logEvery) 
 	{
 		super(formatter, logEvery, false);
 		this.hlm = hlm;
 	}
+
     public void startLogging() {
     	String[] labels = new String[1 + hlm.getData().getReadsTaxa().getTaxonCount()];
     	labels[0] = "iter";
@@ -26,4 +33,5 @@ public class HiddenLinkageLogger extends MCLogger {
     	}
     	this.logValues(values);
     }
+    
 }

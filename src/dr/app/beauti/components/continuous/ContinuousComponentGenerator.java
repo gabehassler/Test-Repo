@@ -1,4 +1,5 @@
 package dr.app.beauti.components.continuous;
+
 import dr.app.beauti.generator.BaseComponentGenerator;
 import dr.app.beauti.options.*;
 import dr.app.beauti.types.OperatorType;
@@ -9,15 +10,25 @@ import dr.evomodel.continuous.ContinuousDiffusionStatistic;
 import dr.evomodelxml.tree.TreeLoggerParser;
 import dr.util.Attribute;
 import dr.xml.AttributeParser;
+
+/**
+ * @author Andrew Rambaut
+ * @version $Id$
+ */
+
 public class ContinuousComponentGenerator extends BaseComponentGenerator {
+
     protected ContinuousComponentGenerator(BeautiOptions options) {
         super(options);
     }
+
     public boolean usesInsertionPoint(InsertionPoint point) {
+
         if (options.getDataPartitions(ContinuousDataType.INSTANCE).size() == 0) {
             // Empty, so do nothing
             return false;
         }
+
         switch (point) {
             case IN_TAXON:
             case AFTER_SITE_MODEL:
@@ -32,10 +43,14 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
             default:
                 return false;
         }
+
     }// END: usesInsertionPoint
+
     protected void generate(final InsertionPoint point, final Object item, final String prefix, final XMLWriter writer) {
+
         ContinuousComponentOptions component = (ContinuousComponentOptions) options
                 .getComponentOptions(ContinuousComponentOptions.class);
+
         switch (point) {
             case IN_TAXON:
                 Taxon taxon = (Taxon)item;
@@ -72,20 +87,25 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
                         "This insertion point is not implemented for "
                                 + this.getClass().getName());
         }
+
     }// END: generate
+
     protected String getCommentLabel() {
         return "Multivariate diffusion model";
     }
+
     private void writeTaxonTraits(Taxon taxon, XMLWriter writer) {
         for (AbstractPartitionData partition : options.getDataPartitions(ContinuousDataType.INSTANCE)) {
             writer.writeOpenTag(AttributeParser.ATTRIBUTE, new Attribute[]{
                     new Attribute.Default<String>(Attribute.NAME, partition.getName())});
+
             StringBuilder sb = new StringBuilder();
             boolean first = true;
             for (TraitData trait : partition.getTraits()) {
                 if (!first) {
                     sb.append(" ");
                 }
+
                 if (taxon.containsAttribute(trait.getName())) {
                     sb.append(taxon.getAttribute(trait.getName()).toString());
                 } else {
@@ -97,29 +117,40 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
             writer.writeCloseTag(AttributeParser.ATTRIBUTE);
         }
     }
+
     private void writeMultivariateDiffusionModels(XMLWriter writer,
                                                   ContinuousComponentOptions component) {
+
         boolean first = false;
+
         for (PartitionSubstitutionModel model : component.getOptions().getPartitionSubstitutionModels(ContinuousDataType.INSTANCE)) {
             String precisionMatrixId = model.getName() + ".precision";
+
             if (!first) { writer.writeBlankLine(); } else {  first = false;  }
+
             writeMultivariateDiffusionModel(writer, model, precisionMatrixId);
+
             writer.writeBlankLine();
+
             writeMultivariateWishartPrior(writer, model, precisionMatrixId);
         }
     }
+
     private void writeMultivariateDiffusionModel(XMLWriter writer,
                                                  PartitionSubstitutionModel model,
                                                  String precisionMatrixId) {
+
         writer.writeOpenTag("multivariateDiffusionModel",
                 new Attribute[] {
                         new Attribute.Default<String>("id", model.getName() + ".diffusionModel")
                 });
+
         writer.writeOpenTag("precisionMatrix");
         writer.writeOpenTag("matrixParameter",
                 new Attribute[] {
                         new Attribute.Default<String>("id", precisionMatrixId)
                 });
+
         for (int i = 0; i < model.getContinuousTraitCount(); i++) {
             StringBuilder sb = new StringBuilder();
             for (int j = 0; j < model.getContinuousTraitCount(); j++) {
@@ -138,21 +169,27 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
                             new Attribute.Default<String>("value", sb.toString())
                     }, true);
         }
+
         writer.writeCloseTag("matrixParameter");
         writer.writeCloseTag("precisionMatrix");
         writer.writeCloseTag("multivariateDiffusionModel");
     }
+
     private void writeMultivariateWishartPrior(XMLWriter writer,
                                                PartitionSubstitutionModel model,
                                                String precisionMatrixId) {
+
         int n = model.getContinuousTraitCount();
+
         writer.writeOpenTag("multivariateWishartPrior",
                 new Attribute[] {
                         new Attribute.Default<String>("id", model.getName() + ".precisionPrior"),
                         new Attribute.Default<String>("df", "" + n),
                 });
+
         writer.writeOpenTag("scaleMatrix");
         writer.writeOpenTag("matrixParameter");
+
         for (int i = 0; i < n; i++) {
             StringBuilder sb = new StringBuilder();
             for (int j = 0; j < n; j++) {
@@ -169,52 +206,76 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
                     new Attribute[]{
                             new Attribute.Default<String>("value", sb.toString())
                     }, true);
+
         }
+
         writer.writeCloseTag("matrixParameter");
         writer.writeCloseTag("scaleMatrix");
+
         writer.writeOpenTag("data");
         writer.writeIDref("parameter", precisionMatrixId);
         writer.writeCloseTag("data");
+
         writer.writeCloseTag("multivariateWishartPrior");
     }
+
     private void writeMultivariateTreeLikelihoods(XMLWriter writer,
                                                   ContinuousComponentOptions component) {
+
         boolean first = true;
+
         for (AbstractPartitionData partitionData : component.getOptions().getDataPartitions(ContinuousDataType.INSTANCE)) {
             PartitionSubstitutionModel model = partitionData.getPartitionSubstitutionModel();
             String diffusionModelId = model.getName() + ".diffusionModel";
             String treeModelId = partitionData.getPartitionTreeModel().getPrefix() + "treeModel";
+
             if (!first) { writer.writeBlankLine(); } else {  first = false;  }
+
             if (model.getContinuousSubstModelType() != ContinuousSubstModelType.HOMOGENOUS) {
                 writeRelaxedBranchRateModel(writer, partitionData, treeModelId);
             }
+
             writer.writeBlankLine();
+
             writeMultivariateTreeLikelihood(writer, partitionData, diffusionModelId, treeModelId);
+
             String precisionMatrixId = model.getName() + ".precision";
+
             writeDiffusionStatistics(writer, partitionData, treeModelId, precisionMatrixId,
                     partitionData.getName() + ".traitLikelihood");
         }
     }
+
+
+
     private void writeRelaxedBranchRateModel(XMLWriter writer,
                                              AbstractPartitionData partitionData,
                                              String treeModelId) {
+
         String prefix = partitionData.getName() + ".";
+
         writer.writeOpenTag("discretizedBranchRates",
                 new Attribute[] {
                         new Attribute.Default<String>("id",
                                 prefix + "diffusionRates"),
                 });
+
         writer.writeIDref("treeModel", treeModelId);
+
         writer.writeOpenTag("distribution");
+
         if (partitionData.getPartitionSubstitutionModel().getContinuousSubstModelType() == ContinuousSubstModelType.LOGNORMAL_RRW) {
             writer.writeOpenTag("logNormalDistributionModel",
                     new Attribute[]{ new Attribute.Default<String>("meanInRealSpace", "true") });
+
             writer.writeOpenTag("mean");
             writer.writeTag("parameter",
                     new Attribute[]{
                             new Attribute.Default<String>("value", "1.0")
                     }, true);
+
             writer.writeCloseTag("mean");
+
             writer.writeOpenTag("stdev");
             writer.writeTag("parameter",
                     new Attribute[]{
@@ -222,6 +283,7 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
                             new Attribute.Default<String>("value", "1.0"),
                             new Attribute.Default<String>("lower", "0.0")
                     }, true);
+
             writer.writeCloseTag("stdev");
             writer.writeCloseTag("logNormalDistributionModel");
         } else {
@@ -255,15 +317,20 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
             writer.writeCloseTag("onePGammaDistributionModel");
         }
         writer.writeCloseTag("distribution");
+
+
         writer.writeOpenTag("rateCategories");
         writer.writeTag("parameter", new Attribute.Default<String>("id", prefix + "rrwCategories"), true);
         writer.writeCloseTag("rateCategories");
+
         writer.writeCloseTag("discretizedBranchRates");
     }
+
     private void writeMultivariateTreeLikelihood(XMLWriter writer,
                                                  AbstractPartitionData partitionData,
                                                  String diffusionModelId,
                                                  String treeModelId) {
+
         writer.writeOpenTag("multivariateTraitLikelihood",
                 new Attribute[] {
                         new Attribute.Default<String>("id", partitionData.getName() + ".traitLikelihood"),
@@ -274,10 +341,15 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
                         new Attribute.Default<String>("reciprocalRates", "true"),
                         new Attribute.Default<String>("integrateInternalTraits", "true")
                 });
+
         writer.writeIDref("multivariateDiffusionModel", diffusionModelId);
+
+
         ContinuousComponentOptions component = (ContinuousComponentOptions) options
                 .getComponentOptions(ContinuousComponentOptions.class);
+
         PartitionSubstitutionModel model = partitionData.getPartitionSubstitutionModel();
+
         if (component.useLambda(model)) {
             writer.writeOpenTag("transformedTreeModel");
             writer.writeIDref("treeModel", treeModelId);
@@ -291,9 +363,11 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
         } else {
             writer.writeIDref("treeModel", treeModelId);
         }
+
         writer.writeOpenTag("traitParameter");
         writer.writeTag("parameter", new Attribute.Default<String>("id", "leaf." + partitionData.getName()), true);
         writer.writeCloseTag("traitParameter");
+
        if (model.getJitterWindow() > 0.0) {
             StringBuilder sb = new StringBuilder(Double.toString(model.getJitterWindow()));
             for (int i = 1; i < model.getContinuousTraitCount(); i++) {
@@ -306,7 +380,9 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
             writer.writeTag("parameter", new Attribute.Default<String>("idref", "leaf." + partitionData.getName()), true);
             writer.writeCloseTag("jitter");
         }
+
         writer.writeOpenTag("conjugateRootPrior");
+
         writer.writeOpenTag("meanParameter");
         StringBuilder sb = new StringBuilder();
         for (int j = 0; j < partitionData.getTraits().size(); j++) {
@@ -315,20 +391,27 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
             }
             sb.append(0.0);
         }
+
         writer.writeTag("parameter", new Attribute.Default<String>("value", sb.toString()), true);
         writer.writeCloseTag("meanParameter");
+
         writer.writeOpenTag("priorSampleSize");
         writer.writeTag("parameter", new Attribute.Default<String>("value", "0.001"), true);
         writer.writeCloseTag("priorSampleSize");
+
         writer.writeCloseTag("conjugateRootPrior");
+
         if (partitionData.getPartitionSubstitutionModel().getContinuousSubstModelType() != ContinuousSubstModelType.HOMOGENOUS) {
             writer.writeIDref("discretizedBranchRates", partitionData.getName() + "." + "diffusionRates");
         }
+
         writer.writeCloseTag("multivariateTraitLikelihood");
     }
+
     private void writeDiffusionStatistics(XMLWriter writer, AbstractPartitionData partitionData,
                                           String treeModelId, String precisionMatrixId, String traitLikelihoodId) {
         String prefix = partitionData.getName() + ".";
+
         if (partitionData.getTraits().size() == 2) {
             writer.writeOpenTag("correlation",
                     new Attribute[] {
@@ -339,12 +422,16 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
             writer.writeIDref("matrixParameter", precisionMatrixId);
             writer.writeCloseTag("correlation");
         }
+
+        /*
         writer.writeOpenTag("treeLengthStatistic",
                 new Attribute[] {
                         new Attribute.Default<String>("id", prefix + "treeLength")
                 });
         writer.writeIDref("treeModel", treeModelId);
         writer.writeCloseTag("treeLengthStatistic");
+
+
         writer.writeOpenTag("productStatistic",
                 new Attribute[] {
                         new Attribute.Default<String>("id", prefix + "treeLengthPrecision1")
@@ -358,6 +445,7 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
         writer.writeIDref("parameter", prefix + "precision.col1");
         writer.writeCloseTag("subStatistic");
         writer.writeCloseTag("productStatistic");
+
         writer.writeOpenTag("productStatistic",
                 new Attribute[] {
                         new Attribute.Default<String>("id", prefix + "treeLengthPrecision2")
@@ -371,12 +459,15 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
         writer.writeIDref("parameter", prefix + "precision.col2");
         writer.writeCloseTag("subStatistic");
         writer.writeCloseTag("productStatistic");
+        */
+
         writer.writeOpenTag("matrixInverse",
                 new Attribute[] {
                         new Attribute.Default<String>("id", prefix + "varCovar")
                 });
         writer.writeIDref("matrixParameter", precisionMatrixId);
         writer.writeCloseTag("matrixInverse");
+
         writer.writeOpenTag(ContinuousDiffusionStatistic.CONTINUOUS_DIFFUSION_STATISTIC, (partitionData.getPartitionSubstitutionModel().isLatitudeLongitude() ?
                 new Attribute[] {
                         new Attribute.Default<String>("id", prefix + "diffusionRate"),
@@ -388,12 +479,15 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
         writer.writeIDref("multivariateTraitLikelihood", traitLikelihoodId);
         writer.writeCloseTag(ContinuousDiffusionStatistic.CONTINUOUS_DIFFUSION_STATISTIC);
     }
+
     private void writePrecisionGibbsOperators(XMLWriter writer,
                                               ContinuousComponentOptions component) {
+
         for (AbstractPartitionData partitionData : component.getOptions().getDataPartitions(ContinuousDataType.INSTANCE)) {
             writePrecisionGibbsOperator(writer, component, partitionData);
         }
     }
+
     private void writePrecisionGibbsOperator(final XMLWriter writer,
                                              final ContinuousComponentOptions component,
                                              AbstractPartitionData partitionData
@@ -405,11 +499,14 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
         writer.writeIDref("multivariateTraitLikelihood", partitionData.getName() + ".traitLikelihood");
         writer.writeIDref("multivariateWishartPrior", partitionData.getPartitionSubstitutionModel().getName() + ".precisionPrior");
         writer.writeCloseTag(ContinuousComponentOptions.PRECISION_GIBBS_OPERATOR);
+
     }
+
     private void writeParameterIdRefs(final XMLWriter writer, final ContinuousComponentOptions component) {
         for (AbstractPartitionData partitionData : component.getOptions().getDataPartitions(ContinuousDataType.INSTANCE)) {
             PartitionSubstitutionModel model = partitionData.getPartitionSubstitutionModel();
             writer.writeIDref("matrixParameter", model.getName() + ".precision");
+
             String prefix = partitionData.getName() + ".";
             if (partitionData.getTraits().size() == 2) {
                 writer.writeIDref("correlation", prefix + "correlation");
@@ -419,23 +516,29 @@ public class ContinuousComponentGenerator extends BaseComponentGenerator {
             }
             writer.writeIDref("matrixInverse", prefix + "varCovar");
             writer.writeIDref(ContinuousDiffusionStatistic.CONTINUOUS_DIFFUSION_STATISTIC, prefix + "diffusionRate");
+
             if (component.useLambda(model)) {
                 writer.writeIDref("parameter", model.getName() + "." + ContinuousComponentOptions.LAMBDA);
             }
         }
     }
+
     private void writeMultivariatePriors(XMLWriter writer,
                                          ContinuousComponentOptions component) {
+
         for (AbstractPartitionData partitionData : component.getOptions().getDataPartitions(ContinuousDataType.INSTANCE)) {
             writer.writeIDref("multivariateWishartPrior", partitionData.getName() + ".precisionPrior");
         }
     }
+
     private void writeMultivariateTreeLikelihoodIdRefs(XMLWriter writer,
                                                        ContinuousComponentOptions component) {
+
         for (AbstractPartitionData partitionData : component.getOptions().getDataPartitions(ContinuousDataType.INSTANCE)) {
             writer.writeIDref("multivariateTraitLikelihood", partitionData.getName() + ".traitLikelihood");
         }
     }
+
     private void writeTreeLogEntries(PartitionTreeModel treeModel, XMLWriter writer) {
         for (AbstractPartitionData partitionData : options.getDataPartitions(ContinuousDataType.INSTANCE)) {
             if (partitionData.getPartitionTreeModel() == treeModel) {

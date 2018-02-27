@@ -1,4 +1,30 @@
+/*
+ * MarkovModulatedSubstitutionModelParser.java
+ *
+ * Copyright (c) 2002-2014 Alexei Drummond, Andrew Rambaut and Marc Suchard
+ *
+ * This file is part of BEAST.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * BEAST is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  BEAST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BEAST; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
 package dr.app.beagle.evomodel.parsers;
+
 import dr.app.beagle.evomodel.sitemodel.SiteRateModel;
 import dr.app.beagle.evomodel.substmodel.MarkovModulatedSubstitutionModel;
 import dr.app.beagle.evomodel.substmodel.SubstitutionModel;
@@ -7,19 +33,28 @@ import dr.evolution.datatype.NewHiddenNucleotides;
 import dr.evoxml.util.DataTypeUtils;
 import dr.inference.model.Parameter;
 import dr.xml.*;
+
 import java.util.ArrayList;
 import java.util.List;
+
+/**
+ * @author Marc A. Suchard
+ */
 public class MarkovModulatedSubstitutionModelParser extends AbstractXMLObjectParser {
+
     public static final String MARKOV_MODULATED_MODEL = "markovModulatedSubstitutionModel";
     //    public static final String HIDDEN_COUNT = "hiddenCount";
     public static final String SWITCHING_RATES = "switchingRates";
     //    public static final String DIAGONALIZATION = "diagonalization";
     public static final String RATE_SCALAR = "rateScalar";
     public static final String GEOMETRIC_RATES = "geometricRates";
+
     public String getParserName() {
         return MARKOV_MODULATED_MODEL;
     }
+
     public Object parseXMLObject(XMLObject xo) throws XMLParseException {
+
         DataType dataType = DataTypeUtils.getDataType(xo);
         System.err.println("dataType = " + dataType);
         NewHiddenNucleotides nucleotides;
@@ -28,6 +63,8 @@ public class MarkovModulatedSubstitutionModelParser extends AbstractXMLObjectPar
         } else {
             throw new XMLParseException("Must construct " + MARKOV_MODULATED_MODEL + " with hidden nucleotides");
         }
+
+
 //
 //        Parameter omegaParam = (Parameter) xo.getElementFirstChild(OMEGA);
 //        Parameter kappaParam = (Parameter) xo.getElementFirstChild(KAPPA);
@@ -39,7 +76,9 @@ public class MarkovModulatedSubstitutionModelParser extends AbstractXMLObjectPar
 //            eigenSystem = new ColtEigenSystem();
 //        else
 //            eigenSystem = new DefaultEigenSystem(dataType.getStateCount());
+
         Parameter switchingRates = (Parameter) xo.getElementFirstChild(SWITCHING_RATES);
+
         List<SubstitutionModel> substModels = new ArrayList<SubstitutionModel>();
         for (int i = 0; i < xo.getChildCount(); i++) {
             Object cxo = xo.getChild(i);
@@ -47,9 +86,12 @@ public class MarkovModulatedSubstitutionModelParser extends AbstractXMLObjectPar
                 substModels.add((SubstitutionModel) cxo);
             }
         }
+
         boolean geometricRates = xo.getAttribute(GEOMETRIC_RATES, false);
+
         Parameter rateScalar = xo.hasChildNamed(RATE_SCALAR) ?
                 (Parameter) xo.getChild(RATE_SCALAR).getChild(Parameter.class) : null;
+
         SiteRateModel siteRateModel = (SiteRateModel) xo.getChild(SiteRateModel.class);
         if (siteRateModel != null) {
             if (siteRateModel.getCategoryCount() != substModels.size()) {
@@ -57,19 +99,25 @@ public class MarkovModulatedSubstitutionModelParser extends AbstractXMLObjectPar
                         "Number of gamma categories must equal number of substitution models in " + xo.getId());
             }
         }
+
         return new MarkovModulatedSubstitutionModel(xo.getId(), substModels, switchingRates, dataType, null,
                 rateScalar, geometricRates, siteRateModel);
     }
+
     public String getParserDescription() {
         return "This element represents the a Markov-modulated substitution model.";
     }
+
     public Class getReturnType() {
         return MarkovModulatedSubstitutionModel.class;
     }
+
     public XMLSyntaxRule[] getSyntaxRules() {
         return rules;
     }
+
     private XMLSyntaxRule[] rules = new XMLSyntaxRule[]{
+
             AttributeRule.newStringRule(DataType.DATA_TYPE),
 //            AttributeRule.newStringRule(GeneticCode.GENETIC_CODE),
 //            new ElementRule(OMEGA,
@@ -84,6 +132,7 @@ public class MarkovModulatedSubstitutionModelParser extends AbstractXMLObjectPar
             AttributeRule.newBooleanRule(GEOMETRIC_RATES, true),
             new ElementRule(RATE_SCALAR,
                     new XMLSyntaxRule[]{new ElementRule(Parameter.class)}, true),
+
             new ElementRule(SiteRateModel.class, true),
     };
 }
