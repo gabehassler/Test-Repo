@@ -1,7 +1,7 @@
 /*
  * TreeModel.java
  *
- * Copyright (c) 2002-2013 Alexei Drummond, Andrew Rambaut and Marc Suchard
+ * Copyright (c) 2002-2015 Alexei Drummond, Andrew Rambaut and Marc Suchard
  *
  * This file is part of BEAST.
  * See the NOTICE file distributed with this work for additional
@@ -60,14 +60,12 @@ public class TreeModel extends AbstractModel implements MultivariateTraitTree {
     }
 
     public TreeModel(Tree tree) {
-        this(TREE_MODEL, tree, false, false);
+        this(TREE_MODEL, tree, false);
     }
 
-    public TreeModel(String id, Tree tree) { this(id, tree, false); }
+    public TreeModel(String id, Tree tree) {
 
-    public TreeModel(String id, Tree tree, boolean fixHeights) {
-
-        this(TREE_MODEL, tree, false, fixHeights);
+        this(TREE_MODEL, tree, false);
         setId(id);
     }
 
@@ -75,7 +73,7 @@ public class TreeModel extends AbstractModel implements MultivariateTraitTree {
       * Useful for constructing a TreeModel from a NEXUS file entry
       */
 
-    public TreeModel(String name, Tree tree, boolean copyAttributes, boolean fixHeights) {
+    public TreeModel(String name, Tree tree, boolean copyAttributes) {
 
         super(name);
 
@@ -85,9 +83,7 @@ public class TreeModel extends AbstractModel implements MultivariateTraitTree {
 
         // adjust the heights to be compatible with the tip dates and perturb
         // any zero branches.
-        if (!fixHeights) {
-            MutableTree.Utils.correctHeightsForTips(binaryTree);
-        }
+        MutableTree.Utils.correctHeightsForTips(binaryTree);
 
         // clone the node structure (this will create the individual parameters)
         Node node = new Node(binaryTree, binaryTree.getRoot());

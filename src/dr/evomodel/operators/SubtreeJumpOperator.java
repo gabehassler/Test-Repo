@@ -1,7 +1,7 @@
 /*
  * SubtreeJumpOperator.java
  *
- * Copyright (C) 2002-2015 Alexei Drummond, Marc A. Suchard and Andrew Rambaut
+ * Copyright (c) 2002-2015 Alexei Drummond, Andrew Rambaut and Marc Suchard
  *
  * This file is part of BEAST.
  * See the NOTICE file distributed with this work for additional
@@ -29,6 +29,7 @@ import dr.evolution.tree.NodeRef;
 import dr.evolution.tree.Tree;
 import dr.evomodel.tree.TreeModel;
 import dr.evomodelxml.operators.SubtreeJumpOperatorParser;
+import dr.evomodelxml.operators.SubtreeSlideOperatorParser;
 import dr.inference.operators.*;
 import dr.math.MathUtils;
 
@@ -42,26 +43,22 @@ import java.util.List;
  * @version $Id$
  */
 public class SubtreeJumpOperator extends AbstractTreeOperator implements CoercableMCMCOperator {
-    private static final double SCALE_ALPHA = 10.0;
 
-    private double bias = 0.0;
-
-    private final TreeModel tree;
-    private final CoercionMode mode;
-    private final boolean arctanTransform;;
+    private TreeModel tree = null;
+    private double size = 1;
+    private CoercionMode mode = CoercionMode.DEFAULT;
 
     /**
      * Constructor
      * @param tree
      * @param weight
-     * @param bias a value used as a power coeficient for the relatedness weights
+     * @param size a non-negative value used as a power coeficient for the relatedness weights
      * @param mode
      */
-    public SubtreeJumpOperator(TreeModel tree, double weight, double bias, boolean arctanTransform, CoercionMode mode) {
+    public SubtreeJumpOperator(TreeModel tree, double weight, double size, CoercionMode mode) {
         this.tree = tree;
         setWeight(weight);
-        this.bias = bias;
-        this.arctanTransform = arctanTransform;
+        this.size = size;
         this.mode = mode;
     }
     /**
@@ -71,9 +68,7 @@ public class SubtreeJumpOperator extends AbstractTreeOperator implements Coercab
      */
     public double doOperation() throws OperatorFailedException {
         double logq;
-
-        final double alpha =  (arctanTransform ? Math.atan(bias) * SCALE_ALPHA : Math.log(bias) );
-
+        final double alpha = Math.log(size); // now alpha lives on the real line
         final NodeRef root = tree.getRoot();
 
 		double  maxHeight = tree.getNodeHeight(root);
@@ -217,16 +212,24 @@ public class SubtreeJumpOperator extends AbstractTreeOperator implements Coercab
         return Math.pow(age, alpha) + Double.MIN_VALUE;
     }
 
+    public double getSize() {
+        return size;
+    }
+
+    public void setSize(double size) {
+        this.size = size;
+    }
+
     public double getCoercableParameter() {
-        return bias;
+        return Math.log(getSize());
     }
 
     public void setCoercableParameter(double value) {
-        bias = value;
+        setSize(Math.exp(value));
     }
 
     public double getRawParameter() {
-        return bias;
+        return getSize();
     }
 
     public CoercionMode getMode() {
@@ -242,7 +245,7 @@ public class SubtreeJumpOperator extends AbstractTreeOperator implements Coercab
         double prob = MCMCOperator.Utils.getAcceptanceProbability(this);
         double targetProb = getTargetAcceptanceProbability();
 
-        double ws = OperatorUtils.optimizeWindowSize(bias, Double.MAX_VALUE, prob, targetProb);
+        double ws = OperatorUtils.optimizeWindowSize(getSize(), Double.MAX_VALUE, prob, targetProb);
 
         if (prob < getMinimumGoodAcceptanceLevel()) {
             return "Try decreasing size to about " + ws;

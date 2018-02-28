@@ -1,7 +1,7 @@
 /*
  * MultiDimensionalScalingLikelihood.java
  *
- * Copyright (c) 2002-2014 Alexei Drummond, Andrew Rambaut and Marc Suchard
+ * Copyright (c) 2002-2015 Alexei Drummond, Andrew Rambaut and Marc Suchard
  *
  * This file is part of BEAST.
  * See the NOTICE file distributed with this work for additional
@@ -201,15 +201,9 @@ public class MultiDimensionalScalingLikelihood extends AbstractModelLikelihood {
         // TODO Flag which cachedDistances or mdsPrecision need to be updated
 
         if (variable == locationsParameter) {
+            int locationIndex = index / mdsDimension;
 
-            if (index == -1) {
-
-                mdsCore.updateLocation(-1, locationsParameter.getParameterValues());
-            } else {
-
-                int locationIndex = index / mdsDimension;
-                mdsCore.updateLocation(locationIndex, locationsParameter.getColumnValues(locationIndex));
-            }
+            mdsCore.updateLocation(locationIndex, locationsParameter.getColumnValues(locationIndex));
         } else if (variable == mdsPrecisionParameter) {
             mdsCore.setParameters(mdsPrecisionParameter.getParameterValues());
         } else {
@@ -234,7 +228,6 @@ public class MultiDimensionalScalingLikelihood extends AbstractModelLikelihood {
 
     @Override
     protected void acceptState() {
-        mdsCore.acceptState();
         // do nothing
     }
 

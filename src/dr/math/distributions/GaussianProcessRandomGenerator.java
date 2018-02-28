@@ -25,8 +25,6 @@
 
 package dr.math.distributions;
 
-import dr.inference.model.Likelihood;
-
 /**
  * @author Marc A. Suchard
  * @author Max R. Tolkoff
@@ -34,5 +32,4 @@ import dr.inference.model.Likelihood;
 
 public interface GaussianProcessRandomGenerator extends RandomGenerator {
     // Only implemented by Gaussian processes
-    Likelihood getLikelihood();
 }

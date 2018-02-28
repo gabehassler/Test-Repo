@@ -25,7 +25,6 @@
 
 package dr.math.distributions;
 
-import dr.inference.model.Likelihood;
 import dr.math.MathUtils;
 import dr.math.matrixAlgebra.*;
 
@@ -303,9 +302,5 @@ public class MultivariateNormalDistribution implements MultivariateDistribution,
     public double logPdf(Object x) {
         double[] v = (double[]) x;
         return logPdf(v);
-    }
-
-    public Likelihood getLikelihood() {
-        return null;
     }
 }

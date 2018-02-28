@@ -1,7 +1,7 @@
 /*
  * CompoundParameter.java
  *
- * Copyright (c) 2002-2013 Alexei Drummond, Andrew Rambaut and Marc Suchard
+ * Copyright (c) 2002-2015 Alexei Drummond, Andrew Rambaut and Marc Suchard
  *
  * This file is part of BEAST.
  * See the NOTICE file distributed with this work for additional
@@ -186,12 +186,9 @@ public class CompoundParameter extends Parameter.Abstract implements VariableLis
     }
 
     public void fireParameterChangedEvent() {
-        doNotPropogateChangeUp = true;
         for (Parameter p : parameters) {
             p.fireParameterChangedEvent();
         }
-        doNotPropogateChangeUp = false;
-        fireParameterChangedEvent(-1, ChangeType.ALL_VALUES_CHANGED);
     }
 
     public double getParameterValue(int dim) {
@@ -274,9 +271,7 @@ public class CompoundParameter extends Parameter.Abstract implements VariableLis
         int dim = 0;
         for (Parameter parameter1 : uniqueParameters) {
             if (variable == parameter1) {
-                if (!doNotPropogateChangeUp) {
-                    fireParameterChangedEvent(dim + index, type);
-                }
+                fireParameterChangedEvent(dim + index, type);
                 break;
             }
             dim += parameter1.getDimension();
@@ -313,8 +308,6 @@ public class CompoundParameter extends Parameter.Abstract implements VariableLis
     private Bounds bounds = null;
     private int dimension;
     private String name;
-
-    private boolean doNotPropogateChangeUp = false;
 
     public static void main(String[] args) {
 
